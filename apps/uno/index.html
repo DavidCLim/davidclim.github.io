@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>UNO Web Game</title>
+    <meta name="description" content="A simple browser-based UNO game.">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="game-shell">
+      <header class="topbar">
+        <a href="../../" class="home-link">Home</a>
+        <div>
+          <p class="eyebrow">First web app</p>
+          <h1>UNO Web Game</h1>
+        </div>
+        <button id="new-game" type="button">New Game</button>
+      </header>
+
+      <section class="scoreboard" aria-label="Game status">
+        <div>
+          <span>Computer</span>
+          <strong id="computer-count">7 cards</strong>
+        </div>
+        <div>
+          <span>Current color</span>
+          <strong id="current-color">Red</strong>
+        </div>
+        <div>
+          <span>You</span>
+          <strong id="player-count">7 cards</strong>
+        </div>
+      </section>
+
+      <section class="table" aria-label="UNO table">
+        <div class="opponent-area">
+          <h2>Computer hand</h2>
+          <div id="computer-hand" class="computer-hand"></div>
+        </div>
+
+        <div class="center-area">
+          <div>
+            <p class="pile-label">Draw pile</p>
+            <button id="draw-card" type="button" class="deck-card" aria-label="Draw a card">UNO</button>
+          </div>
+
+          <div>
+            <p class="pile-label">Discard pile</p>
+            <div id="discard-card" class="card red" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <section class="message-panel" aria-live="polite">
+          <h2 id="turn-heading">Your turn</h2>
+          <p id="message">Play a matching color, number, or action card.</p>
+          <div id="color-picker" class="color-picker" hidden>
+            <button type="button" data-color="red">Red</button>
+            <button type="button" data-color="yellow">Yellow</button>
+            <button type="button" data-color="green">Green</button>
+            <button type="button" data-color="blue">Blue</button>
+          </div>
+        </section>
+      </section>
+
+      <section class="player-area" aria-label="Your hand">
+        <h2>Your hand</h2>
+        <div id="player-hand" class="player-hand"></div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
