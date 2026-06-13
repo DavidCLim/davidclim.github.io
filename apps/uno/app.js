@@ -26,6 +26,8 @@ const els = {
   turnHeading: document.querySelector("#turn-heading"),
   message: document.querySelector("#message"),
   colorPicker: document.querySelector("#color-picker"),
+  winModal: document.querySelector("#win-modal"),
+  winButton: document.querySelector("#win-button"),
 };
 
 function createDeck() {
@@ -83,6 +85,7 @@ function startGame() {
   state.turn = "player";
   state.awaitingColor = null;
   state.gameOver = false;
+  els.winModal.hidden = true;
 
   for (let index = 0; index < 7; index += 1) {
     drawOne(state.playerHand);
@@ -261,6 +264,7 @@ function checkWinner() {
   if (state.playerHand.length === 0) {
     state.gameOver = true;
     setMessage("You win", "Nicely played. Start a new game whenever you are ready.");
+    els.winModal.hidden = false;
     render();
     return true;
   }
@@ -293,7 +297,7 @@ function render() {
   state.computerHand.forEach(() => {
     const card = document.createElement("div");
     card.className = "card-back";
-    card.textContent = "UNO";
+    card.innerHTML = cardBackMarkup();
     els.computerHand.append(card);
   });
 
@@ -317,6 +321,10 @@ function cardMarkup(card) {
   return `<span class="corner">${escapeHtml(card.value)}</span><span class="value">${escapeHtml(card.value)}</span>`;
 }
 
+function cardBackMarkup() {
+  return '<span class="uno-logo">Uno</span><span class="edition">David Edition</span>';
+}
+
 function formatCardName(card) {
   if (card.color === "wild") {
     return card.value;
@@ -337,6 +345,7 @@ function escapeHtml(value) {
 }
 
 els.newGame.addEventListener("click", startGame);
+els.winButton.addEventListener("click", startGame);
 els.drawCard.addEventListener("click", handleDraw);
 els.colorPicker.addEventListener("click", (event) => {
   if (event.target.matches("button[data-color]")) {
