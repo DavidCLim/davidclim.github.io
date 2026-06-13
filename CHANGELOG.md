@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5 - 2026-06-13
+
+- Rebuilt Wild, Reverse, Skip, and Skip Everyone as more accurate code-drawn card symbols.
+- Made number cards larger and more slanted so they fill the center oval better.
+- Updated the web changelog with the newest visual polish.
+
 ## v1.4 - 2026-06-13
 
 - Slanted all card numbers and symbols to better fit the oval.
