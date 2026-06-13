@@ -288,9 +288,9 @@ h2 {
 
 .card .value {
   color: #111111;
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-style: italic;
-  transform: rotate(-16deg);
+  transform: rotate(-20deg);
 }
 
 .card .corner {
@@ -303,15 +303,42 @@ h2 {
   font-style: italic;
 }
 
-.card.red { background: var(--red); }
-.card.yellow { color: #1f2328; background: var(--yellow); }
-.card.green { background: var(--green); }
-.card.blue { background: var(--blue); }
-.card.teal { background: var(--teal); }
-.card.orange { background: var(--orange); }
-.card.pink { background: var(--pink); }
-.card.purple { background: var(--purple); }
-.card.wild { background: conic-gradient(var(--red), var(--yellow), var(--green), var(--blue), var(--red)); }
+.card.red {
+  background: var(--red);
+}
+
+.card.yellow {
+  color: #1f2328;
+  background: var(--yellow);
+}
+
+.card.green {
+  background: var(--green);
+}
+
+.card.blue {
+  background: var(--blue);
+}
+
+.card.teal {
+  background: var(--teal);
+}
+
+.card.orange {
+  background: var(--orange);
+}
+
+.card.pink {
+  background: var(--pink);
+}
+
+.card.purple {
+  background: var(--purple);
+}
+
+.card.wild {
+  background: conic-gradient(var(--red), var(--yellow), var(--green), var(--blue), var(--red));
+}
 
 .card-name {
   position: absolute;
@@ -327,13 +354,40 @@ h2 {
 }
 
 .card .value.symbol {
-  font-size: 2rem;
-  transform: rotate(-16deg);
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  font-size: 2.1rem;
+  text-shadow: none;
+  transform: rotate(-20deg);
 }
 
 .card.number-card .value {
-  font-size: 2.25rem;
-  transform: rotate(-16deg);
+  font-size: 2.85rem;
+  line-height: 1;
+  transform: rotate(-20deg);
+}
+
+.card-icon {
+  display: block;
+  width: 58px;
+  height: 58px;
+  overflow: visible;
+}
+
+.skip-all-icon {
+  width: 64px;
+}
+
+.wild-icon-label {
+  fill: #ffffff;
+  font-family: Impact, Haettenschweiler, "Arial Black", sans-serif;
+  font-size: 15px;
+  font-style: italic;
+  paint-order: stroke;
+  stroke: #111111;
+  stroke-width: 4px;
 }
 
 .player-card {
@@ -426,14 +480,38 @@ h2 {
   font-weight: 800;
 }
 
-.color-picker [data-color="red"] { background: var(--red); }
-.color-picker [data-color="yellow"] { color: #1f2328; background: var(--yellow); }
-.color-picker [data-color="green"] { background: var(--green); }
-.color-picker [data-color="blue"] { background: var(--blue); }
-.color-picker [data-color="teal"] { background: var(--teal); }
-.color-picker [data-color="orange"] { background: var(--orange); }
-.color-picker [data-color="pink"] { background: var(--pink); }
-.color-picker [data-color="purple"] { background: var(--purple); }
+.color-picker [data-color="red"] {
+  background: var(--red);
+}
+
+.color-picker [data-color="yellow"] {
+  color: #1f2328;
+  background: var(--yellow);
+}
+
+.color-picker [data-color="green"] {
+  background: var(--green);
+}
+
+.color-picker [data-color="blue"] {
+  background: var(--blue);
+}
+
+.color-picker [data-color="teal"] {
+  background: var(--teal);
+}
+
+.color-picker [data-color="orange"] {
+  background: var(--orange);
+}
+
+.color-picker [data-color="pink"] {
+  background: var(--pink);
+}
+
+.color-picker [data-color="purple"] {
+  background: var(--purple);
+}
 
 .win-modal {
   position: fixed;
@@ -508,6 +586,12 @@ h2 {
     grid-template-columns: 1fr;
   }
 
-  .topbar { gap: 10px; }
-  .center-area { order: -1; }
+  .topbar {
+    gap: 10px;
+  }
+
+  .center-area {
+    order: -1;
+  }
+
 }
