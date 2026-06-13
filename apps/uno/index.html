@@ -42,7 +42,10 @@
         <div class="center-area">
           <div>
             <p class="pile-label">Draw pile</p>
-            <button id="draw-card" type="button" class="deck-card" aria-label="Draw a card">UNO</button>
+            <button id="draw-card" type="button" class="deck-card" aria-label="Draw a card">
+              <span class="uno-logo">Uno</span>
+              <span class="edition">David Edition</span>
+            </button>
           </div>
 
           <div>
@@ -68,6 +71,13 @@
         <div id="player-hand" class="player-hand"></div>
       </section>
     </main>
+
+    <div id="win-modal" class="win-modal" hidden>
+      <div class="win-dialog" role="dialog" aria-modal="true" aria-labelledby="win-title">
+        <p id="win-title">Round complete</p>
+        <button id="win-button" type="button">You Win!</button>
+      </div>
+    </div>
 
     <script src="app.js"></script>
   </body>
