@@ -18,6 +18,26 @@
         <button id="new-game" type="button">New Game</button>
       </header>
 
+      <section class="controls" aria-label="Game options">
+        <div>
+          <span>Mode</span>
+          <div class="segmented" id="mode-picker">
+            <button type="button" data-mode="classic" class="active">Classic</button>
+            <button type="button" data-mode="mercy">No Mercy</button>
+            <button type="button" data-mode="flip">Flip</button>
+          </div>
+        </div>
+        <div>
+          <span>Bot difficulty</span>
+          <div class="segmented" id="difficulty-picker">
+            <button type="button" data-difficulty="easy">Easy</button>
+            <button type="button" data-difficulty="medium" class="active">Medium</button>
+            <button type="button" data-difficulty="hard">Hard</button>
+          </div>
+        </div>
+        <a href="../../CHANGELOG.md" class="changelog-link">Changelog</a>
+      </section>
+
       <section class="scoreboard" aria-label="Game status">
         <div>
           <span>Computer</span>
@@ -26,6 +46,10 @@
         <div>
           <span>Current color</span>
           <strong id="current-color">Red</strong>
+        </div>
+        <div>
+          <span>Game mode</span>
+          <strong id="game-mode">Classic</strong>
         </div>
         <div>
           <span>You</span>
@@ -43,8 +67,8 @@
           <div>
             <p class="pile-label">Draw pile</p>
             <button id="draw-card" type="button" class="deck-card" aria-label="Draw a card">
-              <span class="uno-logo">Uno</span>
-              <span class="edition">David Edition</span>
+              <span class="uno-logo">UNO</span>
+              <span class="edition">DAVID EDITION</span>
             </button>
           </div>
 
