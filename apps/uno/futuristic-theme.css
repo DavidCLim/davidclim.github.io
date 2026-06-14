@@ -1,0 +1,165 @@
+:root {
+  --neo-bg: #050710;
+  --neo-panel: rgba(8, 18, 36, 0.78);
+  --neo-panel-strong: rgba(11, 28, 54, 0.92);
+  --neo-line: rgba(76, 245, 255, 0.34);
+  --neo-line-hot: rgba(255, 46, 236, 0.48);
+  --neo-cyan: #4cf5ff;
+  --neo-pink: #ff2eec;
+  --neo-violet: #8b5cff;
+  --neo-lime: #b8ff4c;
+}
+
+body {
+  color: #effcff;
+  background:
+    linear-gradient(rgba(76, 245, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(76, 245, 255, 0.045) 1px, transparent 1px),
+    radial-gradient(circle at 14% 12%, rgba(255, 46, 236, 0.34), transparent 26%),
+    radial-gradient(circle at 84% 4%, rgba(76, 245, 255, 0.28), transparent 30%),
+    radial-gradient(circle at 54% 92%, rgba(139, 92, 255, 0.22), transparent 34%),
+    linear-gradient(145deg, #03040a 0%, #071328 48%, #02040b 100%);
+  background-size: 34px 34px, 34px 34px, auto, auto, auto, auto;
+}
+
+.game-shell {
+  position: relative;
+}
+
+.game-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 12%),
+    repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 5px);
+  mix-blend-mode: screen;
+}
+
+.topbar {
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--neo-line);
+}
+
+.eyebrow {
+  color: var(--neo-cyan);
+  text-shadow: 0 0 14px rgba(76, 245, 255, 0.85);
+}
+
+h1 {
+  color: #ffffff;
+  letter-spacing: 0.02em;
+  text-shadow:
+    0 0 12px rgba(76, 245, 255, 0.7),
+    0 0 26px rgba(255, 46, 236, 0.35);
+}
+
+h2 {
+  color: #dffcff;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.controls,
+.scoreboard div,
+.message-panel,
+.table,
+.room-panel {
+  border: 1px solid var(--neo-line);
+  background:
+    linear-gradient(135deg, rgba(76, 245, 255, 0.08), rgba(255, 46, 236, 0.06)),
+    var(--neo-panel);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    0 0 28px rgba(76, 245, 255, 0.12),
+    0 18px 50px rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(14px);
+}
+
+.controls {
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.controls span,
+.scoreboard span,
+.room-panel span,
+.pile-label {
+  color: #9defff;
+}
+
+.scoreboard strong,
+.room-panel strong,
+.changelog-entry h2 {
+  color: var(--neo-lime);
+  text-shadow: 0 0 12px rgba(184, 255, 76, 0.45);
+}
+
+.segmented button,
+.home-link,
+.changelog-link,
+.room-panel button,
+#new-game {
+  border: 1px solid var(--neo-line);
+  color: #eaffff;
+  background:
+    linear-gradient(135deg, rgba(76, 245, 255, 0.16), rgba(139, 92, 255, 0.2));
+  box-shadow:
+    0 0 18px rgba(76, 245, 255, 0.12),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.segmented button:hover,
+.home-link:hover,
+.changelog-link:hover,
+.room-panel button:hover,
+#new-game:hover {
+  border-color: var(--neo-line-hot);
+  box-shadow:
+    0 0 20px rgba(255, 46, 236, 0.2),
+    0 0 26px rgba(76, 245, 255, 0.16);
+}
+
+.segmented button.active,
+#new-game {
+  color: #071019;
+  border-color: rgba(184, 255, 76, 0.75);
+  background: linear-gradient(135deg, var(--neo-cyan), var(--neo-lime));
+  box-shadow: 0 0 22px rgba(76, 245, 255, 0.34);
+}
+
+.room-panel input {
+  border-color: var(--neo-line);
+  color: #effcff;
+  background: rgba(3, 10, 22, 0.86);
+  outline-color: var(--neo-cyan);
+}
+
+.message-panel p,
+.room-panel p,
+.changelog-entry ul {
+  color: #d7f8ff;
+}
+
+.win-dialog {
+  border-color: var(--neo-line);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(76, 245, 255, 0.2), transparent 42%),
+    linear-gradient(145deg, #071328, #030610);
+  box-shadow: 0 0 42px rgba(76, 245, 255, 0.26);
+}
+
+#win-button {
+  color: #061019;
+  background: linear-gradient(135deg, var(--neo-cyan), var(--neo-lime));
+  text-shadow: none;
+}
+
+@media (max-width: 820px) {
+  .controls {
+    gap: 10px;
+  }
+}
