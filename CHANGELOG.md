@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.9 - 2026-06-14
+
+- Changed Skip Everyone to a distinct group-skip symbol so it no longer looks like the regular Skip card.
+- Scaled the Wild card oval back inside the card oval so the symbol does not spill out.
+- Removed the rainbow oval background from the Color Roulette card.
+
 ## v1.8 - 2026-06-14
 
 - Reworked Skip Everyone into a compact single-icon design that stays inside the oval.
