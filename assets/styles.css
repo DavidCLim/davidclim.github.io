@@ -161,9 +161,7 @@ body.uno-selected .apps {
     0 0 34px rgba(76, 245, 255, 0.22);
 }
 
-.uno-card.selected,
-.uno-card:hover,
-.uno-card:focus-within {
+.uno-card {
   border-color: rgba(76, 245, 255, 0.48);
   background:
     linear-gradient(135deg, rgba(76, 245, 255, 0.1), rgba(255, 46, 236, 0.08)),
@@ -173,6 +171,15 @@ body.uno-selected .apps {
     0 0 30px rgba(76, 245, 255, 0.18),
     0 18px 45px rgba(0, 0, 0, 0.24);
   transform: translateY(-2px);
+}
+
+.uno-card:hover,
+.uno-card:focus-within {
+  border-color: rgba(255, 46, 236, 0.58);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 0 34px rgba(255, 46, 236, 0.2),
+    0 20px 48px rgba(0, 0, 0, 0.26);
 }
 
 code {
