@@ -425,20 +425,47 @@ function render() {
 
 function cardMarkup(card) {
   const symbolClass = card.type !== "number" ? "symbol" : "";
-  return `<span class="value ${symbolClass}">${cardIcon(card)}</span>`;
+  const corner = cornerLabel(card);
+  return `<span class="corner corner-top">${corner}</span><span class="value ${symbolClass}">${cardIcon(card)}</span><span class="corner corner-bottom">${corner}</span>`;
 }
 
 function cardIcon(card) {
   if (card.value === "skip") return skipIcon();
   if (card.value === "reverse") return reverseIcon();
   if (card.value === "skipAll") return skipAllIcon();
+  if (["draw1", "draw2", "draw4", "draw5"].includes(card.value)) return drawIcon(drawLabel(card.value));
+  if (card.value === "discardAll") return discardAllIcon();
+  if (card.value === "flip") return flipIcon();
+  if (card.value === "roulette") return rouletteIcon();
   if (card.value === "wild") return wildIcon();
   if (["wild2", "wild4", "wild6", "wild10", "wildColor"].includes(card.value)) return wildIcon(drawLabel(card.value));
-  return { draw1: "+1", draw2: "+2", draw4: "+4", draw5: "+5", discardAll: "ALL", flip: "FLIP", roulette: "COLOR" }[card.value] || escapeHtml(card.value);
+  return escapeHtml(card.value);
+}
+
+function cornerLabel(card) {
+  const labels = {
+    skip: "S",
+    reverse: "R",
+    draw1: "+1",
+    draw2: "+2",
+    draw4: "+4",
+    draw5: "+5",
+    wild: "W",
+    wild2: "+2",
+    wild4: "+4",
+    wild6: "+6",
+    wild10: "+10",
+    wildColor: "C",
+    skipAll: "ALL",
+    discardAll: "ALL",
+    flip: "F",
+    roulette: "?",
+  };
+  return labels[card.value] || escapeHtml(card.value);
 }
 
 function drawLabel(value) {
-  return { wild2: "+2", wild4: "+4", wild6: "+6", wild10: "+10", wildColor: "COLOR" }[value] || "";
+  return { draw1: "+1", draw2: "+2", draw4: "+4", draw5: "+5", wild2: "+2", wild4: "+4", wild6: "+6", wild10: "+10", wildColor: "COLOR" }[value] || "";
 }
 
 function skipIcon() {
@@ -451,6 +478,22 @@ function skipAllIcon() {
 
 function reverseIcon() {
   return `<svg class="card-icon reverse-icon" viewBox="0 0 64 64" aria-hidden="true"><path d="M18 27c4-10 17-14 27-8" fill="none" stroke="#111111" stroke-width="9" stroke-linecap="round"/><path d="M45 19l-1-12 11 6z" fill="#111111"/><path d="M46 37c-4 10-17 14-27 8" fill="none" stroke="#111111" stroke-width="9" stroke-linecap="round"/><path d="M19 45l1 12-11-6z" fill="#111111"/><path d="M19 27c4-8 15-12 24-7" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/><path d="M45 37c-4 8-15 12-24 7" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/></svg>`;
+}
+
+function drawIcon(label) {
+  return `<svg class="card-icon draw-icon" viewBox="0 0 64 64" aria-hidden="true"><rect x="14" y="16" width="28" height="38" rx="5" fill="#ffffff" stroke="#111111" stroke-width="4" transform="rotate(-12 28 35)"/><rect x="24" y="10" width="28" height="38" rx="5" fill="#ffffff" stroke="#111111" stroke-width="4" transform="rotate(10 38 29)"/><text x="33" y="41" text-anchor="middle" class="power-icon-label">${label}</text></svg>`;
+}
+
+function discardAllIcon() {
+  return `<svg class="card-icon discard-icon" viewBox="0 0 64 64" aria-hidden="true"><rect x="12" y="15" width="25" height="36" rx="5" fill="#ffffff" stroke="#111111" stroke-width="4" transform="rotate(-14 24 33)"/><rect x="25" y="11" width="25" height="36" rx="5" fill="#ffffff" stroke="#111111" stroke-width="4" transform="rotate(13 37 29)"/><path d="M18 50h30" stroke="#111111" stroke-width="5" stroke-linecap="round"/><text x="32" y="40" text-anchor="middle" class="power-icon-label small">ALL</text></svg>`;
+}
+
+function flipIcon() {
+  return `<svg class="card-icon flip-icon" viewBox="0 0 64 64" aria-hidden="true"><rect x="13" y="16" width="24" height="34" rx="5" fill="#ffffff" stroke="#111111" stroke-width="4" transform="rotate(-10 25 33)"/><rect x="29" y="14" width="24" height="34" rx="5" fill="#111111" stroke="#ffffff" stroke-width="4" transform="rotate(10 41 31)"/><path d="M18 18c8-8 25-9 33 2" fill="none" stroke="#111111" stroke-width="5" stroke-linecap="round"/><path d="M46 18l8 2-3-8" fill="none" stroke="#111111" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+function rouletteIcon() {
+  return `<svg class="card-icon roulette-icon" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="24" fill="#ffffff" stroke="#111111" stroke-width="5"/><path d="M32 8v48M8 32h48M15 15l34 34M49 15 15 49" stroke="#111111" stroke-width="3"/><circle cx="32" cy="32" r="8" fill="#111111"/><circle cx="43" cy="21" r="5" fill="#e21b2d"/></svg>`;
 }
 
 function wildIcon(label = "") {
