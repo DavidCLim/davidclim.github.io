@@ -1,8 +1,14 @@
 # Changelog
 
+## v1.12 - 2026-06-14
+
+- Changed visible AI wording to Bot.
+- Added a futuristic neon theme for the page, controls, panels, buttons, and changelog.
+- Kept card visuals and gameplay unchanged.
+
 ## v1.11 - 2026-06-14
 
-- Added an Opponent selector so players can choose AI or Human.
+- Added an Opponent selector so players can choose Bot or Human.
 - Added a Human room panel with Host Room, Join Room, and 4-number room codes.
 - Centered the Color Roulette card symbol.
 
