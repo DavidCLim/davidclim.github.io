@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.10 - 2026-06-14
+
+- Rebuilt the Wild card symbol so its colored oval uses the exact same size, shape, and rotation as the card's white oval.
+- Removed the separate rainbow oval background from Wild cards.
+- Restored the Wild card body to a dark background so the oval itself carries the color blocks.
+
 ## v1.9 - 2026-06-14
 
 - Changed Skip Everyone to a distinct group-skip symbol so it no longer looks like the regular Skip card.
