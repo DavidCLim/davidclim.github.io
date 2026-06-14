@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.11 - 2026-06-14
+
+- Added an Opponent selector so players can choose AI or Human.
+- Added a Human room panel with Host Room, Join Room, and 4-number room codes.
+- Centered the Color Roulette card symbol.
+
 ## v1.10 - 2026-06-14
 
 - Rebuilt the Wild card symbol so its colored oval uses the exact same size, shape, and rotation as the card's white oval.
