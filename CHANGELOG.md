@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.7 - 2026-06-14
+
+- Restored number cards to the earlier font style.
+- Adjusted the Wild card icon oval to match the card oval more closely.
+
 ## v1.6 - 2026-06-14
 
 - Added UNO-style corner labels to number cards and power cards.
