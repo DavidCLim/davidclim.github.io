@@ -2,7 +2,7 @@
 
 ## v1.12 - 2026-06-14
 
-- Changed visible AI wording to Bot.
+- Changed visible opponent wording to Bot.
 - Added a futuristic neon theme for the page, controls, panels, buttons, and changelog.
 - Kept card visuals and gameplay unchanged.
 
