@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.16 - 2026-06-14
+
+- Kept the home page UNO app button in the futuristic style at all times while only the page background changes on selection.
+- Added an online Human room connection layer for different-device play, with same-device storage as a fallback.
+- Made the UNO game background more futuristic with deeper neon layers.
+- Added a gold glow to the turn panel and draw button when it is your turn.
+
 ## v1.15 - 2026-06-14
 
 - Made the UNO game shell more futuristic with stronger neon panels, frame effects, and animated button highlights.
