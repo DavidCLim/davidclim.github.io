@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.8 - 2026-06-14
+
+- Reworked Skip Everyone into a compact single-icon design that stays inside the oval.
+- Enlarged the Wild card oval so it covers the full card oval and hides the white oval underneath.
+
 ## v1.7 - 2026-06-14
 
 - Restored number cards to the earlier font style.
