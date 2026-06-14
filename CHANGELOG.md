@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.14 - 2026-06-14
+
+- Made Human room codes sync game state between browser tabs on the same site.
+- Added Player 1 and Player 2 room roles so each player sees their own hand and can only play on their turn.
+- Centered the Skip and Color Roulette symbols inside the card oval.
+
 ## v1.13 - 2026-06-14
 
 - Improved the Mode, Opponent, Bot difficulty, and Changelog controls for tablet and mobile layouts.
@@ -69,7 +75,7 @@
 - Added Classic, No Mercy, and Flip game modes.
 - Added Easy, Medium, and Hard bot difficulty.
 - Added action-card symbols for Skip, Reverse, Draw cards, Wild, Discard All, Color Roulette, and Flip.
-- Added No Mercy-style forced drawing, 0/7 swap hands, larger draw cards, and 25-card mercy elimination.
+- Added No Mercy-style forced drawing, 0/7 hand swaps, larger draw cards, and 25-card mercy elimination.
 - Added Flip-style light and dark sides, dark-side colors, Draw Five, Skip Everyone, and Wild Draw Color.
 
 ## v1.1 - 2026-06-13
