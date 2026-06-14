@@ -1,0 +1,35 @@
+.card.wild {
+  background: var(--wild);
+}
+
+.card.wild::before {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(17, 17, 17, 0.18);
+}
+
+.wild-icon-label {
+  font-size: 13px;
+}
+
+.card.value-wild .value.symbol,
+.card.value-wild2 .value.symbol,
+.card.value-wild4 .value.symbol,
+.card.value-wild6 .value.symbol,
+.card.value-wild10 .value.symbol,
+.card.value-wildColor .value.symbol {
+  position: absolute;
+  inset: 16px 8px;
+  z-index: 1;
+  display: block;
+  width: auto;
+  height: auto;
+  border-radius: 50%;
+  overflow: hidden;
+  transform: rotate(-24deg);
+}
+
+.card .value.symbol .wild-icon {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
