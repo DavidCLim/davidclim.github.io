@@ -25,15 +25,11 @@ body {
   min-height: 100vh;
   font-family: Arial, Helvetica, sans-serif;
   color: #f8fafc;
-  background:
-    radial-gradient(circle at 18% 16%, rgba(51, 123, 255, 0.5), transparent 28%),
-    radial-gradient(circle at 82% 12%, rgba(0, 212, 255, 0.22), transparent 26%),
-    linear-gradient(145deg, #041027 0%, #08204b 45%, #020817 100%);
+  background: radial-gradient(circle at 18% 16%, rgba(51, 123, 255, 0.5), transparent 28%), radial-gradient(circle at 82% 12%, rgba(0, 212, 255, 0.22), transparent 26%), linear-gradient(145deg, #041027 0%, #08204b 45%, #020817 100%);
 }
 
 button, a { font: inherit; }
 button { cursor: pointer; }
-
 .game-shell { width: min(1180px, calc(100% - 24px)); margin: 0 auto; padding: 18px 0 28px; }
 .topbar { display: grid; grid-template-columns: auto 1fr auto; gap: 18px; align-items: center; padding: 14px 0 18px; }
 .controls { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end; margin-bottom: 14px; }
@@ -92,14 +88,17 @@ h2 { margin-bottom: 10px; font-size: 1rem; }
 .card.pink { background: var(--pink); }
 .card.purple { background: var(--purple); }
 .card.wild { background: conic-gradient(var(--red), var(--yellow), var(--green), var(--blue), var(--red)); }
+.card.wild::before { background: linear-gradient(120deg, var(--red) 0 25%, var(--yellow) 25% 50%, var(--green) 50% 75%, var(--blue) 75% 100%); border-color: rgba(17, 17, 17, 0.35); }
 .card-name { position: absolute; right: 8px; bottom: 8px; left: 8px; z-index: 1; color: #111111; font-size: 0.48rem; font-weight: 900; letter-spacing: 0.02em; text-transform: uppercase; }
 .card .value.symbol { display: grid; place-items: center; width: 62px; height: 62px; font-size: 2.1rem; text-shadow: none; transform: rotate(-20deg); }
 .card.number-card .value { font-family: Arial, Helvetica, sans-serif; font-size: 2.85rem; font-weight: 800; line-height: 1; transform: rotate(-20deg); }
 .card-icon { display: block; width: 62px; height: 62px; overflow: visible; }
-.skip-all-icon { width: 68px; }
+.skip-all-icon { width: 58px; height: 58px; }
+.skip-all-label { fill: #111111; font-family: Impact, Haettenschweiler, "Arial Black", sans-serif; font-size: 14px; font-style: italic; paint-order: stroke; stroke: #ffffff; stroke-width: 3px; }
 .power-icon-label { fill: #111111; font-family: Impact, Haettenschweiler, "Arial Black", sans-serif; font-size: 19px; font-style: italic; paint-order: stroke; stroke: #ffffff; stroke-width: 3px; }
 .power-icon-label.small { font-size: 14px; }
 .wild-icon-label { fill: #ffffff; font-family: Impact, Haettenschweiler, "Arial Black", sans-serif; font-size: 15px; font-style: italic; paint-order: stroke; stroke: #111111; stroke-width: 4px; }
+.card .value.symbol .wild-icon { width: 66px; height: 86px; }
 .player-card { border: 0; background: transparent; transition: transform 140ms ease, filter 140ms ease; }
 .player-card:not(:disabled):hover, .player-card:not(:disabled):focus { transform: translateY(-8px); outline: none; filter: brightness(1.04); }
 .player-card:disabled { cursor: not-allowed; opacity: 0.28; filter: grayscale(0.65) saturate(0.55); }
