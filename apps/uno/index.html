@@ -7,6 +7,7 @@
     <meta name="description" content="A simple browser-based UNO game.">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="wild-fix.css">
+    <link rel="stylesheet" href="pvp-fix.css">
   </head>
   <body>
     <main class="game-shell">
@@ -29,6 +30,13 @@
           </div>
         </div>
         <div>
+          <span>Opponent</span>
+          <div class="segmented" id="opponent-picker">
+            <button type="button" data-opponent="ai" class="active">AI</button>
+            <button type="button" data-opponent="human">Human</button>
+          </div>
+        </div>
+        <div>
           <span>Bot difficulty</span>
           <div class="segmented" id="difficulty-picker">
             <button type="button" data-difficulty="easy">Easy</button>
@@ -37,6 +45,20 @@
           </div>
         </div>
         <a href="../../changelog.html" class="changelog-link">Changelog</a>
+      </section>
+
+      <section class="room-panel" id="room-panel" hidden aria-label="Player vs Player room">
+        <div>
+          <span>Room code</span>
+          <strong id="room-code">----</strong>
+        </div>
+        <button id="host-room" type="button">Host Room</button>
+        <label>
+          <span>Join code</span>
+          <input id="join-code" type="text" inputmode="numeric" maxlength="4" placeholder="1234">
+        </label>
+        <button id="join-room" type="button">Join Room</button>
+        <p id="room-status">Host a room to make a 4-number code, or enter a code to join on this browser.</p>
       </section>
 
       <section class="scoreboard" aria-label="Game status">
@@ -60,7 +82,7 @@
 
       <section class="table" aria-label="UNO table">
         <div class="opponent-area">
-          <h2>Computer hand</h2>
+          <h2 id="opponent-title">Computer hand</h2>
           <div id="computer-hand" class="computer-hand"></div>
         </div>
 
@@ -92,7 +114,7 @@
       </section>
 
       <section class="player-area" aria-label="Your hand">
-        <h2>Your hand</h2>
+        <h2 id="player-title">Your hand</h2>
         <div id="player-hand" class="player-hand"></div>
       </section>
     </main>
@@ -106,5 +128,6 @@
 
     <script src="app.js"></script>
     <script src="wild-fix.js"></script>
+    <script src="pvp-fix.js"></script>
   </body>
 </html>
