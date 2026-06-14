@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.15 - 2026-06-14
+
+- Made the UNO game shell more futuristic with stronger neon panels, frame effects, and animated button highlights.
+- Gave the home page UNO app button a matching futuristic style while keeping the rest of the GitHub page layout unchanged.
+- Added a selected UNO state on the home page that changes the white background to the futuristic theme, then returns to white when deselected.
+- Kept gameplay and card visuals unchanged.
+
 ## v1.14 - 2026-06-14
 
 - Made Human room codes sync game state between browser tabs on the same site.
