@@ -6,6 +6,10 @@
   --surface: #ffffff;
   --accent: #0969da;
   --page: #f6f8fa;
+  --neo-cyan: #4cf5ff;
+  --neo-pink: #ff2eec;
+  --neo-violet: #8b5cff;
+  --neo-lime: #b8ff4c;
 }
 
 * {
@@ -18,6 +22,19 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   color: var(--ink);
   background: var(--page);
+  transition: color 220ms ease, background 220ms ease;
+}
+
+body.uno-selected {
+  color: #effcff;
+  background:
+    linear-gradient(rgba(76, 245, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(76, 245, 255, 0.045) 1px, transparent 1px),
+    radial-gradient(circle at 16% 12%, rgba(255, 46, 236, 0.34), transparent 28%),
+    radial-gradient(circle at 82% 8%, rgba(76, 245, 255, 0.28), transparent 30%),
+    radial-gradient(circle at 50% 100%, rgba(139, 92, 255, 0.24), transparent 34%),
+    linear-gradient(145deg, #03040a 0%, #071328 48%, #02040b 100%);
+  background-size: 34px 34px, 34px 34px, auto, auto, auto, auto;
 }
 
 .page {
@@ -37,6 +54,18 @@ body {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+body.uno-selected .eyebrow {
+  color: var(--neo-cyan);
+  text-shadow: 0 0 14px rgba(76, 245, 255, 0.85);
+}
+
+body.uno-selected h1,
+body.uno-selected h2 {
+  text-shadow:
+    0 0 14px rgba(76, 245, 255, 0.6),
+    0 0 28px rgba(255, 46, 236, 0.28);
 }
 
 h1,
@@ -60,9 +89,18 @@ h1 {
   line-height: 1.6;
 }
 
+body.uno-selected .lede,
+body.uno-selected .app-card p {
+  color: #d7f8ff;
+}
+
 .apps {
   border-top: 1px solid var(--line);
   padding-top: 32px;
+}
+
+body.uno-selected .apps {
+  border-top-color: rgba(76, 245, 255, 0.34);
 }
 
 .app-list {
@@ -77,6 +115,7 @@ h1 {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface);
+  transition: border-color 180ms ease, background 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 
 .app-card p {
@@ -94,11 +133,46 @@ h1 {
   background: var(--accent);
   font-weight: 700;
   text-decoration: none;
+  transition: border-color 180ms ease, background 180ms ease, box-shadow 180ms ease, color 180ms ease;
 }
 
 .app-link:focus,
 .app-link:hover {
   background: #0759bd;
+}
+
+.uno-card .app-link {
+  border: 1px solid rgba(76, 245, 255, 0.55);
+  color: #061019;
+  background: linear-gradient(135deg, var(--neo-cyan), var(--neo-lime));
+  box-shadow:
+    0 0 18px rgba(76, 245, 255, 0.28),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.34);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.uno-card .app-link:focus,
+.uno-card .app-link:hover {
+  color: #061019;
+  background: linear-gradient(135deg, var(--neo-lime), var(--neo-cyan));
+  box-shadow:
+    0 0 24px rgba(184, 255, 76, 0.32),
+    0 0 34px rgba(76, 245, 255, 0.22);
+}
+
+.uno-card.selected,
+.uno-card:hover,
+.uno-card:focus-within {
+  border-color: rgba(76, 245, 255, 0.48);
+  background:
+    linear-gradient(135deg, rgba(76, 245, 255, 0.1), rgba(255, 46, 236, 0.08)),
+    rgba(8, 18, 36, 0.82);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+    0 0 30px rgba(76, 245, 255, 0.18),
+    0 18px 45px rgba(0, 0, 0, 0.24);
+  transform: translateY(-2px);
 }
 
 code {
