@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.13 - 2026-06-14
+
+- Improved the Mode, Opponent, Bot difficulty, and Changelog controls for tablet and mobile layouts.
+- Made small-screen buttons arrange into cleaner responsive rows instead of stacking awkwardly.
+- Kept card visuals and gameplay unchanged.
+
 ## v1.12 - 2026-06-14
 
 - Changed visible opponent wording to Bot.
