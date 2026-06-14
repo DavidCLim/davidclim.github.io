@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.6 - 2026-06-14
+
+- Added UNO-style corner labels to number cards and power cards.
+- Reworked Draw, Discard All, Flip, and Color Roulette cards with code-drawn symbols.
+- Made Classic, No Mercy, and Flip cards share the same David Edition card frame and sizing.
+
 ## v1.5 - 2026-06-13
 
 - Rebuilt Wild, Reverse, Skip, and Skip Everyone as more accurate code-drawn card symbols.
@@ -23,7 +29,7 @@
 - Added Classic, No Mercy, and Flip game modes.
 - Added Easy, Medium, and Hard bot difficulty.
 - Added action-card symbols for Skip, Reverse, Draw cards, Wild, Discard All, Color Roulette, and Flip.
-- Added No Mercy-style forced drawing, 0/7 hand swaps, larger draw cards, and 25-card mercy elimination.
+- Added No Mercy-style forced drawing, 0/7 swap hands, larger draw cards, and 25-card mercy elimination.
 - Added Flip-style light and dark sides, dark-side colors, Draw Five, Skip Everyone, and Wild Draw Color.
 
 ## v1.1 - 2026-06-13
