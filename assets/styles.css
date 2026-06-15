@@ -284,6 +284,66 @@ body.uno-selected .apps {
   box-shadow: 0 0 16px rgba(184, 255, 76, 0.42) inset;
 }
 
+.kittens-card {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(255, 209, 102, 0.78);
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 77, 46, 0.42), transparent 30%),
+    radial-gradient(circle at 88% 8%, rgba(255, 209, 102, 0.34), transparent 28%),
+    linear-gradient(145deg, rgba(50, 9, 20, 0.96), rgba(104, 24, 38, 0.9));
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.12) inset,
+    0 0 24px rgba(255, 77, 46, 0.34),
+    0 16px 42px rgba(0, 0, 0, 0.22);
+}
+
+.kittens-card::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background:
+    linear-gradient(115deg, transparent 0 24%, rgba(255, 255, 255, 0.16) 24% 24.8%, transparent 24.8% 100%),
+    radial-gradient(circle at 78% 82%, rgba(255, 79, 163, 0.28), transparent 30%);
+  pointer-events: none;
+}
+
+.kittens-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.kittens-card h3 {
+  color: #fff7eb;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-shadow:
+    0 0 14px rgba(255, 77, 46, 0.88),
+    0 0 28px rgba(255, 209, 102, 0.34);
+}
+
+.kittens-card p {
+  color: #ffd7aa;
+}
+
+.kittens-card .app-link {
+  color: #2a080d;
+  border: 1px solid rgba(255, 209, 102, 0.88);
+  background: linear-gradient(135deg, #ffd166, #ff7a3d);
+  box-shadow:
+    0 0 18px rgba(255, 77, 46, 0.42),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.32);
+}
+
+.kittens-card .app-link:hover,
+.kittens-card .app-link:focus {
+  color: #2a080d;
+  background: linear-gradient(135deg, #ffef9a, #ff4d2e);
+  box-shadow:
+    0 0 22px rgba(255, 209, 102, 0.5),
+    0 0 34px rgba(255, 77, 46, 0.36);
+}
+
 code {
   font-family: Consolas, "Courier New", monospace;
   font-size: 0.95em;
