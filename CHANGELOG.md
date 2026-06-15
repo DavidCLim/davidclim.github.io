@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.19 - 2026-06-15
+
+- Added a second web game: Exploding Kittens.
+- Built a playable player-vs-bot card game with Defuse, Skip, Attack, See Future, Shuffle, Favor, Cat cards, and one hidden Exploding Kitten.
+- Added the new game to the GitHub Pages home screen with its own fiery card style.
+
 ## v1.18 - 2026-06-15
 
 - Made Human room syncing use a shared move counter instead of device timestamps, so different-device games should stop randomly locking turns.
