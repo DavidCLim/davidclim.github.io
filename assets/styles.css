@@ -25,18 +25,6 @@ body {
   transition: color 220ms ease, background 220ms ease;
 }
 
-body.uno-selected {
-  color: #effcff;
-  background:
-    linear-gradient(rgba(76, 245, 255, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(76, 245, 255, 0.045) 1px, transparent 1px),
-    radial-gradient(circle at 16% 12%, rgba(255, 46, 236, 0.34), transparent 28%),
-    radial-gradient(circle at 82% 8%, rgba(76, 245, 255, 0.28), transparent 30%),
-    radial-gradient(circle at 50% 100%, rgba(139, 92, 255, 0.24), transparent 34%),
-    linear-gradient(145deg, #03040a 0%, #071328 48%, #02040b 100%);
-  background-size: 34px 34px, 34px 34px, auto, auto, auto, auto;
-}
-
 .page {
   width: min(960px, calc(100% - 32px));
   margin: 0 auto;
@@ -54,18 +42,6 @@ body.uno-selected {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-}
-
-body.uno-selected .eyebrow {
-  color: var(--neo-cyan);
-  text-shadow: 0 0 14px rgba(76, 245, 255, 0.85);
-}
-
-body.uno-selected h1,
-body.uno-selected h2 {
-  text-shadow:
-    0 0 14px rgba(76, 245, 255, 0.6),
-    0 0 28px rgba(255, 46, 236, 0.28);
 }
 
 h1,
@@ -89,27 +65,22 @@ h1 {
   line-height: 1.6;
 }
 
-body.uno-selected .lede,
-body.uno-selected .app-card p {
-  color: #d7f8ff;
-}
-
 .apps {
   border-top: 1px solid var(--line);
   padding-top: 32px;
 }
 
-body.uno-selected .apps {
-  border-top-color: rgba(76, 245, 255, 0.34);
-}
-
 .app-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: 1fr;
   gap: 16px;
+  max-width: 680px;
 }
 
 .app-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   min-height: 140px;
   padding: 20px;
   border: 1px solid var(--line);
@@ -119,6 +90,7 @@ body.uno-selected .apps {
 }
 
 .app-card p {
+  flex: 1;
   color: var(--muted);
   line-height: 1.5;
 }
@@ -126,6 +98,7 @@ body.uno-selected .apps {
 .app-link {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: 40px;
   padding: 0 14px;
   border-radius: 6px;
@@ -268,8 +241,7 @@ body.uno-selected .apps {
 }
 
 .uno-card:hover,
-.uno-card:focus-within,
-.uno-card.selected {
+.uno-card:focus-within {
   border-color: rgba(189, 251, 255, 0.95);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.22) inset,
@@ -277,11 +249,6 @@ body.uno-selected .apps {
     0 0 52px rgba(76, 245, 255, 0.48),
     0 0 82px rgba(255, 46, 236, 0.3),
     0 20px 48px rgba(0, 0, 0, 0.26);
-}
-
-.uno-card.selected .app-link::after {
-  border-color: rgba(184, 255, 76, 0.72);
-  box-shadow: 0 0 16px rgba(184, 255, 76, 0.42) inset;
 }
 
 .kittens-card {
@@ -327,21 +294,50 @@ body.uno-selected .apps {
 }
 
 .kittens-card .app-link {
-  color: #2a080d;
-  border: 1px solid rgba(255, 209, 102, 0.88);
-  background: linear-gradient(135deg, #ffd166, #ff7a3d);
+  position: relative;
+  overflow: hidden;
+  min-height: 40px;
+  color: #fff7eb;
+  border: 1px solid rgba(255, 225, 132, 0.92);
+  border-radius: 4px;
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  background:
+    linear-gradient(90deg, rgba(255, 209, 102, 0.44), rgba(255, 77, 46, 0.48), rgba(255, 79, 163, 0.36)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 54%),
+    rgba(46, 6, 13, 0.86);
   box-shadow:
-    0 0 18px rgba(255, 77, 46, 0.42),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.32);
+    0 0 0 1px rgba(255, 255, 255, 0.26) inset,
+    0 0 18px rgba(255, 209, 102, 0.62),
+    0 0 34px rgba(255, 77, 46, 0.58);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-shadow:
+    0 0 10px rgba(255, 247, 235, 0.82),
+    0 0 18px rgba(255, 209, 102, 0.62);
+}
+
+.kittens-card .app-link::before {
+  position: absolute;
+  inset: -80% 12%;
+  content: "";
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.76), transparent);
+  opacity: 0.42;
+  transform: rotate(18deg);
+  pointer-events: none;
 }
 
 .kittens-card .app-link:hover,
 .kittens-card .app-link:focus {
-  color: #2a080d;
-  background: linear-gradient(135deg, #ffef9a, #ff4d2e);
+  color: #ffffff;
+  border-color: #fff1a8;
+  background:
+    linear-gradient(90deg, rgba(255, 241, 168, 0.52), rgba(255, 79, 163, 0.42), rgba(255, 77, 46, 0.44)),
+    rgba(58, 9, 18, 0.78);
   box-shadow:
-    0 0 22px rgba(255, 209, 102, 0.5),
-    0 0 34px rgba(255, 77, 46, 0.36);
+    0 0 0 1px rgba(255, 255, 255, 0.28) inset,
+    0 0 22px rgba(255, 209, 102, 0.72),
+    0 0 42px rgba(255, 77, 46, 0.58),
+    0 0 62px rgba(255, 79, 163, 0.32);
 }
 
 code {
