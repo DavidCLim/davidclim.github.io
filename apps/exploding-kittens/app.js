@@ -15,7 +15,9 @@ const state = {
   botHand: [],
   turn: "player",
   pendingTurns: { player: 1, bot: 1 },
+  difficulty: "medium",
   gameOver: false,
+  revealing: false,
 };
 
 const els = {
@@ -30,10 +32,14 @@ const els = {
   messageTitle: document.querySelector("#message-title"),
   message: document.querySelector("#message"),
   futureView: document.querySelector("#future-view"),
+  difficultyPicker: document.querySelector("#difficulty-picker"),
   newGame: document.querySelector("#new-game"),
   resultModal: document.querySelector("#result-modal"),
   resultTitle: document.querySelector("#result-title"),
   resultButton: document.querySelector("#result-button"),
+  dangerModal: document.querySelector("#danger-modal"),
+  dangerTitle: document.querySelector("#danger-title"),
+  dangerMessage: document.querySelector("#danger-message"),
 };
 
 function makeCard(type) {
@@ -72,6 +78,7 @@ function startGame() {
     botHand: [makeCard("defuse")],
     turn: "player",
     pendingTurns: { player: 1, bot: 1 },
+    revealing: false,
     gameOver: false,
   });
   for (let index = 0; index < 4; index += 1) {
@@ -81,6 +88,7 @@ function startGame() {
   state.deck.push(makeCard("explode"));
   state.deck = shuffle(state.deck);
   els.resultModal.hidden = true;
+  els.dangerModal.hidden = true;
   setMessage("Your turn", "Play an action card, or draw to end your turn.");
   hideFuture();
   render();
@@ -113,15 +121,27 @@ function drawFor(actor) {
 function handleExplosion(actor) {
   const hand = actor === "player" ? state.playerHand : state.botHand;
   const defuseIndex = hand.findIndex((card) => card.type === "defuse");
+  state.revealing = true;
+  render();
+
   if (defuseIndex === -1) {
-    endGame(actor === "player" ? "You exploded" : "You win", actor === "player" ? "No Defuse card was available." : "The bot hit the Exploding Kitten without a Defuse.");
+    showDanger(actor, false);
+    window.setTimeout(() => {
+      state.revealing = false;
+      endGame(actor === "player" ? "You exploded" : "You win", actor === "player" ? "No Defuse card was available." : "The bot hit the Exploding Kitten without a Defuse.");
+    }, 1200);
     return;
   }
-  hand.splice(defuseIndex, 1);
-  const insertAt = Math.floor(Math.random() * (state.deck.length + 1));
-  state.deck.splice(insertAt, 0, makeCard("explode"));
-  setMessage("Defused", `${actor === "player" ? "You used" : "The bot used"} a Defuse card and put the danger back in the pile.`);
-  finishTurn(actor);
+  showDanger(actor, true);
+  window.setTimeout(() => {
+    hand.splice(defuseIndex, 1);
+    const insertAt = Math.floor(Math.random() * (state.deck.length + 1));
+    state.deck.splice(insertAt, 0, makeCard("explode"));
+    state.revealing = false;
+    els.dangerModal.hidden = true;
+    setMessage("Defused", `${actor === "player" ? "You used" : "The bot used"} a Defuse card and put the danger back in the pile.`);
+    finishTurn(actor);
+  }, 1300);
 }
 
 function finishTurn(actor) {
@@ -204,16 +224,29 @@ function botTurn() {
 
 function chooseBotCard() {
   const dangerNearTop = state.deck.slice(-2).some((card) => card.type === "explode");
-  const preferred = dangerNearTop ? ["future", "shuffle", "skip", "attack"] : ["favor", "future"];
+  if (state.difficulty === "easy") {
+    const playable = state.botHand.map((card, index) => ({ card, index })).filter(({ card }) => card.kind === "action");
+    return playable.length && Math.random() > 0.45 ? playable[Math.floor(Math.random() * playable.length)].index : -1;
+  }
+  const preferred = dangerNearTop || state.difficulty === "hard" ? ["future", "shuffle", "skip", "attack", "favor"] : ["favor", "future"];
   for (const type of preferred) {
     const index = state.botHand.findIndex((card) => card.type === type);
-    if (index !== -1 && Math.random() > 0.28) return index;
+    if (index !== -1 && (state.difficulty === "hard" || Math.random() > 0.28)) return index;
   }
   return -1;
 }
 
+function showDanger(actor, canDefuse) {
+  els.dangerTitle.textContent = "Exploding Kitten!";
+  els.dangerMessage.textContent = canDefuse
+    ? `${actor === "player" ? "You drew" : "The bot drew"} the Exploding Kitten, but a Defuse card is ready.`
+    : `${actor === "player" ? "You drew" : "The bot drew"} the Exploding Kitten with no Defuse card left.`;
+  els.dangerModal.hidden = false;
+}
+
 function endGame(title, message) {
   state.gameOver = true;
+  els.dangerModal.hidden = true;
   setMessage(title, message);
   els.resultTitle.textContent = title;
   els.resultButton.textContent = title === "You win" ? "You Win!" : "Play Again";
@@ -237,7 +270,8 @@ function render() {
   els.deckCount.textContent = `${state.deck.length} card${state.deck.length === 1 ? "" : "s"}`;
   els.drawCount.textContent = state.deck.length;
   els.turnLabel.textContent = state.turn === "player" ? "You" : "Bot";
-  els.drawCard.disabled = state.turn !== "player" || state.gameOver;
+  els.drawCard.disabled = state.turn !== "player" || state.gameOver || state.revealing;
+  els.difficultyPicker.querySelectorAll("button").forEach((button) => button.classList.toggle("active", button.dataset.difficulty === state.difficulty));
 
   els.botHand.innerHTML = "";
   state.botHand.forEach(() => {
@@ -252,7 +286,7 @@ function render() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "card-button";
-    button.disabled = state.turn !== "player" || state.gameOver;
+    button.disabled = state.turn !== "player" || state.gameOver || state.revealing;
     button.setAttribute("aria-label", `Play ${card.title}`);
     button.innerHTML = cardMarkup(card);
     button.addEventListener("click", () => playCard(index));
@@ -267,5 +301,11 @@ function cardMarkup(card) {
 els.newGame.addEventListener("click", startGame);
 els.resultButton.addEventListener("click", startGame);
 els.drawCard.addEventListener("click", () => drawFor("player"));
+els.difficultyPicker.addEventListener("click", (event) => {
+  if (!event.target.matches("button[data-difficulty]")) return;
+  state.difficulty = event.target.dataset.difficulty;
+  setMessage("Difficulty changed", `Bot difficulty is now ${state.difficulty}.`);
+  render();
+});
 
 startGame();
