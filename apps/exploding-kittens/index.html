@@ -6,6 +6,7 @@
     <title>Exploding Kittens Web Game</title>
     <meta name="description" content="A small browser card game inspired by Exploding Kittens.">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="features.css">
   </head>
   <body>
     <main class="game-shell">
@@ -17,6 +18,18 @@
         </div>
         <button id="new-game" type="button">New Game</button>
       </header>
+
+      <section class="control-panel" aria-label="Game controls">
+        <div class="control-group">
+          <span>Bot difficulty</span>
+          <div class="segmented" id="difficulty-picker">
+            <button type="button" data-difficulty="easy">Easy</button>
+            <button type="button" data-difficulty="medium" class="active">Medium</button>
+            <button type="button" data-difficulty="hard">Hard</button>
+          </div>
+        </div>
+        <a href="changelog.html" class="changelog-link">Changelog</a>
+      </section>
 
       <section class="status-grid" aria-label="Game status">
         <div>
@@ -66,6 +79,18 @@
       <div class="result-dialog" role="dialog" aria-modal="true" aria-labelledby="result-title">
         <p id="result-title">Game over</p>
         <button id="result-button" type="button">Play Again</button>
+      </div>
+    </div>
+
+    <div id="danger-modal" class="danger-modal" hidden>
+      <div class="danger-dialog" role="alert" aria-live="assertive">
+        <p class="danger-eyebrow">Danger card drawn</p>
+        <h2 id="danger-title">Exploding Kitten!</h2>
+        <div class="danger-card" aria-hidden="true">
+          <span class="danger-burst"></span>
+          <strong>BOOM</strong>
+        </div>
+        <p id="danger-message">Checking for a Defuse card...</p>
       </div>
     </div>
 
