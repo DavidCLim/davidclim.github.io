@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Exploding Kittens Web Game</title>
+    <meta name="description" content="A small browser card game inspired by Exploding Kittens.">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="game-shell">
+      <header class="topbar">
+        <a href="../../" class="home-link">Home</a>
+        <div>
+          <p class="eyebrow">Second web game</p>
+          <h1>Exploding Kittens</h1>
+        </div>
+        <button id="new-game" type="button">New Game</button>
+      </header>
+
+      <section class="status-grid" aria-label="Game status">
+        <div>
+          <span>Your hand</span>
+          <strong id="player-count">0 cards</strong>
+        </div>
+        <div>
+          <span>Bot hand</span>
+          <strong id="bot-count">0 cards</strong>
+        </div>
+        <div>
+          <span>Draw pile</span>
+          <strong id="deck-count">0 cards</strong>
+        </div>
+        <div>
+          <span>Turn</span>
+          <strong id="turn-label">You</strong>
+        </div>
+      </section>
+
+      <section class="table" aria-label="Exploding Kittens table">
+        <section class="bot-panel">
+          <h2>Bot</h2>
+          <div id="bot-hand" class="bot-hand"></div>
+        </section>
+
+        <section class="center-panel">
+          <button id="draw-card" class="draw-pile" type="button">
+            <span>Draw</span>
+            <strong id="draw-count">0</strong>
+          </button>
+          <div class="message-panel" aria-live="polite">
+            <h2 id="message-title">Your turn</h2>
+            <p id="message">Play an action card, or draw to end your turn.</p>
+            <p id="future-view" class="future-view" hidden></p>
+          </div>
+        </section>
+
+        <section class="player-panel">
+          <h2>Your hand</h2>
+          <div id="player-hand" class="player-hand"></div>
+        </section>
+      </section>
+    </main>
+
+    <div id="result-modal" class="result-modal" hidden>
+      <div class="result-dialog" role="dialog" aria-modal="true" aria-labelledby="result-title">
+        <p id="result-title">Game over</p>
+        <button id="result-button" type="button">Play Again</button>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
