@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.20 - 2026-06-15
+
+- Stacked the home page app cards vertically so Exploding Kittens sits below UNO.
+- Matched the Exploding Kittens Launch Game button height to the UNO button and gave it a contrasting neon-gold style.
+- Removed the UNO home-card background switching behavior.
+- Added original illustrated card faces to the Exploding Kittens game cards.
+
 ## v1.19 - 2026-06-15
 
 - Added a second web game: Exploding Kittens.
