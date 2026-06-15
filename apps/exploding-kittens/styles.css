@@ -232,11 +232,11 @@ h2 {
 .card-back {
   position: relative;
   display: grid;
-  align-content: center;
+  align-content: start;
   justify-items: center;
   width: 96px;
-  min-height: 138px;
-  padding: 10px 8px;
+  min-height: 150px;
+  padding: 8px 7px 9px;
   border: 4px solid #2b080d;
   border-radius: 14px;
   color: #2b080d;
@@ -268,6 +268,7 @@ h2 {
 }
 
 .card-back {
+  align-content: center;
   color: #fff7eb;
   background:
     radial-gradient(circle at 50% 30%, rgba(255, 209, 102, 0.36), transparent 24%),
@@ -275,22 +276,385 @@ h2 {
 }
 
 .card-icon {
-  font-size: 2rem;
+  margin-top: 6px;
+  font-size: 1.12rem;
+  font-weight: 900;
   line-height: 1;
+  letter-spacing: 0.05em;
 }
 
 .card-title {
-  margin-top: 8px;
-  font-size: 0.82rem;
+  margin-top: 5px;
+  font-size: 0.72rem;
   font-weight: 900;
   text-transform: uppercase;
 }
 
 .card-text {
-  margin: 6px 0 0;
+  margin: 5px 0 0;
   color: inherit;
-  font-size: 0.68rem;
+  font-size: 0.6rem;
   line-height: 1.2;
+}
+
+.card-art {
+  position: relative;
+  width: 70px;
+  height: 56px;
+  border: 3px solid rgba(43, 8, 13, 0.72);
+  border-radius: 13px;
+  background:
+    radial-gradient(circle at 24% 24%, rgba(255, 255, 255, 0.72), transparent 18%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.3), rgba(43, 8, 13, 0.06));
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.42),
+    0 6px 12px rgba(43, 8, 13, 0.2);
+  overflow: hidden;
+}
+
+.art-core,
+.art-mark {
+  position: absolute;
+  display: block;
+}
+
+.explode .card-art {
+  background:
+    radial-gradient(circle at 50% 54%, #fff1a8 0 12%, transparent 13%),
+    conic-gradient(from 15deg, #2a080d, #ff4d2e, #ffd166, #ff4fa3, #2a080d);
+}
+
+.explode .art-core {
+  left: 20px;
+  top: 14px;
+  width: 30px;
+  height: 28px;
+  border-radius: 50% 50% 45% 45%;
+  background: #fff7eb;
+  box-shadow: 0 0 0 4px #2a080d;
+}
+
+.explode .art-core::before,
+.explode .art-core::after {
+  position: absolute;
+  top: 9px;
+  width: 5px;
+  height: 5px;
+  content: "";
+  border-radius: 50%;
+  background: #2a080d;
+}
+
+.explode .art-core::before {
+  left: 8px;
+}
+
+.explode .art-core::after {
+  right: 8px;
+}
+
+.explode .art-mark {
+  width: 46px;
+  height: 6px;
+  border-radius: 999px;
+  background: #ffd166;
+  transform-origin: center;
+}
+
+.explode .art-mark.one {
+  left: 11px;
+  top: 8px;
+  transform: rotate(24deg);
+}
+
+.explode .art-mark.two {
+  left: 12px;
+  bottom: 9px;
+  transform: rotate(-24deg);
+}
+
+.explode .art-mark.three {
+  left: 8px;
+  top: 25px;
+  background: #ff4fa3;
+}
+
+.defuse .card-art {
+  background:
+    linear-gradient(145deg, #d7fff8, #56f4ff);
+}
+
+.defuse .art-core {
+  left: 20px;
+  top: 12px;
+  width: 30px;
+  height: 32px;
+  border: 4px solid #124d55;
+  border-radius: 8px 8px 13px 13px;
+  background: #fff7eb;
+}
+
+.defuse .art-core::before {
+  position: absolute;
+  left: 4px;
+  top: -13px;
+  width: 14px;
+  height: 13px;
+  content: "";
+  border: 4px solid #124d55;
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+}
+
+.defuse .art-mark.one,
+.defuse .art-mark.two {
+  width: 23px;
+  height: 5px;
+  left: 23px;
+  top: 26px;
+  border-radius: 999px;
+  background: #ff4d2e;
+}
+
+.defuse .art-mark.one {
+  transform: rotate(45deg);
+}
+
+.defuse .art-mark.two {
+  transform: rotate(-45deg);
+}
+
+.skip .card-art {
+  background: linear-gradient(145deg, #ffe1f0, #ff8cc4);
+}
+
+.skip .art-core {
+  left: 16px;
+  top: 10px;
+  width: 38px;
+  height: 38px;
+  border: 7px solid #2a080d;
+  border-radius: 50%;
+}
+
+.skip .art-mark.one {
+  left: 12px;
+  top: 26px;
+  width: 48px;
+  height: 8px;
+  border-radius: 999px;
+  background: #2a080d;
+  transform: rotate(-32deg);
+}
+
+.attack .card-art {
+  background:
+    radial-gradient(circle at 78% 20%, rgba(255, 241, 168, 0.85), transparent 18%),
+    linear-gradient(145deg, #ff4d2e, #2a080d);
+}
+
+.attack .art-core {
+  left: 15px;
+  top: 20px;
+  width: 40px;
+  height: 13px;
+  border-radius: 999px;
+  background: #ffd166;
+  box-shadow: 0 0 0 4px #2a080d;
+  transform: rotate(-18deg);
+}
+
+.attack .art-core::after {
+  position: absolute;
+  right: -13px;
+  top: -8px;
+  content: "";
+  border-left: 18px solid #ffd166;
+  border-top: 14px solid transparent;
+  border-bottom: 14px solid transparent;
+}
+
+.attack .art-mark.one,
+.attack .art-mark.two {
+  left: 18px;
+  width: 16px;
+  height: 8px;
+  border-radius: 999px;
+  background: #fff7eb;
+}
+
+.attack .art-mark.one {
+  top: 10px;
+}
+
+.attack .art-mark.two {
+  bottom: 10px;
+}
+
+.future .card-art {
+  background:
+    radial-gradient(circle at center, #fff7eb 0 15%, transparent 16%),
+    linear-gradient(145deg, #56f4ff, #2c0f46);
+}
+
+.future .art-core {
+  left: 11px;
+  top: 15px;
+  width: 48px;
+  height: 27px;
+  border-radius: 50%;
+  background: #fff7eb;
+  box-shadow: 0 0 0 4px #2a080d;
+}
+
+.future .art-core::before {
+  position: absolute;
+  left: 16px;
+  top: 5px;
+  width: 17px;
+  height: 17px;
+  content: "";
+  border-radius: 50%;
+  background: #2a080d;
+  box-shadow: inset 0 0 0 5px #56f4ff;
+}
+
+.shuffle .card-art {
+  background: linear-gradient(145deg, #fff1a8, #ff7a3d);
+}
+
+.shuffle .art-core,
+.shuffle .art-mark.one {
+  left: 13px;
+  width: 42px;
+  height: 14px;
+  border: solid #2a080d;
+  border-width: 4px 4px 0 0;
+  border-radius: 0 999px 0 0;
+}
+
+.shuffle .art-core {
+  top: 13px;
+}
+
+.shuffle .art-mark.one {
+  top: 31px;
+  transform: rotate(180deg);
+}
+
+.shuffle .art-mark.two,
+.shuffle .art-mark.three {
+  right: 9px;
+  width: 0;
+  height: 0;
+  border-left: 11px solid #2a080d;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+}
+
+.shuffle .art-mark.two {
+  top: 8px;
+}
+
+.shuffle .art-mark.three {
+  bottom: 8px;
+  right: 49px;
+  transform: rotate(180deg);
+}
+
+.favor .card-art {
+  background: linear-gradient(145deg, #ff8cc4, #ffd166);
+}
+
+.favor .art-core,
+.favor .art-mark.one {
+  top: 21px;
+  width: 25px;
+  height: 17px;
+  border-radius: 12px 12px 5px 5px;
+  background: #fff7eb;
+  box-shadow: 0 0 0 4px #2a080d;
+}
+
+.favor .art-core {
+  left: 10px;
+  transform: rotate(12deg);
+}
+
+.favor .art-mark.one {
+  right: 10px;
+  transform: rotate(-12deg);
+}
+
+.favor .art-mark.two {
+  left: 29px;
+  top: 17px;
+  width: 12px;
+  height: 22px;
+  border-radius: 999px;
+  background: #ff4d2e;
+}
+
+.cat .card-art {
+  background:
+    radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.62), transparent 18%),
+    linear-gradient(145deg, #fff6df, #ffbf69);
+}
+
+.cat .art-core {
+  left: 18px;
+  top: 15px;
+  width: 34px;
+  height: 30px;
+  border-radius: 45% 45% 50% 50%;
+  background: #fff7eb;
+  box-shadow: 0 0 0 4px #2a080d;
+}
+
+.cat .art-core::before,
+.cat .art-core::after {
+  position: absolute;
+  top: -9px;
+  content: "";
+  border-bottom: 15px solid #fff7eb;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+}
+
+.cat .art-core::before {
+  left: 0;
+  transform: rotate(-18deg);
+}
+
+.cat .art-core::after {
+  right: 0;
+  transform: rotate(18deg);
+}
+
+.cat .art-mark.one,
+.cat .art-mark.two {
+  top: 27px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #2a080d;
+}
+
+.cat .art-mark.one {
+  left: 28px;
+}
+
+.cat .art-mark.two {
+  right: 28px;
+}
+
+.cat .art-mark.three {
+  left: 33px;
+  top: 35px;
+  width: 8px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ff4d2e;
 }
 
 .card-button {
