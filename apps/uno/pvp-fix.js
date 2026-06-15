@@ -3,6 +3,7 @@ state.roomCode = state.roomCode || "";
 state.roomJoined = state.roomJoined || false;
 state.roomRole = state.roomRole || "";
 state.roomUpdatedAt = state.roomUpdatedAt || 0;
+state.roomVersion = state.roomVersion || 0;
 
 const roomStoragePrefix = "uno-david-room-";
 const peerRoomPrefix = "uno-david-";
@@ -43,11 +44,17 @@ function setupConnection(connection) {
     roomTransport.ready = true;
     roomTransport.mode = "online";
     if (state.roomRole === "player1") sendRoomState();
+    if (state.roomRole === "player2") requestRoomState();
     setMessage(state.roomRole === "player1" ? "Player 2 connected" : "Room connected", `Room ${state.roomCode} is online.`);
     render();
   });
   connection.on("data", (message) => {
-    if (!message || message.type !== "state") return;
+    if (!message) return;
+    if (message.type === "request-state") {
+      sendRoomState();
+      return;
+    }
+    if (message.type !== "state") return;
     if (applyRoomState(message.room)) {
       if (state.roomRole === "player1") sendRoomState();
       setMessage(`${currentPlayerName()}'s turn`, `Room ${state.roomCode} updated online.`);
@@ -105,10 +112,16 @@ function sendRoomState() {
   roomTransport.connection.send({
     type: "state",
     room: {
+      version: state.roomVersion || 0,
       updatedAt: state.roomUpdatedAt || Date.now(),
       state: snapshotRoomState(),
     },
   });
+}
+
+function requestRoomState() {
+  if (!roomTransport.connection || !roomTransport.connection.open) return;
+  roomTransport.connection.send({ type: "request-state" });
 }
 
 function roomStorageKey(code = state.roomCode) {
@@ -131,13 +144,16 @@ function snapshotRoomState() {
     flipSide: state.flipSide,
     roomCode: state.roomCode,
     roomJoined: true,
+    roomVersion: state.roomVersion || 0,
   };
 }
 
 function saveRoomState() {
   if (!isPvpMode() || !state.roomCode || !state.roomRole) return;
+  state.roomVersion = (Number(state.roomVersion) || 0) + 1;
   state.roomUpdatedAt = Date.now();
   localStorage.setItem(roomStorageKey(), JSON.stringify({
+    version: state.roomVersion,
     updatedAt: state.roomUpdatedAt,
     state: snapshotRoomState(),
   }));
@@ -154,10 +170,15 @@ function loadRoomState(code) {
   }
 }
 
+function roomVersion(room) {
+  return Number(room?.version || room?.state?.roomVersion || room?.updatedAt || 0);
+}
+
 function applyRoomState(room) {
-  if (!room || !room.state || room.updatedAt <= state.roomUpdatedAt) return false;
+  const incomingVersion = roomVersion(room);
+  if (!room || !room.state || incomingVersion <= (Number(state.roomVersion) || 0)) return false;
   const roomRole = state.roomRole;
-  Object.assign(state, room.state, { roomRole, roomUpdatedAt: room.updatedAt });
+  Object.assign(state, room.state, { roomRole, roomUpdatedAt: room.updatedAt || Date.now(), roomVersion: incomingVersion });
   return true;
 }
 
@@ -393,11 +414,13 @@ pvpEls.opponentPicker.addEventListener("click", (event) => {
     state.roomCode = "";
     state.roomJoined = false;
     state.roomRole = "";
+    state.roomVersion = 0;
     closeOnlineRoom();
   } else {
     state.roomRole = "player1";
     state.roomCode = generateRoomCode();
     state.roomJoined = true;
+    state.roomVersion = 0;
   }
   startGame();
 }, true);
@@ -408,6 +431,7 @@ pvpEls.hostRoom.addEventListener("click", (event) => {
   state.roomRole = "player1";
   state.roomCode = generateRoomCode();
   state.roomJoined = true;
+  state.roomVersion = 0;
   saveRoomState();
   if (!hostOnlineRoom()) setMessage("Room hosted", `Room code ${state.roomCode} is ready on this device. Online helper did not load.`);
   render();
@@ -425,6 +449,7 @@ pvpEls.joinRoom.addEventListener("click", (event) => {
   state.opponent = "human";
   state.roomCode = code;
   state.roomJoined = true;
+  state.roomVersion = 0;
   if (!joinOnlineRoom(code)) {
     const room = loadRoomState(code);
     if (!room) {
