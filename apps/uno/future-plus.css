@@ -38,3 +38,13 @@ body.is-your-turn #turn-heading {
     0 0 24px rgba(255, 159, 28, 0.48);
   animation: turn-glow 1.5s ease-in-out infinite alternate;
 }
+
+@keyframes turn-glow {
+  from {
+    filter: brightness(1);
+  }
+
+  to {
+    filter: brightness(1.22);
+  }
+}
