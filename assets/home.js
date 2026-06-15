@@ -1,22 +1,29 @@
 const unoCard = document.querySelector("[data-theme-target='uno']");
+const unoLink = unoCard?.querySelector(".app-link");
 
 function setUnoSelected(selected) {
   document.body.classList.toggle("uno-selected", selected);
   unoCard?.classList.toggle("selected", selected);
+  unoLink?.setAttribute("aria-disabled", selected ? "false" : "true");
 }
 
 if (unoCard) {
-  unoCard.addEventListener("mouseenter", () => setUnoSelected(true));
-  unoCard.addEventListener("focusin", () => setUnoSelected(true));
-  unoCard.addEventListener("click", () => setUnoSelected(true));
-  unoCard.addEventListener("mouseleave", () => {
-    if (!unoCard.contains(document.activeElement)) setUnoSelected(false);
+  setUnoSelected(false);
+
+  unoCard.addEventListener("click", (event) => {
+    if (!unoCard.classList.contains("selected")) {
+      event.preventDefault();
+      setUnoSelected(true);
+    }
   });
-  unoCard.addEventListener("focusout", () => {
-    window.setTimeout(() => {
-      if (!unoCard.contains(document.activeElement)) setUnoSelected(false);
-    }, 0);
+
+  unoLink?.addEventListener("click", (event) => {
+    if (!unoCard.classList.contains("selected")) {
+      event.preventDefault();
+      setUnoSelected(true);
+    }
   });
+
   document.addEventListener("pointerdown", (event) => {
     if (!unoCard.contains(event.target)) setUnoSelected(false);
   });
