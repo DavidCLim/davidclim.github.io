@@ -144,16 +144,19 @@ body.uno-selected .apps {
 .uno-card .app-link {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(118, 244, 255, 0.95);
+  border: 1px solid rgba(145, 249, 255, 1);
+  border-radius: 4px;
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
   color: #ffffff;
   background:
-    linear-gradient(90deg, rgba(76, 245, 255, 0.24), rgba(255, 46, 236, 0.24)),
-    rgba(2, 8, 22, 0.42);
+    linear-gradient(90deg, rgba(76, 245, 255, 0.34), rgba(139, 92, 255, 0.26), rgba(255, 46, 236, 0.3)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.13), transparent 50%),
+    rgba(1, 10, 27, 0.78);
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.2) inset,
-    0 0 14px rgba(76, 245, 255, 0.72),
-    0 0 30px rgba(76, 245, 255, 0.42),
-    0 0 46px rgba(79, 115, 255, 0.28);
+    0 0 0 1px rgba(255, 255, 255, 0.3) inset,
+    0 0 16px rgba(76, 245, 255, 0.95),
+    0 0 34px rgba(76, 245, 255, 0.62),
+    0 0 56px rgba(79, 115, 255, 0.38);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   text-shadow:
@@ -168,6 +171,15 @@ body.uno-selected .apps {
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.72), transparent);
   opacity: 0.48;
   transform: rotate(18deg);
+  pointer-events: none;
+}
+
+.uno-card .app-link::after {
+  position: absolute;
+  inset: 5px;
+  content: "";
+  border: 1px solid rgba(184, 255, 76, 0.28);
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
   pointer-events: none;
 }
 
@@ -189,19 +201,23 @@ body.uno-selected .apps {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  border-color: rgba(76, 245, 255, 0.48);
+  border: 1px solid rgba(124, 247, 255, 0.92);
+  border-radius: 6px;
+  clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%, 0 18px);
   background:
+    linear-gradient(120deg, transparent 0 16%, rgba(255, 255, 255, 0.18) 16% 16.6%, transparent 16.6% 100%),
     linear-gradient(rgba(118, 244, 255, 0.12) 1px, transparent 1px),
     linear-gradient(90deg, rgba(118, 244, 255, 0.1) 1px, transparent 1px),
-    radial-gradient(circle at 12% 18%, rgba(76, 245, 255, 0.34), transparent 28%),
-    radial-gradient(circle at 88% 0%, rgba(255, 46, 236, 0.28), transparent 30%),
-    linear-gradient(135deg, rgba(6, 25, 62, 0.92), rgba(23, 5, 54, 0.88) 54%, rgba(2, 18, 30, 0.92));
-  background-size: 18px 18px, 18px 18px, auto, auto, auto;
+    radial-gradient(circle at 12% 18%, rgba(76, 245, 255, 0.58), transparent 28%),
+    radial-gradient(circle at 88% 0%, rgba(255, 46, 236, 0.46), transparent 30%),
+    radial-gradient(circle at 75% 92%, rgba(184, 255, 76, 0.24), transparent 26%),
+    linear-gradient(135deg, rgba(2, 18, 48, 0.96), rgba(35, 7, 76, 0.92) 54%, rgba(1, 28, 44, 0.96));
+  background-size: auto, 18px 18px, 18px 18px, auto, auto, auto, auto;
   box-shadow:
-    0 0 0 1px rgba(148, 248, 255, 0.48) inset,
-    0 0 18px rgba(76, 245, 255, 0.8),
-    0 0 46px rgba(76, 245, 255, 0.42),
-    0 0 72px rgba(89, 96, 255, 0.28),
+    0 0 0 1px rgba(228, 254, 255, 0.26) inset,
+    0 0 20px rgba(76, 245, 255, 0.92),
+    0 0 52px rgba(76, 245, 255, 0.56),
+    0 0 86px rgba(89, 96, 255, 0.38),
     0 18px 45px rgba(0, 0, 0, 0.24);
   transform: translateY(-2px);
 }
@@ -240,6 +256,8 @@ body.uno-selected .apps {
 
 .uno-card h3 {
   color: #ffffff;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   text-shadow:
     0 0 12px rgba(76, 245, 255, 0.88),
     0 0 26px rgba(255, 46, 236, 0.36);
@@ -250,7 +268,8 @@ body.uno-selected .apps {
 }
 
 .uno-card:hover,
-.uno-card:focus-within {
+.uno-card:focus-within,
+.uno-card.selected {
   border-color: rgba(189, 251, 255, 0.95);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.22) inset,
@@ -258,6 +277,11 @@ body.uno-selected .apps {
     0 0 52px rgba(76, 245, 255, 0.48),
     0 0 82px rgba(255, 46, 236, 0.3),
     0 20px 48px rgba(0, 0, 0, 0.26);
+}
+
+.uno-card.selected .app-link::after {
+  border-color: rgba(184, 255, 76, 0.72);
+  box-shadow: 0 0 16px rgba(184, 255, 76, 0.42) inset;
 }
 
 code {
