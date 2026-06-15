@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.18 - 2026-06-15
+
+- Made Human room syncing use a shared move counter instead of device timestamps, so different-device games should stop randomly locking turns.
+- Added a room state request when Player 2 connects, so joined devices can recover the current game state more reliably.
+- Kept the GitHub Pages background from changing when someone clicks outside the UNO app card.
+
 ## v1.17 - 2026-06-15
 
 - Made the home page UNO app card/button more futuristic all the time, with a stronger neon panel, light-blue glow, and white launch text.
