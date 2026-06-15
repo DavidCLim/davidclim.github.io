@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.17 - 2026-06-15
+
+- Made the home page UNO app card/button more futuristic all the time, with a stronger neon panel, light-blue glow, and white launch text.
+- Changed the home page behavior so clicking the UNO card selects it and changes the background; Launch Game opens only after the card has been selected.
+- Kept UNO card movement simple without extra animations.
+- Moved the gold turn glow onto the turn heading only, so the draw pile button no longer glows.
+
 ## v1.16 - 2026-06-14
 
 - Kept the home page UNO app button in the futuristic style at all times while only the page background changes on selection.
