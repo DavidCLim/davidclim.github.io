@@ -23,8 +23,4 @@ if (unoCard) {
       setUnoSelected(true);
     }
   });
-
-  document.addEventListener("pointerdown", (event) => {
-    if (!unoCard.contains(event.target)) setUnoSelected(false);
-  });
 }
