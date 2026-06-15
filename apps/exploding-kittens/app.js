@@ -261,7 +261,7 @@ function render() {
 }
 
 function cardMarkup(card) {
-  return `<div class="card ${card.kind}"><span class="card-icon">${card.icon}</span><strong class="card-title">${card.title}</strong><p class="card-text">${card.text}</p></div>`;
+  return `<div class="card ${card.kind} ${card.type}"><div class="card-art" aria-hidden="true"><span class="art-core"></span><span class="art-mark one"></span><span class="art-mark two"></span><span class="art-mark three"></span></div><span class="card-icon">${card.icon}</span><strong class="card-title">${card.title}</strong><p class="card-text">${card.text}</p></div>`;
 }
 
 els.newGame.addEventListener("click", startGame);
