@@ -6,7 +6,7 @@
     <title>Exploding Kittens Web Game</title>
     <meta name="description" content="A small browser card game inspired by Exploding Kittens.">
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="features.css?v=1.4">
+    <link rel="stylesheet" href="features.css?v=1.5">
   </head>
   <body>
     <main class="game-shell">
@@ -19,15 +19,15 @@
         <button id="new-game" type="button">New Game</button>
       </header>
 
-      <section class="control-panel" aria-label="Game controls">
-        <div class="control-group">
+      <section class="controls" aria-label="Game controls">
+        <div>
           <span>Opponent</span>
           <div class="segmented" id="opponent-picker">
             <button type="button" data-opponent="bot" class="active">Bot</button>
             <button type="button" data-opponent="human">Human</button>
           </div>
         </div>
-        <div class="control-group" id="difficulty-group">
+        <div id="difficulty-group">
           <span>Bot difficulty</span>
           <div class="segmented" id="difficulty-picker">
             <button type="button" data-difficulty="easy">Easy</button>
@@ -52,11 +52,7 @@
         <p id="room-status">Host a room to make a 4-number code, or enter a code to join.</p>
       </section>
 
-      <section class="status-grid" aria-label="Game status">
-        <div>
-          <span id="player-count-label">Your hand</span>
-          <strong id="player-count">0 cards</strong>
-        </div>
+      <section class="scoreboard" aria-label="Game status">
         <div>
           <span id="bot-count-label">Bot hand</span>
           <strong id="bot-count">0 cards</strong>
@@ -69,30 +65,38 @@
           <span>Turn</span>
           <strong id="turn-label">You</strong>
         </div>
+        <div>
+          <span id="player-count-label">Your hand</span>
+          <strong id="player-count">0 cards</strong>
+        </div>
       </section>
 
       <section class="table" aria-label="Exploding Kittens table">
-        <section class="bot-panel">
+        <div class="opponent-area">
           <h2 id="opponent-title">Bot</h2>
-          <div id="bot-hand" class="bot-hand"></div>
-        </section>
+          <div id="bot-hand" class="bot-hand computer-hand"></div>
+        </div>
 
-        <section class="center-panel">
-          <button id="draw-card" class="draw-pile" type="button">
-            <span>Draw</span>
-            <strong id="draw-count">0</strong>
-          </button>
-          <div class="message-panel" aria-live="polite">
-            <h2 id="message-title">Your turn</h2>
-            <p id="message">Play an action card, or draw to end your turn.</p>
-            <p id="future-view" class="future-view" hidden></p>
+        <div class="center-area">
+          <div>
+            <p class="pile-label">Draw pile</p>
+            <button id="draw-card" class="draw-pile deck-card" type="button">
+              <span>Draw</span>
+              <strong id="draw-count">0</strong>
+            </button>
           </div>
-        </section>
+        </div>
 
-        <section class="player-panel">
-          <h2 id="player-title">Your hand</h2>
-          <div id="player-hand" class="player-hand"></div>
+        <section class="message-panel" aria-live="polite">
+          <h2 id="message-title">Your turn</h2>
+          <p id="message">Play an action card, or draw to end your turn.</p>
+          <p id="future-view" class="future-view" hidden></p>
         </section>
+      </section>
+
+      <section class="player-area" aria-label="Your hand">
+        <h2 id="player-title">Your hand</h2>
+        <div id="player-hand" class="player-hand"></div>
       </section>
     </main>
 
