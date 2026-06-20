@@ -6,7 +6,7 @@
     <title>Exploding Kittens Web Game</title>
     <meta name="description" content="A small browser card game inspired by Exploding Kittens.">
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="features.css">
+    <link rel="stylesheet" href="features.css?v=1.4">
   </head>
   <body>
     <main class="game-shell">
@@ -21,6 +21,13 @@
 
       <section class="control-panel" aria-label="Game controls">
         <div class="control-group">
+          <span>Opponent</span>
+          <div class="segmented" id="opponent-picker">
+            <button type="button" data-opponent="bot" class="active">Bot</button>
+            <button type="button" data-opponent="human">Human</button>
+          </div>
+        </div>
+        <div class="control-group" id="difficulty-group">
           <span>Bot difficulty</span>
           <div class="segmented" id="difficulty-picker">
             <button type="button" data-difficulty="easy">Easy</button>
@@ -31,13 +38,27 @@
         <a href="changelog.html" class="changelog-link">Changelog</a>
       </section>
 
+      <section class="room-panel" id="room-panel" hidden aria-label="Player vs Player room">
+        <div>
+          <span>Room code</span>
+          <strong id="room-code">----</strong>
+        </div>
+        <button id="host-room" type="button">Host Room</button>
+        <label>
+          <span>Join code</span>
+          <input id="join-code" type="text" inputmode="numeric" maxlength="4" placeholder="1234">
+        </label>
+        <button id="join-room" type="button">Join Room</button>
+        <p id="room-status">Host a room to make a 4-number code, or enter a code to join.</p>
+      </section>
+
       <section class="status-grid" aria-label="Game status">
         <div>
-          <span>Your hand</span>
+          <span id="player-count-label">Your hand</span>
           <strong id="player-count">0 cards</strong>
         </div>
         <div>
-          <span>Bot hand</span>
+          <span id="bot-count-label">Bot hand</span>
           <strong id="bot-count">0 cards</strong>
         </div>
         <div>
@@ -52,7 +73,7 @@
 
       <section class="table" aria-label="Exploding Kittens table">
         <section class="bot-panel">
-          <h2>Bot</h2>
+          <h2 id="opponent-title">Bot</h2>
           <div id="bot-hand" class="bot-hand"></div>
         </section>
 
@@ -69,7 +90,7 @@
         </section>
 
         <section class="player-panel">
-          <h2>Your hand</h2>
+          <h2 id="player-title">Your hand</h2>
           <div id="player-hand" class="player-hand"></div>
         </section>
       </section>
@@ -95,6 +116,7 @@
       </div>
     </div>
 
-    <script src="app.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
+    <script src="app.js?v=1.4"></script>
   </body>
 </html>
