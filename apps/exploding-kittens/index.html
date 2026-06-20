@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Exploding Kittens Web Game</title>
+    <title>EXPLODING KITTENS Web Game</title>
     <meta name="description" content="A small browser card game inspired by Exploding Kittens.">
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="features.css?v=1.5">
+    <link rel="stylesheet" href="features.css?v=1.6">
   </head>
   <body>
     <main class="game-shell">
@@ -14,7 +14,7 @@
         <a href="../../" class="home-link">Home</a>
         <div>
           <p class="eyebrow">Second web game</p>
-          <h1>Exploding Kittens</h1>
+          <h1>EXPLODING KITTENS</h1>
         </div>
         <button id="new-game" type="button">New Game</button>
       </header>
@@ -53,19 +53,19 @@
       </section>
 
       <section class="scoreboard" aria-label="Game status">
-        <div>
+        <div class="stat-card stat-opponent">
           <span id="bot-count-label">Bot hand</span>
           <strong id="bot-count">0 cards</strong>
         </div>
-        <div>
+        <div class="stat-card stat-deck">
           <span>Draw pile</span>
           <strong id="deck-count">0 cards</strong>
         </div>
-        <div>
+        <div class="stat-card stat-turn">
           <span>Turn</span>
           <strong id="turn-label">You</strong>
         </div>
-        <div>
+        <div class="stat-card stat-player">
           <span id="player-count-label">Your hand</span>
           <strong id="player-count">0 cards</strong>
         </div>
