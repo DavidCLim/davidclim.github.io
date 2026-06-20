@@ -83,14 +83,15 @@
     </div>
 
     <div id="danger-modal" class="danger-modal" hidden>
-      <div class="danger-dialog" role="alert" aria-live="assertive">
+      <div class="danger-dialog" role="alertdialog" aria-modal="true" aria-labelledby="danger-title" aria-describedby="danger-message">
         <p class="danger-eyebrow">Danger card drawn</p>
         <h2 id="danger-title">Exploding Kitten!</h2>
         <div class="danger-card" aria-hidden="true">
           <span class="danger-burst"></span>
           <strong>BOOM</strong>
         </div>
-        <p id="danger-message">Checking for a Defuse card...</p>
+        <p id="danger-message">You drew an Exploding Kitten.</p>
+        <button id="danger-action" class="danger-action" type="button">Defuse</button>
       </div>
     </div>
 
