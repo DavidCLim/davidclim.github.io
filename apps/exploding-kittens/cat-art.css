@@ -1,0 +1,494 @@
+/* Original David Edition cat art layer. It is inspired by the feel of the tabletop game without copying official card artwork. */
+.card,
+.card-back {
+  width: 104px;
+  min-height: 154px;
+}
+
+.card {
+  overflow: hidden;
+}
+
+.card .card-art {
+  isolation: isolate;
+  width: 84px;
+  height: 94px;
+  margin: 25px auto 2px;
+  border: 4px solid #111111;
+  border-radius: 13px;
+  background:
+    radial-gradient(circle at 22% 16%, rgba(255, 255, 255, 0.92), transparent 18%),
+    linear-gradient(155deg, #fff6d7 0%, #ffd16b 100%);
+  box-shadow:
+    inset 0 0 0 3px rgba(255, 255, 255, 0.58),
+    0 7px 0 rgba(17, 17, 17, 0.18),
+    0 11px 18px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  transform: rotate(-2deg);
+}
+
+.card .card-art::before,
+.card .card-art::after,
+.card .art-core,
+.card .art-core::before,
+.card .art-core::after,
+.card .art-mark,
+.card .art-mark::before,
+.card .art-mark::after {
+  box-sizing: border-box;
+}
+
+.card .card-art::before {
+  position: absolute;
+  z-index: 1;
+  left: 10px;
+  top: 8px;
+  width: 64px;
+  height: 58px;
+  content: "";
+  border: 5px solid #111111;
+  border-radius: 48% 48% 54% 54%;
+  background:
+    radial-gradient(circle at 32% 46%, #111111 0 4px, transparent 5px),
+    radial-gradient(circle at 67% 46%, #111111 0 4px, transparent 5px),
+    radial-gradient(circle at 50% 61%, #f15b4a 0 5px, transparent 6px),
+    linear-gradient(145deg, #fff9e8 0%, #ffdca0 100%);
+}
+
+.card .card-art::after {
+  position: absolute;
+  z-index: 0;
+  left: 9px;
+  top: 0;
+  width: 66px;
+  height: 30px;
+  content: "";
+  background:
+    linear-gradient(135deg, transparent 0 33%, #111111 34% 45%, #fff9e8 46% 100%) left top / 30px 30px no-repeat,
+    linear-gradient(225deg, transparent 0 33%, #111111 34% 45%, #fff9e8 46% 100%) right top / 30px 30px no-repeat;
+}
+
+.card .art-core {
+  z-index: 2;
+  left: 23px;
+  top: 43px;
+  width: 38px;
+  height: 26px;
+  border: 4px solid #111111;
+  border-radius: 48% 48% 56% 56%;
+  background: #fff8e8;
+  box-shadow: none;
+  transform: none;
+}
+
+.card .art-core::before,
+.card .art-core::after {
+  position: absolute;
+  top: 9px;
+  width: 24px;
+  height: 3px;
+  content: "";
+  border-radius: 999px;
+  background: #111111;
+  box-shadow: 0 8px 0 #111111;
+}
+
+.card .art-core::before {
+  left: -28px;
+  transform: rotate(9deg);
+}
+
+.card .art-core::after {
+  right: -28px;
+  transform: rotate(-9deg);
+}
+
+.card .art-mark {
+  z-index: 3;
+  display: block;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.card .art-mark.one,
+.card .art-mark.two {
+  top: 29px;
+  width: 10px;
+  height: 12px;
+  border-radius: 999px;
+  background: #111111;
+}
+
+.card .art-mark.one { left: 27px; }
+.card .art-mark.two { right: 27px; }
+
+.card .art-mark.three {
+  left: 38px;
+  top: 56px;
+  width: 9px;
+  height: 7px;
+  border-radius: 50%;
+  background: #111111;
+}
+
+.card .card-icon {
+  margin-top: 4px;
+  color: inherit;
+  font-size: 0.66rem;
+  letter-spacing: 0;
+}
+
+.card .card-title {
+  margin-top: 4px;
+  font-size: 0.66rem;
+  line-height: 1.02;
+}
+
+.card .card-text {
+  display: none;
+}
+
+.explode .card-art {
+  background:
+    radial-gradient(circle at 50% 48%, #fff3a6 0 13%, transparent 14%),
+    conic-gradient(from 12deg, #ffdf4e, #ff4d2e, #2a080d, #ff4fa3, #ffd166, #ffdf4e);
+}
+
+.explode .card-art::before {
+  background:
+    radial-gradient(circle at 34% 46%, #111111 0 4px, transparent 5px),
+    radial-gradient(circle at 66% 46%, #111111 0 4px, transparent 5px),
+    radial-gradient(circle at 50% 61%, #ff4d2e 0 5px, transparent 6px),
+    linear-gradient(145deg, #fff9e8 0%, #ffb16a 100%);
+}
+
+.explode .art-mark.one,
+.explode .art-mark.two {
+  top: 33px;
+  width: 15px;
+  height: 5px;
+  border-radius: 999px;
+  background: #111111;
+}
+
+.explode .art-mark.one {
+  left: 25px;
+  transform: rotate(28deg);
+}
+
+.explode .art-mark.two {
+  right: 25px;
+  transform: rotate(-28deg);
+}
+
+.explode .art-mark.three {
+  left: 32px;
+  top: 72px;
+  width: 20px;
+  height: 9px;
+  border: 3px solid #111111;
+  border-radius: 0 0 18px 18px;
+  background: #ff4d2e;
+}
+
+.defuse .card-art {
+  background:
+    radial-gradient(circle at 20% 17%, rgba(255, 255, 255, 0.9), transparent 18%),
+    linear-gradient(155deg, #d7fff8 0%, #56f4ff 100%);
+}
+
+.defuse .art-mark.three {
+  left: 31px;
+  top: 69px;
+  width: 22px;
+  height: 18px;
+  border: 4px solid #111111;
+  border-radius: 4px 4px 8px 8px;
+  background: #ffd166;
+}
+
+.defuse .art-mark.three::before {
+  position: absolute;
+  left: 3px;
+  top: -15px;
+  width: 10px;
+  height: 13px;
+  content: "";
+  border: 4px solid #111111;
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+}
+
+.skip .card-art {
+  background:
+    radial-gradient(circle at 22% 18%, rgba(255, 255, 255, 0.9), transparent 18%),
+    linear-gradient(155deg, #ffe1f0 0%, #ff8cc4 100%);
+}
+
+.skip .art-mark.three {
+  left: 20px;
+  top: 70px;
+  width: 44px;
+  height: 20px;
+  border: 5px solid #111111;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.skip .art-mark.three::after {
+  position: absolute;
+  left: -4px;
+  top: 4px;
+  width: 47px;
+  height: 5px;
+  content: "";
+  border-radius: 999px;
+  background: #111111;
+  transform: rotate(-28deg);
+}
+
+.attack .card-art {
+  background:
+    radial-gradient(circle at 78% 18%, #fff3a6 0 12%, transparent 13%),
+    linear-gradient(155deg, #ff4d2e 0%, #2a080d 100%);
+}
+
+.attack .card-art::before {
+  background:
+    radial-gradient(circle at 34% 46%, #111111 0 4px, transparent 5px),
+    radial-gradient(circle at 66% 46%, #111111 0 4px, transparent 5px),
+    radial-gradient(circle at 50% 61%, #ff4d2e 0 5px, transparent 6px),
+    linear-gradient(145deg, #fff0d3 0%, #ffb36f 100%);
+}
+
+.attack .art-mark.three {
+  left: 19px;
+  top: 70px;
+  width: 43px;
+  height: 12px;
+  border-radius: 999px;
+  background: #ffd166;
+  box-shadow: 0 0 0 4px #111111;
+  transform: rotate(-12deg);
+}
+
+.attack .art-mark.three::after {
+  position: absolute;
+  right: -14px;
+  top: -8px;
+  width: 0;
+  height: 0;
+  content: "";
+  border-left: 18px solid #111111;
+  border-top: 14px solid transparent;
+  border-bottom: 14px solid transparent;
+}
+
+.attack .art-mark.three::before {
+  position: absolute;
+  right: -8px;
+  top: -4px;
+  width: 0;
+  height: 0;
+  content: "";
+  border-left: 12px solid #ffd166;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  z-index: 1;
+}
+
+.future .card-art {
+  background:
+    radial-gradient(circle at 50% 70%, rgba(255, 255, 255, 0.5), transparent 24%),
+    linear-gradient(155deg, #56f4ff 0%, #2c0f46 100%);
+}
+
+.future .card-art::before {
+  background:
+    radial-gradient(circle at 34% 46%, #111111 0 4px, transparent 5px),
+    radial-gradient(circle at 66% 46%, #111111 0 4px, transparent 5px),
+    radial-gradient(circle at 50% 61%, #56f4ff 0 5px, transparent 6px),
+    linear-gradient(145deg, #fff9e8 0%, #d7fff8 100%);
+}
+
+.future .art-mark.three {
+  left: 25px;
+  top: 68px;
+  width: 34px;
+  height: 20px;
+  border: 4px solid #111111;
+  border-radius: 50%;
+  background: #fff7eb;
+}
+
+.future .art-mark.three::before {
+  position: absolute;
+  left: 9px;
+  top: 2px;
+  width: 12px;
+  height: 12px;
+  content: "";
+  border: 3px solid #111111;
+  border-radius: 50%;
+  background: #56f4ff;
+}
+
+.shuffle .card-art {
+  background:
+    radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.9), transparent 18%),
+    linear-gradient(155deg, #fff1a8 0%, #ff7a3d 100%);
+}
+
+.shuffle .art-mark.three {
+  left: 20px;
+  top: 69px;
+  width: 45px;
+  height: 24px;
+  background: transparent;
+}
+
+.shuffle .art-mark.three::before,
+.shuffle .art-mark.three::after {
+  position: absolute;
+  width: 35px;
+  height: 13px;
+  content: "";
+  border: solid #111111;
+  border-width: 4px 4px 0 0;
+  border-radius: 0 999px 0 0;
+}
+
+.shuffle .art-mark.three::before {
+  left: 2px;
+  top: 0;
+}
+
+.shuffle .art-mark.three::after {
+  right: 2px;
+  bottom: 0;
+  transform: rotate(180deg);
+}
+
+.favor .card-art {
+  background:
+    radial-gradient(circle at 23% 18%, rgba(255, 255, 255, 0.9), transparent 18%),
+    linear-gradient(155deg, #ff8cc4 0%, #ffd166 100%);
+}
+
+.favor .art-mark.three {
+  left: 31px;
+  top: 68px;
+  width: 22px;
+  height: 22px;
+  background: #ff4d2e;
+  transform: rotate(45deg);
+}
+
+.favor .art-mark.three::before,
+.favor .art-mark.three::after {
+  position: absolute;
+  content: "";
+  border-radius: 50%;
+  background: #ff4d2e;
+}
+
+.favor .art-mark.three::before {
+  left: -8px;
+  top: 0;
+  width: 22px;
+  height: 22px;
+}
+
+.favor .art-mark.three::after {
+  left: 0;
+  top: -8px;
+  width: 22px;
+  height: 22px;
+}
+
+.cat .card-art {
+  background:
+    radial-gradient(circle at 22% 16%, rgba(255, 255, 255, 0.92), transparent 18%),
+    linear-gradient(155deg, #fff6df 0%, #ffbf69 100%);
+}
+
+.cat .art-mark.three {
+  left: 34px;
+  top: 70px;
+  width: 16px;
+  height: 13px;
+  border: 3px solid #111111;
+  border-top: 0;
+  border-radius: 0 0 999px 999px;
+  background: transparent;
+}
+
+.cat .art-mark.three::before,
+.cat .art-mark.three::after {
+  position: absolute;
+  top: -39px;
+  width: 8px;
+  height: 17px;
+  content: "";
+  border-radius: 999px;
+  background: rgba(255, 122, 61, 0.8);
+}
+
+.cat .art-mark.three::before {
+  left: -13px;
+  transform: rotate(-19deg);
+}
+
+.cat .art-mark.three::after {
+  right: -13px;
+  transform: rotate(19deg);
+}
+
+.card-back {
+  display: grid;
+  place-items: center;
+  padding: 8px;
+  border-color: #111111;
+  color: #fff7eb;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255, 209, 102, 0.32), transparent 30%),
+    linear-gradient(155deg, #2a080d, #6a1726 58%, #ff4d2e);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.card-back::before {
+  width: 64px;
+  height: 64px;
+  content: "CAT";
+  display: grid;
+  place-items: center;
+  border: 4px solid #111111;
+  border-radius: 50% 45% 52% 48%;
+  color: #2a080d;
+  background: #ffd166;
+  font-size: 1rem;
+  transform: rotate(-10deg);
+}
+
+.scoreboard .stat-card,
+.controls,
+.room-panel,
+.table,
+.message-panel {
+  backdrop-filter: blur(12px);
+}
+
+@media (max-width: 820px) {
+  .card,
+  .card-back {
+    width: 96px;
+    min-height: 144px;
+  }
+
+  .card .card-art {
+    width: 78px;
+    height: 88px;
+  }
+}
