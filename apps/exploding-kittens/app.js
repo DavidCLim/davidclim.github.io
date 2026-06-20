@@ -18,6 +18,7 @@ const state = {
   difficulty: "medium",
   gameOver: false,
   revealing: false,
+  pendingExplosion: null,
 };
 
 const els = {
@@ -40,6 +41,7 @@ const els = {
   dangerModal: document.querySelector("#danger-modal"),
   dangerTitle: document.querySelector("#danger-title"),
   dangerMessage: document.querySelector("#danger-message"),
+  dangerAction: document.querySelector("#danger-action"),
 };
 
 function makeCard(type) {
@@ -79,6 +81,7 @@ function startGame() {
     turn: "player",
     pendingTurns: { player: 1, bot: 1 },
     revealing: false,
+    pendingExplosion: null,
     gameOver: false,
   });
   for (let index = 0; index < 4; index += 1) {
@@ -121,27 +124,48 @@ function drawFor(actor) {
 function handleExplosion(actor) {
   const hand = actor === "player" ? state.playerHand : state.botHand;
   const defuseIndex = hand.findIndex((card) => card.type === "defuse");
-  state.revealing = true;
-  render();
 
-  if (defuseIndex === -1) {
-    showDanger(actor, false);
-    window.setTimeout(() => {
-      state.revealing = false;
-      endGame(actor === "player" ? "You exploded" : "You win", actor === "player" ? "No Defuse card was available." : "The bot hit the Exploding Kitten without a Defuse.");
-    }, 1200);
+  if (actor === "bot") {
+    if (defuseIndex === -1) {
+      endGame("You win", "The bot drew the Exploding Kitten with no Defuse card left.");
+      return;
+    }
+    hand.splice(defuseIndex, 1);
+    reinsertExplosion();
+    setMessage("Bot defused", "The bot drew the Exploding Kitten and used a Defuse card.");
+    finishTurn("bot");
     return;
   }
-  showDanger(actor, true);
-  window.setTimeout(() => {
-    hand.splice(defuseIndex, 1);
-    const insertAt = Math.floor(Math.random() * (state.deck.length + 1));
-    state.deck.splice(insertAt, 0, makeCard("explode"));
+
+  state.revealing = true;
+  state.pendingExplosion = { canDefuse: defuseIndex !== -1 };
+  showDanger(defuseIndex !== -1);
+  render();
+}
+
+function resolveDanger() {
+  if (!state.pendingExplosion) return;
+
+  if (!state.pendingExplosion.canDefuse) {
     state.revealing = false;
-    els.dangerModal.hidden = true;
-    setMessage("Defused", `${actor === "player" ? "You used" : "The bot used"} a Defuse card and put the danger back in the pile.`);
-    finishTurn(actor);
-  }, 1300);
+    state.pendingExplosion = null;
+    endGame("You lose!", "No Defuse card was available.");
+    return;
+  }
+
+  const defuseIndex = state.playerHand.findIndex((card) => card.type === "defuse");
+  if (defuseIndex !== -1) state.playerHand.splice(defuseIndex, 1);
+  reinsertExplosion();
+  state.revealing = false;
+  state.pendingExplosion = null;
+  els.dangerModal.hidden = true;
+  setMessage("Defused", "You used a Defuse card and put the danger back in the pile.");
+  finishTurn("player");
+}
+
+function reinsertExplosion() {
+  const insertAt = Math.floor(Math.random() * (state.deck.length + 1));
+  state.deck.splice(insertAt, 0, makeCard("explode"));
 }
 
 function finishTurn(actor) {
@@ -153,11 +177,11 @@ function finishTurn(actor) {
     state.turn = actor === "player" ? "bot" : "player";
   }
   render();
-  if (!state.gameOver && state.turn === "bot") window.setTimeout(botTurn, 700);
+  if (!state.gameOver && !state.revealing && state.turn === "bot") window.setTimeout(botTurn, 700);
 }
 
 function playCard(index) {
-  if (state.turn !== "player" || state.gameOver) return;
+  if (state.turn !== "player" || state.gameOver || state.revealing) return;
   const card = state.playerHand[index];
   if (!card || card.type === "defuse" || card.type === "cat") {
     setMessage("Keep that card", "Defuse cards work automatically. Cat cards are just along for the ride.");
@@ -210,7 +234,7 @@ function useAction(card, actor) {
 }
 
 function botTurn() {
-  if (state.gameOver || state.turn !== "bot") return;
+  if (state.gameOver || state.revealing || state.turn !== "bot") return;
   hideFuture();
   const usefulCardIndex = chooseBotCard();
   if (usefulCardIndex !== -1) {
@@ -236,16 +260,20 @@ function chooseBotCard() {
   return -1;
 }
 
-function showDanger(actor, canDefuse) {
+function showDanger(canDefuse) {
   els.dangerTitle.textContent = "Exploding Kitten!";
   els.dangerMessage.textContent = canDefuse
-    ? `${actor === "player" ? "You drew" : "The bot drew"} the Exploding Kitten, but a Defuse card is ready.`
-    : `${actor === "player" ? "You drew" : "The bot drew"} the Exploding Kitten with no Defuse card left.`;
+    ? "You drew the Exploding Kitten. Click Defuse to survive."
+    : "You drew the Exploding Kitten with no Defuse card left.";
+  els.dangerAction.textContent = canDefuse ? "Defuse" : "You Lose!";
+  els.dangerAction.classList.toggle("lose", !canDefuse);
   els.dangerModal.hidden = false;
 }
 
 function endGame(title, message) {
   state.gameOver = true;
+  state.revealing = false;
+  state.pendingExplosion = null;
   els.dangerModal.hidden = true;
   setMessage(title, message);
   els.resultTitle.textContent = title;
@@ -300,6 +328,7 @@ function cardMarkup(card) {
 
 els.newGame.addEventListener("click", startGame);
 els.resultButton.addEventListener("click", startGame);
+els.dangerAction.addEventListener("click", resolveDanger);
 els.drawCard.addEventListener("click", () => drawFor("player"));
 els.difficultyPicker.addEventListener("click", (event) => {
   if (!event.target.matches("button[data-difficulty]")) return;
