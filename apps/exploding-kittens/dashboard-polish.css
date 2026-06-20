@@ -1,0 +1,210 @@
+h1 {
+  font-family: Impact, Haettenschweiler, "Arial Black", sans-serif;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+  color: #fff7eb;
+  text-shadow:
+    0 0 10px rgba(255, 209, 102, 0.8),
+    0 0 26px rgba(255, 77, 46, 0.58),
+    3px 3px 0 #2a080d;
+}
+
+.topbar {
+  align-items: center;
+  padding: 14px;
+  border: 1px solid rgba(255, 209, 102, 0.32);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(255, 77, 46, 0.16), transparent 42%, rgba(255, 209, 102, 0.14)),
+    rgba(32, 10, 19, 0.84);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    0 0 28px rgba(255, 77, 46, 0.16);
+}
+
+.controls {
+  grid-template-columns: minmax(190px, 1fr) minmax(260px, 1.15fr) minmax(130px, auto);
+  align-items: stretch;
+}
+
+.controls > div,
+.controls .changelog-link {
+  min-width: 0;
+}
+
+.controls > div {
+  padding: 10px;
+  border: 1px solid rgba(255, 209, 102, 0.18);
+  border-radius: 8px;
+  background: rgba(42, 8, 13, 0.32);
+}
+
+.controls .segmented {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+}
+
+.controls .segmented button {
+  width: 100%;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.controls .changelog-link {
+  height: 100%;
+  min-height: 58px;
+  text-align: center;
+}
+
+.scoreboard {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.scoreboard .stat-card {
+  position: relative;
+  min-height: 94px;
+  padding: 14px 14px 12px 56px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 209, 102, 0.36);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 209, 102, 0.22), transparent 34%),
+    linear-gradient(135deg, rgba(255, 77, 46, 0.18), rgba(86, 244, 255, 0.08)),
+    rgba(32, 10, 19, 0.9);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 0 26px rgba(255, 77, 46, 0.18),
+    0 16px 36px rgba(0, 0, 0, 0.3);
+}
+
+.scoreboard .stat-card::before {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 42px;
+  content: "";
+  border: 3px solid #1b1010;
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 50% 40%, #fff7eb 0 16%, transparent 17%),
+    linear-gradient(145deg, #ed3b24, #ffd166);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.5),
+    0 0 16px rgba(255, 209, 102, 0.3);
+  transform: translateY(-50%) rotate(-9deg);
+}
+
+.scoreboard .stat-card::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(120deg, transparent 0 30%, rgba(255, 255, 255, 0.14), transparent 60% 100%);
+  transform: translateX(-120%);
+  animation: stat-scan 5.5s ease-in-out infinite;
+}
+
+.scoreboard .stat-card span {
+  margin-bottom: 7px;
+  color: #ffd7aa;
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.scoreboard .stat-card strong {
+  display: block;
+  color: #fff7eb;
+  font-family: Impact, Haettenschweiler, "Arial Black", sans-serif;
+  font-size: clamp(1.25rem, 2.2vw, 1.8rem);
+  font-style: italic;
+  line-height: 0.95;
+  text-transform: uppercase;
+  text-shadow:
+    0 0 14px rgba(255, 209, 102, 0.5),
+    2px 2px 0 #2a080d;
+}
+
+.stat-deck::before {
+  background:
+    linear-gradient(145deg, #2a080d, #6a1726),
+    #2a080d !important;
+}
+
+.stat-turn::before {
+  background:
+    radial-gradient(circle at 50% 50%, #ffd166 0 22%, transparent 23%),
+    linear-gradient(145deg, #56f4ff, #ff4fa3) !important;
+}
+
+.stat-player::before {
+  transform: translateY(-50%) rotate(9deg) !important;
+}
+
+.table {
+  grid-template-columns: minmax(190px, 1fr) minmax(220px, 320px) minmax(230px, 1fr);
+}
+
+.opponent-area,
+.player-area,
+.message-panel {
+  min-width: 0;
+}
+
+@keyframes stat-scan {
+  0%, 48% {
+    transform: translateX(-120%);
+  }
+
+  76%, 100% {
+    transform: translateX(120%);
+  }
+}
+
+@media (max-width: 980px) {
+  .scoreboard {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .table {
+    grid-template-columns: 1fr;
+  }
+
+  .center-area {
+    order: -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .topbar {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .home-link,
+  #new-game {
+    justify-self: stretch;
+  }
+
+  .controls {
+    grid-template-columns: 1fr;
+  }
+
+  .controls .segmented {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  }
+
+  .scoreboard {
+    grid-template-columns: 1fr;
+  }
+
+  .scoreboard .stat-card {
+    min-height: 82px;
+  }
+}
