@@ -6,14 +6,15 @@
     <title>EXPLODING KITTENS Web Game</title>
     <meta name="description" content="A small browser card game inspired by Exploding Kittens.">
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="features.css?v=2.7">
-    <link rel="stylesheet" href="card-reference.css?v=2.7">
-    <link rel="stylesheet" href="card-label-fix.css?v=2.7">
-    <link rel="stylesheet" href="card-authenticity.css?v=2.7">
-    <link rel="stylesheet" href="card-badge-text.css?v=2.7">
-    <link rel="stylesheet" href="card-text-back-fix.css?v=2.7">
-    <link rel="stylesheet" href="card-description-reference.css?v=2.7">
-    <link rel="stylesheet" href="reference-photo-cards.css?v=2.7">
+    <link rel="stylesheet" href="features.css?v=2.8">
+    <link rel="stylesheet" href="card-reference.css?v=2.8">
+    <link rel="stylesheet" href="card-label-fix.css?v=2.8">
+    <link rel="stylesheet" href="card-authenticity.css?v=2.8">
+    <link rel="stylesheet" href="card-badge-text.css?v=2.8">
+    <link rel="stylesheet" href="card-text-back-fix.css?v=2.8">
+    <link rel="stylesheet" href="card-description-reference.css?v=2.8">
+    <link rel="stylesheet" href="reference-photo-cards.css?v=2.8">
+    <link rel="stylesheet" href="cards-in-game.css?v=2.8">
   </head>
   <body>
     <main class="game-shell">
@@ -101,6 +102,11 @@
         </section>
       </section>
 
+      <section class="reference-deck player-panel" aria-label="Card reference deck">
+        <h2>Card references in this game</h2>
+        <div id="reference-cards" class="reference-cards"></div>
+      </section>
+
       <section class="player-area player-panel" aria-label="Your hand">
         <h2 id="player-title">Your hand</h2>
         <div id="player-hand" class="player-hand"></div>
@@ -128,6 +134,6 @@
     </div>
 
     <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
-    <script src="app.js?v=2.7"></script>
+    <script src="app.js?v=2.8"></script>
   </body>
 </html>
