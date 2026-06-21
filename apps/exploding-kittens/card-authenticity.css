@@ -1,0 +1,299 @@
+.card {
+  min-height: 184px;
+  padding: 8px;
+  background:
+    radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.72), transparent 14%),
+    linear-gradient(180deg, #fffdf3 0%, #fbf2dc 100%);
+}
+
+.card::before {
+  inset: 8px;
+  border-width: 3px;
+}
+
+.card::after {
+  content: "ORIGINAL\A EDITION";
+  position: absolute;
+  left: 14px;
+  bottom: 18px;
+  z-index: 3;
+  display: block;
+  color: #9e988b;
+  white-space: pre;
+  font-size: 0.48rem;
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: 0.02em;
+  text-align: left;
+  transform: rotate(-90deg);
+  transform-origin: left bottom;
+}
+
+.cat::after {
+  content: "NSFW";
+}
+
+.alter::after {
+  content: "PARTY\A PACK";
+}
+
+.card .corner-icon {
+  left: 15px;
+  top: 13px;
+  width: 27px;
+  height: 27px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  font-size: 0.52rem;
+}
+
+.card .corner-icon::after {
+  content: "";
+  position: fixed;
+  width: 27px;
+  height: 27px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  background: var(--accent);
+  transform: translate(72px, 137px) rotate(180deg);
+  box-shadow: 0 -3px 8px rgba(0, 0, 0, 0.18);
+}
+
+.card .card-heading {
+  min-height: 42px;
+  margin: 4px 6px 0 39px;
+}
+
+.card .card-heading strong {
+  font-size: 0.93rem;
+  letter-spacing: -0.02em;
+}
+
+.card .card-heading em {
+  max-width: 70px;
+  color: #989287;
+  font-size: 0.45rem;
+  letter-spacing: 0.01em;
+}
+
+.card .card-art {
+  width: 99px;
+  height: 108px;
+  margin-top: 1px;
+  border-radius: 18px 16px 21px 17px;
+}
+
+.card .card-action {
+  right: 18px;
+  bottom: 36px;
+  left: 18px;
+  font-size: 0.47rem;
+  line-height: 1.13;
+}
+
+.card > .card-title {
+  right: 18px;
+  bottom: 8px;
+  left: 38px;
+  font-size: 0.66rem;
+}
+
+.defuse .card-art {
+  background:
+    radial-gradient(circle at 52% 77%, #ffe75f 0 16%, transparent 35%),
+    linear-gradient(160deg, #afcf17 0%, #82a916 100%);
+}
+
+.defuse .card-art::before {
+  left: 18px;
+  top: 24px;
+  width: 67px;
+  height: 38px;
+  border-width: 4px;
+  border-radius: 53% 44% 47% 49%;
+  background: #3a3d40;
+  transform: rotate(8deg);
+}
+
+.defuse .card-art::after {
+  left: 25px;
+  top: 61px;
+  width: 47px;
+  height: 34px;
+  background: #fffaf0;
+}
+
+.defuse .art-core {
+  left: 18px;
+  top: 30px;
+  width: 18px;
+  height: 18px;
+  box-shadow: 22px 1px 0 #101010;
+}
+
+.defuse .art-mark.two {
+  left: 55px;
+  top: 16px;
+  height: 30px;
+}
+
+.alter .card-art {
+  background:
+    radial-gradient(circle at 45% 65%, rgba(255, 255, 255, 0.12), transparent 34%),
+    linear-gradient(160deg, #832686 0%, #521864 100%);
+}
+
+.alter .card-art::before {
+  left: 16px;
+  top: 45px;
+  width: 66px;
+  height: 25px;
+  border-radius: 57% 44% 45% 53%;
+}
+
+.alter .card-art::after {
+  left: 43px;
+  top: 18px;
+  width: 34px;
+  height: 45px;
+  background:
+    radial-gradient(circle at 52% 22%, #ffffff 0 1px, transparent 2px),
+    radial-gradient(circle at 60% 40%, #ffffff 0 1px, transparent 2px),
+    radial-gradient(circle at 41% 51%, #ffffff 0 1px, transparent 2px),
+    #151a3d;
+}
+
+.alter .art-core {
+  left: 59px;
+  top: 48px;
+  width: 26px;
+  height: 25px;
+}
+
+.alter .art-mark.one {
+  left: 61px;
+  top: 70px;
+  width: 27px;
+  height: 24px;
+}
+
+.alter .art-mark.three {
+  left: 12px;
+  top: 36px;
+  height: 51px;
+}
+
+.future .card-art {
+  background:
+    radial-gradient(circle at 42% 70%, rgba(114, 34, 80, 0.25), transparent 22%),
+    linear-gradient(160deg, #f24b86 0%, #d82f70 100%);
+}
+
+.future .card-art::before {
+  left: 11px;
+  top: 39px;
+  width: 43px;
+  height: 32px;
+}
+
+.future .card-art::after {
+  left: 62px;
+  top: 52px;
+  width: 29px;
+  height: 19px;
+}
+
+.future .art-core {
+  left: 8px;
+  top: 33px;
+  width: 34px;
+  height: 20px;
+}
+
+.future .art-mark.one {
+  left: 60px;
+  top: 45px;
+}
+
+.shuffle .card-art {
+  background:
+    radial-gradient(circle at 58% 41%, rgba(255, 255, 255, 0.28), transparent 16%),
+    linear-gradient(160deg, #cc925d 0%, #a67342 100%);
+}
+
+.shuffle .art-mark.three {
+  left: 13px;
+  top: 11px;
+  width: 73px;
+  height: 29px;
+  border-radius: 10px 12px 11px 10px;
+}
+
+.shuffle .art-mark.three::before {
+  content: "When the wormhole opens, it will break the known universe.";
+  font-size: 0.39rem;
+}
+
+.skip .card-art {
+  background:
+    linear-gradient(163deg, #3da6dc 0 54%, #1179bd 55% 100%);
+}
+
+.skip .card-art::before {
+  left: 31px;
+  top: 17px;
+  width: 27px;
+  height: 27px;
+}
+
+.skip .card-art::after {
+  left: 35px;
+  top: 44px;
+  width: 34px;
+  height: 36px;
+}
+
+.skip .art-mark.one,
+.skip .art-mark.two,
+.skip .art-mark.three {
+  background:
+    radial-gradient(circle at 38% 30%, #ffffff 0 2px, transparent 3px),
+    #c73324;
+}
+
+.cat .card-art {
+  background: linear-gradient(180deg, #f5f0e4 0%, #e5dccb 100%);
+}
+
+.cat .card-art::before {
+  left: 19px;
+  top: 43px;
+  width: 65px;
+  height: 43px;
+}
+
+.cat .art-core {
+  left: 29px;
+  top: 25px;
+  width: 49px;
+  height: 25px;
+}
+
+.cat .art-mark.three {
+  left: 39px;
+  top: 52px;
+}
+
+.card-back {
+  min-height: 184px;
+}
+
+@media (max-width: 820px) {
+  .card,
+  .card-back {
+    min-height: 172px;
+  }
+
+  .card .corner-icon::after {
+    transform: translate(62px, 125px) rotate(180deg);
+  }
+}
