@@ -10,6 +10,8 @@ const cards = {
   cat: { title: "Cat's Schrodinger", subtitle: "Quantum box cat", kind: "cat", icon: "CAT", text: "Cute, but it does nothing by itself.", action: "This is a Cat card and is powerless on its own." },
 };
 
+const referenceCardTypes = ["defuse", "alter", "future", "shuffle", "skip", "cat"];
+
 const state = {
   deck: [],
   playerHand: [],
@@ -31,6 +33,7 @@ const state = {
 const els = {
   playerHand: document.querySelector("#player-hand"),
   botHand: document.querySelector("#bot-hand"),
+  referenceCards: document.querySelector("#reference-cards"),
   playerCount: document.querySelector("#player-count"),
   botCount: document.querySelector("#bot-count"),
   playerCountLabel: document.querySelector("#player-count-label"),
@@ -263,35 +266,31 @@ function alterFuture(actor) {
     render();
     return;
   }
-
   if (actor === "bot") {
-    const saferOrder = [...topCards].sort((a, b) => (a.type === "explode" ? 1 : 0) - (b.type === "explode" ? 1 : 0));
-    applyTopCardOrder(saferOrder);
-    setMessage("Future altered", "The bot rearranged the next three cards.");
+    const safeFirst = [...topCards].sort((a, b) => Number(a.type === "explode") - Number(b.type === "explode"));
+    applyTopCardOrder(safeFirst);
+    setMessage("Future altered", "The bot rearranged the next cards.");
     render();
     return;
   }
 
-  const preview = topCards.map((card, index) => `${index + 1}: ${card.title}`).join("\n");
-  const answer = window.prompt(`Alter the Future\n\n${preview}\n\nType the new order, like 312 or 2,1,3.`, "123");
-  const order = parseCardOrder(answer, topCards.length);
-  if (order) {
-    applyTopCardOrder(order.map((number) => topCards[number - 1]));
-    els.futureView.textContent = `New order: ${order.map((number) => topCards[number - 1].title).join(" | ")}`;
-    els.futureView.hidden = false;
-    setMessage("Future altered", `${playerName(actor)} rearranged the next cards.`);
-  } else {
-    els.futureView.textContent = `Order unchanged: ${topCards.map((card) => card.title).join(" | ")}`;
-    els.futureView.hidden = false;
-    setMessage("Future unchanged", "No valid order was entered, so the top cards stayed the same.");
+  const cardList = topCards.map((card, index) => `${index + 1}: ${card.title}`).join(" | ");
+  const input = window.prompt(`Next cards are ${cardList}. Enter the new order, like 231.`, "123");
+  const order = parseCardOrder(input, topCards.length);
+  if (!order) {
+    setMessage("Future unchanged", "The top cards stayed in the same order.");
+    render();
+    return;
   }
+  applyTopCardOrder(order.map((number) => topCards[number - 1]));
+  setMessage("Future altered", "You rearranged the next cards.");
   render();
 }
 
 function useAction(card, actor) {
   hideFuture();
   if (card.type === "skip") {
-    setMessage("Skipped", `${playerName(actor)} skipped the draw.`);
+    setMessage("Skipped", `${playerName(actor)} ended the turn without drawing.`);
     finishTurn(actor);
     return;
   }
@@ -628,6 +627,8 @@ function render() {
   els.opponentPicker.querySelectorAll("button").forEach((button) => button.classList.toggle("active", button.dataset.opponent === state.opponent));
   els.difficultyPicker.querySelectorAll("button").forEach((button) => button.classList.toggle("active", button.dataset.difficulty === state.difficulty));
 
+  renderReferenceCards();
+
   els.botHand.innerHTML = "";
   hiddenHand.forEach(() => {
     const card = document.createElement("div");
@@ -647,6 +648,11 @@ function render() {
     button.addEventListener("click", () => playCard(index));
     els.playerHand.append(button);
   });
+}
+
+function renderReferenceCards() {
+  if (!els.referenceCards || els.referenceCards.childElementCount) return;
+  els.referenceCards.innerHTML = referenceCardTypes.map((type) => cardMarkup({ ...cards[type], type })).join("");
 }
 
 function cardMarkup(card) {
