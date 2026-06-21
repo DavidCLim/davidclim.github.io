@@ -1,0 +1,19 @@
+.card .corner-icon::after {
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  font-size: 0.52rem;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+}
+
+.explode .corner-icon::after { content: "BOOM"; }
+.defuse .corner-icon::after { content: "SAFE"; }
+.skip .corner-icon::after { content: "SKIP"; }
+.attack .corner-icon::after { content: "2X"; }
+.future .corner-icon::after { content: "EYE"; }
+.alter .corner-icon::after { content: "3X"; }
+.shuffle .corner-icon::after { content: "MIX"; }
+.favor .corner-icon::after { content: "TAKE"; }
+.cat .corner-icon::after { content: "CAT"; }
