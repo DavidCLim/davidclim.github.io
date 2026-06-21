@@ -6,14 +6,15 @@
     <title>Exploding Kittens Changelog</title>
     <meta name="description" content="Version history for David's Exploding Kittens web game.">
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="features.css?v=2.9">
-    <link rel="stylesheet" href="card-reference.css?v=2.9">
-    <link rel="stylesheet" href="card-label-fix.css?v=2.9">
-    <link rel="stylesheet" href="card-authenticity.css?v=2.9">
-    <link rel="stylesheet" href="card-badge-text.css?v=2.9">
-    <link rel="stylesheet" href="card-text-back-fix.css?v=2.9">
-    <link rel="stylesheet" href="card-description-reference.css?v=2.9">
-    <link rel="stylesheet" href="reference-photo-cards.css?v=2.9">
+    <link rel="stylesheet" href="features.css?v=3.0">
+    <link rel="stylesheet" href="card-reference.css?v=3.0">
+    <link rel="stylesheet" href="card-label-fix.css?v=3.0">
+    <link rel="stylesheet" href="card-authenticity.css?v=3.0">
+    <link rel="stylesheet" href="card-badge-text.css?v=3.0">
+    <link rel="stylesheet" href="card-text-back-fix.css?v=3.0">
+    <link rel="stylesheet" href="card-description-reference.css?v=3.0">
+    <link rel="stylesheet" href="reference-photo-cards.css?v=3.0">
+    <link rel="stylesheet" href="card-clean-polish.css?v=3.0">
   </head>
   <body>
     <main class="game-shell">
@@ -27,6 +28,16 @@
       </header>
 
       <section class="table changelog-page" aria-label="Exploding Kittens changelog">
+        <article class="message-panel changelog-entry">
+          <h2>v3.0</h2>
+          <p>June 21, 2026</p>
+          <ul>
+            <li>Reworked the card visuals with a cleaner polished style so they look good again in the playable hand.</li>
+            <li>Simplified the CSS-drawn artwork into clearer original cat/action illustrations with stronger color panels and readable card text.</li>
+            <li>Kept the simple restored game layout and did not change gameplay.</li>
+          </ul>
+        </article>
+
         <article class="message-panel changelog-entry">
           <h2>v2.9</h2>
           <p>June 21, 2026</p>
@@ -88,42 +99,12 @@
         </article>
 
         <article class="message-panel changelog-entry">
-          <h2>v2.3</h2>
+          <h2>v2.0-v2.3</h2>
           <p>June 21, 2026</p>
           <ul>
-            <li>Made card linework smaller and lighter for a closer hand-drawn card-game style.</li>
-            <li>Adjusted card typography, panel color, and ink weight toward a flatter cartoon look.</li>
-            <li>Changed the game layout to a new angled tabletop design with a compact status strip and lower hand tray.</li>
-          </ul>
-        </article>
-
-        <article class="message-panel changelog-entry">
-          <h2>v2.2</h2>
-          <p>June 21, 2026</p>
-          <ul>
-            <li>Added text to the mirrored bottom corner badges so they match the top badge identity for each card type.</li>
-            <li>Kept the mirrored badges attached to each card across screen sizes.</li>
-            <li>Bumped cache versions so the newest card-badge layer loads on GitHub Pages.</li>
-          </ul>
-        </article>
-
-        <article class="message-panel changelog-entry">
-          <h2>v2.1</h2>
-          <p>June 21, 2026</p>
-          <ul>
-            <li>Added closer physical-card details: mirrored corner badges, vertical edition labels, thicker cream frame spacing, and sharper colored inner borders.</li>
-            <li>Adjusted the Defuse, Alter the Future, See the Future, Shuffle, Skip, and Cat card scenes to better match the reference-card layout while keeping the art original.</li>
-            <li>Bumped the game cache versions so the newest card-detail layer loads on GitHub Pages.</li>
-          </ul>
-        </article>
-
-        <article class="message-panel changelog-entry">
-          <h2>v2.0</h2>
-          <p>June 21, 2026</p>
-          <ul>
-            <li>Rebuilt the card faces into a closer reference-style format with cream borders, colored outlines, top titles, subtitles, large painted panels, action text, and upside-down bottom titles.</li>
-            <li>Added Alter the Future as a real action card in the deck.</li>
-            <li>Made Alter the Future show the next cards and let human players rearrange them, while the bot can rearrange danger away from the top.</li>
+            <li>Added stronger reference-style card layout, physical-card details, mirrored badges, and tighter description placement.</li>
+            <li>Added Alter the Future as a playable card and improved how it rearranges the draw pile.</li>
+            <li>Tested different layout and card-art directions before returning to the simpler game layout.</li>
           </ul>
         </article>
 
