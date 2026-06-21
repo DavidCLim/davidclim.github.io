@@ -1,12 +1,13 @@
 const cards = {
-  explode: { title: "Exploding Kitten", kind: "explode", icon: "BOOM", text: "Avoid this unless you have Defuse." },
-  defuse: { title: "Defuse", kind: "defuse", icon: "SAFE", text: "Automatically saves you from exploding." },
-  skip: { title: "Skip", kind: "action", icon: "SKIP", text: "End your turn without drawing." },
-  attack: { title: "Attack", kind: "action", icon: "2X", text: "End your turn and make the other player take two turns." },
-  future: { title: "See Future", kind: "action", icon: "EYE", text: "Peek at the next three cards." },
-  shuffle: { title: "Shuffle", kind: "action", icon: "MIX", text: "Shuffle the draw pile." },
-  favor: { title: "Favor", kind: "action", icon: "TAKE", text: "Steal a random card from the other player." },
-  cat: { title: "Cat Card", kind: "cat", icon: "CAT", text: "Cute, but it does nothing by itself." },
+  explode: { title: "Exploding Kitten", subtitle: "Danger card", kind: "explode", icon: "BOOM", text: "Avoid this unless you have Defuse.", action: "If you draw this without Defuse, you lose." },
+  defuse: { title: "Defuse", subtitle: "Via belly rubs", kind: "defuse", icon: "SAFE", text: "Automatically saves you from exploding.", action: "Put the danger card back into the deck." },
+  skip: { title: "Skip", subtitle: "Crab walk with some claws", kind: "action", icon: "SKIP", text: "End your turn without drawing.", action: "End your turn without drawing a card." },
+  attack: { title: "Attack", subtitle: "Launch the chaos", kind: "action", icon: "2X", text: "End your turn and make the other player take two turns.", action: "Make the other player take two turns." },
+  future: { title: "See the Future", subtitle: "Deploy the spy bunnies", kind: "action", icon: "EYE", text: "Peek at the next three cards.", action: "Privately view the top three cards." },
+  alter: { title: "Alter the Future", subtitle: "Ask the wizard cat", kind: "action", icon: "3X", text: "View and reorder the next three cards.", action: "Privately view and rearrange the top three cards." },
+  shuffle: { title: "Shuffle", subtitle: "A portal box appears", kind: "action", icon: "MIX", text: "Shuffle the draw pile.", action: "Shuffle the draw pile." },
+  favor: { title: "Favor", subtitle: "Make a persuasive face", kind: "action", icon: "TAKE", text: "Steal a random card from the other player.", action: "Steal a random card from another player." },
+  cat: { title: "Cat's Schrodinger", subtitle: "Quantum box cat", kind: "cat", icon: "CAT", text: "Cute, but it does nothing by itself.", action: "This is a Cat card and is powerless on its own." },
 };
 
 const state = {
@@ -76,6 +77,7 @@ function makeDeck() {
   add(deck, "skip", 4);
   add(deck, "attack", 3);
   add(deck, "future", 4);
+  add(deck, "alter", 3);
   add(deck, "shuffle", 4);
   add(deck, "favor", 3);
   add(deck, "cat", 10);
@@ -237,6 +239,55 @@ function playCard(index) {
   if (isPvpMode()) saveRoomState();
 }
 
+function peekTopCards(total = 3) {
+  return state.deck.slice(-total).reverse();
+}
+
+function applyTopCardOrder(cardsInDrawOrder) {
+  if (!cardsInDrawOrder.length) return;
+  state.deck.splice(-cardsInDrawOrder.length, cardsInDrawOrder.length);
+  state.deck.push(...cardsInDrawOrder.slice().reverse());
+}
+
+function parseCardOrder(value, total) {
+  const numbers = String(value || "").match(/\d/g)?.map(Number) || [];
+  if (numbers.length !== total) return null;
+  const expected = Array.from({ length: total }, (_, index) => index + 1);
+  return expected.every((number) => numbers.includes(number)) ? numbers : null;
+}
+
+function alterFuture(actor) {
+  const topCards = peekTopCards(3);
+  if (!topCards.length) {
+    setMessage("No future", "There are no cards left to rearrange.");
+    render();
+    return;
+  }
+
+  if (actor === "bot") {
+    const saferOrder = [...topCards].sort((a, b) => (a.type === "explode" ? 1 : 0) - (b.type === "explode" ? 1 : 0));
+    applyTopCardOrder(saferOrder);
+    setMessage("Future altered", "The bot rearranged the next three cards.");
+    render();
+    return;
+  }
+
+  const preview = topCards.map((card, index) => `${index + 1}: ${card.title}`).join("\n");
+  const answer = window.prompt(`Alter the Future\n\n${preview}\n\nType the new order, like 312 or 2,1,3.`, "123");
+  const order = parseCardOrder(answer, topCards.length);
+  if (order) {
+    applyTopCardOrder(order.map((number) => topCards[number - 1]));
+    els.futureView.textContent = `New order: ${order.map((number) => topCards[number - 1].title).join(" | ")}`;
+    els.futureView.hidden = false;
+    setMessage("Future altered", `${playerName(actor)} rearranged the next cards.`);
+  } else {
+    els.futureView.textContent = `Order unchanged: ${topCards.map((card) => card.title).join(" | ")}`;
+    els.futureView.hidden = false;
+    setMessage("Future unchanged", "No valid order was entered, so the top cards stayed the same.");
+  }
+  render();
+}
+
 function useAction(card, actor) {
   hideFuture();
   if (card.type === "skip") {
@@ -256,11 +307,16 @@ function useAction(card, actor) {
     return;
   }
   if (card.type === "future") {
-    const nextCards = state.deck.slice(-3).reverse().map((item) => item.title).join(" | ");
+    const nextCards = peekTopCards(3).map((item) => item.title).join(" | ");
     els.futureView.textContent = `Next cards: ${nextCards || "No cards left"}`;
     els.futureView.hidden = false;
     setMessage("Future seen", `${playerName(actor)} peeked at the next cards.`);
     render();
+    return;
+  }
+  if (card.type === "alter") {
+    alterFuture(actor);
+    if (isPvpMode()) saveRoomState();
     return;
   }
   if (card.type === "shuffle") {
@@ -296,12 +352,12 @@ function botTurn() {
 }
 
 function chooseBotCard() {
-  const dangerNearTop = state.deck.slice(-2).some((card) => card.type === "explode");
+  const dangerNearTop = state.deck.slice(-3).some((card) => card.type === "explode");
   if (state.difficulty === "easy") {
     const playable = state.botHand.map((card, index) => ({ card, index })).filter(({ card }) => card.kind === "action");
     return playable.length && Math.random() > 0.45 ? playable[Math.floor(Math.random() * playable.length)].index : -1;
   }
-  const preferred = dangerNearTop || state.difficulty === "hard" ? ["future", "shuffle", "skip", "attack", "favor"] : ["favor", "future"];
+  const preferred = dangerNearTop || state.difficulty === "hard" ? ["alter", "future", "shuffle", "skip", "attack", "favor"] : ["favor", "future", "alter"];
   for (const type of preferred) {
     const index = state.botHand.findIndex((card) => card.type === type);
     if (index !== -1 && (state.difficulty === "hard" || Math.random() > 0.28)) return index;
@@ -594,7 +650,7 @@ function render() {
 }
 
 function cardMarkup(card) {
-  return `<div class="card ${card.kind} ${card.type}"><div class="card-art" aria-hidden="true"><span class="art-core"></span><span class="art-mark one"></span><span class="art-mark two"></span><span class="art-mark three"></span></div><span class="card-icon">${card.icon}</span><strong class="card-title">${card.title}</strong><p class="card-text">${card.text}</p></div>`;
+  return `<div class="card ${card.kind} ${card.type}"><span class="corner-icon">${card.icon}</span><div class="card-heading"><strong>${card.title}</strong><em>${card.subtitle}</em></div><div class="card-art" aria-hidden="true"><span class="art-core"></span><span class="art-mark one"></span><span class="art-mark two"></span><span class="art-mark three"></span></div><p class="card-action">${card.action}</p><strong class="card-title">${card.title}</strong><p class="card-text">${card.text}</p></div>`;
 }
 
 els.newGame.addEventListener("click", startGame);
