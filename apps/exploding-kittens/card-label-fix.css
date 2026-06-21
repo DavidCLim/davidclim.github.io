@@ -1,0 +1,24 @@
+.card::after {
+  display: none;
+}
+
+.card > .card-title {
+  position: absolute;
+  right: 16px;
+  bottom: 8px;
+  left: 37px;
+  z-index: 3;
+  display: block;
+  margin: 0;
+  color: #141414;
+  font-size: 0.68rem;
+  font-weight: 900;
+  line-height: 1;
+  text-align: right;
+  text-transform: uppercase;
+  transform: rotate(180deg);
+}
+
+.cat > .card-title {
+  color: #24201a;
+}
