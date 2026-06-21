@@ -1,0 +1,137 @@
+.card {
+  --ink-line: #151515;
+  border-width: 3px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.82),
+    0 8px 16px rgba(0, 0, 0, 0.26);
+}
+
+.card::before {
+  border-width: 2px;
+}
+
+.card .corner-icon,
+.card .corner-icon::after {
+  border-width: 1px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.16);
+}
+
+.card .card-heading strong {
+  font-family: "Arial Narrow", "Roboto Condensed", Impact, Arial, sans-serif;
+  font-size: 0.88rem;
+  font-stretch: condensed;
+  letter-spacing: -0.01em;
+}
+
+.card .card-heading em,
+.card::after {
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+}
+
+.card .card-art {
+  filter: saturate(0.96) contrast(1.04);
+  box-shadow: inset 0 -14px 0 rgba(0, 0, 0, 0.04);
+}
+
+.card .card-art::before,
+.card .card-art::after,
+.card .art-core,
+.card .art-core::before,
+.card .art-core::after,
+.card .art-mark,
+.card .art-mark::before,
+.card .art-mark::after {
+  border-width: 2px !important;
+}
+
+.card .card-action {
+  font-family: "Arial Narrow", "Roboto Condensed", Impact, Arial, sans-serif;
+  font-size: 0.45rem;
+  letter-spacing: 0.01em;
+}
+
+.defuse .card-art::before {
+  border-width: 3px !important;
+  width: 66px;
+  height: 37px;
+}
+
+.defuse .art-core {
+  width: 15px;
+  height: 15px;
+  box-shadow: 20px 1px 0 #101010;
+}
+
+.defuse .art-mark.three {
+  height: 2px;
+  box-shadow: 0 8px 0 #111111, 0 16px 0 #111111;
+}
+
+.alter .card-art::after {
+  border-width: 2px !important;
+  clip-path: polygon(50% 0, 97% 100%, 3% 100%);
+}
+
+.alter .art-core,
+.future .art-core,
+.future .art-mark.one,
+.shuffle .art-core,
+.skip .card-art::before,
+.skip .card-art::after,
+.cat .art-core,
+.cat .art-mark.three {
+  border-width: 2px !important;
+}
+
+.future .art-core,
+.future .art-mark.one {
+  background: #2a3938;
+}
+
+.future .art-core::before,
+.future .art-core::after,
+.future .art-mark.one::before,
+.future .art-mark.one::after {
+  box-shadow: inset 0 0 0 1px #5d7a16;
+}
+
+.shuffle .card-art::before,
+.shuffle .card-art::after {
+  border-width: 2px !important;
+}
+
+.shuffle .art-mark.three {
+  background: #8b6038;
+}
+
+.skip .art-core {
+  height: 3px;
+}
+
+.skip .art-core::before,
+.skip .art-core::after {
+  height: 3px;
+}
+
+.skip .art-mark.one,
+.skip .art-mark.two,
+.skip .art-mark.three {
+  border-width: 2px;
+}
+
+.cat .card-art::before,
+.cat .card-art::after {
+  border-width: 2px !important;
+}
+
+.cat .art-mark.one,
+.cat .art-mark.two {
+  box-shadow: 0 0 5px #d8f02b;
+}
+
+.card-back {
+  border-width: 3px;
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.72),
+    0 8px 16px rgba(0, 0, 0, 0.26);
+}
