@@ -1,0 +1,32 @@
+.reference-deck {
+  margin-top: 16px;
+  overflow: hidden;
+}
+
+.reference-deck h2 {
+  margin-bottom: 12px;
+}
+
+.reference-cards {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  overflow-x: auto;
+  padding: 4px 4px 12px;
+  scrollbar-color: rgba(255, 209, 102, 0.65) rgba(42, 8, 13, 0.45);
+}
+
+.reference-cards .card {
+  flex: 0 0 auto;
+  transform: none;
+}
+
+.reference-cards .card:hover {
+  transform: translateY(-4px);
+}
+
+@media (max-width: 820px) {
+  .reference-cards {
+    gap: 10px;
+  }
+}
