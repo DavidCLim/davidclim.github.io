@@ -1,0 +1,145 @@
+.card {
+  min-height: 194px;
+}
+
+.card .card-art {
+  height: 94px;
+  margin-top: 2px;
+  margin-bottom: 0;
+  border-radius: 18px 16px 18px 16px;
+}
+
+.card .card-action {
+  position: relative;
+  z-index: 3;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  display: grid;
+  place-items: center;
+  min-height: 31px;
+  margin: -1px 13px 0;
+  padding: 2px 8px;
+  border-radius: 0 0 13px 13px;
+  color: #ffffff;
+  background: var(--panel-dark);
+  font-size: 0.43rem;
+  line-height: 1.08;
+  text-shadow: none;
+}
+
+.card .card-action::before,
+.card .card-action::after {
+  position: absolute;
+  top: 50%;
+  color: #ffffff;
+  font-size: 1.22rem;
+  transform: translateY(-50%);
+}
+
+.card .card-action::before {
+  left: 4px;
+  margin: 0;
+}
+
+.card .card-action::after {
+  right: 4px;
+  margin: 0;
+}
+
+.cat .card-action {
+  color: #827c71;
+  background: transparent;
+}
+
+.card > .card-title {
+  bottom: 7px;
+}
+
+.card::after {
+  bottom: 17px;
+}
+
+.card .corner-icon::after {
+  top: 144px;
+}
+
+.card-back {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 194px;
+  padding: 10px;
+  border: 3px solid #101010;
+  border-radius: 13px;
+  color: #fff8e9;
+  background:
+    radial-gradient(circle at 48% 44%, rgba(255, 209, 102, 0.38), transparent 30%),
+    linear-gradient(160deg, #191919 0%, #3d1014 48%, #cc3428 100%);
+  overflow: hidden;
+}
+
+.card-back::before {
+  content: "EXPLODING\A KITTENS";
+  position: relative;
+  z-index: 2;
+  width: 84px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border: 3px solid #101010;
+  border-radius: 50%;
+  color: #2a080d;
+  background: #ffd166;
+  font-family: Impact, "Arial Black", Arial, sans-serif;
+  font-size: 0.78rem;
+  line-height: 1;
+  text-align: center;
+  white-space: pre;
+  transform: rotate(-10deg);
+}
+
+.card-back::after {
+  content: "DAVID EDITION";
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: calc(50% + 39px);
+  width: 92px;
+  color: #fff8e9;
+  font-family: "Arial Narrow", Impact, Arial, sans-serif;
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-shadow: 0 2px 0 #101010;
+  transform: translateX(-50%) rotate(-10deg);
+}
+
+.card-back .card-icon,
+.card-back .card-title {
+  display: none;
+}
+
+@media (max-width: 820px) {
+  .card {
+    min-height: 182px;
+  }
+
+  .card .card-art {
+    height: 88px;
+  }
+
+  .card .card-action {
+    min-height: 29px;
+    font-size: 0.4rem;
+  }
+
+  .card .corner-icon::after {
+    top: 132px;
+  }
+
+  .card-back {
+    min-height: 182px;
+  }
+}
