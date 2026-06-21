@@ -48,13 +48,15 @@
 
 .card .corner-icon::after {
   content: "";
-  position: fixed;
+  position: absolute;
+  left: 72px;
+  top: 137px;
   width: 27px;
   height: 27px;
   border: 2px solid rgba(255, 255, 255, 0.35);
   border-radius: 50%;
   background: var(--accent);
-  transform: translate(72px, 137px) rotate(180deg);
+  transform: rotate(180deg);
   box-shadow: 0 -3px 8px rgba(0, 0, 0, 0.18);
 }
 
@@ -294,6 +296,7 @@
   }
 
   .card .corner-icon::after {
-    transform: translate(62px, 125px) rotate(180deg);
+    left: 62px;
+    top: 125px;
   }
 }
