@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reversi Web Game</title>
+    <meta name="description" content="A browser-based Reversi game for David's GitHub Pages site.">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="game-shell">
+      <header class="topbar">
+        <a href="../../" class="home-link">Home</a>
+        <div>
+          <p class="eyebrow">Second web game</p>
+          <h1>REVERSI</h1>
+        </div>
+        <button id="new-game" type="button">New Game</button>
+      </header>
+
+      <section class="controls" aria-label="Game options">
+        <div>
+          <span>Opponent</span>
+          <div class="segmented" id="opponent-picker">
+            <button type="button" data-opponent="bot" class="active">Bot</button>
+            <button type="button" data-opponent="human">Human</button>
+          </div>
+        </div>
+        <a class="changelog-link" href="changelog.html">Changelog</a>
+      </section>
+
+      <section class="scoreboard" aria-label="Game status">
+        <div class="stat-card black-stat">
+          <span>Black</span>
+          <strong id="black-score">2</strong>
+        </div>
+        <div class="stat-card white-stat">
+          <span>White</span>
+          <strong id="white-score">2</strong>
+        </div>
+        <div class="stat-card turn-stat">
+          <span>Turn</span>
+          <strong id="turn-label">Black</strong>
+        </div>
+        <div class="stat-card moves-stat">
+          <span>Legal moves</span>
+          <strong id="move-count">4</strong>
+        </div>
+      </section>
+
+      <section class="table" aria-label="Reversi table">
+        <section class="message-panel" aria-live="polite">
+          <h2 id="message-title">Black starts</h2>
+          <p id="message">Place a black disc on a glowing square to trap white discs between black ones.</p>
+          <div class="legend" aria-hidden="true">
+            <span><i class="disc black"></i> Black</span>
+            <span><i class="disc white"></i> White</span>
+          </div>
+        </section>
+
+        <div class="board-wrap">
+          <div id="board" class="board" aria-label="Reversi board"></div>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js?v=1.0"></script>
+  </body>
+</html>
