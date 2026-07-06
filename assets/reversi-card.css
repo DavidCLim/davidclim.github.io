@@ -17,18 +17,7 @@
 }
 
 .reversi-card::before {
-  position: absolute;
-  right: 22px;
-  top: 24px;
-  width: 56px;
-  height: 56px;
-  content: "";
-  border-radius: 50%;
-  background: radial-gradient(circle at 34% 24%, #ffffff, #ebe6db 66%);
-  box-shadow:
-    -42px 42px 0 -2px #111515,
-    0 0 22px rgba(134, 255, 208, 0.22);
-  pointer-events: none;
+  display: none;
 }
 
 .reversi-card::after {
