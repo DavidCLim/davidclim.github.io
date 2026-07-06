@@ -3,132 +3,32 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>EXPLODING KITTENS Web Game</title>
-    <meta name="description" content="A small browser card game inspired by Exploding Kittens.">
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="features.css?v=3.0">
-    <link rel="stylesheet" href="card-reference.css?v=3.0">
-    <link rel="stylesheet" href="card-label-fix.css?v=3.0">
-    <link rel="stylesheet" href="card-authenticity.css?v=3.0">
-    <link rel="stylesheet" href="card-badge-text.css?v=3.0">
-    <link rel="stylesheet" href="card-text-back-fix.css?v=3.0">
-    <link rel="stylesheet" href="card-description-reference.css?v=3.0">
-    <link rel="stylesheet" href="reference-photo-cards.css?v=3.0">
-    <link rel="stylesheet" href="card-clean-polish.css?v=3.0">
+    <title>Reversi moved here</title>
+    <meta name="robots" content="noindex">
+    <meta http-equiv="refresh" content="0; url=../reversi/">
+    <link rel="canonical" href="../reversi/">
+    <style>
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        color: #f5fff9;
+        font-family: Arial, Helvetica, sans-serif;
+        background: radial-gradient(circle at 18% 12%, rgba(40, 199, 111, 0.28), transparent 28%), #07130f;
+      }
+
+      a {
+        color: #86ffd0;
+        font-weight: 900;
+      }
+    </style>
   </head>
   <body>
-    <main class="game-shell">
-      <header class="topbar">
-        <a href="../../" class="home-link">Home</a>
-        <div>
-          <p class="eyebrow">Second web game</p>
-          <h1>EXPLODING KITTENS</h1>
-        </div>
-        <button id="new-game" type="button">New Game</button>
-      </header>
-
-      <section class="controls" aria-label="Game controls">
-        <div>
-          <span>Opponent</span>
-          <div class="segmented" id="opponent-picker">
-            <button type="button" data-opponent="bot" class="active">Bot</button>
-            <button type="button" data-opponent="human">Human</button>
-          </div>
-        </div>
-        <div id="difficulty-group">
-          <span>Bot difficulty</span>
-          <div class="segmented" id="difficulty-picker">
-            <button type="button" data-difficulty="easy">Easy</button>
-            <button type="button" data-difficulty="medium" class="active">Medium</button>
-            <button type="button" data-difficulty="hard">Hard</button>
-          </div>
-        </div>
-        <a href="changelog.html" class="changelog-link">Changelog</a>
-      </section>
-
-      <section class="room-panel" id="room-panel" hidden aria-label="Player vs Player room">
-        <div>
-          <span>Room code</span>
-          <strong id="room-code">----</strong>
-        </div>
-        <button id="host-room" type="button">Host Room</button>
-        <label>
-          <span>Join code</span>
-          <input id="join-code" type="text" inputmode="numeric" maxlength="4" placeholder="1234">
-        </label>
-        <button id="join-room" type="button">Join Room</button>
-        <p id="room-status">Host a room to make a 4-number code, or enter a code to join.</p>
-      </section>
-
-      <section class="scoreboard status-grid" aria-label="Game status">
-        <div class="stat-card stat-opponent">
-          <span id="bot-count-label">Bot hand</span>
-          <strong id="bot-count">0 cards</strong>
-        </div>
-        <div class="stat-card stat-deck">
-          <span>Draw pile</span>
-          <strong id="deck-count">0 cards</strong>
-        </div>
-        <div class="stat-card stat-turn">
-          <span>Turn</span>
-          <strong id="turn-label">You</strong>
-        </div>
-        <div class="stat-card stat-player">
-          <span id="player-count-label">Your hand</span>
-          <strong id="player-count">0 cards</strong>
-        </div>
-      </section>
-
-      <section class="table" aria-label="Exploding Kittens table">
-        <div class="opponent-area bot-panel">
-          <h2 id="opponent-title">Bot</h2>
-          <div id="bot-hand" class="bot-hand computer-hand"></div>
-        </div>
-
-        <div class="center-area center-panel">
-          <div>
-            <p class="pile-label">Draw pile</p>
-            <button id="draw-card" class="draw-pile deck-card" type="button">
-              <span>Draw</span>
-              <strong id="draw-count">0</strong>
-            </button>
-          </div>
-        </div>
-
-        <section class="message-panel" aria-live="polite">
-          <h2 id="message-title">Your turn</h2>
-          <p id="message">Play an action card, or draw to end your turn.</p>
-          <p id="future-view" class="future-view" hidden></p>
-        </section>
-      </section>
-
-      <section class="player-area player-panel" aria-label="Your hand">
-        <h2 id="player-title">Your hand</h2>
-        <div id="player-hand" class="player-hand"></div>
-      </section>
+    <main>
+      <h1>Reversi replaced Exploding Kittens</h1>
+      <p>Opening <a href="../reversi/">the Reversi game</a>.</p>
     </main>
-
-    <div id="result-modal" class="result-modal" hidden>
-      <div class="result-dialog" role="dialog" aria-modal="true" aria-labelledby="result-title">
-        <p id="result-title">Game over</p>
-        <button id="result-button" type="button">Play Again</button>
-      </div>
-    </div>
-
-    <div id="danger-modal" class="danger-modal" hidden>
-      <div class="danger-dialog" role="alertdialog" aria-modal="true" aria-labelledby="danger-title" aria-describedby="danger-message">
-        <p class="danger-eyebrow">Danger card drawn</p>
-        <h2 id="danger-title">Exploding Kitten!</h2>
-        <div class="danger-card" aria-hidden="true">
-          <span class="danger-burst"></span>
-          <strong>BOOM</strong>
-        </div>
-        <p id="danger-message">You drew an Exploding Kitten.</p>
-        <button id="danger-action" class="danger-action" type="button">Defuse</button>
-      </div>
-    </div>
-
-    <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
-    <script src="app.js?v=3.0"></script>
   </body>
 </html>
