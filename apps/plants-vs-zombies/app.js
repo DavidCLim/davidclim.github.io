@@ -8,6 +8,14 @@ const plantStats = {
   wall: { hp: 360, fireRate: 0, damage: 0 },
   chomper: { hp: 150, fireRate: 2600, damage: 120, melee: true },
 };
+const zombieTypes = [
+  { kind: "normal", min: 0, weight: 48, hp: 120, speed: 0.00022, damage: 16 },
+  { kind: "flag", min: 4, weight: 13, hp: 110, speed: 0.00027, damage: 14 },
+  { kind: "runner", min: 6, weight: 16, hp: 85, speed: 0.00035, damage: 12 },
+  { kind: "cone", min: 8, weight: 20, hp: 165, speed: 0.0002, damage: 18 },
+  { kind: "bucket", min: 12, weight: 15, hp: 230, speed: 0.00018, damage: 22 },
+  { kind: "brute", min: 18, weight: 7, hp: 310, speed: 0.00015, damage: 28 },
+];
 
 const state = {
   sun: 75,
@@ -137,23 +145,34 @@ function update(dt) {
   render();
 }
 
+function chooseZombieType() {
+  const options = zombieTypes.filter((type) => state.spawned >= type.min);
+  const total = options.reduce((sum, type) => sum + type.weight, 0);
+  let roll = Math.random() * total;
+  for (const type of options) {
+    roll -= type.weight;
+    if (roll <= 0) return type;
+  }
+  return options[0];
+}
+
 function spawnZombie() {
   const row = Math.floor(Math.random() * rows);
-  const armored = state.spawned > 10 && Math.random() < 0.25;
-  const sprinter = state.spawned > 15 && Math.random() < 0.18;
+  const type = chooseZombieType();
   state.zombies.push({
     id: state.nextId += 1,
     row,
     x: cols + 0.35,
-    hp: armored ? 170 : sprinter ? 85 : 120,
-    maxHp: armored ? 170 : sprinter ? 85 : 120,
-    speed: sprinter ? 0.00033 : 0.00022,
+    hp: type.hp,
+    maxHp: type.hp,
+    speed: type.speed,
     slow: 0,
     eat: 0,
-    kind: armored ? "armored" : sprinter ? "sprinter" : "normal",
+    damage: type.damage,
+    kind: type.kind,
   });
   state.spawned += 1;
-  state.spawnTimer = Math.max(850, 2700 - state.spawned * 45);
+  state.spawnTimer = Math.max(760, 2700 - state.spawned * 48);
 }
 
 function updatePlants(dt) {
@@ -208,7 +227,7 @@ function updateZombies(dt) {
     if (blocker) {
       zombie.eat -= dt;
       if (zombie.eat <= 0) {
-        blocker.hp -= zombie.kind === "armored" ? 22 : 16;
+        blocker.hp -= zombie.damage;
         zombie.eat = 480;
       }
     } else {
@@ -269,7 +288,7 @@ function renderPlant(plant) {
 }
 
 function renderZombie(zombie) {
-  return `<div class="zombie ${zombie.kind}" style="${position(zombie.row, zombie.x)}"><span class="eye"></span><span class="arm"></span></div>`;
+  return `<div class="zombie ${zombie.kind}" style="${position(zombie.row, zombie.x)}"><span class="helmet"></span><span class="cone"></span><span class="flag"></span><span class="eye"></span><span class="arm"></span></div>`;
 }
 
 function renderShot(shot) {
