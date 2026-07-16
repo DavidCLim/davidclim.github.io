@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Plants vs Zombies Web Game</title>
     <meta name="description" content="A lane-defense plants versus zombies style web game using original David Edition plant art.">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=1.1">
   </head>
   <body>
     <main class="game-shell">
@@ -15,7 +15,10 @@
           <p class="eyebrow">Second web game</p>
           <h1>PLANTS VS ZOMBIES</h1>
         </div>
-        <button id="new-game" type="button">New Game</button>
+        <div class="top-actions">
+          <a class="changelog-link" href="changelog.html">Changelog</a>
+          <button id="new-game" type="button">New Game</button>
+        </div>
       </header>
 
       <section class="hud" aria-label="Game status">
@@ -69,7 +72,6 @@
         <section class="message-panel" aria-live="polite">
           <h2 id="message-title">Defend the lawn</h2>
           <p id="message">Choose a plant, then click a lawn tile. Stop the zombies before they cross the left edge.</p>
-          <a class="changelog-link" href="changelog.html">Changelog</a>
         </section>
 
         <div class="lawn-wrap">
