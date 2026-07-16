@@ -1,0 +1,180 @@
+body {
+  background:
+    radial-gradient(circle at 14% 8%, rgba(193, 255, 98, 0.34), transparent 22%),
+    radial-gradient(circle at 88% 10%, rgba(78, 232, 118, 0.24), transparent 24%),
+    radial-gradient(circle at 8% 88%, rgba(73, 187, 82, 0.26), transparent 34%),
+    radial-gradient(circle at 86% 82%, rgba(255, 207, 87, 0.12), transparent 28%),
+    linear-gradient(145deg, #245b50 0%, #123d25 45%, #06120b 100%);
+}
+
+.seed-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.seed-card::before {
+  content: "";
+  position: absolute;
+  inset: auto -18px -38px -18px;
+  height: 62px;
+  opacity: 0.36;
+  background:
+    radial-gradient(ellipse 36px 16px at 12% 36%, #7fea5e 0 48%, transparent 50%),
+    radial-gradient(ellipse 42px 18px at 35% 48%, #33ba55 0 48%, transparent 50%),
+    radial-gradient(ellipse 40px 17px at 62% 34%, #99fb66 0 48%, transparent 50%),
+    radial-gradient(ellipse 44px 18px at 86% 48%, #2baa50 0 48%, transparent 50%);
+}
+
+.seed-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.mini-plant {
+  width: 76px;
+  height: 72px;
+  margin-bottom: 10px;
+  filter: drop-shadow(3px 4px 0 #06130a) drop-shadow(0 8px 5px rgba(0, 0, 0, 0.2));
+  background:
+    linear-gradient(88deg, transparent 45%, #06130a 46% 49%, #1b8d47 50% 57%, #06130a 58% 61%, transparent 62%) 50% 50% / 100% 62% no-repeat,
+    radial-gradient(ellipse 22px 11px at 32% 90%, #8bed66 0 55%, transparent 57%),
+    radial-gradient(ellipse 23px 12px at 61% 88%, #1a9a4b 0 55%, transparent 57%),
+    radial-gradient(ellipse 19px 10px at 47% 96%, #56d260 0 55%, transparent 57%);
+}
+
+.mini-plant::before {
+  left: 11px;
+  top: 2px;
+  width: 41px;
+  height: 39px;
+  border: 4px solid #06130a;
+  border-radius: 52% 47% 48% 55%;
+  background:
+    radial-gradient(ellipse at 31% 37%, #06150f 0 10%, transparent 11%),
+    radial-gradient(ellipse at 58% 38%, #06150f 0 10%, transparent 11%),
+    radial-gradient(circle at 35% 29%, rgba(255, 255, 255, 0.9) 0 4%, transparent 5%),
+    radial-gradient(circle at 62% 30%, rgba(255, 255, 255, 0.9) 0 4%, transparent 5%),
+    radial-gradient(circle at 25% 18%, rgba(255, 255, 255, 0.72) 0 9%, transparent 10%),
+    radial-gradient(circle at 72% 67%, rgba(49, 178, 70, 0.36) 0 12%, transparent 13%),
+    linear-gradient(145deg, #d9ff67 0%, #78e154 45%, #159246 100%);
+  transform: rotate(-5deg);
+}
+
+.mini-plant::after {
+  left: 45px;
+  top: 20px;
+  width: 27px;
+  height: 24px;
+  border: 4px solid #06130a;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 63% 52%, #010806 0 43%, transparent 44%),
+    linear-gradient(145deg, #58d65b, #08723e 82%);
+  transform: rotate(8deg);
+}
+
+.mini-plant.ice::before {
+  border-color: #062035;
+  background:
+    radial-gradient(ellipse at 31% 37%, #061522 0 10%, transparent 11%),
+    radial-gradient(ellipse at 58% 38%, #061522 0 10%, transparent 11%),
+    radial-gradient(circle at 36% 30%, white 0 4%, transparent 5%),
+    radial-gradient(circle at 63% 31%, white 0 4%, transparent 5%),
+    radial-gradient(circle at 25% 18%, rgba(255, 255, 255, 0.84) 0 9%, transparent 10%),
+    linear-gradient(145deg, #c9ffff 0%, #66cee2 55%, #246b91 100%);
+  clip-path: polygon(0 26%, 14% 6%, 27% 20%, 43% 0, 54% 18%, 78% 4%, 100% 26%, 100% 100%, 0 100%);
+}
+
+.mini-plant.ice::after {
+  border-color: #062035;
+  background: radial-gradient(circle at 63% 52%, #011722 0 43%, transparent 44%), linear-gradient(145deg, #8ff7ff, #2a8db5 82%);
+}
+
+.mini-plant.fire::before {
+  border-color: #28040b;
+  background:
+    radial-gradient(ellipse at 31% 37%, #fff6ad 0 10%, transparent 11%),
+    radial-gradient(ellipse at 58% 38%, #fff6ad 0 10%, transparent 11%),
+    radial-gradient(circle at 52% 36%, #fff4a6 0 21%, #ff6b32 41%, #8d061a 78%);
+  box-shadow: 0 0 18px rgba(255, 75, 49, 0.72);
+}
+
+.mini-plant.fire::after {
+  border-color: #28040b;
+  background: radial-gradient(circle at 63% 52%, #210005 0 43%, transparent 44%), linear-gradient(145deg, #ff8c43, #8d061a 82%);
+}
+
+.mini-plant.wall::before {
+  left: 16px;
+  width: 43px;
+  height: 45px;
+  border-radius: 45% 50% 44% 52%;
+  background:
+    radial-gradient(ellipse at 32% 45%, #06150f 0 10%, transparent 11%),
+    radial-gradient(ellipse at 62% 45%, #06150f 0 10%, transparent 11%),
+    radial-gradient(circle at 37% 37%, white 0 4%, transparent 5%),
+    radial-gradient(circle at 67% 38%, white 0 4%, transparent 5%),
+    linear-gradient(145deg, #e0ff75, #7cda46 62%, #24813a);
+}
+
+.mini-plant.wall::after {
+  display: block;
+  left: 25px;
+  top: -3px;
+  width: 20px;
+  height: 17px;
+  border-radius: 8% 82% 12% 78%;
+  background: linear-gradient(145deg, #a8ff67, #147d41);
+  transform: rotate(-24deg);
+}
+
+.mini-plant.chomper::before {
+  left: 7px;
+  width: 47px;
+  height: 42px;
+  border-radius: 43% 57% 44% 58%;
+  background:
+    radial-gradient(ellipse at 29% 34%, #06150f 0 10%, transparent 11%),
+    radial-gradient(ellipse at 59% 43%, #06150f 0 10%, transparent 11%),
+    radial-gradient(circle at 34% 27%, white 0 4%, transparent 5%),
+    radial-gradient(circle at 64% 36%, white 0 4%, transparent 5%),
+    linear-gradient(145deg, #e4ff73, #56d256 62%, #137b42);
+}
+
+.mini-plant.chomper::after {
+  left: 39px;
+  top: 14px;
+  width: 36px;
+  height: 33px;
+  background:
+    repeating-linear-gradient(112deg, transparent 0 6px, rgba(255, 255, 255, 0.95) 7px 10px, transparent 11px 18px),
+    radial-gradient(circle at 55% 52%, #03100a 0 49%, #1b6839 50%);
+}
+
+.plant-head {
+  box-shadow: inset -7px -9px 0 rgba(0, 67, 31, 0.18), inset 5px 5px 0 rgba(255, 255, 255, 0.12);
+}
+
+.plant .leaves,
+.plant .leaves::before,
+.plant .leaves::after {
+  box-shadow: inset 4px 3px 0 rgba(221, 255, 124, 0.22);
+}
+
+.lawn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(95deg, transparent 0 36px, rgba(5, 90, 42, 0.12) 37px 40px, transparent 41px 82px),
+    radial-gradient(ellipse 85px 18px at 17% 22%, rgba(12, 114, 50, 0.16), transparent 72%),
+    radial-gradient(ellipse 96px 21px at 68% 84%, rgba(12, 114, 50, 0.14), transparent 72%);
+}
+
+@media (max-width: 860px) {
+  .mini-plant {
+    width: 68px;
+    height: 66px;
+  }
+}
