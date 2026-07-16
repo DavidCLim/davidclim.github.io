@@ -1,8 +1,8 @@
 :root {
   --bg: #143333;
-  --panel: rgba(15, 43, 37, 0.88);
-  --panel-strong: rgba(20, 64, 47, 0.94);
-  --line: rgba(166, 255, 132, 0.28);
+  --panel: rgba(13, 39, 31, 0.9);
+  --panel-strong: rgba(20, 64, 47, 0.95);
+  --line: rgba(166, 255, 132, 0.3);
   --leaf: #56d260;
   --leaf-dark: #0d7c42;
   --acid: #b8ff5b;
@@ -11,6 +11,7 @@
   --ice: #86f4ff;
   --ink: #f5ffe9;
   --muted: #c4e7c8;
+  --outline: #06130a;
 }
 
 * {
@@ -18,14 +19,44 @@
 }
 
 body {
+  position: relative;
   min-height: 100vh;
   margin: 0;
+  overflow-x: hidden;
   color: var(--ink);
   font-family: Arial, Helvetica, sans-serif;
   background:
-    radial-gradient(circle at 16% 10%, rgba(184, 255, 91, 0.22), transparent 28%),
-    radial-gradient(circle at 90% 6%, rgba(255, 75, 49, 0.18), transparent 30%),
-    linear-gradient(145deg, #143333 0%, #0f271f 56%, #08130e 100%);
+    radial-gradient(circle at 16% 10%, rgba(184, 255, 91, 0.28), transparent 24%),
+    radial-gradient(circle at 88% 8%, rgba(255, 75, 49, 0.16), transparent 28%),
+    radial-gradient(circle at 5% 92%, rgba(78, 222, 124, 0.22), transparent 34%),
+    linear-gradient(145deg, #194743 0%, #123522 48%, #06110b 100%);
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+body::before {
+  z-index: 0;
+  opacity: 0.54;
+  background:
+    radial-gradient(ellipse 120px 42px at 8% 14%, rgba(122, 231, 91, 0.32) 0 48%, transparent 50%),
+    radial-gradient(ellipse 150px 48px at 92% 19%, rgba(79, 202, 81, 0.28) 0 48%, transparent 50%),
+    radial-gradient(ellipse 110px 36px at 20% 72%, rgba(184, 255, 91, 0.22) 0 48%, transparent 50%),
+    radial-gradient(ellipse 150px 54px at 86% 76%, rgba(69, 189, 89, 0.22) 0 48%, transparent 50%),
+    repeating-linear-gradient(112deg, transparent 0 70px, rgba(158, 255, 113, 0.08) 72px 76px, transparent 78px 150px);
+}
+
+body::after {
+  z-index: 0;
+  opacity: 0.55;
+  background:
+    linear-gradient(90deg, transparent 0 7%, rgba(43, 136, 61, 0.28) 7.3% 7.6%, transparent 7.9% 18%, rgba(51, 165, 69, 0.22) 18.3% 18.6%, transparent 18.9% 100%),
+    radial-gradient(ellipse at 50% 112%, rgba(80, 205, 69, 0.34), transparent 48%);
 }
 
 button,
@@ -38,6 +69,8 @@ button {
 }
 
 .game-shell {
+  position: relative;
+  z-index: 1;
   width: min(1220px, calc(100% - 24px));
   margin: 0 auto;
   padding: 18px 0 28px;
@@ -51,11 +84,12 @@ button {
   border: 1px solid var(--line);
   border-radius: 8px;
   background:
-    linear-gradient(135deg, rgba(184, 255, 91, 0.11), rgba(73, 202, 96, 0.06)),
+    linear-gradient(135deg, rgba(184, 255, 91, 0.12), rgba(73, 202, 96, 0.06)),
     var(--panel);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.05) inset,
     0 18px 50px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(10px);
 }
 
 .topbar {
@@ -65,6 +99,13 @@ button {
   align-items: center;
   margin-bottom: 14px;
   padding: 14px;
+}
+
+.top-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
 }
 
 .home-link,
@@ -82,6 +123,10 @@ button {
   font-weight: 900;
   text-decoration: none;
   box-shadow: 0 0 18px rgba(184, 255, 91, 0.24), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.changelog-link {
+  background: linear-gradient(135deg, #8effa0, #33d99b 48%, #19a56f);
 }
 
 .eyebrow,
@@ -184,10 +229,28 @@ h2 {
 }
 
 .table {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(230px, 310px) 1fr;
   gap: 16px;
   padding: 16px;
+  overflow: hidden;
+}
+
+.table::before {
+  content: "";
+  position: absolute;
+  inset: auto -6% -18px -6%;
+  height: 80px;
+  opacity: 0.42;
+  background:
+    radial-gradient(ellipse 42px 18px at 8% 40%, #58cf4d 0 48%, transparent 50%),
+    radial-gradient(ellipse 52px 20px at 22% 54%, #8dea60 0 48%, transparent 50%),
+    radial-gradient(ellipse 38px 18px at 39% 42%, #42b84d 0 48%, transparent 50%),
+    radial-gradient(ellipse 56px 22px at 58% 52%, #8dea60 0 48%, transparent 50%),
+    radial-gradient(ellipse 44px 19px at 76% 41%, #43b94f 0 48%, transparent 50%),
+    radial-gradient(ellipse 58px 24px at 92% 56%, #7ee65d 0 48%, transparent 50%);
+  pointer-events: none;
 }
 
 .message-panel {
@@ -218,7 +281,9 @@ h2 {
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
     linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-    repeating-linear-gradient(180deg, #2aa85e 0 20%, #249653 20% 40%);
+    radial-gradient(ellipse 72px 18px at 10% 12%, rgba(209, 255, 119, 0.16), transparent 70%),
+    radial-gradient(ellipse 94px 22px at 78% 70%, rgba(209, 255, 119, 0.14), transparent 70%),
+    repeating-linear-gradient(180deg, #31b665 0 20%, #259f57 20% 40%);
   box-shadow: inset 0 0 0 2px rgba(184, 255, 91, 0.16), 0 24px 70px rgba(0, 0, 0, 0.42);
 }
 
@@ -226,6 +291,14 @@ h2 {
   position: relative;
   border: 1px solid rgba(3, 25, 13, 0.22);
   background: radial-gradient(circle at 45% 40%, rgba(255, 255, 255, 0.08), transparent 40%);
+}
+
+.tile::after {
+  content: "";
+  position: absolute;
+  inset: 72% 16% 7% 12%;
+  border-radius: 50%;
+  background: rgba(5, 61, 29, 0.12);
 }
 
 .tile:hover {
@@ -248,23 +321,41 @@ h2 {
 }
 
 .plant {
-  width: min(8.4vw, 76px);
-  height: min(8.4vw, 76px);
-  filter: drop-shadow(0 7px 0 rgba(0, 0, 0, 0.18));
+  width: min(9.2vw, 86px);
+  height: min(9.2vw, 86px);
+  filter: drop-shadow(3px 5px 0 rgba(4, 13, 8, 0.62)) drop-shadow(0 10px 6px rgba(0, 0, 0, 0.18));
+}
+
+.plant::before {
+  content: "";
+  position: absolute;
+  left: 45%;
+  top: 2%;
+  width: 23%;
+  height: 23%;
+  border: 3px solid var(--outline);
+  border-radius: 8% 82% 12% 78%;
+  background: linear-gradient(145deg, #9eff61, #158a42);
+  transform: rotate(22deg);
+  z-index: 0;
 }
 
 .plant-head {
   position: absolute;
-  left: 16%;
-  top: 3%;
-  width: 67%;
-  height: 58%;
-  border: 4px solid #06130a;
-  border-radius: 52% 47% 49% 52%;
+  left: 11%;
+  top: 1%;
+  width: 70%;
+  height: 61%;
+  z-index: 2;
+  border: 5px solid var(--outline);
+  border-radius: 52% 47% 48% 55%;
   background:
-    radial-gradient(circle at 28% 24%, rgba(255, 255, 255, 0.52), transparent 12%),
-    radial-gradient(circle at 70% 27%, rgba(221, 255, 111, 0.35), transparent 13%),
-    linear-gradient(145deg, #c3ff5c, #3fca55 62%, #118345);
+    radial-gradient(circle at 29% 20%, rgba(255, 255, 255, 0.7) 0 8%, transparent 9%),
+    radial-gradient(circle at 64% 24%, rgba(223, 255, 116, 0.34) 0 10%, transparent 11%),
+    radial-gradient(circle at 33% 70%, rgba(151, 255, 76, 0.34) 0 9%, transparent 10%),
+    radial-gradient(circle at 70% 64%, rgba(31, 164, 66, 0.32) 0 11%, transparent 12%),
+    linear-gradient(145deg, #d7ff66 0%, #73df55 42%, #1b9e49 73%, #0b683c 100%);
+  transform: rotate(-5deg);
 }
 
 .plant-head::before,
@@ -272,35 +363,54 @@ h2 {
   content: "";
   position: absolute;
   top: 30%;
-  width: 16%;
-  height: 29%;
+  width: 17%;
+  height: 31%;
+  border: 2px solid rgba(2, 11, 7, 0.46);
   border-radius: 50%;
-  background: #062014;
-  box-shadow: inset 3px 3px 0 rgba(255, 255, 255, 0.92);
+  background: #06150f;
+  box-shadow: inset 4px 4px 0 rgba(255, 255, 255, 0.95);
 }
 
-.plant-head::before { left: 26%; }
+.plant-head::before { left: 25%; }
 .plant-head::after { left: 53%; }
 
 .mouth {
   position: absolute;
-  right: -25%;
-  top: 28%;
-  width: 42%;
-  height: 40%;
-  border: 4px solid #06130a;
+  right: -31%;
+  top: 26%;
+  width: 48%;
+  height: 43%;
+  border: 5px solid var(--outline);
+  border-radius: 51% 49% 47% 53%;
+  background:
+    radial-gradient(circle at 62% 52%, #010806 0 45%, transparent 46%),
+    radial-gradient(circle at 28% 28%, rgba(183, 255, 116, 0.54), transparent 17%),
+    linear-gradient(145deg, #55d55a, #08723e 82%);
+  transform: rotate(8deg);
+}
+
+.mouth::after {
+  content: "";
+  position: absolute;
+  right: 11%;
+  top: 18%;
+  width: 19%;
+  height: 21%;
   border-radius: 50%;
-  background: radial-gradient(circle at 72% 50%, #04120d 0 45%, #0f6b3e 46% 100%);
+  background: rgba(255, 255, 255, 0.48);
 }
 
 .stem {
   position: absolute;
   left: 47%;
-  top: 56%;
-  width: 10%;
-  height: 23%;
+  top: 55%;
+  width: 12%;
+  height: 25%;
+  z-index: 1;
+  border: 3px solid var(--outline);
+  border-top: 0;
   border-radius: 999px;
-  background: #117343;
+  background: linear-gradient(90deg, #0a6339, #28a653 60%, #0d6b3d);
   transform: rotate(3deg);
 }
 
@@ -310,34 +420,57 @@ h2 {
   position: absolute;
   content: "";
   bottom: 0;
-  width: 44%;
-  height: 24%;
-  border: 3px solid #073218;
-  background: linear-gradient(145deg, #79df64, #148947);
+  width: 46%;
+  height: 25%;
+  z-index: 3;
+  border: 4px solid var(--outline);
+  background:
+    linear-gradient(34deg, transparent 46%, rgba(219, 255, 118, 0.5) 47% 52%, transparent 53%),
+    linear-gradient(145deg, #8ff06a, #15964b 66%, #0d6238);
 }
 
 .leaves {
-  left: 28%;
-  border-radius: 12% 70% 18% 70%;
-  transform: rotate(-9deg);
+  left: 27%;
+  border-radius: 12% 75% 18% 70%;
+  transform: rotate(-8deg);
 }
 
 .leaves::before {
-  left: -42%;
-  bottom: -6%;
-  border-radius: 70% 12% 70% 18%;
-  transform: rotate(-18deg);
+  left: -48%;
+  bottom: -10%;
+  border-radius: 76% 12% 70% 18%;
+  transform: rotate(-19deg);
 }
 
 .leaves::after {
-  right: -42%;
-  bottom: -6%;
-  border-radius: 12% 70% 18% 70%;
-  transform: rotate(18deg);
+  right: -48%;
+  bottom: -10%;
+  border-radius: 12% 75% 18% 70%;
+  transform: rotate(20deg);
+}
+
+.plant.ice::before {
+  background: linear-gradient(145deg, #eaffff, #5ac6e8);
 }
 
 .plant.ice .plant-head {
-  background: linear-gradient(145deg, #a8fbff, #4aa6c4 70%, #23658a);
+  border-color: #062035;
+  background:
+    radial-gradient(circle at 30% 21%, rgba(255, 255, 255, 0.86) 0 9%, transparent 10%),
+    radial-gradient(circle at 67% 25%, rgba(207, 255, 255, 0.36) 0 11%, transparent 12%),
+    linear-gradient(145deg, #bdffff 0%, #62c6dc 53%, #276a91 100%);
+}
+
+.plant.ice .mouth {
+  border-color: #062035;
+  background: radial-gradient(circle at 62% 52%, #011722 0 45%, transparent 46%), linear-gradient(145deg, #8ff7ff, #2a8db5 82%);
+}
+
+.plant.ice .leaves,
+.plant.ice .leaves::before,
+.plant.ice .leaves::after {
+  border-color: #062035;
+  background: linear-gradient(145deg, #90f8ff, #15916c 70%);
 }
 
 .plant.ice .plant-head .crown,
@@ -345,79 +478,118 @@ h2 {
 .plant.ice .plant-head .crown::after {
   position: absolute;
   content: "";
-  left: -22%;
-  top: -16%;
-  width: 29%;
-  height: 42%;
-  border: 3px solid #0b3550;
-  background: linear-gradient(145deg, #e5ffff, #72d8ff);
+  left: -26%;
+  top: -19%;
+  width: 31%;
+  height: 45%;
+  border: 3px solid #062035;
+  background: linear-gradient(145deg, #f1ffff, #73ddff 62%, #3086b2);
   clip-path: polygon(50% 0, 100% 100%, 0 100%);
 }
 
-.plant.ice .plant-head .crown::before { left: 55%; top: 0; transform: rotate(20deg); }
-.plant.ice .plant-head .crown::after { left: 105%; top: 6%; transform: rotate(38deg); }
+.plant.ice .plant-head .crown::before { left: 52%; top: -4%; transform: rotate(20deg); }
+.plant.ice .plant-head .crown::after { left: 104%; top: 8%; transform: rotate(40deg); }
+
+.plant.fire::after {
+  content: "";
+  position: absolute;
+  left: 18%;
+  top: -10%;
+  width: 76%;
+  height: 78%;
+  z-index: 1;
+  border-radius: 52% 48% 46% 58%;
+  background:
+    radial-gradient(circle at 50% 52%, rgba(255, 255, 255, 0.28), transparent 30%),
+    radial-gradient(circle at 60% 40%, rgba(255, 211, 89, 0.64), transparent 42%),
+    linear-gradient(140deg, rgba(255, 164, 82, 0.82), rgba(255, 39, 39, 0.2) 70%);
+  filter: blur(1px);
+}
 
 .plant.fire .plant-head {
-  background: radial-gradient(circle at 62% 36%, #fff4a6 0 18%, #ff5b34 38%, #8d061a 76%);
-  box-shadow: 0 0 24px rgba(255, 75, 49, 0.72);
+  z-index: 2;
+  border-color: #28040b;
+  background: radial-gradient(circle at 60% 35%, #fff4a6 0 19%, #ff6b32 40%, #8d061a 76%);
+  box-shadow: 0 0 25px rgba(255, 75, 49, 0.72);
 }
 
 .plant.fire .plant-head::before,
 .plant.fire .plant-head::after { background: #fff6ad; box-shadow: none; }
+.plant.fire .mouth { border-color: #28040b; background: radial-gradient(circle at 63% 53%, #210005 0 45%, transparent 46%), linear-gradient(145deg, #ff8c43, #8d061a 80%); }
 .plant.fire .leaves,
 .plant.fire .leaves::before,
-.plant.fire .leaves::after { background: linear-gradient(145deg, #b82136, #5c081c); }
+.plant.fire .leaves::after { border-color: #28040b; background: linear-gradient(145deg, #b82136, #5c081c); }
 
 .plant.wall .mouth { display: none; }
 .plant.wall .plant-head {
-  width: 74%;
-  height: 67%;
-  left: 12%;
+  width: 78%;
+  height: 70%;
+  left: 10%;
+  top: 0;
   border-radius: 46% 50% 44% 52%;
-  background: linear-gradient(145deg, #dbff75, #79d849 62%, #24813a);
+  background:
+    radial-gradient(circle at 27% 19%, rgba(255, 255, 255, 0.58) 0 8%, transparent 9%),
+    linear-gradient(145deg, #e0ff75, #7cda46 62%, #24813a);
 }
 
 .plant.wall .plant-head::before { left: 25%; top: 35%; }
 .plant.wall .plant-head::after { left: 58%; top: 35%; }
 
-.plant.chomper .plant-head {
-  width: 82%;
-  height: 66%;
-  left: 8%;
-  border-radius: 44% 54% 46% 56%;
-  background: linear-gradient(145deg, #d8ff76, #49c954 65%, #158245);
+.plant.wall::before {
+  left: 28%;
+  top: -7%;
+  width: 20%;
+  height: 23%;
+  transform: rotate(-18deg);
 }
 
+.plant.chomper .plant-head {
+  width: 83%;
+  height: 67%;
+  left: 6%;
+  top: 0;
+  border-radius: 43% 57% 44% 58%;
+  background:
+    radial-gradient(circle at 29% 19%, rgba(255, 255, 255, 0.6) 0 8%, transparent 9%),
+    linear-gradient(145deg, #e4ff73, #56d256 62%, #137b42);
+}
+
+.plant.chomper .plant-head::before { top: 28%; left: 25%; transform: rotate(-12deg); }
+.plant.chomper .plant-head::after { top: 34%; left: 56%; transform: rotate(10deg); }
+
 .plant.chomper .mouth {
-  right: -10%;
-  top: 18%;
-  width: 58%;
-  height: 52%;
-  background: radial-gradient(circle at 55% 52%, #03100a 0 49%, #1b6839 50%);
+  right: -12%;
+  top: 15%;
+  width: 59%;
+  height: 54%;
+  background:
+    repeating-linear-gradient(112deg, transparent 0 8px, rgba(255, 255, 255, 0.92) 9px 13px, transparent 14px 23px),
+    radial-gradient(circle at 55% 52%, #03100a 0 49%, #1b6839 50%);
 }
 
 .plant.triple .plant-head {
-  box-shadow: -18px 11px 0 -4px #79df64, 18px 11px 0 -4px #79df64;
+  box-shadow: -20px 12px 0 -4px #79df64, 20px 12px 0 -4px #79df64;
 }
 
 .mini-plant {
   position: relative;
   display: block;
-  width: 56px;
-  height: 52px;
+  width: 60px;
+  height: 56px;
   margin: 0 auto 8px;
+  filter: drop-shadow(2px 3px 0 #06130a);
 }
 
 .mini-plant::before {
   content: "";
   position: absolute;
-  left: 14px;
+  left: 12px;
   top: 2px;
-  width: 30px;
-  height: 30px;
+  width: 33px;
+  height: 32px;
   border: 3px solid #06130a;
-  border-radius: 50%;
-  background: linear-gradient(145deg, #c3ff5c, #3fca55);
+  border-radius: 53% 47% 46% 56%;
+  background: linear-gradient(145deg, #d7ff66, #3fca55 68%);
 }
 
 .mini-plant::after {
@@ -425,17 +597,17 @@ h2 {
   position: absolute;
   left: 38px;
   top: 13px;
-  width: 18px;
-  height: 18px;
+  width: 21px;
+  height: 19px;
   border: 3px solid #06130a;
   border-radius: 50%;
   background: #0f6b3e;
 }
 
-.mini-plant.ice::before { background: linear-gradient(145deg, #a8fbff, #4aa6c4); }
+.mini-plant.ice::before { background: linear-gradient(145deg, #bdffff, #4aa6c4); }
 .mini-plant.fire::before { background: radial-gradient(circle, #fff4a6, #ff5b34 48%, #8d061a); }
 .mini-plant.wall::after { display: none; }
-.mini-plant.chomper::after { width: 24px; height: 23px; background: #07140d; }
+.mini-plant.chomper::after { width: 25px; height: 23px; background: #07140d; }
 
 .zombie {
   width: min(7.6vw, 68px);
@@ -504,12 +676,32 @@ h2 {
 .shot.ice { background: radial-gradient(circle at 35% 25%, #efffff, #62dbff 62%); box-shadow: 0 0 14px rgba(134, 244, 255, 0.74); }
 .shot.fire { background: radial-gradient(circle at 35% 25%, #fff3a6, #ff4b31 62%); box-shadow: 0 0 16px rgba(255, 75, 49, 0.8); }
 
+.changelog-page {
+  display: block;
+}
+
+.changelog-entry ul {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
 @media (max-width: 860px) {
   .topbar,
   .hud,
   .seed-bank,
   .table {
     grid-template-columns: 1fr;
+  }
+
+  .top-actions {
+    justify-content: stretch;
+  }
+
+  .top-actions > *,
+  .home-link {
+    width: 100%;
   }
 
   .seed-bank {
