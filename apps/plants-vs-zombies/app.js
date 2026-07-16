@@ -18,7 +18,6 @@ const plantCatalog = [
 
 const plantStats = Object.fromEntries(plantCatalog.map((plant) => [plant.id, plant]));
 const costs = Object.fromEntries(plantCatalog.map((plant) => [plant.id, plant.cost]));
-
 const zombieTypes = [
   { kind: "normal", min: 0, weight: 48, hp: 120, speed: 0.00022, damage: 16 },
   { kind: "flag", min: 4, weight: 13, hp: 110, speed: 0.00027, damage: 14 },
@@ -32,7 +31,7 @@ const state = {
   sun: 75,
   wave: 1,
   selected: "pea",
-  equipped: ["pea", "ice", "fire", "wall", "chomper"].filter((id) => plantStats[id]),
+  equipped: ["pea", "ice", "fire", "spike", "chomper"],
   running: true,
   won: false,
   lost: false,
@@ -41,14 +40,12 @@ const state = {
   zombies: [],
   shots: [],
   spawned: 0,
-  target: 24,
+  target: 28,
   spawnTimer: 2200,
   sunTimer: 0,
   lastTime: 0,
   clock: 0,
 };
-
-if (!state.equipped.includes("wall")) state.equipped = ["pea", "ice", "fire", "spike", "chomper"];
 
 const els = {
   lawn: document.querySelector("#lawn"),
@@ -63,6 +60,9 @@ const els = {
   plantShop: document.querySelector("#plant-shop"),
   loadoutCount: document.querySelector("#loadout-count"),
 };
+
+let lastSeedHtml = "";
+let lastShopHtml = "";
 
 function startGame() {
   Object.assign(state, {
@@ -83,6 +83,7 @@ function startGame() {
     lastTime: performance.now(),
     clock: 0,
   });
+  lastSeedHtml = "";
   setMessage("Defend the lawn", "Pick from your five equipped plants, then plant on the lawn. Use the shop to swap your lineup.");
   buildTiles();
   render();
@@ -102,42 +103,19 @@ function buildTiles() {
       els.lawn.append(tile);
     }
   }
-  const entityLayer = document.createElement("div");
-  entityLayer.className = "entity-layer";
-  const shotLayer = document.createElement("div");
-  shotLayer.className = "shot-layer";
-  els.lawn.append(entityLayer, shotLayer);
+  els.lawn.insertAdjacentHTML("beforeend", '<div class="entity-layer"></div><div class="shot-layer"></div>');
 }
 
 function plantAt(row, col) {
-  if (!state.running || state.lost || state.won) return;
-  if (!state.equipped.includes(state.selected)) return;
-  if (col > 5) {
-    setMessage("Too far forward", "Plant closer to the house. Zombies enter from the right side.");
-    return;
-  }
+  if (!state.running || state.lost || state.won || !state.equipped.includes(state.selected)) return;
+  if (col > 5) return setMessage("Too far forward", "Plant closer to the house. Zombies enter from the right side.");
   if (state.plants.some((plant) => plant.row === row && plant.col === col)) return;
   const stats = plantStats[state.selected];
-  if (state.sun < stats.cost) {
-    setMessage("Need more sun", `${stats.name} costs ${stats.cost} sun.`);
-    return;
-  }
+  if (state.sun < stats.cost) return setMessage("Need more sun", `${stats.name} costs ${stats.cost} sun.`);
   state.sun -= stats.cost;
-  state.plants.push({
-    id: state.nextId += 1,
-    type: state.selected,
-    row,
-    col,
-    hp: stats.hp,
-    cooldown: 420,
-    action: 0,
-  });
+  state.plants.push({ id: state.nextId += 1, type: state.selected, row, col, hp: stats.hp, cooldown: 420, action: 0 });
   setMessage(`${stats.name} planted`, stats.role);
   render();
-}
-
-function plantName(type) {
-  return plantStats[type]?.name || "Plant";
 }
 
 function loop(now) {
@@ -154,10 +132,8 @@ function update(dt) {
     state.sun += 25;
     state.sunTimer = 0;
   }
-
   state.spawnTimer -= dt;
   if (state.spawned < state.target && state.spawnTimer <= 0) spawnZombie();
-
   updatePlants(dt);
   updateShots(dt);
   updateZombies(dt);
@@ -168,8 +144,7 @@ function update(dt) {
 
 function chooseZombieType() {
   const options = zombieTypes.filter((type) => state.spawned >= type.min);
-  const total = options.reduce((sum, type) => sum + type.weight, 0);
-  let roll = Math.random() * total;
+  let roll = Math.random() * options.reduce((sum, type) => sum + type.weight, 0);
   for (const type of options) {
     roll -= type.weight;
     if (roll <= 0) return type;
@@ -178,11 +153,10 @@ function chooseZombieType() {
 }
 
 function spawnZombie() {
-  const row = Math.floor(Math.random() * rows);
   const type = chooseZombieType();
   state.zombies.push({
     id: state.nextId += 1,
-    row,
+    row: Math.floor(Math.random() * rows),
     x: cols + 0.35,
     hp: type.hp,
     maxHp: type.hp,
@@ -228,12 +202,9 @@ function updatePlants(dt) {
       continue;
     }
 
-    const rowsToShoot = stats.multiRows || [0];
-    rowsToShoot.forEach((offset) => {
+    (stats.multiRows || [0]).forEach((offset) => {
       const shotRow = plant.row + offset;
-      if (shotRow < 0 || shotRow >= rows) return;
-      const laneTarget = nearestZombieInLane(shotRow, plant.col);
-      if (!laneTarget) return;
+      if (shotRow < 0 || shotRow >= rows || !nearestZombieInLane(shotRow, plant.col)) return;
       state.shots.push({
         id: state.nextId += 1,
         row: shotRow,
@@ -257,9 +228,7 @@ function shotSpeed(type) {
 }
 
 function nearestZombieInLane(row, col) {
-  return state.zombies
-    .filter((zombie) => zombie.row === row && zombie.x > col - 0.25)
-    .sort((a, b) => a.x - b.x)[0];
+  return state.zombies.filter((zombie) => zombie.row === row && zombie.x > col - 0.25).sort((a, b) => a.x - b.x)[0];
 }
 
 function updateShots(dt) {
@@ -270,20 +239,8 @@ function updateShots(dt) {
     hit.hp -= shot.damage;
     if (shot.slow) hit.slow = Math.max(hit.slow, shot.slow);
     if (shot.poison) hit.poison = Math.max(hit.poison, shot.poison);
-    if (shot.splash) {
-      state.zombies
-        .filter((zombie) => zombie !== hit && zombie.row === hit.row && Math.abs(zombie.x - hit.x) <= shot.splash)
-        .forEach((zombie) => { zombie.hp -= Math.round(shot.damage * 0.52); });
-    }
-    if (shot.chain) {
-      state.zombies
-        .filter((zombie) => zombie !== hit && Math.abs(zombie.row - hit.row) <= 1 && Math.abs(zombie.x - hit.x) <= 1.4)
-        .slice(0, shot.chain)
-        .forEach((zombie) => {
-          zombie.hp -= Math.round(shot.damage * 0.7);
-          zombie.slow = Math.max(zombie.slow, 500);
-        });
-    }
+    if (shot.splash) state.zombies.filter((zombie) => zombie !== hit && zombie.row === hit.row && Math.abs(zombie.x - hit.x) <= shot.splash).forEach((zombie) => { zombie.hp -= Math.round(shot.damage * 0.52); });
+    if (shot.chain) state.zombies.filter((zombie) => zombie !== hit && Math.abs(zombie.row - hit.row) <= 1 && Math.abs(zombie.x - hit.x) <= 1.4).slice(0, shot.chain).forEach((zombie) => { zombie.hp -= Math.round(shot.damage * 0.7); zombie.slow = Math.max(zombie.slow, 500); });
     shot.hit = true;
   }
 }
@@ -303,8 +260,7 @@ function updateZombies(dt) {
         zombie.eat = 480;
       }
     } else {
-      const slowFactor = zombie.slow > 0 ? 0.42 : 1;
-      zombie.x -= zombie.speed * slowFactor * dt;
+      zombie.x -= zombie.speed * (zombie.slow > 0 ? 0.42 : 1) * dt;
     }
     if (zombie.x < -0.35) loseGame();
   }
@@ -317,8 +273,7 @@ function cleanup() {
 }
 
 function checkEnd() {
-  if (state.lost || state.won) return;
-  if (state.spawned >= state.target && state.zombies.length === 0) {
+  if (!state.lost && !state.won && state.spawned >= state.target && state.zombies.length === 0) {
     state.won = true;
     state.running = false;
     setMessage("You defended the lawn", "The final zombie fell. Your plants win this wave.");
@@ -339,7 +294,6 @@ function render() {
   els.status.textContent = state.won ? "Win" : state.lost ? "Lost" : "Plant!";
   renderSeedBank();
   renderShop();
-
   const entityLayer = els.lawn.querySelector(".entity-layer");
   const shotLayer = els.lawn.querySelector(".shot-layer");
   if (!entityLayer || !shotLayer) return;
@@ -348,25 +302,26 @@ function render() {
 }
 
 function renderSeedBank() {
-  els.seedBank.innerHTML = state.equipped.map((id) => {
+  const html = state.equipped.map((id) => {
     const plant = plantStats[id];
-    return `<button class="seed-card ${id === state.selected ? "active" : ""} ${state.sun < plant.cost ? "locked" : ""}" data-plant="${id}" type="button">
-      <span class="mini-plant ${id}"></span>
-      <strong>${plant.name}</strong>
-      <small>${plant.cost} sun</small>
-    </button>`;
+    return `<button class="seed-card ${id === state.selected ? "active" : ""} ${state.sun < plant.cost ? "locked" : ""}" data-plant="${id}" type="button"><span class="mini-plant ${id}"></span><strong>${plant.name}</strong><small>${plant.cost} sun</small></button>`;
   }).join("");
+  if (html !== lastSeedHtml) {
+    els.seedBank.innerHTML = html;
+    lastSeedHtml = html;
+  }
 }
 
 function renderShop() {
   els.loadoutCount.textContent = `${state.equipped.length} / ${maxEquipped} equipped`;
-  els.plantShop.innerHTML = plantCatalog.map((plant) => {
+  const html = plantCatalog.map((plant) => {
     const equipped = state.equipped.includes(plant.id);
-    return `<button class="shop-card ${equipped ? "equipped" : ""}" data-shop-plant="${plant.id}" type="button">
-      <span class="mini-plant ${plant.id}"></span>
-      <span class="shop-copy"><strong>${plant.name}</strong><small>${plant.role}</small><em>${equipped ? "Equipped" : "Tap to equip"}</em></span>
-    </button>`;
+    return `<button class="shop-card ${equipped ? "equipped" : ""}" data-shop-plant="${plant.id}" type="button"><span class="mini-plant ${plant.id}"></span><span class="shop-copy"><strong>${plant.name}</strong><small>${plant.role}</small><em>${equipped ? "Equipped" : "Tap to equip"}</em></span></button>`;
   }).join("");
+  if (html !== lastShopHtml) {
+    els.plantShop.innerHTML = html;
+    lastShopHtml = html;
+  }
 }
 
 function position(row, x) {
@@ -377,8 +332,7 @@ function renderPlant(plant) {
   const bob = Math.sin((state.clock + plant.id * 113) / 360) * 3;
   const tilt = Math.sin((state.clock + plant.id * 71) / 520) * 4;
   const action = plant.action > 0 ? " action" : "";
-  const actionScale = plant.action > 0 ? 1.08 : 1;
-  const style = `${position(plant.row, plant.col)}--bob:${bob.toFixed(2)}px;--tilt:${tilt.toFixed(2)}deg;--pulse:${actionScale};`;
+  const style = `${position(plant.row, plant.col)}--bob:${bob.toFixed(2)}px;--tilt:${tilt.toFixed(2)}deg;--pulse:${plant.action > 0 ? 1.08 : 1};`;
   return `<div class="plant ${plant.type}${action}" style="${style}"><div class="plant-head"><span class="crown"></span><span class="mouth"></span></div><span class="stem"></span><span class="leaves"></span></div>`;
 }
 
@@ -386,8 +340,7 @@ function renderZombie(zombie) {
   const limp = Math.sin((state.clock + zombie.id * 37) / 170) * 3;
   const hurt = Math.max(0, 1 - zombie.hp / zombie.maxHp);
   const status = `${zombie.slow > 0 ? " slow" : ""}${zombie.poison > 0 ? " poison" : ""}`;
-  const style = `${position(zombie.row, zombie.x)}--limp:${limp.toFixed(2)}deg;--hurt:${hurt.toFixed(2)};`;
-  return `<div class="zombie ${zombie.kind}${status}" style="${style}"><span class="helmet"></span><span class="cone"></span><span class="flag"></span><span class="eye"></span><span class="arm"></span></div>`;
+  return `<div class="zombie ${zombie.kind}${status}" style="${position(zombie.row, zombie.x)}--limp:${limp.toFixed(2)}deg;--hurt:${hurt.toFixed(2)};"><span class="helmet"></span><span class="cone"></span><span class="flag"></span><span class="eye"></span><span class="arm"></span></div>`;
 }
 
 function renderShot(shot) {
@@ -403,7 +356,7 @@ els.seedBank.addEventListener("click", (event) => {
   const card = event.target.closest(".seed-card[data-plant]");
   if (!card) return;
   state.selected = card.dataset.plant;
-  setMessage(`${plantName(state.selected)} selected`, `Click a lawn tile to plant it for ${costs[state.selected]} sun.`);
+  setMessage(`${plantStats[state.selected].name} selected`, `Click a lawn tile to plant it for ${costs[state.selected]} sun.`);
   render();
 });
 
@@ -415,16 +368,15 @@ els.plantShop.addEventListener("click", (event) => {
     if (state.equipped.length <= 1) return;
     state.equipped = state.equipped.filter((plantId) => plantId !== id);
     if (state.selected === id) state.selected = state.equipped[0];
-    setMessage(`${plantName(id)} unequipped`, "You can equip up to five plants from the shop.");
+    setMessage(`${plantStats[id].name} unequipped`, "You can equip up to five plants from the shop.");
   } else {
-    if (state.equipped.length >= maxEquipped) {
-      setMessage("Loadout full", "Unequip one plant first. You can only carry five plants at a time.");
-      return;
-    }
+    if (state.equipped.length >= maxEquipped) return setMessage("Loadout full", "Unequip one plant first. You can only carry five plants at a time.");
     state.equipped.push(id);
     state.selected = id;
-    setMessage(`${plantName(id)} equipped`, plantStats[id].role);
+    setMessage(`${plantStats[id].name} equipped`, plantStats[id].role);
   }
+  lastSeedHtml = "";
+  lastShopHtml = "";
   render();
 });
 
