@@ -255,6 +255,192 @@
   height: 61% !important;
 }
 
+/* Face pass: less pasted-on, more like the uneven painted reference art. */
+.plant-head::before,
+.plant-head::after {
+  border: 0 !important;
+  background:
+    radial-gradient(ellipse at 62% 34%, rgba(255,255,255,.98) 0 14%, transparent 16%),
+    radial-gradient(ellipse at 45% 56%, #04120f 0 60%, #000 61% 100%) !important;
+  box-shadow:
+    -2px 3px 0 rgba(0,0,0,.78),
+    inset -4px -4px 0 rgba(0,0,0,.55) !important;
+  border-radius: 55% 45% 58% 42% / 62% 48% 55% 43% !important;
+  transform-origin: center !important;
+}
+
+.plant-head::before {
+  left: 30% !important;
+  top: 23% !important;
+  width: 18% !important;
+  height: 31% !important;
+  transform: rotate(10deg) skewX(-6deg) !important;
+}
+
+.plant-head::after {
+  left: 52% !important;
+  top: 20% !important;
+  width: 13% !important;
+  height: 28% !important;
+  transform: rotate(-11deg) skewX(8deg) !important;
+  opacity: .94 !important;
+}
+
+.plant-head {
+  background:
+    linear-gradient(156deg, transparent 0 36%, rgba(1,7,5,.34) 37% 40%, transparent 41%),
+    radial-gradient(ellipse at 26% 17%, rgba(255,255,255,.9) 0 7%, transparent 8%),
+    radial-gradient(ellipse at 44% 31%, rgba(224,255,97,.26) 0 15%, transparent 16%),
+    radial-gradient(ellipse at 73% 66%, rgba(0,44,25,.42) 0 17%, transparent 18%),
+    linear-gradient(145deg, #dfff5e 0%, #79ec4f 38%, #209b48 66%, #034f31 100%) !important;
+}
+
+.plant.pea .plant-head::before {
+  left: 28% !important;
+  top: 22% !important;
+  width: 17% !important;
+  height: 33% !important;
+  transform: rotate(8deg) !important;
+}
+
+.plant.pea .plant-head::after {
+  left: 51% !important;
+  top: 19% !important;
+  width: 12% !important;
+  height: 29% !important;
+  transform: rotate(-9deg) !important;
+}
+
+.plant.pea .mouth {
+  border-radius: 39% 67% 66% 39% / 45% 58% 60% 45% !important;
+  background:
+    radial-gradient(ellipse at 67% 54%, #000 0 50%, transparent 51%),
+    radial-gradient(ellipse at 26% 23%, rgba(244,255,166,.76), transparent 18%),
+    linear-gradient(145deg, #7cf360 0%, #16934a 64%, #023f29 100%) !important;
+}
+
+.plant.ice .plant-head::before,
+.plant.ice .plant-head::after {
+  background:
+    radial-gradient(ellipse at 60% 34%, rgba(255,255,255,1) 0 15%, transparent 17%),
+    radial-gradient(ellipse at 45% 56%, #071827 0 62%, #000 63% 100%) !important;
+  box-shadow: -2px 3px 0 rgba(0,16,26,.86), inset -4px -4px 0 rgba(0,31,54,.62) !important;
+}
+
+.plant.fire .plant-head::before,
+.plant.fire .plant-head::after {
+  width: 21% !important;
+  height: 31% !important;
+  top: 28% !important;
+  border-radius: 68% 22% 70% 28% / 72% 24% 70% 28% !important;
+  background: radial-gradient(ellipse at 58% 43%, #fff7aa 0 42%, #ffbf43 43% 70%, #7d0612 72%) !important;
+  box-shadow: 0 0 12px rgba(255,196,55,.8), -3px 3px 0 rgba(75,0,8,.72) !important;
+}
+
+.plant.fire .plant-head::before {
+  left: 28% !important;
+  transform: rotate(-22deg) skewX(-8deg) !important;
+}
+
+.plant.fire .plant-head::after {
+  left: 53% !important;
+  transform: rotate(19deg) skewX(7deg) !important;
+}
+
+.plant.volt .plant-head::before {
+  left: 31% !important;
+  top: 25% !important;
+  width: 34% !important;
+  height: 35% !important;
+  border-radius: 51% 49% 48% 52% !important;
+  background: radial-gradient(circle at 50% 50%, #fff 0 38%, #b7fff4 39% 66%, #15a992 67% 100%) !important;
+  box-shadow: 0 0 20px rgba(171,255,244,.9), inset 0 0 8px rgba(0,89,77,.4) !important;
+  transform: rotate(-8deg) !important;
+}
+
+.plant.volt .plant-head::after {
+  display: none !important;
+}
+
+.plant.angry .plant-head::before,
+.plant.angry .plant-head::after,
+.plant.spike .plant-head::before,
+.plant.spike .plant-head::after {
+  height: 19% !important;
+  width: 24% !important;
+  border-radius: 18% 82% 24% 76% !important;
+  background: radial-gradient(ellipse at 72% 55%, #fff 0 18%, transparent 20%), #020807 !important;
+}
+
+.plant.angry .plant-head::before,
+.plant.spike .plant-head::before {
+  left: 30% !important;
+  top: 29% !important;
+  transform: rotate(-25deg) skewX(-11deg) !important;
+}
+
+.plant.angry .plant-head::after,
+.plant.spike .plant-head::after {
+  left: 53% !important;
+  top: 25% !important;
+  transform: rotate(18deg) skewX(9deg) !important;
+}
+
+.plant.vine .plant-head::before,
+.plant.toxic .plant-head::before {
+  left: 32% !important;
+  top: 27% !important;
+  width: 18% !important;
+  height: 34% !important;
+  transform: rotate(-5deg) !important;
+}
+
+.plant.vine .plant-head::after,
+.plant.toxic .plant-head::after {
+  left: 57% !important;
+  top: 26% !important;
+  width: 14% !important;
+  height: 31% !important;
+  transform: rotate(10deg) !important;
+}
+
+.plant.triple .plant-head::before,
+.plant.triple .plant-head::after {
+  width: 20% !important;
+  height: 28% !important;
+  top: 24% !important;
+}
+
+.plant.cannon .plant-head::before {
+  left: 34% !important;
+  top: 22% !important;
+  width: 18% !important;
+  height: 32% !important;
+}
+
+.plant.cannon .plant-head::after {
+  left: 56% !important;
+  top: 24% !important;
+  width: 13% !important;
+  height: 26% !important;
+}
+
+.plant.chomper .plant-head::before {
+  left: 34% !important;
+  top: 32% !important;
+  width: 18% !important;
+  height: 21% !important;
+  transform: rotate(-19deg) !important;
+}
+
+.plant.chomper .plant-head::after {
+  left: 57% !important;
+  top: 29% !important;
+  width: 15% !important;
+  height: 19% !important;
+  transform: rotate(18deg) !important;
+}
+
 .zombie .boss-bar {
   display: block !important;
   position: absolute;
