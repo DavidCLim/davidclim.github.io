@@ -1,0 +1,38 @@
+.plant,
+.mini-plant {
+  filter: saturate(1.18) contrast(1.12) brightness(1.04) drop-shadow(0 5px 0 rgba(5, 29, 12, .24)) !important;
+  image-rendering: auto;
+}
+
+.plant::before,
+.mini-plant::before {
+  display: block !important;
+  content: "";
+  position: absolute;
+  inset: 8% 10% 12%;
+  border-radius: 42% 48% 44% 46%;
+  background: radial-gradient(circle at 32% 24%, rgba(255, 255, 255, .34), rgba(255, 255, 255, 0) 32%);
+  opacity: .32;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.mini-plant::before {
+  inset: 10% 12% 16%;
+  opacity: .26;
+}
+
+.plant.fire,
+.mini-plant.fire {
+  filter: saturate(1.16) contrast(1.13) brightness(1.05) drop-shadow(0 0 12px rgba(255, 78, 40, .65)) !important;
+}
+
+.plant.volt,
+.mini-plant.volt {
+  filter: saturate(1.12) contrast(1.1) brightness(1.08) drop-shadow(0 0 12px rgba(122, 255, 239, .68)) !important;
+}
+
+.seed-card .mini-plant,
+.shop-card .mini-plant {
+  transform: translateZ(0) scale(.98);
+}
