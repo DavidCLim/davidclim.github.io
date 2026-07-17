@@ -1,38 +1,48 @@
 const rows = 5;
 const cols = 9;
 const maxEquipped = 5;
+const storageKey = "david-pvz-save-v1";
 
 const plantCatalog = [
-  { id: "pea", name: "Peashooter", cost: 50, role: "Balanced pea shots", hp: 90, fireRate: 1250, damage: 20, shot: "pea" },
-  { id: "ice", name: "Ice Bloom", cost: 75, role: "Slows zombies", hp: 90, fireRate: 1500, damage: 14, shot: "ice", slow: 1700 },
-  { id: "fire", name: "Fire Bloom", cost: 100, role: "Splash fireballs", hp: 85, fireRate: 1750, damage: 30, shot: "fire", splash: 0.72 },
-  { id: "volt", name: "Volt Sprout", cost: 125, role: "Chains lightning", hp: 80, fireRate: 1900, damage: 24, shot: "volt", chain: 2 },
-  { id: "angry", name: "Angry Pea", cost: 125, role: "Fast heavy shots", hp: 95, fireRate: 930, damage: 18, shot: "angry" },
-  { id: "spike", name: "Spike Leaf", cost: 75, role: "Lane spike trap", hp: 170, fireRate: 420, damage: 12, trap: true },
-  { id: "vine", name: "Vine Snare", cost: 100, role: "Grabs and weakens", hp: 120, fireRate: 720, damage: 8, trap: true, slowAura: 900 },
-  { id: "toxic", name: "Toxic Pea", cost: 125, role: "Poison shots", hp: 90, fireRate: 1450, damage: 15, shot: "toxic", poison: 2500 },
-  { id: "triple", name: "Triple Pea", cost: 175, role: "Three-lane shots", hp: 100, fireRate: 1500, damage: 17, shot: "triple", multiRows: [-1, 0, 1] },
-  { id: "chomper", name: "Chomper", cost: 150, role: "Huge bite", hp: 170, fireRate: 2500, damage: 145, melee: true },
-  { id: "cannon", name: "Pea Cannon", cost: 200, role: "Heavy pod blasts", hp: 135, fireRate: 2350, damage: 62, shot: "cannon", splash: 0.95 },
+  { id: "pea", name: "Peashooter", price: 0, cost: 50, role: "Balanced pea shots", hp: 90, fireRate: 1250, damage: 20, shot: "pea" },
+  { id: "ice", name: "Ice Bloom", price: 0, cost: 75, role: "Slows zombies", hp: 90, fireRate: 1500, damage: 14, shot: "ice", slow: 1700 },
+  { id: "fire", name: "Fire Bloom", price: 0, cost: 100, role: "Splash fireballs", hp: 85, fireRate: 1750, damage: 30, shot: "fire", splash: 0.72 },
+  { id: "spike", name: "Spike Leaf", price: 0, cost: 75, role: "Lane spike trap", hp: 170, fireRate: 420, damage: 12, trap: true },
+  { id: "chomper", name: "Chomper", price: 0, cost: 150, role: "Huge bite", hp: 170, fireRate: 2500, damage: 145, melee: true },
+  { id: "volt", name: "Volt Sprout", price: 120, cost: 125, role: "Chains lightning", hp: 80, fireRate: 1900, damage: 24, shot: "volt", chain: 2 },
+  { id: "angry", name: "Angry Pea", price: 140, cost: 125, role: "Fast heavy shots", hp: 95, fireRate: 930, damage: 18, shot: "angry" },
+  { id: "vine", name: "Vine Snare", price: 160, cost: 100, role: "Grabs and weakens", hp: 120, fireRate: 720, damage: 8, trap: true, slowAura: 900 },
+  { id: "toxic", name: "Toxic Pea", price: 180, cost: 125, role: "Poison shots", hp: 90, fireRate: 1450, damage: 15, shot: "toxic", poison: 2500 },
+  { id: "triple", name: "Triple Pea", price: 220, cost: 175, role: "Three-lane shots", hp: 100, fireRate: 1500, damage: 17, shot: "triple", multiRows: [-1, 0, 1] },
+  { id: "cannon", name: "Pea Cannon", price: 260, cost: 200, role: "Heavy pod blasts", hp: 135, fireRate: 2350, damage: 62, shot: "cannon", splash: 0.95 },
 ];
 
 const plantStats = Object.fromEntries(plantCatalog.map((plant) => [plant.id, plant]));
 const costs = Object.fromEntries(plantCatalog.map((plant) => [plant.id, plant.cost]));
+const starterPlants = plantCatalog.filter((plant) => plant.price === 0).map((plant) => plant.id);
 const zombieTypes = [
-  { kind: "normal", min: 0, weight: 48, hp: 120, speed: 0.00022, damage: 16 },
-  { kind: "flag", min: 4, weight: 13, hp: 110, speed: 0.00027, damage: 14 },
-  { kind: "runner", min: 6, weight: 16, hp: 85, speed: 0.00035, damage: 12 },
-  { kind: "cone", min: 8, weight: 20, hp: 165, speed: 0.0002, damage: 18 },
-  { kind: "bucket", min: 12, weight: 15, hp: 230, speed: 0.00018, damage: 22 },
-  { kind: "brute", min: 18, weight: 7, hp: 310, speed: 0.00015, damage: 28 },
+  { kind: "normal", min: 0, weight: 38, hp: 120, speed: 0.00022, damage: 16 },
+  { kind: "flag", min: 3, weight: 10, hp: 110, speed: 0.00027, damage: 14, aura: true },
+  { kind: "runner", min: 5, weight: 14, hp: 85, speed: 0.00036, damage: 12 },
+  { kind: "cone", min: 7, weight: 18, hp: 165, speed: 0.0002, damage: 18 },
+  { kind: "bucket", min: 10, weight: 12, hp: 230, speed: 0.00018, damage: 22, armor: 0.18 },
+  { kind: "shield", min: 12, weight: 10, hp: 180, speed: 0.00019, damage: 18, shield: 85 },
+  { kind: "healer", min: 14, weight: 8, hp: 150, speed: 0.0002, damage: 12, healer: true },
+  { kind: "leaper", min: 16, weight: 8, hp: 135, speed: 0.00028, damage: 15, leaper: true },
+  { kind: "toxic", min: 18, weight: 7, hp: 170, speed: 0.00021, damage: 14, toxic: true },
+  { kind: "brute", min: 20, weight: 6, hp: 320, speed: 0.00015, damage: 30, armor: 0.24 },
 ];
 
+const saved = loadSave();
 const state = {
+  coins: saved.coins,
+  unlocked: saved.unlocked,
+  equipped: saved.equipped,
+  phase: "setup",
   sun: 75,
-  wave: 1,
-  selected: "pea",
-  equipped: ["pea", "ice", "fire", "spike", "chomper"],
-  running: true,
+  wave: saved.wave,
+  selected: saved.equipped[0],
+  running: false,
   won: false,
   lost: false,
   nextId: 1,
@@ -40,7 +50,7 @@ const state = {
   zombies: [],
   shots: [],
   spawned: 0,
-  target: 28,
+  target: 0,
   spawnTimer: 2200,
   sunTimer: 0,
   lastTime: 0,
@@ -49,6 +59,7 @@ const state = {
 
 const els = {
   lawn: document.querySelector("#lawn"),
+  coins: document.querySelector("#coin-count"),
   sun: document.querySelector("#sun-count"),
   wave: document.querySelector("#wave-count"),
   zombiesLeft: document.querySelector("#zombies-left"),
@@ -56,6 +67,12 @@ const els = {
   messageTitle: document.querySelector("#message-title"),
   message: document.querySelector("#message"),
   newGame: document.querySelector("#new-game"),
+  startRound: document.querySelector("#start-round"),
+  shopButton: document.querySelector("#shop-button"),
+  closeShop: document.querySelector("#close-shop"),
+  shopBackdrop: document.querySelector("#shop-backdrop"),
+  shopModal: document.querySelector("#shop-modal"),
+  shopNote: document.querySelector("#shop-note"),
   seedBank: document.querySelector("#seed-bank"),
   plantShop: document.querySelector("#plant-shop"),
   loadoutCount: document.querySelector("#loadout-count"),
@@ -64,12 +81,29 @@ const els = {
 let lastSeedHtml = "";
 let lastShopHtml = "";
 
-function startGame() {
+function loadSave() {
+  const fallback = { coins: 0, unlocked: starterPlants, equipped: starterPlants.slice(0, maxEquipped), wave: 1 };
+  try {
+    const data = JSON.parse(localStorage.getItem(storageKey) || "null");
+    if (!data) return fallback;
+    const unlocked = [...new Set([...(data.unlocked || []), ...starterPlants])].filter((id) => plantStats[id]);
+    const equipped = (data.equipped || fallback.equipped).filter((id) => unlocked.includes(id)).slice(0, maxEquipped);
+    return { coins: Number(data.coins) || 0, unlocked, equipped: equipped.length ? equipped : fallback.equipped, wave: Math.max(1, Number(data.wave) || 1) };
+  } catch {
+    return fallback;
+  }
+}
+
+function saveGame() {
+  localStorage.setItem(storageKey, JSON.stringify({ coins: state.coins, unlocked: state.unlocked, equipped: state.equipped, wave: state.wave }));
+}
+
+function setupRound(message = "Open the shop, buy plants with Seed Coins, equip exactly five, then start the round. Sun is only used during the round.") {
   Object.assign(state, {
+    phase: "setup",
     sun: 75,
-    wave: 1,
-    selected: state.equipped.includes(state.selected) ? state.selected : state.equipped[0],
-    running: true,
+    selected: state.equipped[0],
+    running: false,
     won: false,
     lost: false,
     nextId: 1,
@@ -77,15 +111,47 @@ function startGame() {
     zombies: [],
     shots: [],
     spawned: 0,
-    target: 28,
+    target: 0,
     spawnTimer: 2200,
     sunTimer: 0,
     lastTime: performance.now(),
     clock: 0,
   });
   lastSeedHtml = "";
-  setMessage("Defend the lawn", "Pick from your five equipped plants, then plant on the lawn. Use the shop to swap your lineup.");
   buildTiles();
+  setMessage("Prepare the lawn", message);
+  render();
+}
+
+function startRound() {
+  if (state.phase === "running") return;
+  if (state.equipped.length !== maxEquipped) {
+    setMessage("Choose exactly five", "Open the shop and equip five unlocked plants before starting.");
+    openShop();
+    return;
+  }
+  Object.assign(state, {
+    phase: "running",
+    sun: 75,
+    selected: state.equipped[0],
+    running: true,
+    won: false,
+    lost: false,
+    plants: [],
+    zombies: [],
+    shots: [],
+    spawned: 0,
+    target: 24 + state.wave * 4,
+    spawnTimer: 1800,
+    sunTimer: 0,
+    lastTime: performance.now(),
+    clock: 0,
+  });
+  closeShop();
+  buildTiles();
+  setMessage(`Wave ${state.wave}`, "The loadout is locked. Spend sun to plant and stop the special zombies.");
+  lastSeedHtml = "";
+  lastShopHtml = "";
   render();
 }
 
@@ -143,7 +209,7 @@ function update(dt) {
 }
 
 function chooseZombieType() {
-  const options = zombieTypes.filter((type) => state.spawned >= type.min);
+  const options = zombieTypes.filter((type) => state.spawned >= type.min || state.wave >= Math.ceil(type.min / 4));
   let roll = Math.random() * options.reduce((sum, type) => sum + type.weight, 0);
   for (const type of options) {
     roll -= type.weight;
@@ -166,9 +232,17 @@ function spawnZombie() {
     eat: 0,
     damage: type.damage,
     kind: type.kind,
+    armor: type.armor || 0,
+    shield: type.shield || 0,
+    healer: !!type.healer,
+    healTimer: 900,
+    aura: !!type.aura,
+    leaper: !!type.leaper,
+    leaped: false,
+    toxic: !!type.toxic,
   });
   state.spawned += 1;
-  state.spawnTimer = Math.max(720, 2550 - state.spawned * 46);
+  state.spawnTimer = Math.max(610, 2450 - state.spawned * 45 - state.wave * 35);
 }
 
 function updatePlants(dt) {
@@ -182,7 +256,7 @@ function updatePlants(dt) {
       const victims = state.zombies.filter((zombie) => zombie.row === plant.row && Math.abs(zombie.x - plant.col) < 0.62);
       if (victims.length && plant.cooldown <= 0) {
         victims.forEach((zombie) => {
-          zombie.hp -= stats.damage;
+          damageZombie(zombie, stats.damage);
           if (stats.slowAura) zombie.slow = Math.max(zombie.slow, stats.slowAura);
         });
         plant.action = 320;
@@ -195,7 +269,7 @@ function updatePlants(dt) {
     if (!target || plant.cooldown > 0) continue;
     if (stats.melee) {
       if (target.x - plant.col < 1.32) {
-        target.hp -= stats.damage;
+        damageZombie(target, stats.damage);
         plant.action = 520;
         plant.cooldown = stats.fireRate;
       }
@@ -231,36 +305,62 @@ function nearestZombieInLane(row, col) {
   return state.zombies.filter((zombie) => zombie.row === row && zombie.x > col - 0.25).sort((a, b) => a.x - b.x)[0];
 }
 
+function damageZombie(zombie, amount) {
+  let damage = amount * (1 - zombie.armor);
+  if (zombie.shield > 0) {
+    const blocked = Math.min(zombie.shield, damage * 0.65);
+    zombie.shield -= blocked;
+    damage -= blocked;
+  }
+  zombie.hp -= Math.max(1, damage);
+}
+
 function updateShots(dt) {
   for (const shot of state.shots) {
     shot.x += shot.speed * dt;
     const hit = state.zombies.find((zombie) => zombie.row === shot.row && zombie.x <= shot.x + 0.25 && zombie.x >= shot.x - 0.45);
     if (!hit) continue;
-    hit.hp -= shot.damage;
+    damageZombie(hit, shot.damage);
     if (shot.slow) hit.slow = Math.max(hit.slow, shot.slow);
     if (shot.poison) hit.poison = Math.max(hit.poison, shot.poison);
-    if (shot.splash) state.zombies.filter((zombie) => zombie !== hit && zombie.row === hit.row && Math.abs(zombie.x - hit.x) <= shot.splash).forEach((zombie) => { zombie.hp -= Math.round(shot.damage * 0.52); });
-    if (shot.chain) state.zombies.filter((zombie) => zombie !== hit && Math.abs(zombie.row - hit.row) <= 1 && Math.abs(zombie.x - hit.x) <= 1.4).slice(0, shot.chain).forEach((zombie) => { zombie.hp -= Math.round(shot.damage * 0.7); zombie.slow = Math.max(zombie.slow, 500); });
+    if (shot.splash) state.zombies.filter((zombie) => zombie !== hit && zombie.row === hit.row && Math.abs(zombie.x - hit.x) <= shot.splash).forEach((zombie) => damageZombie(zombie, Math.round(shot.damage * 0.52)));
+    if (shot.chain) state.zombies.filter((zombie) => zombie !== hit && Math.abs(zombie.row - hit.row) <= 1 && Math.abs(zombie.x - hit.x) <= 1.4).slice(0, shot.chain).forEach((zombie) => { damageZombie(zombie, Math.round(shot.damage * 0.7)); zombie.slow = Math.max(zombie.slow, 500); });
     shot.hit = true;
   }
 }
 
 function updateZombies(dt) {
+  const flagRows = new Set(state.zombies.filter((zombie) => zombie.aura).map((zombie) => zombie.row));
   for (const zombie of state.zombies) {
     zombie.slow = Math.max(0, zombie.slow - dt);
     if (zombie.poison > 0) {
       zombie.poison = Math.max(0, zombie.poison - dt);
-      zombie.hp -= 0.008 * dt;
+      damageZombie(zombie, 0.008 * dt);
     }
+    if (zombie.healer) {
+      zombie.healTimer -= dt;
+      if (zombie.healTimer <= 0) {
+        state.zombies.filter((other) => other !== zombie && Math.abs(other.row - zombie.row) <= 1 && Math.abs(other.x - zombie.x) <= 1.35).forEach((other) => { other.hp = Math.min(other.maxHp, other.hp + 16); });
+        zombie.healTimer = 1200;
+      }
+    }
+
     const blocker = state.plants.find((plant) => plant.row === zombie.row && Math.abs(zombie.x - plant.col) < 0.42);
+    if (blocker && zombie.leaper && !zombie.leaped && zombie.x > blocker.col) {
+      zombie.x -= 0.95;
+      zombie.leaped = true;
+      continue;
+    }
     if (blocker) {
       zombie.eat -= dt;
       if (zombie.eat <= 0) {
-        blocker.hp -= zombie.damage;
-        zombie.eat = 480;
+        blocker.hp -= zombie.damage + (zombie.toxic ? 8 : 0);
+        zombie.eat = zombie.toxic ? 360 : 480;
       }
     } else {
-      zombie.x -= zombie.speed * (zombie.slow > 0 ? 0.42 : 1) * dt;
+      const slowFactor = zombie.slow > 0 ? 0.42 : 1;
+      const flagBoost = flagRows.has(zombie.row) && !zombie.aura ? 1.18 : 1;
+      zombie.x -= zombie.speed * slowFactor * flagBoost * dt;
     }
     if (zombie.x < -0.35) loseGame();
   }
@@ -274,9 +374,16 @@ function cleanup() {
 
 function checkEnd() {
   if (!state.lost && !state.won && state.spawned >= state.target && state.zombies.length === 0) {
+    const reward = 120 + state.wave * 35;
+    state.coins += reward;
+    state.wave += 1;
     state.won = true;
     state.running = false;
-    setMessage("You defended the lawn", "The final zombie fell. Your plants win this wave.");
+    state.phase = "setup";
+    saveGame();
+    closeShop();
+    setMessage("You defended the lawn", `You earned ${reward} Seed Coins. Open the shop before starting the next round.`);
+    lastShopHtml = "";
   }
 }
 
@@ -284,14 +391,19 @@ function loseGame() {
   if (state.lost) return;
   state.lost = true;
   state.running = false;
-  setMessage("The zombies got through", "Start a new game and plant earlier in the weak lanes.");
+  state.phase = "setup";
+  closeShop();
+  setMessage("The zombies got through", "Your coins and unlocked plants are safe. Adjust your loadout, then try the round again.");
 }
 
 function render() {
+  els.coins.textContent = state.coins;
   els.sun.textContent = Math.floor(state.sun);
   els.wave.textContent = state.wave;
-  els.zombiesLeft.textContent = Math.max(0, state.target - state.spawned + state.zombies.length);
-  els.status.textContent = state.won ? "Win" : state.lost ? "Lost" : "Plant!";
+  els.zombiesLeft.textContent = state.phase === "running" ? Math.max(0, state.target - state.spawned + state.zombies.length) : 0;
+  els.status.textContent = state.phase === "running" ? "Round" : state.won ? "Win" : state.lost ? "Retry" : "Setup";
+  els.startRound.disabled = state.phase === "running" || state.equipped.length !== maxEquipped;
+  els.shopButton.disabled = state.phase === "running";
   renderSeedBank();
   renderShop();
   const entityLayer = els.lawn.querySelector(".entity-layer");
@@ -304,19 +416,25 @@ function render() {
 function renderSeedBank() {
   const html = state.equipped.map((id) => {
     const plant = plantStats[id];
-    return `<button class="seed-card ${id === state.selected ? "active" : ""} ${state.sun < plant.cost ? "locked" : ""}" data-plant="${id}" type="button"><span class="mini-plant ${id}"></span><strong>${plant.name}</strong><small>${plant.cost} sun</small></button>`;
+    const locked = state.phase === "running" && state.sun < plant.cost;
+    return `<button class="seed-card ${id === state.selected ? "active" : ""} ${locked ? "locked" : ""}" data-plant="${id}" type="button"><span class="mini-plant ${id}"></span><strong>${plant.name}</strong><small>${plant.cost} sun</small></button>`;
   }).join("");
   if (html !== lastSeedHtml) {
     els.seedBank.innerHTML = html;
     lastSeedHtml = html;
   }
+  els.loadoutCount.textContent = `${state.equipped.length} / ${maxEquipped} equipped`;
 }
 
 function renderShop() {
-  els.loadoutCount.textContent = `${state.equipped.length} / ${maxEquipped} equipped`;
+  const lockedDuringRound = state.phase === "running";
+  els.shopNote.textContent = lockedDuringRound ? "The shop is locked during a round." : "Buy plants with Seed Coins, then equip exactly five before starting.";
   const html = plantCatalog.map((plant) => {
+    const unlocked = state.unlocked.includes(plant.id);
     const equipped = state.equipped.includes(plant.id);
-    return `<button class="shop-card ${equipped ? "equipped" : ""}" data-shop-plant="${plant.id}" type="button"><span class="mini-plant ${plant.id}"></span><span class="shop-copy"><strong>${plant.name}</strong><small>${plant.role}</small><em>${equipped ? "Equipped" : "Tap to equip"}</em></span></button>`;
+    const affordable = state.coins >= plant.price;
+    const label = unlocked ? (equipped ? "Equipped" : "Equip") : `${plant.price} coins`;
+    return `<button class="shop-card ${equipped ? "equipped" : ""} ${unlocked ? "unlocked" : "locked-shop"} ${!affordable && !unlocked ? "too-expensive" : ""}" data-shop-plant="${plant.id}" type="button" ${lockedDuringRound ? "disabled" : ""}><span class="mini-plant ${plant.id}"></span><span class="shop-copy"><strong>${plant.name}</strong><small>${plant.role}</small><em>${label}</em></span></button>`;
   }).join("");
   if (html !== lastShopHtml) {
     els.plantShop.innerHTML = html;
@@ -339,8 +457,8 @@ function renderPlant(plant) {
 function renderZombie(zombie) {
   const limp = Math.sin((state.clock + zombie.id * 37) / 170) * 3;
   const hurt = Math.max(0, 1 - zombie.hp / zombie.maxHp);
-  const status = `${zombie.slow > 0 ? " slow" : ""}${zombie.poison > 0 ? " poison" : ""}`;
-  return `<div class="zombie ${zombie.kind}${status}" style="${position(zombie.row, zombie.x)}--limp:${limp.toFixed(2)}deg;--hurt:${hurt.toFixed(2)};"><span class="helmet"></span><span class="cone"></span><span class="flag"></span><span class="eye"></span><span class="arm"></span></div>`;
+  const status = `${zombie.slow > 0 ? " slow" : ""}${zombie.poison > 0 ? " poison" : ""}${zombie.shield > 0 ? " shielded" : ""}`;
+  return `<div class="zombie ${zombie.kind}${status}" style="${position(zombie.row, zombie.x)}--limp:${limp.toFixed(2)}deg;--hurt:${hurt.toFixed(2)};"><span class="helmet"></span><span class="cone"></span><span class="flag"></span><span class="shield-plate"></span><span class="eye"></span><span class="arm"></span></div>`;
 }
 
 function renderShot(shot) {
@@ -352,34 +470,57 @@ function setMessage(title, message) {
   els.message.textContent = message;
 }
 
+function openShop() {
+  if (state.phase === "running") return;
+  els.shopModal.classList.remove("hidden");
+  els.shopModal.setAttribute("aria-hidden", "false");
+  renderShop();
+}
+
+function closeShop() {
+  els.shopModal.classList.add("hidden");
+  els.shopModal.setAttribute("aria-hidden", "true");
+}
+
 els.seedBank.addEventListener("click", (event) => {
   const card = event.target.closest(".seed-card[data-plant]");
   if (!card) return;
   state.selected = card.dataset.plant;
-  setMessage(`${plantStats[state.selected].name} selected`, `Click a lawn tile to plant it for ${costs[state.selected]} sun.`);
+  setMessage(`${plantStats[state.selected].name} selected`, state.phase === "running" ? `Click a lawn tile to plant it for ${costs[state.selected]} sun.` : "This plant is ready in your locked-in loadout.");
   render();
 });
 
 els.plantShop.addEventListener("click", (event) => {
+  if (state.phase === "running") return;
   const card = event.target.closest(".shop-card[data-shop-plant]");
   if (!card) return;
   const id = card.dataset.shopPlant;
-  if (state.equipped.includes(id)) {
-    if (state.equipped.length <= 1) return;
+  const plant = plantStats[id];
+  if (!state.unlocked.includes(id)) {
+    if (state.coins < plant.price) return setMessage("Need more Seed Coins", `Beat rounds to earn coins. ${plant.name} costs ${plant.price}.`);
+    state.coins -= plant.price;
+    state.unlocked.push(id);
+    setMessage(`${plant.name} bought`, "Now equip it if you want it in your next round.");
+  } else if (state.equipped.includes(id)) {
     state.equipped = state.equipped.filter((plantId) => plantId !== id);
-    if (state.selected === id) state.selected = state.equipped[0];
-    setMessage(`${plantStats[id].name} unequipped`, "You can equip up to five plants from the shop.");
+    if (state.selected === id) state.selected = state.equipped[0] || "";
+    setMessage(`${plant.name} unequipped`, "Equip exactly five plants before starting.");
   } else {
     if (state.equipped.length >= maxEquipped) return setMessage("Loadout full", "Unequip one plant first. You can only carry five plants at a time.");
     state.equipped.push(id);
     state.selected = id;
-    setMessage(`${plantStats[id].name} equipped`, plantStats[id].role);
+    setMessage(`${plant.name} equipped`, plant.role);
   }
+  saveGame();
   lastSeedHtml = "";
   lastShopHtml = "";
   render();
 });
 
-els.newGame.addEventListener("click", startGame);
-startGame();
+els.shopButton.addEventListener("click", openShop);
+els.closeShop.addEventListener("click", closeShop);
+els.shopBackdrop.addEventListener("click", closeShop);
+els.startRound.addEventListener("click", startRound);
+els.newGame.addEventListener("click", () => setupRound("Round reset. Shop and equip five plants, then start again."));
+setupRound();
 window.requestAnimationFrame(loop);
