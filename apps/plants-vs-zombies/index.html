@@ -6,7 +6,7 @@
     <title>Plants vs Zombies Web Game</title>
     <meta name="description" content="A lane-defense plants versus zombies style web game using original David Edition plant art.">
     <link rel="stylesheet" href="styles.css?v=1.1">
-    <link rel="stylesheet" href="polish.css?v=1.2">
+    <link rel="stylesheet" href="polish.css?v=1.4">
   </head>
   <body>
     <main class="game-shell">
@@ -18,11 +18,17 @@
         </div>
         <div class="top-actions">
           <a class="changelog-link" href="changelog.html">Changelog</a>
+          <button id="shop-button" type="button">Shop</button>
+          <button id="start-round" type="button">Start Round</button>
           <button id="new-game" type="button">New Game</button>
         </div>
       </header>
 
       <section class="hud" aria-label="Game status">
+        <div class="stat-card coin-card">
+          <span>Seed Coins</span>
+          <strong id="coin-count">0</strong>
+        </div>
         <div class="stat-card sun-card">
           <span>Sun</span>
           <strong id="sun-count">75</strong>
@@ -33,31 +39,29 @@
         </div>
         <div class="stat-card">
           <span>Zombies left</span>
-          <strong id="zombies-left">24</strong>
+          <strong id="zombies-left">0</strong>
         </div>
         <div class="stat-card">
           <span>Status</span>
-          <strong id="status-label">Plant!</strong>
+          <strong id="status-label">Setup</strong>
         </div>
       </section>
 
-      <section class="seed-bank" id="seed-bank" aria-label="Equipped plants"></section>
-
-      <section class="shop-panel" aria-label="Plant shop and loadout">
-        <header class="shop-header">
+      <section class="loadout-panel" aria-label="Equipped plants">
+        <div class="loadout-header">
           <div>
-            <p class="eyebrow">Plant shop</p>
-            <h2>Choose 5 equipped plants</h2>
+            <p class="eyebrow">Loadout</p>
+            <h2>Equip 5 before the round</h2>
           </div>
           <strong id="loadout-count">5 / 5 equipped</strong>
-        </header>
-        <div class="plant-shop" id="plant-shop"></div>
+        </div>
+        <div class="seed-bank" id="seed-bank" aria-label="Equipped plants"></div>
       </section>
 
       <section class="table" aria-label="Plants versus zombies lawn">
         <section class="message-panel" aria-live="polite">
-          <h2 id="message-title">Defend the lawn</h2>
-          <p id="message">Choose a plant, then click a lawn tile. Stop the zombies before they cross the left edge.</p>
+          <h2 id="message-title">Prepare the lawn</h2>
+          <p id="message">Open the shop, buy plants with Seed Coins, equip exactly five, then start the round. Sun is only used during the round.</p>
         </section>
 
         <div class="lawn-wrap">
@@ -66,6 +70,21 @@
       </section>
     </main>
 
-    <script src="app.js?v=1.3"></script>
+    <section class="shop-modal hidden" id="shop-modal" aria-label="Plant shop" aria-hidden="true">
+      <div class="shop-backdrop" id="shop-backdrop"></div>
+      <div class="shop-window" role="dialog" aria-modal="true" aria-labelledby="shop-title">
+        <header class="shop-header">
+          <div>
+            <p class="eyebrow">Plant shop</p>
+            <h2 id="shop-title">Buy and equip plants</h2>
+          </div>
+          <button id="close-shop" type="button">Close</button>
+        </header>
+        <p class="shop-note" id="shop-note">Shop changes are only allowed before a round starts. You can equip exactly five plants.</p>
+        <div class="plant-shop" id="plant-shop"></div>
+      </div>
+    </section>
+
+    <script src="app.js?v=1.4"></script>
   </body>
 </html>
