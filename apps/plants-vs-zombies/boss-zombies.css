@@ -1,0 +1,229 @@
+.zombie {
+  transform: translate(-50%, -50%) rotate(var(--limp, 0deg));
+  animation: zombie-shamble 780ms ease-in-out infinite alternate;
+}
+
+.zombie.runner.dashing {
+  animation: zombie-dash 280ms ease-in-out infinite alternate;
+  filter: drop-shadow(0 8px 0 rgba(0, 0, 0, 0.16)) drop-shadow(0 0 14px rgba(255, 215, 92, .55));
+}
+
+.zombie.giant {
+  width: min(13.8vw, 132px);
+  height: min(15vw, 148px);
+  z-index: 6;
+  filter: drop-shadow(0 14px 0 rgba(0, 0, 0, 0.22)) drop-shadow(0 0 22px rgba(255, 75, 49, .28));
+  animation: giant-shamble 1050ms ease-in-out infinite alternate;
+}
+
+.zombie.giant::before {
+  left: 10%;
+  top: 0;
+  width: 66%;
+  height: 42%;
+  border-width: 6px;
+  background:
+    radial-gradient(circle at 28% 22%, rgba(255,255,255,.35), transparent 18%),
+    linear-gradient(145deg, #a2c792, #55745e 70%);
+}
+
+.zombie.giant::after {
+  left: 27%;
+  top: 38%;
+  width: 36%;
+  height: 48%;
+  border-width: 6px;
+  background: linear-gradient(180deg, #7c738d, #303343);
+}
+
+.zombie.giant .arm {
+  left: 56%;
+  top: 48%;
+  width: 52%;
+  height: 12%;
+  transform-origin: left center;
+}
+
+.zombie.giant.stomping {
+  animation: giant-stomp 260ms ease-out 2;
+}
+
+.zombie.giant.roaring .ability-aura {
+  opacity: .95;
+  transform: translate(-50%, -50%) scale(1.35);
+  border-color: rgba(255, 215, 92, .75);
+}
+
+.zombie .ability-aura {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  width: 118%;
+  height: 92%;
+  border: 3px solid transparent;
+  border-radius: 50%;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.75);
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 220ms ease;
+}
+
+.zombie.healer.healing .ability-aura {
+  opacity: .92;
+  border-color: rgba(123, 255, 149, .72);
+  box-shadow: 0 0 18px rgba(123, 255, 149, .45);
+}
+
+.zombie.flag .flag {
+  display: block;
+  position: absolute;
+  left: 56%;
+  top: -7%;
+  width: 34%;
+  height: 30%;
+  border-left: 4px solid #111;
+  background: linear-gradient(135deg, #ff4b31, #ffd75c);
+  clip-path: polygon(0 0, 100% 20%, 78% 55%, 100% 92%, 0 78%);
+  animation: flag-wave 560ms ease-in-out infinite alternate;
+}
+
+.zombie.cone .cone,
+.zombie.leaper .cone {
+  display: block;
+  position: absolute;
+  left: 22%;
+  top: -13%;
+  width: 48%;
+  height: 35%;
+  background: linear-gradient(145deg, #ffae3d, #d04724);
+  border: 4px solid #08120e;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.zombie.bucket .helmet,
+.zombie.brute .helmet,
+.zombie.shield .helmet,
+.zombie.giant .helmet {
+  display: block;
+  position: absolute;
+  left: 13%;
+  top: -8%;
+  width: 58%;
+  height: 28%;
+  border: 4px solid #08120e;
+  border-radius: 12px 12px 5px 5px;
+  background: linear-gradient(145deg, #d6e0e4, #697780 70%);
+  z-index: 3;
+}
+
+.zombie.shield .shield-plate,
+.zombie.shielded .shield-plate {
+  display: block;
+  position: absolute;
+  left: 2%;
+  top: 35%;
+  width: 35%;
+  height: 42%;
+  border: 4px solid #08120e;
+  border-radius: 12px 7px 14px 8px;
+  background: linear-gradient(145deg, #b9f7ff, #3c7e91 72%);
+  z-index: 4;
+  box-shadow: 0 0 14px rgba(134, 244, 255, .36);
+}
+
+.zombie.toxic::after {
+  background: linear-gradient(180deg, #6a6f83, #3b315f 55%, #6f3593);
+}
+
+.zombie.toxic.poison,
+.zombie.poison {
+  filter: drop-shadow(0 8px 0 rgba(0, 0, 0, 0.16)) hue-rotate(42deg) saturate(1.25);
+}
+
+.zombie.leaper.leaping {
+  animation: zombie-leap 360ms ease-out 1;
+}
+
+.zombie.brute::before {
+  transform: scale(1.1);
+}
+
+.zombie .ability-tag {
+  position: absolute;
+  left: 50%;
+  top: -22px;
+  z-index: 8;
+  transform: translateX(-50%);
+  padding: 2px 6px;
+  border: 1px solid rgba(255, 215, 92, .65);
+  border-radius: 999px;
+  color: #fff7cf;
+  background: rgba(5, 19, 12, .78);
+  font-size: .52rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  opacity: .8;
+  pointer-events: none;
+}
+
+.zombie.normal .ability-tag,
+.zombie.cone .ability-tag,
+.zombie.bucket .ability-tag {
+  opacity: 0;
+}
+
+.zombie.giant .ability-tag {
+  top: -28px;
+  color: #06130a;
+  background: linear-gradient(135deg, #ffd75c, #ff4b31);
+  border-color: #ffd75c;
+  opacity: 1;
+}
+
+.zombie .boss-bar {
+  display: none;
+}
+
+.zombie.giant .boss-bar {
+  display: block;
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  bottom: -12px;
+  height: 8px;
+  border: 2px solid #06130a;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ff4b31 var(--hp), rgba(255,255,255,.18) 0);
+}
+
+@keyframes zombie-shamble {
+  from { margin-top: -1px; }
+  to { margin-top: 2px; }
+}
+
+@keyframes zombie-dash {
+  from { margin-left: 0; }
+  to { margin-left: -7px; }
+}
+
+@keyframes zombie-leap {
+  0% { margin-top: 0; }
+  45% { margin-top: -28px; }
+  100% { margin-top: 0; }
+}
+
+@keyframes giant-shamble {
+  from { margin-top: -2px; }
+  to { margin-top: 3px; }
+}
+
+@keyframes giant-stomp {
+  0% { margin-top: -2px; }
+  60% { margin-top: 9px; }
+  100% { margin-top: 0; }
+}
+
+@keyframes flag-wave {
+  from { transform: skewY(-8deg); }
+  to { transform: skewY(10deg); }
+}
