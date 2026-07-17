@@ -13,6 +13,15 @@
     state.bossWarningShown = false;
   }
 
+  function showBossWarning() {
+    resetBossState();
+    if (state.phase === "running" && isBossWave()) {
+      setMessage(`Wave ${state.wave}: giant zombie`, "A giant zombie will enter once the wave is underway. Save sun for heavy defenses.");
+    }
+  }
+
+  resetBossState();
+
   setupRound = function upgradedSetupRound(message) {
     originalSetupRound(message);
     resetBossState();
@@ -20,11 +29,14 @@
 
   startRound = function upgradedStartRound() {
     originalStartRound();
-    resetBossState();
-    if (state.phase === "running" && isBossWave()) {
-      setMessage(`Wave ${state.wave}: giant zombie`, "A giant zombie will enter once the wave is underway. Save sun for heavy defenses.");
-    }
+    showBossWarning();
   };
+
+  if (els.startRound) {
+    els.startRound.addEventListener("click", () => {
+      window.setTimeout(showBossWarning, 0);
+    });
+  }
 
   function spawnGiantZombie() {
     const hp = 640 + state.wave * 135;
