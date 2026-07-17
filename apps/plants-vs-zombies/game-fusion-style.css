@@ -1,0 +1,327 @@
+/* Original fusion layer: familiar lane-defense plant shapes mixed with the uploaded painted reference style. */
+.plant,
+.mini-plant {
+  --ink: #020703;
+  --glow-green: #d7ff58;
+  --leaf-dark: #07381f;
+  --leaf-mid: #22a84b;
+  --leaf-light: #9eff56;
+  filter: drop-shadow(5px 6px 0 rgba(1, 5, 3, .9)) drop-shadow(0 9px 9px rgba(0,0,0,.22)) saturate(1.35) contrast(1.2) !important;
+}
+
+.plant {
+  width: min(10vw, 98px) !important;
+  height: min(10vw, 98px) !important;
+}
+
+.plant-head {
+  left: 7% !important;
+  top: 1% !important;
+  width: 70% !important;
+  height: 61% !important;
+  border: 6px solid var(--ink) !important;
+  border-radius: 53% 47% 50% 56% / 55% 48% 54% 47% !important;
+  background:
+    radial-gradient(ellipse at 24% 18%, rgba(255,255,255,.9) 0 7%, transparent 8%),
+    radial-gradient(ellipse at 42% 27%, rgba(230,255,106,.38) 0 13%, transparent 14%),
+    radial-gradient(ellipse at 72% 67%, rgba(0,43,25,.45) 0 19%, transparent 20%),
+    linear-gradient(145deg, #dfff55 0%, #7aec4d 35%, #1c9948 68%, #06482d 100%) !important;
+  box-shadow: inset -10px -11px 0 rgba(0,31,18,.35), inset 6px 5px 0 rgba(255,255,255,.16) !important;
+}
+
+.plant-head::before,
+.plant-head::after {
+  content: "";
+  position: absolute;
+  z-index: 5;
+  border: 0 !important;
+  background:
+    radial-gradient(ellipse at 64% 33%, #fff 0 15%, transparent 17%),
+    radial-gradient(ellipse at 47% 58%, #04100d 0 61%, #000 62% 100%) !important;
+  box-shadow: -2px 3px 0 rgba(0,0,0,.78), inset -4px -4px 0 rgba(0,0,0,.5) !important;
+}
+
+.plant-head::before {
+  left: 29% !important;
+  top: 24% !important;
+  width: 17% !important;
+  height: 32% !important;
+  border-radius: 58% 42% 55% 45% !important;
+  transform: rotate(8deg) !important;
+}
+
+.plant-head::after {
+  left: 53% !important;
+  top: 22% !important;
+  width: 13% !important;
+  height: 28% !important;
+  border-radius: 48% 52% 58% 42% !important;
+  transform: rotate(-9deg) !important;
+}
+
+.mouth {
+  right: -37% !important;
+  top: 24% !important;
+  width: 58% !important;
+  height: 48% !important;
+  border: 6px solid var(--ink) !important;
+  border-radius: 35% 68% 67% 35% / 42% 58% 60% 43% !important;
+  background:
+    radial-gradient(ellipse at 68% 54%, #000 0 50%, transparent 51%),
+    radial-gradient(ellipse at 27% 22%, rgba(247,255,171,.72), transparent 18%),
+    linear-gradient(145deg, #83f762 0%, #159247 65%, #023b26 100%) !important;
+  box-shadow: inset -7px -7px 0 rgba(0,28,15,.34), 2px 1px 0 rgba(255,255,255,.12) inset !important;
+}
+
+.stem {
+  left: 43% !important;
+  top: 58% !important;
+  width: 13% !important;
+  height: 29% !important;
+  border: 4px solid var(--ink) !important;
+  border-radius: 40% !important;
+  background: linear-gradient(90deg, #06351f 0%, #23b852 55%, #074428 100%) !important;
+}
+
+.leaves,
+.leaves::before,
+.leaves::after {
+  border: 5px solid var(--ink) !important;
+  background:
+    linear-gradient(32deg, transparent 42%, rgba(226,255,114,.82) 43% 50%, transparent 51%),
+    linear-gradient(145deg, #bfff5e 0%, #1b9f49 62%, #05381f 100%) !important;
+}
+
+.plant::before {
+  border: 5px solid var(--ink) !important;
+  background:
+    linear-gradient(32deg, transparent 42%, rgba(224,255,115,.9) 43% 52%, transparent 53%),
+    linear-gradient(145deg, #d5ff66 0%, #128642 75%) !important;
+}
+
+.plant.pea .plant-head {
+  border-radius: 55% 45% 49% 58% !important;
+}
+
+.plant.pea .mouth {
+  width: 61% !important;
+  right: -40% !important;
+}
+
+.plant.ice .plant-head,
+.mini-plant.ice::before {
+  border-color: #02131f !important;
+  background:
+    radial-gradient(ellipse at 23% 16%, #fff 0 8%, transparent 9%),
+    radial-gradient(ellipse at 56% 23%, rgba(255,255,255,.5) 0 13%, transparent 14%),
+    linear-gradient(145deg, #e8ffff 0%, #72d9ea 42%, #2772a4 72%, #10375f 100%) !important;
+  box-shadow: inset -10px -11px 0 rgba(4,43,77,.36), 0 0 18px rgba(130,238,255,.45) !important;
+}
+
+.plant.ice .crown {
+  left: -42% !important;
+  top: -34% !important;
+  width: 100% !important;
+  height: 62% !important;
+  border: 5px solid #02131f !important;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.9), rgba(103,217,238,.72) 45%, rgba(34,95,151,.85)) !important;
+  clip-path: polygon(0 58%, 15% 15%, 28% 42%, 43% 0, 57% 38%, 77% 4%, 91% 45%, 100% 18%, 98% 82%, 5% 100%) !important;
+}
+
+.plant.ice .mouth::after {
+  content: "";
+  position: absolute;
+  left: 12%;
+  bottom: -22%;
+  width: 72%;
+  height: 34%;
+  background: linear-gradient(90deg, transparent 0 12%, #dfffff 13% 27%, transparent 28% 42%, #bdf8ff 43% 58%, transparent 59% 73%, #e9ffff 74% 88%, transparent 89%);
+  clip-path: polygon(0 0, 100% 0, 82% 100%, 64% 0, 48% 100%, 32% 0, 16% 100%);
+}
+
+.plant.fire .plant-head,
+.mini-plant.fire::before {
+  border-color: #260006 !important;
+  background: radial-gradient(ellipse at 59% 39%, #fff39b 0 22%, #ff7430 43%, #9b061a 73%, #4b0010 100%) !important;
+  box-shadow: inset -9px -10px 0 rgba(50,0,12,.45), 0 0 25px rgba(255,88,36,.72) !important;
+}
+
+.plant.fire::after {
+  left: -9% !important;
+  top: -44% !important;
+  width: 128% !important;
+  height: 123% !important;
+  background:
+    radial-gradient(ellipse at 56% 40%, rgba(255,250,158,.95) 0 16%, transparent 17%),
+    radial-gradient(ellipse at 54% 42%, rgba(255,151,40,.92) 0 38%, transparent 39%),
+    linear-gradient(145deg, rgba(255,225,80,.88), rgba(255,62,38,.78) 54%, rgba(98,0,24,.45)) !important;
+  clip-path: polygon(50% 0, 64% 20%, 88% 2%, 82% 29%, 100% 39%, 78% 52%, 90% 84%, 61% 68%, 48% 100%, 35% 68%, 5% 87%, 20% 56%, 0 42%, 24% 28%, 16% 4%, 40% 22%) !important;
+}
+
+.plant.fire .plant-head::before,
+.plant.fire .plant-head::after {
+  background: radial-gradient(ellipse at 58% 43%, #fff8ae 0 42%, #ffbd37 43% 70%, #7f0714 72%) !important;
+  box-shadow: 0 0 13px rgba(255,197,49,.86), -3px 3px 0 rgba(75,0,8,.74) !important;
+}
+
+.plant.volt .plant-head,
+.mini-plant.volt::before {
+  border-color: #031b18 !important;
+  border-radius: 42% 58% 44% 60% !important;
+  background: radial-gradient(circle at 49% 47%, #fff 0 24%, #adfff2 25% 43%, #22d0b8 54%, #075340 100%) !important;
+  box-shadow: 0 0 24px rgba(127,255,238,.8), inset -8px -8px 0 rgba(0,50,42,.35) !important;
+}
+
+.plant.volt .plant-head::before {
+  left: 29% !important;
+  top: 24% !important;
+  width: 38% !important;
+  height: 38% !important;
+  border-radius: 50% !important;
+  background: radial-gradient(circle, #fff 0 40%, #b8fff5 41% 66%, #0fa691 67%) !important;
+  box-shadow: 0 0 22px rgba(174,255,247,.95) !important;
+}
+
+.plant.volt .plant-head::after { display: none !important; }
+
+.plant.volt .crown {
+  inset: -34% -42% auto auto !important;
+  width: 86% !important;
+  height: 75% !important;
+  background: linear-gradient(135deg, rgba(235,255,255,.95), rgba(77,255,228,.62)) !important;
+  clip-path: polygon(0 48%, 34% 0, 27% 37%, 68% 13%, 50% 52%, 100% 39%, 41% 100%, 53% 57%) !important;
+}
+
+.plant.angry .plant-head,
+.plant.spike .plant-head {
+  border-radius: 61% 39% 55% 43% !important;
+  transform: rotate(-10deg) !important;
+}
+
+.plant.angry .plant-head::before,
+.plant.angry .plant-head::after,
+.plant.spike .plant-head::before,
+.plant.spike .plant-head::after {
+  width: 24% !important;
+  height: 19% !important;
+  border-radius: 15% 85% 22% 78% !important;
+  background: radial-gradient(ellipse at 74% 56%, #fff 0 18%, transparent 20%), #020807 !important;
+}
+
+.plant.spike .plant-head,
+.mini-plant.spike::before {
+  clip-path: polygon(0 40%, 12% 7%, 28% 27%, 44% 0, 61% 26%, 82% 6%, 100% 43%, 87% 96%, 14% 100%) !important;
+}
+
+.plant.vine .plant-head,
+.plant.toxic .plant-head,
+.mini-plant.vine::before,
+.mini-plant.toxic::before {
+  border-color: #160820 !important;
+  background:
+    radial-gradient(ellipse at 24% 16%, rgba(255,255,255,.82) 0 7%, transparent 8%),
+    radial-gradient(ellipse at 68% 67%, rgba(120,48,153,.64) 0 18%, transparent 19%),
+    linear-gradient(145deg, #9aff5c 0%, #20aa4e 49%, #5a2a92 100%) !important;
+}
+
+.plant.vine .crown,
+.plant.toxic .crown {
+  top: 43% !important;
+  left: -19% !important;
+  width: 140% !important;
+  height: 73% !important;
+  border: 0 !important;
+  background:
+    radial-gradient(ellipse at 19% 48%, rgba(132,47,155,.98) 0 29%, transparent 31%),
+    radial-gradient(ellipse at 56% 58%, rgba(82,39,133,.96) 0 35%, transparent 37%),
+    radial-gradient(ellipse at 84% 44%, rgba(145,56,163,.86) 0 24%, transparent 26%) !important;
+}
+
+.plant.triple {
+  width: min(11vw, 108px) !important;
+}
+
+.plant.triple .plant-head {
+  left: 31% !important;
+  top: 1% !important;
+  width: 38% !important;
+  height: 52% !important;
+  box-shadow:
+    -31px 12px 0 -2px #74df59,
+    31px 12px 0 -2px #75df58,
+    inset -8px -9px 0 rgba(0,35,18,.28) !important;
+}
+
+.plant.triple .mouth {
+  right: -43% !important;
+  width: 66% !important;
+}
+
+.plant.cannon {
+  width: min(11.2vw, 110px) !important;
+}
+
+.plant.cannon .plant-head {
+  left: -1% !important;
+  width: 89% !important;
+  height: 63% !important;
+  border-radius: 62% 42% 47% 61% !important;
+}
+
+.plant.cannon .mouth {
+  right: -43% !important;
+  top: 23% !important;
+  width: 76% !important;
+  height: 52% !important;
+  border-radius: 28% 69% 69% 28% !important;
+  background:
+    radial-gradient(ellipse at 72% 54%, #000 0 54%, transparent 55%),
+    linear-gradient(145deg, #88f762 0%, #138843 58%, #032b1f 100%) !important;
+}
+
+.plant.chomper {
+  width: min(11.4vw, 112px) !important;
+  height: min(11.4vw, 112px) !important;
+}
+
+.plant.chomper .plant-head {
+  left: 0 !important;
+  top: -6% !important;
+  width: 91% !important;
+  height: 74% !important;
+  clip-path: polygon(0 38%, 17% 5%, 45% 0, 77% 10%, 100% 37%, 82% 59%, 94% 96%, 56% 78%, 24% 98%, 30% 66%) !important;
+}
+
+.plant.chomper .mouth {
+  right: -14% !important;
+  top: 12% !important;
+  width: 70% !important;
+  height: 61% !important;
+  border-radius: 40% 66% 64% 38% !important;
+  background:
+    linear-gradient(90deg, transparent 0 8%, #f3fff0 9% 15%, transparent 16% 28%, #f3fff0 29% 35%, transparent 36% 100%),
+    radial-gradient(ellipse at 63% 52%, #000 0 56%, #06120c 57% 100%) !important;
+}
+
+.plant.chomper .mouth::before {
+  content: "";
+  position: absolute;
+  left: 13%;
+  top: 8%;
+  width: 78%;
+  height: 82%;
+  background: linear-gradient(90deg, #fff 0 8%, transparent 9% 24%, #fff 25% 34%, transparent 35% 54%, #fff 55% 64%, transparent 65%);
+  clip-path: polygon(0 0, 100% 0, 88% 34%, 76% 0, 61% 37%, 48% 0, 33% 35%, 18% 0, 8% 32%);
+  opacity: .95;
+}
+
+.mini-plant {
+  background: radial-gradient(ellipse at 52% 36%, #dcff62 0 32%, #29a84f 33% 68%, #063d25 69%) !important;
+  border: 4px solid var(--ink) !important;
+}
+
+.mini-plant::before {
+  border: 4px solid var(--ink) !important;
+  background: inherit !important;
+}
