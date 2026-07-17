@@ -1,0 +1,139 @@
+.plant,
+.mini-plant {
+  background: none !important;
+  image-rendering: auto;
+}
+
+.plant .plant-head,
+.plant .stem,
+.plant .leaves {
+  display: block !important;
+}
+
+.plant::before {
+  display: block !important;
+  content: "" !important;
+  position: absolute !important;
+  left: 45% !important;
+  top: 2% !important;
+  width: 23% !important;
+  height: 23% !important;
+  border: 3px solid var(--outline) !important;
+  border-radius: 8% 82% 12% 78% !important;
+  background: linear-gradient(145deg, #a8ff64, #158a42) !important;
+  transform: rotate(22deg) !important;
+  z-index: 0 !important;
+  inset: auto !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+}
+
+.plant::after {
+  display: none !important;
+}
+
+.plant.fire::after {
+  display: block !important;
+}
+
+.mini-plant::before,
+.mini-plant::after {
+  display: block !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+}
+
+.plant,
+.mini-plant {
+  filter: drop-shadow(3px 5px 0 rgba(4, 13, 8, 0.62)) drop-shadow(0 10px 6px rgba(0, 0, 0, 0.18)) saturate(1.08) contrast(1.04) !important;
+}
+
+.mini-plant {
+  filter: drop-shadow(2px 3px 0 #06130a) saturate(1.08) contrast(1.04) !important;
+}
+
+.plant-head,
+.mouth,
+.leaves,
+.leaves::before,
+.leaves::after,
+.mini-plant::before,
+.mini-plant::after {
+  border-width: 4px !important;
+}
+
+.plant-head {
+  background:
+    radial-gradient(circle at 29% 20%, rgba(255, 255, 255, 0.72) 0 8%, transparent 9%),
+    radial-gradient(circle at 64% 24%, rgba(223, 255, 116, 0.3) 0 10%, transparent 11%),
+    linear-gradient(145deg, #d9ff67 0%, #78e156 44%, #209f4a 74%, #0b683c 100%) !important;
+}
+
+.mouth {
+  background:
+    radial-gradient(circle at 62% 52%, #010806 0 45%, transparent 46%),
+    radial-gradient(circle at 28% 28%, rgba(183, 255, 116, 0.5), transparent 17%),
+    linear-gradient(145deg, #5edc5e, #08723e 82%) !important;
+}
+
+.plant.pea .plant-head {
+  width: 72% !important;
+  height: 62% !important;
+  left: 10% !important;
+  top: 1% !important;
+  transform: rotate(-5deg) !important;
+}
+
+.plant.pea .mouth {
+  display: block !important;
+  right: -31% !important;
+  top: 26% !important;
+  width: 48% !important;
+  height: 43% !important;
+}
+
+.plant.pea .stem,
+.plant.pea .leaves {
+  display: block !important;
+}
+
+.mini-plant.pea::before {
+  left: 12px !important;
+  top: 2px !important;
+  width: 33px !important;
+  height: 32px !important;
+  border-radius: 53% 47% 46% 56% !important;
+  background: linear-gradient(145deg, #d9ff67, #3fca55 68%) !important;
+  clip-path: none !important;
+  box-shadow: inset -5px -6px 0 rgba(2, 40, 19, 0.22), inset 4px 3px 0 rgba(255, 255, 255, 0.2) !important;
+}
+
+.mini-plant.pea::after {
+  left: 38px !important;
+  top: 13px !important;
+  width: 21px !important;
+  height: 19px !important;
+  border-radius: 50% !important;
+  background: #0f6b3e !important;
+}
+
+.plant.ice::before { background: linear-gradient(145deg, #eaffff, #5ac6e8) !important; }
+.plant.fire::before { background: linear-gradient(145deg, #ffcf55, #a90a1b) !important; }
+.plant.volt::before { background: linear-gradient(145deg, #dcfff8, #1fcfb0) !important; }
+.plant.toxic::before,
+.plant.vine::before { background: linear-gradient(145deg, #83ff6c, #743192) !important; }
+
+.plant.fire,
+.mini-plant.fire {
+  filter: drop-shadow(3px 5px 0 rgba(28, 2, 6, 0.75)) drop-shadow(0 0 14px rgba(255, 90, 42, 0.34)) saturate(1.08) !important;
+}
+
+.plant.volt,
+.mini-plant.volt {
+  filter: drop-shadow(3px 5px 0 rgba(4, 13, 8, 0.62)) drop-shadow(0 0 13px rgba(122, 255, 239, 0.42)) saturate(1.06) !important;
+}
+
+.seed-card .mini-plant,
+.shop-card .mini-plant {
+  transform: none !important;
+}
