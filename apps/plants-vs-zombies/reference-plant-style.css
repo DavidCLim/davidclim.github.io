@@ -1,0 +1,293 @@
+.plant,
+.mini-plant {
+  --deep-ink: #010705;
+  --plant-green-bright: #cfff58;
+  --plant-green-mid: #61df49;
+  --plant-green-shadow: #056238;
+  filter: drop-shadow(5px 6px 0 rgba(1, 7, 4, .82)) drop-shadow(0 10px 8px rgba(0,0,0,.24)) saturate(1.28) contrast(1.16) !important;
+}
+
+.plant {
+  width: min(9.8vw, 94px) !important;
+  height: min(9.8vw, 94px) !important;
+}
+
+.plant-head {
+  border: 6px solid var(--deep-ink) !important;
+  border-radius: 56% 42% 48% 58% !important;
+  background:
+    radial-gradient(circle at 24% 17%, rgba(255,255,255,.94) 0 8%, transparent 9%),
+    radial-gradient(circle at 41% 32%, rgba(211,255,84,.22) 0 13%, transparent 14%),
+    radial-gradient(circle at 67% 61%, rgba(5,105,55,.35) 0 14%, transparent 15%),
+    linear-gradient(145deg, #dbff59 0%, #75e84f 38%, #209e48 66%, #045c35 100%) !important;
+  box-shadow:
+    inset -9px -11px 0 rgba(0, 35, 18, .3),
+    inset 6px 5px 0 rgba(255,255,255,.16),
+    0 0 0 2px rgba(206,255,89,.08);
+}
+
+.plant-head::before,
+.plant-head::after {
+  top: 27% !important;
+  width: 16% !important;
+  height: 34% !important;
+  border: 3px solid rgba(0,0,0,.64) !important;
+  background: #020807 !important;
+  box-shadow: inset 5px 5px 0 rgba(255,255,255,.96) !important;
+}
+
+.plant-head::before { left: 24% !important; }
+.plant-head::after { left: 54% !important; }
+
+.mouth {
+  border: 6px solid var(--deep-ink) !important;
+  right: -35% !important;
+  top: 24% !important;
+  width: 53% !important;
+  height: 47% !important;
+  border-radius: 45% 62% 62% 45% !important;
+  background:
+    radial-gradient(circle at 64% 52%, #000 0 48%, transparent 49%),
+    radial-gradient(circle at 25% 24%, rgba(235,255,160,.66), transparent 18%),
+    linear-gradient(145deg, #73f05f 0%, #14924a 65%, #034d2f 100%) !important;
+  box-shadow: inset -6px -7px 0 rgba(0, 35, 18, .32);
+}
+
+.stem {
+  border-width: 4px !important;
+  width: 13% !important;
+  height: 29% !important;
+  background: linear-gradient(90deg, #054f31, #2bbe58 55%, #065730) !important;
+}
+
+.leaves,
+.leaves::before,
+.leaves::after {
+  border: 5px solid var(--deep-ink) !important;
+  height: 28% !important;
+  background:
+    linear-gradient(33deg, transparent 42%, rgba(223,255,113,.72) 43% 51%, transparent 52%),
+    linear-gradient(145deg, #baff61 0%, #199b4b 62%, #045b35 100%) !important;
+}
+
+.plant::before {
+  border: 5px solid var(--deep-ink) !important;
+  left: 43% !important;
+  top: -8% !important;
+  width: 34% !important;
+  height: 31% !important;
+  border-radius: 8% 90% 12% 78% !important;
+  background:
+    linear-gradient(30deg, transparent 42%, rgba(224,255,119,.8) 43% 52%, transparent 53%),
+    linear-gradient(145deg, #cfff58, #128a45 72%) !important;
+  transform: rotate(25deg) !important;
+}
+
+.plant.pea .plant-head {
+  width: 76% !important;
+  height: 64% !important;
+  left: 7% !important;
+  top: 0 !important;
+}
+
+.plant.pea .mouth {
+  right: -36% !important;
+  top: 24% !important;
+}
+
+.plant.ice {
+  filter: drop-shadow(5px 6px 0 rgba(0, 17, 29, .82)) drop-shadow(0 0 16px rgba(134,244,255,.34)) saturate(1.22) contrast(1.13) !important;
+}
+
+.plant.ice .plant-head,
+.mini-plant.ice::before {
+  border-color: #021321 !important;
+  background:
+    radial-gradient(circle at 25% 16%, #ffffff 0 9%, transparent 10%),
+    radial-gradient(circle at 62% 22%, rgba(255,255,255,.5) 0 12%, transparent 13%),
+    linear-gradient(145deg, #dfffff 0%, #62c9df 48%, #1d4e7c 100%) !important;
+  box-shadow: inset -9px -10px 0 rgba(0, 39, 66, .32), 0 0 18px rgba(134,244,255,.42) !important;
+}
+
+.plant.ice .crown {
+  left: -38% !important;
+  top: -29% !important;
+  width: 92% !important;
+  height: 54% !important;
+  border-width: 5px !important;
+  clip-path: polygon(6% 46%, 22% 0, 38% 32%, 58% 2%, 70% 36%, 92% 10%, 100% 72%, 0 100%) !important;
+}
+
+.plant.fire {
+  filter: drop-shadow(5px 6px 0 rgba(37, 0, 8, .86)) drop-shadow(0 0 24px rgba(255,80,36,.62)) saturate(1.28) contrast(1.12) !important;
+}
+
+.plant.fire::after {
+  left: -2% !important;
+  top: -38% !important;
+  width: 116% !important;
+  height: 112% !important;
+  clip-path: polygon(51% 0, 65% 21%, 92% 4%, 80% 32%, 100% 43%, 78% 57%, 89% 90%, 59% 68%, 43% 100%, 34% 67%, 2% 85%, 20% 55%, 0 42%, 23% 30%, 16% 5%, 39% 24%) !important;
+  background:
+    radial-gradient(circle at 56% 43%, rgba(255,255,205,.96), transparent 20%),
+    radial-gradient(circle at 50% 45%, rgba(255,179,59,.95), transparent 42%),
+    linear-gradient(135deg, rgba(255,217,83,.9), rgba(255,55,38,.8) 56%, rgba(117,0,27,.34)) !important;
+}
+
+.plant.fire .plant-head,
+.mini-plant.fire::before {
+  border-color: #250006 !important;
+  background: radial-gradient(circle at 58% 38%, #fff6ad 0 21%, #ff5a2e 42%, #7f0517 82%) !important;
+}
+
+.plant.fire .plant-head::before,
+.plant.fire .plant-head::after {
+  background: #fff6ad !important;
+  border-color: #250006 !important;
+  box-shadow: none !important;
+}
+
+.plant.volt {
+  filter: drop-shadow(5px 6px 0 rgba(0, 31, 26, .8)) drop-shadow(0 0 24px rgba(122,255,239,.72)) saturate(1.2) contrast(1.12) !important;
+}
+
+.plant.volt .plant-head,
+.mini-plant.volt::before {
+  border-color: #031e19 !important;
+  border-radius: 40% 60% 42% 62% !important;
+  background:
+    radial-gradient(circle at 48% 46%, #fff 0 23%, #a2fff4 24% 43%, #28d6ba 54%, #07644f 100%) !important;
+}
+
+.plant.volt .crown {
+  inset: -32% -42% auto auto !important;
+  width: 82% !important;
+  height: 72% !important;
+  border-width: 5px !important;
+  box-shadow: 0 0 18px rgba(122,255,239,.75) !important;
+}
+
+.plant.angry .plant-head {
+  border-radius: 60% 40% 54% 44% !important;
+  transform: rotate(-12deg) !important;
+}
+
+.plant.angry .plant-head::before,
+.plant.angry .plant-head::after {
+  height: 21% !important;
+  border-radius: 40% !important;
+  transform: rotate(-22deg) !important;
+}
+
+.plant.angry .plant-head::after { transform: rotate(22deg) !important; }
+
+.plant.spike .plant-head,
+.mini-plant.spike::before {
+  clip-path: polygon(0 38%, 14% 0, 29% 24%, 48% 0, 62% 25%, 86% 5%, 100% 43%, 88% 100%, 12% 100%) !important;
+  border-radius: 34% 52% 40% 54% !important;
+}
+
+.plant.vine .plant-head,
+.plant.toxic .plant-head,
+.mini-plant.vine::before,
+.mini-plant.toxic::before {
+  border-color: #11091b !important;
+  background:
+    radial-gradient(circle at 24% 18%, rgba(255,255,255,.82) 0 8%, transparent 9%),
+    radial-gradient(circle at 70% 64%, rgba(110,49,143,.55) 0 16%, transparent 17%),
+    linear-gradient(145deg, #96ff62 0%, #1ca84f 50%, #54268b 100%) !important;
+}
+
+.plant.vine .crown,
+.plant.toxic .crown {
+  top: 46% !important;
+  left: -10% !important;
+  width: 124% !important;
+  height: 66% !important;
+  background:
+    radial-gradient(ellipse at 22% 48%, rgba(129,48,159,.96) 0 30%, transparent 32%),
+    radial-gradient(ellipse at 70% 62%, rgba(66,30,116,.96) 0 36%, transparent 38%) !important;
+}
+
+.plant.triple .plant-head {
+  left: 30% !important;
+  width: 42% !important;
+  box-shadow:
+    -30px 12px 0 -2px #76df59,
+    30px 12px 0 -2px #76df59,
+    inset -9px -11px 0 rgba(0,35,18,.28) !important;
+}
+
+.plant.cannon {
+  width: min(11vw, 104px) !important;
+}
+
+.plant.cannon .plant-head {
+  left: -2% !important;
+  width: 88% !important;
+  border-radius: 64% 44% 46% 62% !important;
+}
+
+.plant.cannon .mouth {
+  right: -40% !important;
+  width: 73% !important;
+  height: 51% !important;
+  border-radius: 33% 66% 66% 33% !important;
+}
+
+.plant.chomper {
+  width: min(11vw, 106px) !important;
+  height: min(11vw, 106px) !important;
+}
+
+.plant.chomper .plant-head {
+  width: 88% !important;
+  height: 72% !important;
+  left: 2% !important;
+  top: -4% !important;
+  clip-path: polygon(0 38%, 18% 4%, 45% 0, 74% 10%, 100% 37%, 80% 63%, 94% 100%, 54% 79%, 25% 96%, 30% 66%) !important;
+}
+
+.plant.chomper .mouth {
+  right: -16% !important;
+  top: 12% !important;
+  width: 68% !important;
+  height: 61% !important;
+}
+
+.zombie .boss-bar {
+  display: block !important;
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: -10px;
+  height: 7px;
+  border: 2px solid #06130a;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, #73e84d var(--hp), rgba(255,255,255,.18) 0),
+    rgba(2, 13, 8, .72);
+  box-shadow: 0 1px 0 rgba(255,255,255,.16) inset;
+}
+
+.zombie.giant .boss-bar {
+  left: 3%;
+  right: 3%;
+  bottom: -14px;
+  height: 10px;
+  background:
+    linear-gradient(90deg, #ff4b31 var(--hp), rgba(255,255,255,.18) 0),
+    rgba(2, 13, 8, .78);
+}
+
+.zombie.shielded .boss-bar {
+  background:
+    linear-gradient(90deg, #86f4ff var(--hp), rgba(255,255,255,.18) 0),
+    rgba(2, 13, 8, .72);
+}
+
+.zombie.poison .boss-bar {
+  background:
+    linear-gradient(90deg, #a2ff4e var(--hp), rgba(255,255,255,.18) 0),
+    rgba(2, 13, 8, .72);
+}
