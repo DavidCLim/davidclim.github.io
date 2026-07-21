@@ -1,0 +1,67 @@
+/* Eye placement fix: lift eyes above the head shape like the uploaded reference lineup. */
+.entity-layer .plant:not(.volt) .plant-head {
+  overflow: visible !important;
+}
+
+.entity-layer .plant:not(.volt) .plant-head::before,
+.entity-layer .plant:not(.volt) .plant-head::after {
+  top: -8% !important;
+  width: 15% !important;
+  height: 25% !important;
+  z-index: 12 !important;
+  border: 2px solid rgba(4, 13, 7, .18) !important;
+  background:
+    radial-gradient(circle at 58% 28%, #fff 0 18%, transparent 20%),
+    #06100a !important;
+}
+
+.entity-layer .plant:not(.volt) .plant-head::before {
+  left: 31% !important;
+}
+
+.entity-layer .plant:not(.volt) .plant-head::after {
+  left: 55% !important;
+}
+
+.entity-layer .plant.triple .plant-head::before,
+.entity-layer .plant.triple .plant-head::after {
+  top: -7% !important;
+  width: 16% !important;
+  height: 25% !important;
+}
+
+.entity-layer .plant.angry .plant-head::before,
+.entity-layer .plant.spike .plant-head::before,
+.entity-layer .plant.angry .plant-head::after,
+.entity-layer .plant.spike .plant-head::after {
+  top: 2% !important;
+  width: 22% !important;
+  height: 15% !important;
+}
+
+.seed-card .mini-plant,
+.shop-card .mini-plant {
+  overflow: visible !important;
+}
+
+.seed-card .mini-plant::before,
+.shop-card .mini-plant::before {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  left: 30% !important;
+  top: -6% !important;
+  width: 13% !important;
+  height: 23% !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background:
+    radial-gradient(circle at 58% 28%, #fff 0 18%, transparent 20%),
+    #06100a !important;
+  box-shadow: 12px 0 0 #06100a !important;
+}
+
+.seed-card .mini-plant.volt::before,
+.shop-card .mini-plant.volt::before {
+  display: none !important;
+}
