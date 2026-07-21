@@ -56,6 +56,46 @@
   box-shadow: 0 0 18px rgba(125, 211, 252, .42), inset 0 0 12px rgba(125, 211, 252, .12);
 }
 
+.topbar {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(125, 211, 252, 0.58);
+  background:
+    linear-gradient(120deg, rgba(125, 211, 252, .18), transparent 32%),
+    radial-gradient(circle at 78% 22%, rgba(184, 255, 91, .18), transparent 30%),
+    linear-gradient(145deg, rgba(5, 24, 54, .96), rgba(4, 45, 35, .96));
+  box-shadow:
+    0 0 24px rgba(125, 211, 252, .26),
+    0 22px 60px rgba(0, 0, 0, .42),
+    inset 0 0 0 1px rgba(255, 255, 255, .08);
+}
+
+.topbar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent, rgba(125, 211, 252, .18), transparent),
+    repeating-linear-gradient(90deg, transparent 0 46px, rgba(125, 211, 252, .07) 47px 49px, transparent 50px 96px);
+  opacity: .72;
+}
+
+.topbar > * {
+  position: relative;
+  z-index: 1;
+}
+
+.topbar h1 {
+  color: #ffffff;
+  font-size: clamp(2.15rem, 6vw, 4.6rem);
+  letter-spacing: .035em;
+  text-shadow:
+    0 0 12px rgba(255, 255, 255, .4),
+    0 0 22px rgba(125, 211, 252, .74),
+    0 0 44px rgba(184, 255, 91, .28);
+}
+
 .home-link,
 .changelog-link,
 .top-actions button,
