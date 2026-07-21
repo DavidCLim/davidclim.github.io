@@ -10,6 +10,10 @@
   --sprite-size: min(7vw, 66px) !important;
 }
 
+.entity-layer .plant.spike {
+  --sprite-size: min(8.2vw, 78px) !important;
+}
+
 .entity-layer .plant-head {
   left: 10% !important;
   top: 16% !important;
@@ -72,38 +76,89 @@
   height: 18% !important;
 }
 
+/* Ice is now just a clean blue peashooter. */
+.entity-layer .plant.ice {
+  --line: #072237 !important;
+  --head-a: #ddffff !important;
+  --head-b: #7be9fb !important;
+  --head-c: #2aa4d2 !important;
+  --head-d: #0f5584 !important;
+}
+
 .entity-layer .plant.ice .crown {
-  left: -14% !important;
-  top: -13% !important;
-  width: 55% !important;
-  height: 37% !important;
-  border-width: 2px !important;
+  display: none !important;
+}
+
+.entity-layer .plant.ice .mouth {
+  background:
+    radial-gradient(ellipse at 70% 53%, #00101d 0 54%, transparent 55%),
+    linear-gradient(145deg, #cbffff 0%, #42bedc 55%, #0f5584 100%) !important;
+}
+
+.entity-layer .plant.ice .stem::before,
+.entity-layer .plant.ice .stem::after {
+  background:
+    radial-gradient(circle at 58% 28%, #fff 0 18%, transparent 20%),
+    #06182a !important;
+}
+
+/* Fire is now just a clean red peashooter. */
+.entity-layer .plant.fire {
+  --line: #350400 !important;
+  --head-a: #ffd36b !important;
+  --head-b: #ff6a2f !important;
+  --head-c: #d72418 !important;
+  --head-d: #65030d !important;
 }
 
 .entity-layer .plant.fire::after {
-  left: 5% !important;
-  top: -5% !important;
-  width: 61% !important;
-  height: 62% !important;
-  opacity: .9 !important;
+  display: none !important;
+  content: none !important;
 }
 
 .entity-layer .plant.fire .plant-head {
-  top: 19% !important;
+  top: 16% !important;
+}
+
+.entity-layer .plant.fire .mouth {
+  background:
+    radial-gradient(ellipse at 70% 53%, #1d0000 0 54%, transparent 55%),
+    linear-gradient(145deg, #ffb052 0%, #ef3f20 55%, #750716 100%) !important;
 }
 
 .entity-layer .plant.fire .stem::before,
 .entity-layer .plant.fire .stem::after {
-  top: -170% !important;
+  top: -185% !important;
   background:
     radial-gradient(circle at 58% 28%, #fff8ae 0 18%, transparent 20%),
     #5a0700 !important;
 }
 
+/* Bigger spike leaf, still clean. */
 .entity-layer .plant.spike .plant-head,
 .entity-layer .plant.angry .plant-head {
   border-radius: 50% !important;
   clip-path: none !important;
+}
+
+.entity-layer .plant.spike .plant-head {
+  left: 9% !important;
+  top: 13% !important;
+  width: 56% !important;
+  height: 51% !important;
+}
+
+.entity-layer .plant.spike .mouth {
+  right: -39% !important;
+  top: 32% !important;
+  width: 49% !important;
+  height: 35% !important;
+}
+
+.entity-layer .plant.spike .leaves {
+  top: 78% !important;
+  width: 59% !important;
+  height: 19% !important;
 }
 
 .entity-layer .plant.spike .plant-head::before,
@@ -210,4 +265,14 @@
 .seed-card .mini-plant.volt::before,
 .shop-card .mini-plant.volt::before {
   display: none !important;
+}
+
+.seed-card .mini-plant.ice,
+.shop-card .mini-plant.ice {
+  background: linear-gradient(145deg, #ddffff 0%, #7be9fb 38%, #2aa4d2 70%, #0f5584 100%) !important;
+}
+
+.seed-card .mini-plant.fire,
+.shop-card .mini-plant.fire {
+  background: linear-gradient(145deg, #ffd36b 0%, #ff6a2f 38%, #d72418 70%, #65030d 100%) !important;
 }
