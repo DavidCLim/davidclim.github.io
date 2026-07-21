@@ -1,42 +1,188 @@
-/* Eye placement fix: lift eyes above the head shape like the uploaded reference lineup. */
-.entity-layer .plant:not(.volt) .plant-head {
+/* Final cleanup: eyes sit above the oval, and special plants fit inside their tiles. */
+.entity-layer .plant {
+  --sprite-size: min(6.7vw, 64px) !important;
+  transform: translate(-50%, -51%) translateY(var(--bob, 0)) rotate(var(--tilt, 0)) scale(var(--pulse, 1)) !important;
+}
+
+.entity-layer .plant.triple,
+.entity-layer .plant.chomper,
+.entity-layer .plant.cannon {
+  --sprite-size: min(7vw, 66px) !important;
+}
+
+.entity-layer .plant-head {
+  left: 10% !important;
+  top: 16% !important;
+  width: 52% !important;
+  height: 47% !important;
   overflow: visible !important;
 }
 
 .entity-layer .plant:not(.volt) .plant-head::before,
 .entity-layer .plant:not(.volt) .plant-head::after {
-  top: -8% !important;
-  width: 15% !important;
-  height: 25% !important;
-  z-index: 12 !important;
-  border: 2px solid rgba(4, 13, 7, .18) !important;
+  content: none !important;
+  display: none !important;
+}
+
+.entity-layer .plant:not(.volt) .stem::before,
+.entity-layer .plant:not(.volt) .stem::after {
+  content: "" !important;
+  position: absolute !important;
+  top: -185% !important;
+  width: 76% !important;
+  height: 78% !important;
+  z-index: 20 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
   background:
     radial-gradient(circle at 58% 28%, #fff 0 18%, transparent 20%),
     #06100a !important;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.2) !important;
 }
 
-.entity-layer .plant:not(.volt) .plant-head::before {
-  left: 31% !important;
+.entity-layer .plant:not(.volt) .stem::before {
+  left: -185% !important;
 }
 
-.entity-layer .plant:not(.volt) .plant-head::after {
-  left: 55% !important;
+.entity-layer .plant:not(.volt) .stem::after {
+  left: 52% !important;
 }
 
-.entity-layer .plant.triple .plant-head::before,
-.entity-layer .plant.triple .plant-head::after {
-  top: -7% !important;
-  width: 16% !important;
-  height: 25% !important;
+.entity-layer .mouth {
+  right: -37% !important;
+  top: 33% !important;
+  width: 47% !important;
+  height: 34% !important;
 }
 
-.entity-layer .plant.angry .plant-head::before,
+.entity-layer .stem {
+  left: 39% !important;
+  top: 58% !important;
+  height: 23% !important;
+  overflow: visible !important;
+}
+
+.entity-layer .leaves {
+  top: 79% !important;
+}
+
+.entity-layer .plant::before {
+  top: 4% !important;
+  width: 21% !important;
+  height: 18% !important;
+}
+
+.entity-layer .plant.ice .crown {
+  left: -14% !important;
+  top: -13% !important;
+  width: 55% !important;
+  height: 37% !important;
+  border-width: 2px !important;
+}
+
+.entity-layer .plant.fire::after {
+  left: 5% !important;
+  top: -5% !important;
+  width: 61% !important;
+  height: 62% !important;
+  opacity: .9 !important;
+}
+
+.entity-layer .plant.fire .plant-head {
+  top: 19% !important;
+}
+
+.entity-layer .plant.fire .stem::before,
+.entity-layer .plant.fire .stem::after {
+  top: -170% !important;
+  background:
+    radial-gradient(circle at 58% 28%, #fff8ae 0 18%, transparent 20%),
+    #5a0700 !important;
+}
+
+.entity-layer .plant.spike .plant-head,
+.entity-layer .plant.angry .plant-head {
+  border-radius: 50% !important;
+  clip-path: none !important;
+}
+
 .entity-layer .plant.spike .plant-head::before,
-.entity-layer .plant.angry .plant-head::after,
-.entity-layer .plant.spike .plant-head::after {
-  top: 2% !important;
-  width: 22% !important;
-  height: 15% !important;
+.entity-layer .plant.spike .plant-head::after,
+.entity-layer .plant.angry .plant-head::before,
+.entity-layer .plant.angry .plant-head::after {
+  display: none !important;
+  content: none !important;
+}
+
+.entity-layer .plant.spike .stem::before,
+.entity-layer .plant.angry .stem::before,
+.entity-layer .plant.spike .stem::after,
+.entity-layer .plant.angry .stem::after {
+  top: -165% !important;
+  height: 55% !important;
+  border-radius: 20% 80% 28% 72% !important;
+}
+
+.entity-layer .plant.spike .stem::before,
+.entity-layer .plant.angry .stem::before {
+  transform: rotate(-18deg) !important;
+}
+
+.entity-layer .plant.spike .stem::after,
+.entity-layer .plant.angry .stem::after {
+  transform: rotate(18deg) !important;
+}
+
+.entity-layer .plant.chomper .plant-head {
+  left: 6% !important;
+  top: 17% !important;
+  width: 52% !important;
+  height: 46% !important;
+}
+
+.entity-layer .plant.chomper .mouth {
+  right: -25% !important;
+  top: 30% !important;
+  width: 51% !important;
+  height: 36% !important;
+}
+
+.entity-layer .plant.chomper .stem::before,
+.entity-layer .plant.chomper .stem::after {
+  top: -175% !important;
+}
+
+.entity-layer .plant.triple .plant-head {
+  left: 31% !important;
+  top: 15% !important;
+  width: 32% !important;
+  height: 30% !important;
+}
+
+.entity-layer .plant.triple .crown,
+.entity-layer .plant.triple::after {
+  width: 29% !important;
+  height: 28% !important;
+  top: 29% !important;
+}
+
+.entity-layer .plant.triple .crown {
+  left: 4% !important;
+}
+
+.entity-layer .plant.triple::after {
+  left: 58% !important;
+}
+
+.entity-layer .plant.triple .stem::before,
+.entity-layer .plant.triple .stem::after {
+  top: -162% !important;
+  width: 64% !important;
+  height: 65% !important;
+}
+
+.entity-layer .plant.volt .plant-head::before {
+  top: 25% !important;
 }
 
 .seed-card .mini-plant,
@@ -49,10 +195,10 @@
   content: "" !important;
   display: block !important;
   position: absolute !important;
-  left: 30% !important;
-  top: -6% !important;
+  left: 31% !important;
+  top: -11% !important;
   width: 13% !important;
-  height: 23% !important;
+  height: 22% !important;
   border: 0 !important;
   border-radius: 50% !important;
   background:
