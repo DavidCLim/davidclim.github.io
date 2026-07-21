@@ -56,21 +56,16 @@
   overflow: visible !important;
 }
 
-.entity-layer .leaves {
-  top: 79% !important;
-}
+.entity-layer .leaves { top: 79% !important; }
+.entity-layer .plant::before { top: 4% !important; width: 21% !important; height: 18% !important; }
 
-.entity-layer .plant::before {
-  top: 4% !important;
-  width: 21% !important;
-  height: 18% !important;
-}
-
-/* Delete special decorations completely for ice and fire. */
+/* Delete special decorations completely for ice, fire, and volt. */
 .entity-layer .plant.ice .crown,
 .entity-layer .plant.ice::after,
 .entity-layer .plant.fire .crown,
-.entity-layer .plant.fire::after {
+.entity-layer .plant.fire::after,
+.entity-layer .plant.volt .crown,
+.entity-layer .plant.volt::after {
   content: none !important;
   display: none !important;
   visibility: hidden !important;
@@ -142,6 +137,67 @@
     radial-gradient(circle at 58% 28%, #fff8ae 0 18%, transparent 20%),
     #5a0700 !important;
 }
+
+/* Volt is now a clean electric cyan peashooter shape. */
+.entity-layer .plant.volt {
+  --line: #05322b !important;
+  --head-a: #eaffff !important;
+  --head-b: #85fff0 !important;
+  --head-c: #19cbb2 !important;
+  --head-d: #066d60 !important;
+}
+
+.entity-layer .plant.volt .plant-head {
+  left: 10% !important;
+  top: 16% !important;
+  width: 52% !important;
+  height: 47% !important;
+  border-radius: 50% !important;
+  clip-path: none !important;
+  background:
+    radial-gradient(circle at 25% 18%, rgba(255,255,255,.98) 0 8%, transparent 9%),
+    radial-gradient(circle at 47% 31%, rgba(212,255,249,.56) 0 14%, transparent 15%),
+    linear-gradient(145deg, #eaffff 0%, #85fff0 38%, #19cbb2 70%, #066d60 100%) !important;
+  box-shadow: inset -5px -6px 0 rgba(0, 65, 52, .24), 0 0 10px rgba(105,255,235,.34) !important;
+}
+
+.entity-layer .plant.volt .plant-head::before,
+.entity-layer .plant.volt .plant-head::after {
+  content: none !important;
+  display: none !important;
+  opacity: 0 !important;
+}
+
+.entity-layer .plant.volt .mouth {
+  display: block !important;
+  right: -37% !important;
+  top: 33% !important;
+  width: 47% !important;
+  height: 34% !important;
+  border-radius: 35% 72% 72% 35% / 42% 52% 56% 42% !important;
+  background:
+    radial-gradient(ellipse at 70% 53%, #001814 0 54%, transparent 55%),
+    linear-gradient(145deg, #c8fff7 0%, #28d6bf 55%, #066d60 100%) !important;
+}
+
+.entity-layer .plant.volt .stem::before,
+.entity-layer .plant.volt .stem::after {
+  content: "" !important;
+  position: absolute !important;
+  top: -185% !important;
+  width: 76% !important;
+  height: 78% !important;
+  z-index: 20 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background:
+    radial-gradient(circle at 58% 28%, #fff 0 18%, transparent 20%),
+    #05251f !important;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.2) !important;
+}
+
+.entity-layer .plant.volt .stem::before { left: -185% !important; }
+.entity-layer .plant.volt .stem::after { left: 52% !important; }
 
 /* Spike Leaf: bigger, simple, no weird old spikes. */
 .entity-layer .plant.spike {
@@ -255,10 +311,6 @@
   height: 65% !important;
 }
 
-.entity-layer .plant.volt .plant-head::before {
-  top: 25% !important;
-}
-
 .seed-card .mini-plant,
 .shop-card .mini-plant {
   overflow: visible !important;
@@ -281,11 +333,6 @@
   box-shadow: 12px 0 0 #06100a !important;
 }
 
-.seed-card .mini-plant.volt::before,
-.shop-card .mini-plant.volt::before {
-  display: none !important;
-}
-
 .seed-card .mini-plant.ice,
 .shop-card .mini-plant.ice {
   background: linear-gradient(145deg, #ddffff 0%, #7be9fb 38%, #2aa4d2 70%, #0f5584 100%) !important;
@@ -294,6 +341,17 @@
 .seed-card .mini-plant.fire,
 .shop-card .mini-plant.fire {
   background: linear-gradient(145deg, #ffd36b 0%, #ff6a2f 38%, #d72418 70%, #65030d 100%) !important;
+}
+
+.seed-card .mini-plant.volt,
+.shop-card .mini-plant.volt {
+  background: linear-gradient(145deg, #eaffff 0%, #85fff0 38%, #19cbb2 70%, #066d60 100%) !important;
+  box-shadow: 0 0 10px rgba(105,255,235,.35) !important;
+}
+
+.seed-card .mini-plant.volt::before,
+.shop-card .mini-plant.volt::before {
+  display: block !important;
 }
 
 .seed-card .mini-plant.spike,
