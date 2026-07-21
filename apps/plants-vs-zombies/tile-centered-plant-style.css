@@ -1,0 +1,236 @@
+/* Final plant centering and photo-lineup polish layer. Original art, tuned toward the uploaded upgraded lineup. */
+.entity-layer .plant {
+  --sprite-size: min(8.2vw, 78px);
+  width: var(--sprite-size) !important;
+  height: var(--sprite-size) !important;
+  transform: translate(-50%, -54%) translateY(var(--bob, 0)) rotate(var(--tilt, 0)) scale(var(--pulse, 1)) !important;
+  transform-origin: 50% 78% !important;
+  overflow: visible !important;
+}
+
+.entity-layer .plant.triple,
+.entity-layer .plant.chomper,
+.entity-layer .plant.cannon {
+  --sprite-size: min(8.9vw, 86px);
+}
+
+.entity-layer .plant-head {
+  left: 8% !important;
+  top: 4% !important;
+  width: 58% !important;
+  height: 52% !important;
+  border-width: 4px !important;
+  border-radius: 50% 48% 51% 49% / 48% 48% 54% 54% !important;
+  transform: rotate(-4deg) !important;
+}
+
+.entity-layer .mouth {
+  right: -43% !important;
+  top: 25% !important;
+  width: 58% !important;
+  height: 43% !important;
+  border-width: 4px !important;
+  border-radius: 34% 72% 72% 34% / 42% 52% 56% 42% !important;
+  transform: rotate(4deg) !important;
+}
+
+.entity-layer .plant-head::before,
+.entity-layer .plant-head::after {
+  top: 24% !important;
+  width: 13% !important;
+  height: 27% !important;
+  border-radius: 48% !important;
+  background:
+    radial-gradient(circle at 58% 28%, #fff 0 16%, transparent 18%),
+    #06100a !important;
+  border: 0 !important;
+}
+
+.entity-layer .plant-head::before { left: 28% !important; }
+.entity-layer .plant-head::after { left: 50% !important; }
+
+.entity-layer .stem {
+  left: 39% !important;
+  top: 55% !important;
+  width: 11% !important;
+  height: 27% !important;
+  transform: rotate(4deg) !important;
+}
+
+.entity-layer .leaves {
+  left: 22% !important;
+  top: 75% !important;
+  width: 45% !important;
+  height: 18% !important;
+  transform: rotate(-7deg) !important;
+}
+
+.entity-layer .leaves::before {
+  left: -34% !important;
+  top: 3% !important;
+  width: 74% !important;
+  height: 90% !important;
+  transform: rotate(-23deg) !important;
+}
+
+.entity-layer .leaves::after {
+  right: -45% !important;
+  top: -5% !important;
+  width: 78% !important;
+  height: 94% !important;
+  transform: rotate(20deg) !important;
+}
+
+.entity-layer .plant::before {
+  left: 38% !important;
+  top: -7% !important;
+  width: 29% !important;
+  height: 27% !important;
+  transform: rotate(20deg) !important;
+}
+
+.entity-layer .plant.pea .plant-head {
+  background:
+    radial-gradient(circle at 22% 16%, rgba(255,255,255,.92) 0 7%, transparent 8%),
+    radial-gradient(circle at 43% 27%, rgba(221,255,104,.64) 0 11%, transparent 12%),
+    radial-gradient(circle at 64% 65%, rgba(11,122,46,.42) 0 16%, transparent 17%),
+    linear-gradient(145deg, #d7ff62 0%, #97ef47 36%, #2fbd42 66%, #087033 100%) !important;
+}
+
+.entity-layer .plant.triple .plant-head {
+  left: 29% !important;
+  top: 11% !important;
+  width: 32% !important;
+  height: 35% !important;
+  box-shadow:
+    -22px 10px 0 -2px #9cf04a,
+    22px 10px 0 -2px #9cf04a,
+    -25px 12px 0 1px #061008,
+    25px 12px 0 1px #061008,
+    inset -5px -6px 0 rgba(0,45,20,.26) !important;
+}
+
+.entity-layer .plant.triple .mouth {
+  width: 67% !important;
+  right: -55% !important;
+  top: 28% !important;
+}
+
+.entity-layer .plant.ice .plant-head {
+  top: 9% !important;
+  background:
+    radial-gradient(circle at 23% 15%, #fff 0 8%, transparent 9%),
+    radial-gradient(circle at 54% 30%, rgba(255,255,255,.64) 0 13%, transparent 14%),
+    linear-gradient(145deg, #e9ffff 0%, #78e9fa 40%, #31a9d5 70%, #115785 100%) !important;
+}
+
+.entity-layer .plant.ice .crown {
+  left: -42% !important;
+  top: -40% !important;
+  width: 102% !important;
+  height: 66% !important;
+  clip-path: polygon(0 58%, 12% 16%, 28% 42%, 45% 0, 59% 39%, 78% 8%, 97% 50%, 100% 83%, 8% 100%) !important;
+}
+
+.entity-layer .plant.fire .plant-head {
+  top: 10% !important;
+  background:
+    radial-gradient(circle at 60% 38%, #fff5a1 0 18%, #ff982d 38%, #d72218 68%, #65030d 100%) !important;
+}
+
+.entity-layer .plant.fire::after {
+  left: -5% !important;
+  top: -32% !important;
+  width: 100% !important;
+  height: 104% !important;
+  filter: blur(.2px) saturate(1.15) !important;
+}
+
+.entity-layer .plant.volt .plant-head {
+  top: 14% !important;
+  width: 54% !important;
+  height: 47% !important;
+  background: radial-gradient(circle at 49% 47%, #ffffff 0 30%, #bafff7 31% 48%, #23d4b8 60%, #077161 100%) !important;
+}
+
+.entity-layer .plant.volt .mouth {
+  opacity: .22 !important;
+}
+
+.entity-layer .plant.angry .plant-head,
+.entity-layer .plant.spike .plant-head {
+  top: 6% !important;
+  width: 63% !important;
+  height: 52% !important;
+  clip-path: polygon(3% 38%, 17% 7%, 31% 24%, 49% 0, 64% 26%, 84% 7%, 100% 41%, 86% 98%, 14% 100%) !important;
+}
+
+.entity-layer .plant.toxic .plant-head,
+.entity-layer .plant.vine .plant-head {
+  top: 7% !important;
+  width: 61% !important;
+  height: 50% !important;
+}
+
+.entity-layer .plant.toxic .mouth,
+.entity-layer .plant.vine .mouth {
+  background:
+    radial-gradient(ellipse at 69% 54%, #030104 0 53%, transparent 54%),
+    linear-gradient(145deg, #94ff55 0%, #25b84b 42%, #74309f 100%) !important;
+}
+
+.entity-layer .plant.chomper .plant-head {
+  left: -2% !important;
+  top: -1% !important;
+  width: 76% !important;
+  height: 63% !important;
+  clip-path: polygon(0 38%, 15% 7%, 42% 0, 75% 9%, 100% 36%, 83% 59%, 96% 96%, 55% 79%, 25% 98%, 31% 66%) !important;
+}
+
+.entity-layer .plant.chomper .mouth {
+  right: -9% !important;
+  top: 16% !important;
+  width: 62% !important;
+  height: 53% !important;
+}
+
+.entity-layer .plant.cannon .plant-head {
+  left: 3% !important;
+  top: 9% !important;
+  width: 67% !important;
+  height: 51% !important;
+}
+
+.entity-layer .plant.cannon .mouth {
+  right: -47% !important;
+  top: 27% !important;
+  width: 70% !important;
+  height: 45% !important;
+}
+
+.entity-layer .plant.cannon::after {
+  left: 38% !important;
+  top: -7% !important;
+  width: 34% !important;
+  height: 27% !important;
+}
+
+.seed-card .mini-plant,
+.shop-card .mini-plant {
+  transform: none !important;
+  margin-inline: auto !important;
+}
+
+.mini-plant {
+  width: 52px !important;
+  height: 52px !important;
+  border-radius: 50% !important;
+}
+
+.mini-plant::after {
+  right: -17px !important;
+  top: 17px !important;
+  width: 28px !important;
+  height: 22px !important;
+  border-radius: 35% 72% 72% 35% / 42% 52% 56% 42% !important;
+}
