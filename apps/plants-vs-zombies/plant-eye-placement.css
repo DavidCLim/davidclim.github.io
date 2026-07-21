@@ -1,17 +1,7 @@
-/* Final cleanup: eyes sit above the oval, and special plants fit inside their tiles. */
+/* Force requested plant shapes. Last-loaded CSS wins over all older art layers. */
 .entity-layer .plant {
   --sprite-size: min(6.7vw, 64px) !important;
   transform: translate(-50%, -51%) translateY(var(--bob, 0)) rotate(var(--tilt, 0)) scale(var(--pulse, 1)) !important;
-}
-
-.entity-layer .plant.triple,
-.entity-layer .plant.chomper,
-.entity-layer .plant.cannon {
-  --sprite-size: min(7vw, 66px) !important;
-}
-
-.entity-layer .plant.spike {
-  --sprite-size: min(8.2vw, 78px) !important;
 }
 
 .entity-layer .plant-head {
@@ -19,6 +9,8 @@
   top: 16% !important;
   width: 52% !important;
   height: 47% !important;
+  border-radius: 50% !important;
+  clip-path: none !important;
   overflow: visible !important;
 }
 
@@ -26,6 +18,7 @@
 .entity-layer .plant:not(.volt) .plant-head::after {
   content: none !important;
   display: none !important;
+  opacity: 0 !important;
 }
 
 .entity-layer .plant:not(.volt) .stem::before,
@@ -44,19 +37,16 @@
   box-shadow: 0 0 0 1px rgba(0,0,0,.2) !important;
 }
 
-.entity-layer .plant:not(.volt) .stem::before {
-  left: -185% !important;
-}
-
-.entity-layer .plant:not(.volt) .stem::after {
-  left: 52% !important;
-}
+.entity-layer .plant:not(.volt) .stem::before { left: -185% !important; }
+.entity-layer .plant:not(.volt) .stem::after { left: 52% !important; }
 
 .entity-layer .mouth {
   right: -37% !important;
   top: 33% !important;
   width: 47% !important;
   height: 34% !important;
+  border-radius: 35% 72% 72% 35% / 42% 52% 56% 42% !important;
+  clip-path: none !important;
 }
 
 .entity-layer .stem {
@@ -76,7 +66,24 @@
   height: 18% !important;
 }
 
-/* Ice is now just a clean blue peashooter. */
+/* Delete special decorations completely for ice and fire. */
+.entity-layer .plant.ice .crown,
+.entity-layer .plant.ice::after,
+.entity-layer .plant.fire .crown,
+.entity-layer .plant.fire::after {
+  content: none !important;
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  border: 0 !important;
+  background: none !important;
+  clip-path: none !important;
+  filter: none !important;
+}
+
+/* Ice is exactly a blue peashooter shape. */
 .entity-layer .plant.ice {
   --line: #072237 !important;
   --head-a: #ddffff !important;
@@ -85,8 +92,11 @@
   --head-d: #0f5584 !important;
 }
 
-.entity-layer .plant.ice .crown {
-  display: none !important;
+.entity-layer .plant.ice .plant-head {
+  background:
+    radial-gradient(circle at 25% 18%, rgba(255,255,255,.95) 0 8%, transparent 9%),
+    radial-gradient(circle at 46% 30%, rgba(210,255,255,.48) 0 14%, transparent 15%),
+    linear-gradient(145deg, #ddffff 0%, #7be9fb 38%, #2aa4d2 70%, #0f5584 100%) !important;
 }
 
 .entity-layer .plant.ice .mouth {
@@ -102,7 +112,7 @@
     #06182a !important;
 }
 
-/* Fire is now just a clean red peashooter. */
+/* Fire is exactly a red peashooter shape. */
 .entity-layer .plant.fire {
   --line: #350400 !important;
   --head-a: #ffd36b !important;
@@ -111,13 +121,12 @@
   --head-d: #65030d !important;
 }
 
-.entity-layer .plant.fire::after {
-  display: none !important;
-  content: none !important;
-}
-
 .entity-layer .plant.fire .plant-head {
   top: 16% !important;
+  background:
+    radial-gradient(circle at 25% 18%, rgba(255,245,150,.95) 0 8%, transparent 9%),
+    radial-gradient(circle at 46% 30%, rgba(255,218,100,.48) 0 14%, transparent 15%),
+    linear-gradient(145deg, #ffd36b 0%, #ff6a2f 38%, #d72418 70%, #65030d 100%) !important;
 }
 
 .entity-layer .plant.fire .mouth {
@@ -134,58 +143,67 @@
     #5a0700 !important;
 }
 
-/* Bigger spike leaf, still clean. */
-.entity-layer .plant.spike .plant-head,
-.entity-layer .plant.angry .plant-head {
-  border-radius: 50% !important;
+/* Spike Leaf: bigger, simple, no weird old spikes. */
+.entity-layer .plant.spike {
+  --sprite-size: min(8.4vw, 80px) !important;
+  --line: #06210b !important;
+  --head-a: #e5ff70 !important;
+  --head-b: #91ee45 !important;
+  --head-c: #2bb345 !important;
+  --head-d: #086a2c !important;
+}
+
+.entity-layer .plant.spike::after,
+.entity-layer .plant.spike .crown,
+.entity-layer .plant.spike .plant-head::before,
+.entity-layer .plant.spike .plant-head::after {
+  content: none !important;
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  border: 0 !important;
+  background: none !important;
   clip-path: none !important;
 }
 
 .entity-layer .plant.spike .plant-head {
-  left: 9% !important;
+  left: 8% !important;
   top: 13% !important;
-  width: 56% !important;
-  height: 51% !important;
+  width: 57% !important;
+  height: 52% !important;
+  border-radius: 50% !important;
+  clip-path: none !important;
+  background:
+    radial-gradient(circle at 25% 18%, rgba(255,255,255,.95) 0 8%, transparent 9%),
+    radial-gradient(circle at 46% 30%, rgba(229,255,120,.46) 0 14%, transparent 15%),
+    linear-gradient(145deg, #e5ff70 0%, #91ee45 38%, #2bb345 70%, #086a2c 100%) !important;
 }
 
 .entity-layer .plant.spike .mouth {
-  right: -39% !important;
+  right: -38% !important;
   top: 32% !important;
   width: 49% !important;
   height: 35% !important;
+  background:
+    radial-gradient(ellipse at 70% 53%, #001708 0 54%, transparent 55%),
+    linear-gradient(145deg, #c2ff5c 0%, #31bb45 55%, #06441f 100%) !important;
 }
 
 .entity-layer .plant.spike .leaves {
   top: 78% !important;
-  width: 59% !important;
+  width: 60% !important;
   height: 19% !important;
 }
 
-.entity-layer .plant.spike .plant-head::before,
-.entity-layer .plant.spike .plant-head::after,
-.entity-layer .plant.angry .plant-head::before,
-.entity-layer .plant.angry .plant-head::after {
-  display: none !important;
-  content: none !important;
-}
-
 .entity-layer .plant.spike .stem::before,
-.entity-layer .plant.angry .stem::before,
-.entity-layer .plant.spike .stem::after,
-.entity-layer .plant.angry .stem::after {
-  top: -165% !important;
-  height: 55% !important;
-  border-radius: 20% 80% 28% 72% !important;
-}
-
-.entity-layer .plant.spike .stem::before,
-.entity-layer .plant.angry .stem::before {
-  transform: rotate(-18deg) !important;
-}
-
-.entity-layer .plant.spike .stem::after,
-.entity-layer .plant.angry .stem::after {
-  transform: rotate(18deg) !important;
+.entity-layer .plant.spike .stem::after {
+  top: -185% !important;
+  width: 76% !important;
+  height: 78% !important;
+  border-radius: 50% !important;
+  transform: none !important;
 }
 
 .entity-layer .plant.chomper .plant-head {
@@ -207,6 +225,12 @@
   top: -175% !important;
 }
 
+.entity-layer .plant.triple,
+.entity-layer .plant.chomper,
+.entity-layer .plant.cannon {
+  --sprite-size: min(7vw, 66px) !important;
+}
+
 .entity-layer .plant.triple .plant-head {
   left: 31% !important;
   top: 15% !important;
@@ -221,13 +245,8 @@
   top: 29% !important;
 }
 
-.entity-layer .plant.triple .crown {
-  left: 4% !important;
-}
-
-.entity-layer .plant.triple::after {
-  left: 58% !important;
-}
+.entity-layer .plant.triple .crown { left: 4% !important; }
+.entity-layer .plant.triple::after { left: 58% !important; }
 
 .entity-layer .plant.triple .stem::before,
 .entity-layer .plant.triple .stem::after {
@@ -275,4 +294,11 @@
 .seed-card .mini-plant.fire,
 .shop-card .mini-plant.fire {
   background: linear-gradient(145deg, #ffd36b 0%, #ff6a2f 38%, #d72418 70%, #65030d 100%) !important;
+}
+
+.seed-card .mini-plant.spike,
+.shop-card .mini-plant.spike {
+  width: 58px !important;
+  height: 58px !important;
+  background: linear-gradient(145deg, #e5ff70 0%, #91ee45 38%, #2bb345 70%, #086a2c 100%) !important;
 }
