@@ -1,0 +1,111 @@
+.account-panel {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid rgba(184, 255, 91, 0.3);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(184, 255, 91, 0.12), rgba(73, 202, 96, 0.06)),
+    rgba(13, 39, 31, 0.9);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28), inset 0 0 0 1px rgba(255,255,255,.05);
+}
+
+.account-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: end;
+}
+
+.account-form label {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+  font-size: .74rem;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.account-form input {
+  width: min(32vw, 170px);
+  min-height: 38px;
+  border: 1px solid rgba(184, 255, 91, .42);
+  border-radius: 6px;
+  padding: 0 10px;
+  color: var(--ink);
+  background: rgba(3, 16, 10, .72);
+  font-weight: 800;
+  outline: none;
+}
+
+.account-form input:focus {
+  border-color: var(--acid);
+  box-shadow: 0 0 14px rgba(184, 255, 91, .24);
+}
+
+#shop-button,
+#start-round,
+#delete-plant,
+#save-progress,
+#account-submit,
+#logout-account {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(184, 255, 91, 0.58);
+  border-radius: 6px;
+  color: #092012;
+  background: linear-gradient(135deg, var(--sun), var(--acid));
+  font-weight: 900;
+  box-shadow: 0 0 18px rgba(184, 255, 91, 0.24), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+#delete-plant {
+  background: linear-gradient(135deg, #ffcf5f, #ff6b4d);
+}
+
+#delete-plant.active {
+  color: #fff7dc;
+  background: linear-gradient(135deg, #ff3f3f, #7c0d11);
+  box-shadow: 0 0 22px rgba(255, 70, 70, .48), inset 0 0 0 1px rgba(255,255,255,.22);
+}
+
+#save-progress {
+  background: linear-gradient(135deg, #8effa0, #33d99b 48%, #19a56f);
+}
+
+#logout-account {
+  color: var(--ink);
+  background: rgba(5, 19, 12, .7);
+}
+
+#account-label {
+  color: var(--sun);
+  font-size: .9rem;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+@media (max-width: 760px) {
+  .account-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .account-form,
+  .account-form label,
+  .account-form input,
+  #account-submit,
+  #logout-account {
+    width: 100%;
+  }
+
+  #account-label {
+    text-align: left;
+  }
+}
