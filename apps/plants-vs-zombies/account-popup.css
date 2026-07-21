@@ -8,9 +8,9 @@ body.account-required {
   z-index: 80;
   display: none;
   background:
-    radial-gradient(circle at 50% 32%, rgba(184, 255, 91, .22), transparent 34%),
-    rgba(1, 9, 5, .76);
-  backdrop-filter: blur(8px);
+    radial-gradient(circle at 50% 28%, rgba(125, 211, 252, .2), transparent 30%),
+    radial-gradient(circle at 22% 78%, rgba(184, 255, 91, .16), transparent 34%),
+    rgba(1, 8, 14, .82);
 }
 
 body.account-required .account-gate-backdrop {
@@ -19,33 +19,44 @@ body.account-required .account-gate-backdrop {
 
 .account-panel.popup-open {
   position: fixed;
-  z-index: 90;
+  z-index: 100;
   left: 50%;
   top: 50%;
   width: min(560px, calc(100vw - 28px));
   transform: translate(-50%, -50%);
   grid-template-columns: 1fr;
-  padding: 20px;
-  border: 2px solid rgba(184, 255, 91, .7);
-  box-shadow: 0 0 40px rgba(184, 255, 91, .28), 0 28px 90px rgba(0,0,0,.62);
+  padding: 22px;
+  border: 2px solid rgba(125, 211, 252, .92);
+  background:
+    radial-gradient(circle at 14% 8%, rgba(125, 211, 252, .22), transparent 28%),
+    linear-gradient(145deg, #08204b 0%, #052437 48%, #031018 100%);
+  box-shadow:
+    0 0 34px rgba(125, 211, 252, .48),
+    0 0 78px rgba(0, 102, 204, .32),
+    0 28px 90px rgba(0,0,0,.72),
+    inset 0 0 0 1px rgba(255,255,255,.12);
 }
 
 .account-panel.popup-open::before {
   content: "ACCOUNT REQUIRED";
   display: block;
-  color: var(--sun);
-  font-size: 1.2rem;
+  color: #ffd75c;
+  font-size: 1.28rem;
   font-weight: 900;
-  letter-spacing: .08em;
+  letter-spacing: .1em;
   text-transform: uppercase;
+  text-shadow: 0 0 16px rgba(255, 215, 92, .58), 0 0 26px rgba(125, 211, 252, .36);
 }
 
 .account-panel.popup-open::after {
-  content: "Create or sign in, then press Save whenever you want to keep progress.";
+  content: "SIGN IN OR CREATE AN ACCOUNT, THEN PRESS SAVE WHENEVER YOU WANT TO KEEP PROGRESS.";
   display: block;
-  color: var(--muted);
-  font-weight: 800;
-  line-height: 1.4;
+  color: #dbeafe;
+  font-size: .86rem;
+  font-weight: 900;
+  letter-spacing: .04em;
+  line-height: 1.45;
+  text-transform: uppercase;
 }
 
 .account-panel.popup-open .account-form,
@@ -56,16 +67,21 @@ body.account-required .account-gate-backdrop {
   width: 100%;
 }
 
+.account-panel.popup-open .account-form {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.account-panel.popup-open #account-label {
+  text-align: left;
+}
+
 #open-account {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 40px;
-  padding: 0 14px;
-  border: 1px solid rgba(184, 255, 91, 0.58);
-  border-radius: 6px;
-  color: #092012;
-  background: linear-gradient(135deg, #dcfbff, #82e4f8 48%, #2fa8d6);
-  font-weight: 900;
-  box-shadow: 0 0 18px rgba(130, 228, 248, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  border-color: rgba(125, 211, 252, 0.82);
+  color: #ffffff;
+  background: linear-gradient(135deg, #00c2ff, #0066cc 52%, #07266c);
+  box-shadow:
+    0 0 22px rgba(125, 211, 252, 0.54),
+    0 0 38px rgba(0, 102, 204, 0.28),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.22);
 }
