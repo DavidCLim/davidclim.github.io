@@ -1,8 +1,9 @@
 const rows = 5;
 const cols = 9;
 const maxEquipped = 5;
-const storageKey = "david-pvz-save-v2";
-const legacyStorageKey = "david-pvz-save-v1";
+const accountsKey = "david-pvz-accounts-v1";
+const activeAccountKey = "david-pvz-active-account";
+const legacyStorageKey = "david-pvz-save-v2";
 
 const plantCatalog = [
   { id: "pea", name: "Peashooter", price: 0, cost: 50, role: "Balanced pea shots", hp: 90, fireRate: 1250, damage: 20, shot: "pea" },
@@ -22,6 +23,8 @@ const plantStats = Object.fromEntries(plantCatalog.map((plant) => [plant.id, pla
 const costs = Object.fromEntries(plantCatalog.map((plant) => [plant.id, plant.cost]));
 const starterPlants = ["pea", "ice", "fire", "spike", "chomper"];
 const paidPlants = plantCatalog.filter((plant) => plant.price > 0).map((plant) => plant.id);
+const defaultSave = { coins: 0, unlocked: starterPlants, equipped: starterPlants, wave: 1 };
+
 const zombieTypes = [
   { kind: "normal", min: 0, weight: 38, hp: 120, speed: 0.00022, damage: 16 },
   { kind: "flag", min: 3, weight: 10, hp: 110, speed: 0.00027, damage: 14, aura: true },
@@ -35,15 +38,18 @@ const zombieTypes = [
   { kind: "brute", min: 20, weight: 6, hp: 320, speed: 0.00015, damage: 30, armor: 0.24 },
 ];
 
-const saved = loadSave();
+const initial = loadSave();
 const state = {
-  coins: saved.coins,
-  unlocked: saved.unlocked,
-  equipped: saved.equipped,
+  account: initial.account,
+  coins: initial.coins,
+  unlocked: initial.unlocked,
+  equipped: initial.equipped,
   phase: "setup",
   sun: 75,
-  wave: saved.wave,
-  selected: saved.equipped[0],
+  wave: initial.wave,
+  selected: initial.equipped[0],
+  deleteMode: false,
+  dirty: false,
   running: false,
   won: false,
   lost: false,
@@ -57,7 +63,7 @@ const state = {
   sunTimer: 0,
   lastTime: 0,
   clock: 0,
-  saveNote: saved.migrated ? "Saved on this device" : "Saved",
+  saveNote: initial.account ? "Loaded" : "Sign in",
 };
 
 const els = {
@@ -73,6 +79,13 @@ const els = {
   newGame: document.querySelector("#new-game"),
   startRound: document.querySelector("#start-round"),
   shopButton: document.querySelector("#shop-button"),
+  deletePlant: document.querySelector("#delete-plant"),
+  saveProgress: document.querySelector("#save-progress"),
+  accountForm: document.querySelector("#account-form"),
+  accountUsername: document.querySelector("#account-username"),
+  accountPassword: document.querySelector("#account-password"),
+  accountLabel: document.querySelector("#account-label"),
+  logoutAccount: document.querySelector("#logout-account"),
   closeShop: document.querySelector("#close-shop"),
   shopBackdrop: document.querySelector("#shop-backdrop"),
   shopModal: document.querySelector("#shop-modal"),
@@ -85,42 +98,103 @@ const els = {
 let lastSeedHtml = "";
 let lastShopHtml = "";
 
-function loadSave() {
-  const fallback = { coins: 0, unlocked: starterPlants, equipped: starterPlants, wave: 1, migrated: false };
+function getAccounts() {
   try {
-    const current = JSON.parse(localStorage.getItem(storageKey) || "null");
-    if (current) return normalizeSave(current, false);
-    const legacy = JSON.parse(localStorage.getItem(legacyStorageKey) || "null");
-    if (legacy) {
-      return normalizeSave({ coins: legacy.coins, wave: legacy.wave, unlocked: starterPlants, equipped: starterPlants }, true);
-    }
-    return fallback;
+    return JSON.parse(localStorage.getItem(accountsKey) || "{}");
   } catch {
-    return fallback;
+    return {};
   }
 }
 
-function normalizeSave(data, migrated) {
+function writeAccounts(accounts) {
+  localStorage.setItem(accountsKey, JSON.stringify(accounts));
+}
+
+function normalizeSave(data) {
   const coins = Math.max(0, Math.floor(Number(data.coins) || 0));
   const unlocked = [...new Set([...(data.unlocked || []), ...starterPlants])].filter((id) => plantStats[id]);
   const paidUnlocked = unlocked.filter((id) => paidPlants.includes(id));
   const cleanUnlocked = [...starterPlants, ...paidUnlocked];
   const equipped = (data.equipped || starterPlants).filter((id) => cleanUnlocked.includes(id)).slice(0, maxEquipped);
-  return { coins, unlocked: cleanUnlocked, equipped: equipped.length === maxEquipped ? equipped : starterPlants, wave: Math.max(1, Number(data.wave) || 1), migrated };
+  return { coins, unlocked: cleanUnlocked, equipped: equipped.length === maxEquipped ? equipped : starterPlants, wave: Math.max(1, Number(data.wave) || 1) };
 }
 
-function saveGame(note = "Saved") {
-  localStorage.setItem(storageKey, JSON.stringify({ coins: state.coins, unlocked: state.unlocked, equipped: state.equipped, wave: state.wave }));
+function loadSave() {
+  const active = sessionStorage.getItem(activeAccountKey) || "";
+  const accounts = getAccounts();
+  if (active && accounts[active]) return { account: active, ...normalizeSave(accounts[active].save || defaultSave) };
+  return { account: "", ...defaultSave };
+}
+
+function snapshotSave() {
+  return { coins: state.coins, unlocked: state.unlocked, equipped: state.equipped, wave: state.wave };
+}
+
+function markUnsaved(note = "Unsaved") {
+  state.dirty = true;
   state.saveNote = note;
   if (els.saveStatus) els.saveStatus.textContent = note;
 }
 
-function setupRound(message = "Open the shop, buy plants with Seed Coins, equip exactly five, then start the round. Sun is only used during the round.") {
-  Object.assign(state, { phase: "setup", sun: 75, selected: state.equipped[0], running: false, won: false, lost: false, nextId: 1, plants: [], zombies: [], shots: [], spawned: 0, target: 0, spawnTimer: 2200, sunTimer: 0, lastTime: performance.now(), clock: 0 });
+function saveGame(note = "Saved") {
+  if (!state.account) {
+    state.saveNote = "Sign in first";
+    if (els.saveStatus) els.saveStatus.textContent = state.saveNote;
+    setMessage("Sign in first", "Create or sign into an account, then press Save to store your progress.");
+    render();
+    return;
+  }
+  const accounts = getAccounts();
+  if (!accounts[state.account]) {
+    state.saveNote = "Account missing";
+    if (els.saveStatus) els.saveStatus.textContent = state.saveNote;
+    return;
+  }
+  accounts[state.account].save = snapshotSave();
+  writeAccounts(accounts);
+  state.dirty = false;
+  state.saveNote = note;
+  if (els.saveStatus) els.saveStatus.textContent = note;
+  setMessage("Progress saved", `${state.account}'s plants, coins, and wave were saved.`);
+  render();
+}
+
+function signInOrCreate(event) {
+  event.preventDefault();
+  const username = els.accountUsername.value.trim().replace(/\s+/g, "_").slice(0, 18);
+  const password = els.accountPassword.value;
+  if (!username || !password) return setMessage("Account needed", "Type a username and password first.");
+
+  const accounts = getAccounts();
+  if (accounts[username]) {
+    if (accounts[username].password !== password) return setMessage("Wrong password", "That username already exists. Try the right password.");
+  } else {
+    accounts[username] = { password, save: normalizeSave(defaultSave) };
+    writeAccounts(accounts);
+  }
+
+  const save = normalizeSave(accounts[username].save || defaultSave);
+  sessionStorage.setItem(activeAccountKey, username);
+  Object.assign(state, { account: username, coins: save.coins, unlocked: save.unlocked, equipped: save.equipped, wave: save.wave, selected: save.equipped[0], dirty: false, saveNote: "Loaded" });
+  els.accountPassword.value = "";
+  lastSeedHtml = "";
+  lastShopHtml = "";
+  setupRound(`${username} is signed in. Progress only saves when you press Save.`);
+}
+
+function logoutAccount() {
+  sessionStorage.removeItem(activeAccountKey);
+  Object.assign(state, { account: "", coins: 0, unlocked: starterPlants, equipped: starterPlants, wave: 1, selected: starterPlants[0], dirty: false, saveNote: "Sign in" });
+  lastSeedHtml = "";
+  lastShopHtml = "";
+  setupRound("Signed out. Create or sign into an account before playing if you want to save progress.");
+}
+
+function setupRound(message = "Sign in or create an account, open the shop, equip exactly five plants, then start the round. Progress only saves when you press Save.") {
+  Object.assign(state, { phase: "setup", sun: 75, selected: state.equipped[0], deleteMode: false, running: false, won: false, lost: false, nextId: 1, plants: [], zombies: [], shots: [], spawned: 0, target: 0, spawnTimer: 2200, sunTimer: 0, lastTime: performance.now(), clock: 0 });
   lastSeedHtml = "";
   buildTiles();
   setMessage("Prepare the lawn", message);
-  saveGame("Saved");
   render();
 }
 
@@ -131,7 +205,7 @@ function startRound() {
     openShop();
     return;
   }
-  Object.assign(state, { phase: "running", sun: 75, selected: state.equipped[0], running: true, won: false, lost: false, plants: [], zombies: [], shots: [], spawned: 0, target: 24 + state.wave * 4, spawnTimer: 1800, sunTimer: 0, lastTime: performance.now(), clock: 0 });
+  Object.assign(state, { phase: "running", sun: 75, selected: state.equipped[0], deleteMode: false, running: true, won: false, lost: false, plants: [], zombies: [], shots: [], spawned: 0, target: 24 + state.wave * 4, spawnTimer: 1800, sunTimer: 0, lastTime: performance.now(), clock: 0 });
   closeShop();
   buildTiles();
   setMessage(`Wave ${state.wave}`, "The loadout is locked. Spend sun to plant and stop the special zombies.");
@@ -158,9 +232,18 @@ function buildTiles() {
 }
 
 function plantAt(row, col) {
-  if (!state.running || state.lost || state.won || !state.equipped.includes(state.selected)) return;
+  if (!state.running || state.lost || state.won) return;
+  const existingIndex = state.plants.findIndex((plant) => plant.row === row && plant.col === col);
+  if (state.deleteMode) {
+    if (existingIndex === -1) return setMessage("No plant there", "Click a planted tile to remove that plant.");
+    const [removed] = state.plants.splice(existingIndex, 1);
+    setMessage("Plant removed", `${plantStats[removed.type].name} was deleted from the lawn.`);
+    render();
+    return;
+  }
+  if (!state.equipped.includes(state.selected)) return;
   if (col > 5) return setMessage("Too far forward", "Plant closer to the house. Zombies enter from the right side.");
-  if (state.plants.some((plant) => plant.row === row && plant.col === col)) return;
+  if (existingIndex !== -1) return;
   const stats = plantStats[state.selected];
   if (state.sun < stats.cost) return setMessage("Need more sun", `${stats.name} costs ${stats.cost} sun.`);
   state.sun -= stats.cost;
@@ -325,9 +408,9 @@ function checkEnd() {
     state.won = true;
     state.running = false;
     state.phase = "setup";
-    saveGame("Saved");
     closeShop();
-    setMessage("You defended the lawn", `You earned ${reward} Seed Coins. Your device save was updated.`);
+    markUnsaved("Unsaved win");
+    setMessage("You defended the lawn", `You earned ${reward} Seed Coins. Press Save to keep this progress.`);
     lastShopHtml = "";
   }
 }
@@ -337,20 +420,22 @@ function loseGame() {
   state.lost = true;
   state.running = false;
   state.phase = "setup";
-  saveGame("Saved");
   closeShop();
-  setMessage("The zombies got through", "Your coins and unlocked plants are saved on this device. Adjust your loadout, then try again.");
+  markUnsaved("Unsaved retry");
+  setMessage("The zombies got through", "Adjust your loadout, then try again. Press Save if you want to keep account progress changes.");
 }
 
 function render() {
   els.coins.textContent = state.coins;
   if (els.saveStatus) els.saveStatus.textContent = state.saveNote;
+  if (els.accountLabel) els.accountLabel.textContent = state.account ? `Signed in as ${state.account}` : "No account signed in";
   els.sun.textContent = Math.floor(state.sun);
   els.wave.textContent = state.wave;
   els.zombiesLeft.textContent = state.phase === "running" ? Math.max(0, state.target - state.spawned + state.zombies.length) : 0;
-  els.status.textContent = state.phase === "running" ? "Round" : state.won ? "Win" : state.lost ? "Retry" : "Setup";
+  els.status.textContent = state.deleteMode ? "Delete" : state.phase === "running" ? "Round" : state.won ? "Win" : state.lost ? "Retry" : "Setup";
   els.startRound.disabled = state.phase === "running" || state.equipped.length !== maxEquipped;
   els.shopButton.disabled = state.phase === "running";
+  if (els.deletePlant) els.deletePlant.classList.toggle("active", state.deleteMode);
   renderSeedBank();
   renderShop();
   const entityLayer = els.lawn.querySelector(".entity-layer");
@@ -364,7 +449,7 @@ function renderSeedBank() {
   const html = state.equipped.map((id) => {
     const plant = plantStats[id];
     const locked = state.phase === "running" && state.sun < plant.cost;
-    return `<button class="seed-card ${id === state.selected ? "active" : ""} ${locked ? "locked" : ""}" data-plant="${id}" type="button"><span class="mini-plant ${id}"></span><strong>${plant.name}</strong><small>${plant.cost} sun</small></button>`;
+    return `<button class="seed-card ${id === state.selected && !state.deleteMode ? "active" : ""} ${locked ? "locked" : ""}" data-plant="${id}" type="button"><span class="mini-plant ${id}"></span><strong>${plant.name}</strong><small>${plant.cost} sun</small></button>`;
   }).join("");
   if (html !== lastSeedHtml) {
     els.seedBank.innerHTML = html;
@@ -375,7 +460,7 @@ function renderSeedBank() {
 
 function renderShop() {
   const lockedDuringRound = state.phase === "running";
-  els.shopNote.textContent = lockedDuringRound ? "The shop is locked during a round." : "Only the original five plants are free. Beat rounds to earn Seed Coins and buy stronger plants.";
+  els.shopNote.textContent = lockedDuringRound ? "The shop is locked during a round." : "Only the original five plants are free. Press Save when you want to keep shop changes.";
   const html = plantCatalog.map((plant) => {
     const unlocked = state.unlocked.includes(plant.id);
     const equipped = state.equipped.includes(plant.id);
@@ -429,10 +514,20 @@ function closeShop() {
   els.shopModal.setAttribute("aria-hidden", "true");
 }
 
+els.accountForm.addEventListener("submit", signInOrCreate);
+els.logoutAccount.addEventListener("click", logoutAccount);
+els.saveProgress.addEventListener("click", () => saveGame("Saved"));
+els.deletePlant.addEventListener("click", () => {
+  state.deleteMode = !state.deleteMode;
+  setMessage(state.deleteMode ? "Delete mode on" : "Delete mode off", state.deleteMode ? "Click any planted tile to remove that plant." : "Choose a seed card, then click the lawn to plant.");
+  render();
+});
+
 els.seedBank.addEventListener("click", (event) => {
   const card = event.target.closest(".seed-card[data-plant]");
   if (!card) return;
   state.selected = card.dataset.plant;
+  state.deleteMode = false;
   setMessage(`${plantStats[state.selected].name} selected`, state.phase === "running" ? `Click a lawn tile to plant it for ${costs[state.selected]} sun.` : "This plant is ready in your locked-in loadout.");
   render();
 });
@@ -447,29 +542,29 @@ els.plantShop.addEventListener("click", (event) => {
     if (state.coins < plant.price) return setMessage("Need more Seed Coins", `Beat rounds to earn coins. ${plant.name} costs ${plant.price}.`);
     state.coins -= plant.price;
     state.unlocked.push(id);
-    state.saveNote = "Saving...";
-    setMessage(`${plant.name} bought`, "Now equip it if you want it in your next round.");
+    markUnsaved("Unsaved shop");
+    setMessage(`${plant.name} bought`, "Press Save if you want to keep this purchase.");
   } else if (state.equipped.includes(id)) {
     state.equipped = state.equipped.filter((plantId) => plantId !== id);
     if (state.selected === id) state.selected = state.equipped[0] || "";
-    setMessage(`${plant.name} unequipped`, "Equip exactly five plants before starting.");
+    markUnsaved("Unsaved shop");
+    setMessage(`${plant.name} unequipped`, "Equip exactly five plants before starting, then press Save to keep it.");
   } else {
     if (state.equipped.length >= maxEquipped) return setMessage("Loadout full", "Unequip one plant first. You can only carry five plants at a time.");
     state.equipped.push(id);
     state.selected = id;
-    setMessage(`${plant.name} equipped`, plant.role);
+    markUnsaved("Unsaved shop");
+    setMessage(`${plant.name} equipped`, `${plant.role} Press Save to keep this loadout.`);
   }
-  saveGame("Saved");
   lastSeedHtml = "";
   lastShopHtml = "";
   render();
 });
 
-window.addEventListener("beforeunload", () => saveGame("Saved"));
 els.shopButton.addEventListener("click", openShop);
 els.closeShop.addEventListener("click", closeShop);
 els.shopBackdrop.addEventListener("click", closeShop);
 els.startRound.addEventListener("click", startRound);
-els.newGame.addEventListener("click", () => setupRound("Round reset. Shop and equip five plants, then start again."));
+els.newGame.addEventListener("click", () => setupRound("Round reset. Shop and equip five plants, then start again. Press Save to keep progress."));
 setupRound();
 window.requestAnimationFrame(loop);
