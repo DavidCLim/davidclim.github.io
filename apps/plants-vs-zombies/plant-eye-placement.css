@@ -59,7 +59,9 @@
 .entity-layer .leaves { top: 79% !important; }
 .entity-layer .plant::before { top: 4% !important; width: 21% !important; height: 18% !important; }
 
-/* Remove all special ice/fire/volt decorations. */
+/* Remove all special ice/fire/volt decorations, including the normal top leaf on ice/fire. */
+.entity-layer .plant.ice::before,
+.entity-layer .plant.fire::before,
 .entity-layer .plant.ice .crown,
 .entity-layer .plant.ice::after,
 .entity-layer .plant.fire .crown,
@@ -78,7 +80,7 @@
   filter: none !important;
 }
 
-/* Ice: normal peashooter, blue colors only. */
+/* Ice: normal peashooter, blue colors only, no top leaf. */
 .entity-layer .plant.ice {
   --line: #082844 !important;
   --head-a: #dcfbff !important;
@@ -119,7 +121,7 @@
     #06182a !important;
 }
 
-/* Fire: normal peashooter, red/orange colors only. */
+/* Fire: normal peashooter, red/orange colors only, no top leaf. */
 .entity-layer .plant.fire {
   --line: #3b0500 !important;
   --head-a: #ffd26a !important;
