@@ -21,67 +21,67 @@
     <link rel="stylesheet" href="level-up-plant-style.css?v=1.0">
     <link rel="stylesheet" href="tile-centered-plant-style.css?v=1.3">
     <link rel="stylesheet" href="plant-eye-placement.css?v=1.6">
-    <link rel="stylesheet" href="account-controls.css?v=1.0">
-    <link rel="stylesheet" href="account-popup.css?v=1.0">
+    <link rel="stylesheet" href="account-controls.css?v=1.1">
+    <link rel="stylesheet" href="account-popup.css?v=1.1">
   </head>
   <body>
     <main class="game-shell">
       <header class="topbar">
-        <a href="../../" class="home-link">Home</a>
+        <a href="../../" class="home-link">HOME</a>
         <div>
-          <p class="eyebrow">Second web game</p>
+          <p class="eyebrow">SECOND WEB GAME</p>
           <h1>PLANTS VS ZOMBIES</h1>
         </div>
         <div class="top-actions">
-          <a class="changelog-link" href="changelog.html">Changelog</a>
-          <button id="open-account" type="button">Account</button>
-          <button id="shop-button" type="button">Shop</button>
-          <button id="delete-plant" type="button">Delete Plant</button>
-          <button id="save-progress" type="button">Save</button>
-          <button id="start-round" type="button">Start Round</button>
-          <button id="new-game" type="button">New Game</button>
+          <a class="changelog-link" href="changelog.html">CHANGELOG</a>
+          <button id="open-account" type="button">ACCOUNT</button>
+          <button id="shop-button" type="button">SHOP</button>
+          <button id="delete-plant" type="button">DELETE PLANT</button>
+          <button id="save-progress" type="button">SAVE</button>
+          <button id="start-round" type="button">START ROUND</button>
+          <button id="new-game" type="button">NEW GAME</button>
         </div>
       </header>
 
       <section class="account-panel" aria-label="Account controls">
         <form id="account-form" class="account-form">
           <label>
-            Username
-            <input id="account-username" autocomplete="username" maxlength="18" placeholder="Username">
+            USERNAME
+            <input id="account-username" autocomplete="username" maxlength="18" placeholder="USERNAME">
           </label>
           <label>
-            Password
-            <input id="account-password" autocomplete="current-password" type="password" maxlength="32" placeholder="Password">
+            PASSWORD
+            <input id="account-password" autocomplete="current-password" type="password" maxlength="32" placeholder="PASSWORD">
           </label>
-          <button id="account-submit" type="submit">Sign in / Create</button>
-          <button id="logout-account" type="button">Log out</button>
+          <button id="account-submit" type="submit">SIGN IN / CREATE</button>
+          <button id="logout-account" type="button">LOG OUT</button>
         </form>
-        <strong id="account-label">No account signed in</strong>
+        <strong id="account-label">NO ACCOUNT SIGNED IN</strong>
       </section>
 
       <section class="hud" aria-label="Game status">
         <div class="stat-card coin-card">
-          <span>Seed Coins</span>
+          <span>SEED COINS</span>
           <strong id="coin-count">0</strong>
         </div>
         <div class="stat-card sun-card">
-          <span>Sun</span>
+          <span>SUN</span>
           <strong id="sun-count">75</strong>
         </div>
         <div class="stat-card">
-          <span>Wave</span>
+          <span>WAVE</span>
           <strong id="wave-count">1</strong>
         </div>
         <div class="stat-card">
-          <span>Zombies left</span>
+          <span>ZOMBIES LEFT</span>
           <strong id="zombies-left">0</strong>
         </div>
         <div class="stat-card save-card">
-          <span>Manual Save</span>
+          <span>MANUAL SAVE</span>
           <strong id="save-status">Not saved</strong>
         </div>
         <div class="stat-card">
-          <span>Status</span>
+          <span>STATUS</span>
           <strong id="status-label">Setup</strong>
         </div>
       </section>
@@ -89,17 +89,17 @@
       <section class="loadout-panel" aria-label="Equipped plants">
         <div class="loadout-header">
           <div>
-            <p class="eyebrow">Loadout</p>
-            <h2>Equip 5 before the round</h2>
+            <p class="eyebrow">LOADOUT</p>
+            <h2>EQUIP 5 BEFORE THE ROUND</h2>
           </div>
-          <strong id="loadout-count">5 / 5 equipped</strong>
+          <strong id="loadout-count">5 / 5 EQUIPPED</strong>
         </div>
         <div class="seed-bank" id="seed-bank" aria-label="Equipped plants"></div>
       </section>
 
       <section class="table" aria-label="Plants versus zombies lawn">
         <section class="message-panel" aria-live="polite">
-          <h2 id="message-title">Prepare the lawn</h2>
+          <h2 id="message-title">PREPARE THE LAWN</h2>
           <p id="message">Sign in or create an account, open the shop, equip exactly five plants, then start the round. Progress only saves when you press Save.</p>
         </section>
 
@@ -114,10 +114,10 @@
       <div class="shop-window" role="dialog" aria-modal="true" aria-labelledby="shop-title">
         <header class="shop-header">
           <div>
-            <p class="eyebrow">Plant shop</p>
-            <h2 id="shop-title">Buy and equip plants</h2>
+            <p class="eyebrow">PLANT SHOP</p>
+            <h2 id="shop-title">BUY AND EQUIP PLANTS</h2>
           </div>
-          <button id="close-shop" type="button">Close</button>
+          <button id="close-shop" type="button">CLOSE</button>
         </header>
         <p class="shop-note" id="shop-note">Shop changes are only allowed before a round starts. You can equip exactly five plants.</p>
         <div class="plant-shop" id="plant-shop"></div>
