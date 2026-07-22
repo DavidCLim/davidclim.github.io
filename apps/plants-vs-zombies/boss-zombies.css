@@ -9,38 +9,38 @@
 }
 
 .zombie.giant {
-  width: min(13.8vw, 132px);
-  height: min(15vw, 148px);
-  z-index: 6;
-  filter: drop-shadow(0 14px 0 rgba(0, 0, 0, 0.22)) drop-shadow(0 0 22px rgba(255, 75, 49, .28));
+  width: min(23vw, 230px);
+  height: min(25vw, 250px);
+  z-index: 12;
+  filter: drop-shadow(0 22px 0 rgba(0, 0, 0, 0.25)) drop-shadow(0 0 34px rgba(255, 75, 49, .36));
   animation: giant-shamble 1050ms ease-in-out infinite alternate;
 }
 
 .zombie.giant::before {
-  left: 10%;
-  top: 0;
-  width: 66%;
-  height: 42%;
-  border-width: 6px;
+  left: 8%;
+  top: -1%;
+  width: 70%;
+  height: 43%;
+  border-width: 7px;
   background:
     radial-gradient(circle at 28% 22%, rgba(255,255,255,.35), transparent 18%),
     linear-gradient(145deg, #a2c792, #55745e 70%);
 }
 
 .zombie.giant::after {
-  left: 27%;
-  top: 38%;
-  width: 36%;
-  height: 48%;
-  border-width: 6px;
+  left: 25%;
+  top: 37%;
+  width: 40%;
+  height: 50%;
+  border-width: 7px;
   background: linear-gradient(180deg, #7c738d, #303343);
 }
 
 .zombie.giant .arm {
-  left: 56%;
+  left: 55%;
   top: 48%;
-  width: 52%;
-  height: 12%;
+  width: 58%;
+  height: 13%;
   transform-origin: left center;
 }
 
@@ -50,7 +50,7 @@
 
 .zombie.giant.roaring .ability-aura {
   opacity: .95;
-  transform: translate(-50%, -50%) scale(1.35);
+  transform: translate(-50%, -50%) scale(1.48);
   border-color: rgba(255, 215, 92, .75);
 }
 
@@ -173,7 +173,7 @@
 }
 
 .zombie.giant .ability-tag {
-  top: -28px;
+  top: -34px;
   color: #06130a;
   background: linear-gradient(135deg, #ffd75c, #ff4b31);
   border-color: #ffd75c;
@@ -187,10 +187,10 @@
 .zombie.giant .boss-bar {
   display: block;
   position: absolute;
-  left: 4%;
-  right: 4%;
-  bottom: -12px;
-  height: 8px;
+  left: 2%;
+  right: 2%;
+  bottom: -15px;
+  height: 10px;
   border: 2px solid #06130a;
   border-radius: 999px;
   background: linear-gradient(90deg, #ff4b31 var(--hp), rgba(255,255,255,.18) 0);
@@ -213,13 +213,13 @@
 }
 
 @keyframes giant-shamble {
-  from { margin-top: -2px; }
-  to { margin-top: 3px; }
+  from { margin-top: -4px; transform: translate(-50%, -50%) rotate(-1deg) scale(1); }
+  to { margin-top: 5px; transform: translate(-50%, -50%) rotate(1deg) scale(1.03); }
 }
 
 @keyframes giant-stomp {
   0% { margin-top: -2px; }
-  60% { margin-top: 9px; }
+  60% { margin-top: 14px; }
   100% { margin-top: 0; }
 }
 
