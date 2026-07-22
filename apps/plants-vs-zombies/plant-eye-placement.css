@@ -41,12 +41,44 @@
 .entity-layer .plant .stem::after { left: 52% !important; }
 
 .entity-layer .mouth {
-  right: -37% !important;
-  top: 33% !important;
-  width: 47% !important;
-  height: 34% !important;
-  border-radius: 35% 72% 72% 35% / 42% 52% 56% 42% !important;
+  right: -43% !important;
+  top: 29% !important;
+  width: 54% !important;
+  height: 43% !important;
+  border-width: 4px !important;
+  border-radius: 50% !important;
   clip-path: none !important;
+  transform: rotate(5deg) !important;
+  background:
+    radial-gradient(ellipse at 72% 52%, #000b05 0 48%, #06341b 49% 58%, transparent 59%),
+    radial-gradient(circle at 28% 26%, rgba(231,255,148,.82) 0 13%, transparent 14%),
+    linear-gradient(145deg, #bfff62 0%, #42c84c 48%, #087032 100%) !important;
+  box-shadow:
+    inset -5px -6px 0 rgba(0, 45, 18, .3),
+    inset 4px 4px 0 rgba(255, 255, 255, .16) !important;
+}
+
+.entity-layer .mouth::before {
+  content: "" !important;
+  position: absolute !important;
+  right: 8% !important;
+  top: 16% !important;
+  width: 54% !important;
+  height: 63% !important;
+  border-radius: 50% !important;
+  background: radial-gradient(ellipse at 58% 52%, #000703 0 62%, #062513 63% 100%) !important;
+  box-shadow: inset 2px 2px 0 rgba(255,255,255,.06) !important;
+}
+
+.entity-layer .mouth::after {
+  content: "" !important;
+  position: absolute !important;
+  right: 20% !important;
+  top: 20% !important;
+  width: 14% !important;
+  height: 16% !important;
+  border-radius: 50% !important;
+  background: rgba(255,255,255,.62) !important;
 }
 
 .entity-layer .stem {
@@ -104,12 +136,13 @@
 }
 
 .entity-layer .plant.ice .mouth {
-  right: -37% !important;
-  top: 33% !important;
-  width: 47% !important;
-  height: 34% !important;
+  right: -43% !important;
+  top: 29% !important;
+  width: 54% !important;
+  height: 43% !important;
   background:
-    radial-gradient(ellipse at 70% 53%, #00101d 0 54%, transparent 55%),
+    radial-gradient(ellipse at 72% 52%, #00101d 0 48%, #0a3c58 49% 58%, transparent 59%),
+    radial-gradient(circle at 28% 26%, rgba(230,255,255,.88) 0 13%, transparent 14%),
     linear-gradient(145deg, #cbffff 0%, #42bedc 55%, #145886 100%) !important;
 }
 
@@ -145,12 +178,13 @@
 }
 
 .entity-layer .plant.fire .mouth {
-  right: -37% !important;
-  top: 33% !important;
-  width: 47% !important;
-  height: 34% !important;
+  right: -43% !important;
+  top: 29% !important;
+  width: 54% !important;
+  height: 43% !important;
   background:
-    radial-gradient(ellipse at 70% 53%, #1d0000 0 54%, transparent 55%),
+    radial-gradient(ellipse at 72% 52%, #1d0000 0 48%, #64200b 49% 58%, transparent 59%),
+    radial-gradient(circle at 28% 26%, rgba(255,228,112,.84) 0 13%, transparent 14%),
     linear-gradient(145deg, #ffb052 0%, #ef3f20 55%, #781014 100%) !important;
 }
 
@@ -187,13 +221,14 @@
 
 .entity-layer .plant.volt .mouth {
   display: block !important;
-  right: -37% !important;
-  top: 33% !important;
-  width: 47% !important;
-  height: 34% !important;
-  border-radius: 35% 72% 72% 35% / 42% 52% 56% 42% !important;
+  right: -43% !important;
+  top: 29% !important;
+  width: 54% !important;
+  height: 43% !important;
+  border-radius: 50% !important;
   background:
-    radial-gradient(ellipse at 70% 53%, #001814 0 54%, transparent 55%),
+    radial-gradient(ellipse at 72% 52%, #001814 0 48%, #0b554a 49% 58%, transparent 59%),
+    radial-gradient(circle at 28% 26%, rgba(234,255,255,.9) 0 13%, transparent 14%),
     linear-gradient(145deg, #c8fff7 0%, #28d6bf 55%, #066d60 100%) !important;
 }
 
@@ -243,12 +278,13 @@
 }
 
 .entity-layer .plant.spike .mouth {
-  right: -38% !important;
-  top: 32% !important;
-  width: 49% !important;
-  height: 35% !important;
+  right: -43% !important;
+  top: 29% !important;
+  width: 54% !important;
+  height: 43% !important;
   background:
-    radial-gradient(ellipse at 70% 53%, #001708 0 54%, transparent 55%),
+    radial-gradient(ellipse at 72% 52%, #001708 0 48%, #06441f 49% 58%, transparent 59%),
+    radial-gradient(circle at 28% 26%, rgba(229,255,112,.82) 0 13%, transparent 14%),
     linear-gradient(145deg, #c2ff5c 0%, #31bb45 55%, #06441f 100%) !important;
 }
 
