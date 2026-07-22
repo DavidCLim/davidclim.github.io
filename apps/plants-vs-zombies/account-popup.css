@@ -1,79 +1,35 @@
 body.account-required {
-  overflow: hidden;
+  overflow: auto;
 }
 
 .account-gate-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 80;
-  display: none;
-  background:
-    radial-gradient(circle at 50% 28%, rgba(125, 211, 252, .2), transparent 30%),
-    radial-gradient(circle at 22% 78%, rgba(184, 255, 91, .16), transparent 34%),
-    rgba(1, 8, 14, .82);
-}
-
-body.account-required .account-gate-backdrop {
-  display: block;
+  display: none !important;
+  pointer-events: none !important;
 }
 
 .account-panel.popup-open {
-  position: fixed;
-  z-index: 100;
-  left: 50%;
-  top: 50%;
-  width: min(560px, calc(100vw - 28px));
-  transform: translate(-50%, -50%);
-  grid-template-columns: 1fr;
-  padding: 22px;
-  border: 2px solid rgba(125, 211, 252, .92);
-  background:
-    radial-gradient(circle at 14% 8%, rgba(125, 211, 252, .22), transparent 28%),
-    linear-gradient(145deg, #08204b 0%, #052437 48%, #031018 100%);
-  box-shadow:
-    0 0 34px rgba(125, 211, 252, .48),
-    0 0 78px rgba(0, 102, 204, .32),
-    0 28px 90px rgba(0,0,0,.72),
-    inset 0 0 0 1px rgba(255,255,255,.12);
+  position: static;
+  z-index: auto;
+  width: auto;
+  transform: none;
 }
 
-.account-panel.popup-open::before {
-  content: "ACCOUNT REQUIRED";
-  display: block;
-  color: #ffd75c;
-  font-size: 1.28rem;
-  font-weight: 900;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  text-shadow: 0 0 16px rgba(255, 215, 92, .58), 0 0 26px rgba(125, 211, 252, .36);
-}
-
+.account-panel.popup-open::before,
 .account-panel.popup-open::after {
-  content: "SIGN IN OR CREATE AN ACCOUNT, THEN PRESS SAVE WHENEVER YOU WANT TO KEEP PROGRESS.";
-  display: block;
-  color: #dbeafe;
-  font-size: .86rem;
-  font-weight: 900;
-  letter-spacing: .04em;
-  line-height: 1.45;
-  text-transform: uppercase;
+  display: none;
 }
 
-.account-panel.popup-open .account-form,
-.account-panel.popup-open .account-form label,
-.account-panel.popup-open .account-form input,
-.account-panel.popup-open #account-submit,
-.account-panel.popup-open #logout-account {
-  width: 100%;
+.account-panel.account-highlight {
+  border-color: rgba(255, 215, 92, .95);
+  box-shadow:
+    0 0 28px rgba(255, 215, 92, .42),
+    0 0 52px rgba(125, 211, 252, .28),
+    0 18px 50px rgba(0, 0, 0, .34),
+    inset 0 0 0 1px rgba(255,255,255,.14);
 }
 
-.account-panel.popup-open .account-form {
-  display: grid;
-  grid-template-columns: 1fr;
-}
-
-.account-panel.popup-open #account-label {
-  text-align: left;
+.account-panel.account-highlight #account-label {
+  color: #ffffff;
 }
 
 #open-account {
