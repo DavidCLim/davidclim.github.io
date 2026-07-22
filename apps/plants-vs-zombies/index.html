@@ -21,8 +21,8 @@
     <link rel="stylesheet" href="level-up-plant-style.css?v=1.0">
     <link rel="stylesheet" href="tile-centered-plant-style.css?v=1.3">
     <link rel="stylesheet" href="plant-eye-placement.css?v=1.7">
-    <link rel="stylesheet" href="account-controls.css?v=1.2">
-    <link rel="stylesheet" href="account-popup.css?v=1.3">
+    <link rel="stylesheet" href="account-controls.css?v=1.3">
+    <link rel="stylesheet" href="account-popup.css?v=1.4">
     <link rel="stylesheet" href="final-plant-sprites.css?v=1.0">
   </head>
   <body>
@@ -45,14 +45,14 @@
       </header>
 
       <section class="account-panel" aria-label="Account controls">
-        <form id="account-form" class="account-form">
+        <form id="account-form" class="account-form" autocomplete="off">
           <label>
             USERNAME
-            <input id="account-username" autocomplete="username" maxlength="18" placeholder="USERNAME">
+            <input id="account-username" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="18" placeholder="USERNAME">
           </label>
           <label>
             PASSWORD
-            <input id="account-password" autocomplete="current-password" type="password" maxlength="32" placeholder="PASSWORD">
+            <input id="account-password" autocomplete="new-password" autocapitalize="none" spellcheck="false" type="password" maxlength="32" placeholder="PASSWORD">
           </label>
           <button id="account-submit" type="submit">SIGN IN / CREATE</button>
           <button id="logout-account" type="button">LOG OUT</button>
