@@ -1,4 +1,9 @@
-const accountSaveVersion = "account-save-v2";
+const accountSaveVersion = "account-save-v3";
+
+function accountSaveSetLoggedInVisuals(isLoggedIn) {
+  document.body.classList.toggle("account-logged-in", Boolean(isLoggedIn));
+  document.body.classList.toggle("account-logged-out", !isLoggedIn);
+}
 
 function accountSaveGetAccounts() {
   try {
@@ -34,6 +39,7 @@ function accountSaveLoad(username) {
 
 function accountSaveApply(username, save) {
   sessionStorage.setItem(activeAccountKey, username);
+  accountSaveSetLoggedInVisuals(true);
   Object.assign(state, {
     account: username,
     coins: save.coins,
@@ -52,6 +58,7 @@ function accountSaveApply(username, save) {
 saveGame = function saveGameToAccount(note = "Account saved") {
   const username = accountSaveNormalizeUsername(state.account || sessionStorage.getItem(activeAccountKey));
   if (!username) {
+    accountSaveSetLoggedInVisuals(false);
     state.saveNote = "Sign in first";
     if (els.saveStatus) els.saveStatus.textContent = state.saveNote;
     setMessage("Sign in first", "Create or sign into an account, then press Save to store plants, coins, and wave in that account.");
@@ -61,6 +68,7 @@ saveGame = function saveGameToAccount(note = "Account saved") {
 
   const accounts = accountSaveGetAccounts();
   if (!accounts[username]) {
+    accountSaveSetLoggedInVisuals(false);
     state.saveNote = "Account missing";
     if (els.saveStatus) els.saveStatus.textContent = state.saveNote;
     setMessage("Account missing", "Sign in again, then press Save.");
@@ -72,6 +80,7 @@ saveGame = function saveGameToAccount(note = "Account saved") {
   accounts[username].savedAt = new Date().toISOString();
   accounts[username].version = accountSaveVersion;
   accountSaveWriteAccounts(accounts);
+  accountSaveSetLoggedInVisuals(true);
   Object.assign(state, { account: username, dirty: false, saveNote: note });
   if (els.saveStatus) els.saveStatus.textContent = note;
   setMessage("Account saved", `${username}'s Seed Coins, unlocked plants, equipped plants, and wave are saved to this account profile.`);
@@ -79,10 +88,14 @@ saveGame = function saveGameToAccount(note = "Account saved") {
 };
 
 signInOrCreate = function signInOrCreateAccount(event) {
-  event.preventDefault();
+  if (event) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }
   const username = accountSaveNormalizeUsername(els.accountUsername.value);
   const password = els.accountPassword.value;
   if (!username || !password) {
+    accountSaveSetLoggedInVisuals(false);
     setMessage("Account needed", "Type a username and password first.");
     return;
   }
@@ -90,6 +103,7 @@ signInOrCreate = function signInOrCreateAccount(event) {
   const accounts = accountSaveGetAccounts();
   if (accounts[username]) {
     if (accounts[username].password !== password) {
+      accountSaveSetLoggedInVisuals(false);
       setMessage("Wrong password", "That username already exists. Try the right password.");
       return;
     }
@@ -109,7 +123,11 @@ signInOrCreate = function signInOrCreateAccount(event) {
 };
 
 if (els.accountForm) {
-  els.accountForm.addEventListener("submit", signInOrCreate, true);
+  els.accountForm.addEventListener("submit", (event) => signInOrCreate(event), true);
+}
+
+if (els.logoutAccount) {
+  els.logoutAccount.addEventListener("click", () => accountSaveSetLoggedInVisuals(false), true);
 }
 
 if (els.saveProgress) {
@@ -120,8 +138,4 @@ if (els.saveProgress) {
   }, true);
 }
 
-const activeAccountForSave = sessionStorage.getItem(activeAccountKey);
-if (activeAccountForSave) {
-  const save = accountSaveLoad(activeAccountForSave);
-  if (save) accountSaveApply(activeAccountForSave, save);
-}
+accountSaveSetLoggedInVisuals(false);
