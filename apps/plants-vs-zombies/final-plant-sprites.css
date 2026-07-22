@@ -1,0 +1,339 @@
+/* Final sprite polish: this file is loaded last and controls the visible plant art. */
+.entity-layer .plant {
+  --plant-line: #06120a;
+  --plant-a: #dfff66;
+  --plant-b: #8de34d;
+  --plant-c: #27ad47;
+  --plant-d: #087032;
+  --mouth-a: #c8ff61;
+  --mouth-b: #39bd48;
+  --mouth-c: #06451e;
+  width: min(7.1vw, 70px) !important;
+  height: min(7.1vw, 70px) !important;
+  overflow: visible !important;
+}
+
+.entity-layer .plant.ice {
+  --plant-line: #082844;
+  --plant-a: #e4ffff;
+  --plant-b: #86e9fb;
+  --plant-c: #2fa8d6;
+  --plant-d: #145886;
+  --mouth-a: #d8ffff;
+  --mouth-b: #45c7e4;
+  --mouth-c: #073b5a;
+}
+
+.entity-layer .plant.fire {
+  --plant-line: #3b0500;
+  --plant-a: #ffe27a;
+  --plant-b: #ff8738;
+  --plant-c: #d9341f;
+  --plant-d: #781014;
+  --mouth-a: #ffc45a;
+  --mouth-b: #ef4d25;
+  --mouth-c: #581008;
+}
+
+.entity-layer .plant.volt {
+  --plant-line: #05322b;
+  --plant-a: #f2ffff;
+  --plant-b: #91fff2;
+  --plant-c: #18cbb2;
+  --plant-d: #066d60;
+  --mouth-a: #d8fff9;
+  --mouth-b: #2bd6bf;
+  --mouth-c: #044f45;
+}
+
+.entity-layer .plant.angry,
+.entity-layer .plant.spike,
+.entity-layer .plant.toxic,
+.entity-layer .plant.vine,
+.entity-layer .plant.triple,
+.entity-layer .plant.cannon {
+  --plant-line: #06120a;
+}
+
+.entity-layer .plant.toxic,
+.entity-layer .plant.vine {
+  --plant-a: #bfff5f;
+  --plant-b: #5ee04e;
+  --plant-c: #24a64c;
+  --plant-d: #713095;
+  --mouth-a: #bfff5f;
+  --mouth-b: #43b94f;
+  --mouth-c: #4b1c68;
+}
+
+.entity-layer .plant-head {
+  left: 9% !important;
+  top: 13% !important;
+  width: 55% !important;
+  height: 51% !important;
+  border: 4px solid var(--plant-line) !important;
+  border-radius: 52% 48% 49% 54% !important;
+  background:
+    radial-gradient(circle at 24% 18%, rgba(255,255,255,.95) 0 8%, transparent 9%),
+    radial-gradient(circle at 48% 29%, rgba(230,255,120,.38) 0 13%, transparent 14%),
+    linear-gradient(145deg, var(--plant-a) 0%, var(--plant-b) 39%, var(--plant-c) 70%, var(--plant-d) 100%) !important;
+  box-shadow: inset -6px -7px 0 rgba(0, 44, 18, .24), inset 4px 4px 0 rgba(255,255,255,.12) !important;
+  overflow: visible !important;
+}
+
+.entity-layer .plant-head::before,
+.entity-layer .plant-head::after {
+  display: none !important;
+}
+
+.entity-layer .plant .stem::before,
+.entity-layer .plant .stem::after {
+  top: -182% !important;
+  width: 70% !important;
+  height: 75% !important;
+  border-radius: 50% !important;
+  background:
+    radial-gradient(circle at 58% 28%, #fff 0 18%, transparent 20%),
+    #06100a !important;
+}
+
+.entity-layer .plant.ice .stem::before,
+.entity-layer .plant.ice .stem::after { background: radial-gradient(circle at 58% 28%, #fff 0 18%, transparent 20%), #06182a !important; }
+.entity-layer .plant.fire .stem::before,
+.entity-layer .plant.fire .stem::after { background: radial-gradient(circle at 58% 28%, #fff6ad 0 18%, transparent 20%), #5a0700 !important; }
+.entity-layer .plant.volt .stem::before,
+.entity-layer .plant.volt .stem::after { background: radial-gradient(circle at 58% 28%, #fff 0 18%, transparent 20%), #05251f !important; }
+
+.entity-layer .plant .stem::before { left: -176% !important; }
+.entity-layer .plant .stem::after { left: 48% !important; }
+
+.entity-layer .mouth {
+  display: block !important;
+  right: -48% !important;
+  top: 27% !important;
+  width: 58% !important;
+  height: 47% !important;
+  z-index: 8 !important;
+  border: 4px solid var(--plant-line) !important;
+  border-radius: 52% !important;
+  transform: rotate(5deg) !important;
+  background:
+    radial-gradient(ellipse at 72% 52%, #000704 0 45%, var(--mouth-c) 46% 57%, transparent 58%),
+    radial-gradient(circle at 28% 25%, rgba(255,255,190,.78) 0 13%, transparent 14%),
+    linear-gradient(145deg, var(--mouth-a) 0%, var(--mouth-b) 50%, var(--mouth-c) 100%) !important;
+  box-shadow: inset -6px -6px 0 rgba(0, 35, 15, .3), inset 4px 4px 0 rgba(255,255,255,.18) !important;
+  clip-path: none !important;
+}
+
+.entity-layer .mouth::before {
+  content: "" !important;
+  position: absolute !important;
+  right: 7% !important;
+  top: 14% !important;
+  width: 56% !important;
+  height: 66% !important;
+  border-radius: 50% !important;
+  background: radial-gradient(ellipse at 60% 52%, #000604 0 60%, rgba(255,255,255,.08) 61% 64%, transparent 65%) !important;
+}
+
+.entity-layer .mouth::after {
+  content: "" !important;
+  position: absolute !important;
+  right: 21% !important;
+  top: 18% !important;
+  width: 14% !important;
+  height: 16% !important;
+  border-radius: 50% !important;
+  background: rgba(255,255,255,.68) !important;
+}
+
+.entity-layer .stem {
+  left: 40% !important;
+  top: 58% !important;
+  width: 10% !important;
+  height: 24% !important;
+}
+
+.entity-layer .leaves {
+  left: 17% !important;
+  top: 80% !important;
+  width: 58% !important;
+  height: 17% !important;
+}
+
+.entity-layer .plant::before {
+  left: 38% !important;
+  top: 0 !important;
+  width: 22% !important;
+  height: 20% !important;
+  border: 3px solid var(--plant-line) !important;
+}
+
+.entity-layer .plant.ice::before,
+.entity-layer .plant.fire::before {
+  display: none !important;
+}
+
+.entity-layer .plant.fire .plant-head {
+  box-shadow: inset -6px -7px 0 rgba(80, 0, 0, .25), 0 0 16px rgba(255, 90, 32, .34) !important;
+}
+
+.entity-layer .plant.volt .plant-head {
+  box-shadow: inset -6px -7px 0 rgba(0, 60, 50, .24), 0 0 14px rgba(105,255,235,.36) !important;
+}
+
+.entity-layer .plant.chomper {
+  width: min(8vw, 78px) !important;
+  height: min(8vw, 78px) !important;
+}
+
+.entity-layer .plant.chomper .plant-head {
+  left: 2% !important;
+  top: 15% !important;
+  width: 59% !important;
+  height: 52% !important;
+}
+
+.entity-layer .plant.chomper .mouth {
+  right: -35% !important;
+  top: 23% !important;
+  width: 68% !important;
+  height: 54% !important;
+  border-radius: 46% 62% 58% 46% / 46% 54% 56% 48% !important;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 10px, rgba(255,255,255,.96) 11px 16px, transparent 17px 28px),
+    radial-gradient(ellipse at 64% 52%, #000 0 58%, #0a2412 59% 100%) !important;
+}
+
+.entity-layer .plant.triple {
+  width: min(8vw, 76px) !important;
+  height: min(8vw, 76px) !important;
+}
+
+.entity-layer .plant.triple .plant-head {
+  left: 31% !important;
+  top: 10% !important;
+  width: 36% !important;
+  height: 34% !important;
+}
+
+.entity-layer .plant.triple .mouth {
+  right: -47% !important;
+  top: 29% !important;
+  width: 50% !important;
+  height: 40% !important;
+}
+
+.entity-layer .plant.triple .crown,
+.entity-layer .plant.triple::after {
+  display: block !important;
+  content: "" !important;
+  position: absolute !important;
+  width: 34% !important;
+  height: 32% !important;
+  top: 28% !important;
+  z-index: 4 !important;
+  border: 4px solid var(--plant-line) !important;
+  border-radius: 50% !important;
+  background: linear-gradient(145deg, var(--plant-a) 0%, var(--plant-b) 39%, var(--plant-c) 70%, var(--plant-d) 100%) !important;
+  box-shadow: inset -5px -5px 0 rgba(0,44,18,.22) !important;
+}
+
+.entity-layer .plant.triple .crown { left: 0 !important; }
+.entity-layer .plant.triple::after { left: 57% !important; }
+
+.entity-layer .plant.cannon {
+  width: min(8.2vw, 80px) !important;
+  height: min(8.2vw, 80px) !important;
+}
+
+.entity-layer .plant.cannon .mouth {
+  right: -58% !important;
+  top: 27% !important;
+  width: 70% !important;
+  height: 49% !important;
+}
+
+/* Inventory and shop icons should match the lawn sprites but stay readable at small size. */
+.seed-card .mini-plant,
+.shop-card .mini-plant {
+  position: relative !important;
+  width: 54px !important;
+  height: 54px !important;
+  margin: 0 auto 9px !important;
+  border: 3px solid #06120a !important;
+  border-radius: 52% 48% 49% 54% !important;
+  overflow: visible !important;
+  background:
+    radial-gradient(circle at 24% 18%, rgba(255,255,255,.92) 0 8%, transparent 9%),
+    linear-gradient(145deg, #dfff66 0%, #8de34d 39%, #27ad47 70%, #087032 100%) !important;
+  filter: drop-shadow(2px 3px 0 rgba(0,0,0,.68)) !important;
+}
+
+.seed-card .mini-plant::before,
+.shop-card .mini-plant::before {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  left: 24% !important;
+  top: 29% !important;
+  width: 10% !important;
+  height: 18% !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: radial-gradient(circle at 58% 28%, #fff 0 18%, transparent 20%), #06100a !important;
+  box-shadow: 13px 0 0 #06100a !important;
+}
+
+.seed-card .mini-plant::after,
+.shop-card .mini-plant::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  right: -24px !important;
+  top: 15px !important;
+  width: 34px !important;
+  height: 28px !important;
+  border: 3px solid #06120a !important;
+  border-radius: 50% !important;
+  background:
+    radial-gradient(ellipse at 73% 52%, #000704 0 45%, #06451e 46% 58%, transparent 59%),
+    radial-gradient(circle at 28% 25%, rgba(255,255,190,.78) 0 13%, transparent 14%),
+    linear-gradient(145deg, #c8ff61 0%, #39bd48 50%, #06451e 100%) !important;
+}
+
+.seed-card .mini-plant.ice,
+.shop-card .mini-plant.ice { border-color: #082844 !important; background: linear-gradient(145deg, #e4ffff 0%, #86e9fb 39%, #2fa8d6 70%, #145886 100%) !important; }
+.seed-card .mini-plant.ice::after,
+.shop-card .mini-plant.ice::after { border-color: #082844 !important; background: radial-gradient(ellipse at 73% 52%, #00101d 0 45%, #073b5a 46% 58%, transparent 59%), linear-gradient(145deg, #d8ffff 0%, #45c7e4 50%, #073b5a 100%) !important; }
+
+.seed-card .mini-plant.fire,
+.shop-card .mini-plant.fire { border-color: #3b0500 !important; background: linear-gradient(145deg, #ffe27a 0%, #ff8738 39%, #d9341f 70%, #781014 100%) !important; }
+.seed-card .mini-plant.fire::after,
+.shop-card .mini-plant.fire::after { border-color: #3b0500 !important; background: radial-gradient(ellipse at 73% 52%, #1d0000 0 45%, #581008 46% 58%, transparent 59%), linear-gradient(145deg, #ffc45a 0%, #ef4d25 50%, #581008 100%) !important; }
+
+.seed-card .mini-plant.volt,
+.shop-card .mini-plant.volt { border-color: #05322b !important; background: linear-gradient(145deg, #f2ffff 0%, #91fff2 39%, #18cbb2 70%, #066d60 100%) !important; }
+.seed-card .mini-plant.volt::after,
+.shop-card .mini-plant.volt::after { border-color: #05322b !important; background: radial-gradient(ellipse at 73% 52%, #001814 0 45%, #044f45 46% 58%, transparent 59%), linear-gradient(145deg, #d8fff9 0%, #2bd6bf 50%, #044f45 100%) !important; }
+
+.seed-card .mini-plant.chomper::after,
+.shop-card .mini-plant.chomper::after {
+  right: -27px !important;
+  top: 12px !important;
+  width: 39px !important;
+  height: 34px !important;
+  border-radius: 46% 62% 58% 46% / 46% 54% 56% 48% !important;
+  background: repeating-linear-gradient(90deg, transparent 0 8px, rgba(255,255,255,.96) 9px 13px, transparent 14px 23px), radial-gradient(ellipse at 64% 52%, #000 0 58%, #0a2412 59% 100%) !important;
+}
+
+.seed-card .mini-plant.triple::before,
+.shop-card .mini-plant.triple::before {
+  left: -12px !important;
+  top: 18px !important;
+  width: 28px !important;
+  height: 28px !important;
+  border: 3px solid #06120a !important;
+  background: linear-gradient(145deg, #dfff66 0%, #8de34d 39%, #27ad47 70%, #087032 100%) !important;
+  box-shadow: 34px 0 0 -1px #27ad47 !important;
+}
