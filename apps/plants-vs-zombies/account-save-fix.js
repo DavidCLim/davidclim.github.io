@@ -1,4 +1,4 @@
-const accountSaveVersion = "account-save-v3";
+const accountSaveVersion = "account-save-v4";
 
 function accountSaveSetLoggedInVisuals(isLoggedIn) {
   document.body.classList.toggle("account-logged-in", Boolean(isLoggedIn));
@@ -18,7 +18,32 @@ function accountSaveWriteAccounts(accounts) {
 }
 
 function accountSaveNormalizeUsername(username) {
-  return String(username || "").trim().replace(/\s+/g, "_").slice(0, 18);
+  return String(username || "").trim().replace(/\s+/g, "_").toLowerCase().slice(0, 18);
+}
+
+function accountSaveMigrateAccounts(accounts) {
+  const migrated = {};
+  let changed = false;
+  Object.entries(accounts).forEach(([name, account]) => {
+    const normalized = accountSaveNormalizeUsername(name);
+    if (!normalized) {
+      changed = true;
+      return;
+    }
+    if (normalized !== name) changed = true;
+    if (!migrated[normalized]) {
+      migrated[normalized] = { ...account, displayName: account.displayName || name };
+      return;
+    }
+    changed = true;
+    const existingSave = normalizeSave(migrated[normalized].save || defaultSave);
+    const incomingSave = normalizeSave(account.save || defaultSave);
+    if ((incomingSave.wave > existingSave.wave) || (incomingSave.coins > existingSave.coins)) {
+      migrated[normalized] = { ...account, displayName: migrated[normalized].displayName || account.displayName || name };
+    }
+  });
+  if (changed) accountSaveWriteAccounts(migrated);
+  return migrated;
 }
 
 function accountSaveSnapshot() {
@@ -31,17 +56,18 @@ function accountSaveSnapshot() {
 }
 
 function accountSaveLoad(username) {
-  const accounts = accountSaveGetAccounts();
-  const account = accounts[username];
+  const accounts = accountSaveMigrateAccounts(accountSaveGetAccounts());
+  const account = accounts[accountSaveNormalizeUsername(username)];
   if (!account) return null;
   return normalizeSave(account.save || defaultSave);
 }
 
 function accountSaveApply(username, save) {
-  sessionStorage.setItem(activeAccountKey, username);
+  const normalized = accountSaveNormalizeUsername(username);
+  sessionStorage.setItem(activeAccountKey, normalized);
   accountSaveSetLoggedInVisuals(true);
   Object.assign(state, {
-    account: username,
+    account: normalized,
     coins: save.coins,
     unlocked: save.unlocked,
     equipped: save.equipped,
@@ -52,7 +78,7 @@ function accountSaveApply(username, save) {
   });
   lastSeedHtml = "";
   lastShopHtml = "";
-  setupRound(`Loaded ${username}'s saved account: ${save.coins} Seed Coins, wave ${save.wave}, and ${save.unlocked.length} unlocked plants.`);
+  setupRound(`Loaded ${normalized}'s saved account: ${save.coins} Seed Coins, wave ${save.wave}, and ${save.unlocked.length} unlocked plants.`);
 }
 
 saveGame = function saveGameToAccount(note = "Account saved") {
@@ -66,7 +92,7 @@ saveGame = function saveGameToAccount(note = "Account saved") {
     return;
   }
 
-  const accounts = accountSaveGetAccounts();
+  const accounts = accountSaveMigrateAccounts(accountSaveGetAccounts());
   if (!accounts[username]) {
     accountSaveSetLoggedInVisuals(false);
     state.saveNote = "Account missing";
@@ -92,7 +118,8 @@ signInOrCreate = function signInOrCreateAccount(event) {
     event.preventDefault();
     event.stopImmediatePropagation();
   }
-  const username = accountSaveNormalizeUsername(els.accountUsername.value);
+  const rawUsername = els.accountUsername.value;
+  const username = accountSaveNormalizeUsername(rawUsername);
   const password = els.accountPassword.value;
   if (!username || !password) {
     accountSaveSetLoggedInVisuals(false);
@@ -100,16 +127,17 @@ signInOrCreate = function signInOrCreateAccount(event) {
     return;
   }
 
-  const accounts = accountSaveGetAccounts();
+  const accounts = accountSaveMigrateAccounts(accountSaveGetAccounts());
   if (accounts[username]) {
     if (accounts[username].password !== password) {
       accountSaveSetLoggedInVisuals(false);
-      setMessage("Wrong password", "That username already exists. Try the right password.");
+      setMessage("Username already taken", "That account name already exists. Use the correct password or choose a different name.");
       return;
     }
   } else {
     accounts[username] = {
       password,
+      displayName: rawUsername.trim().slice(0, 18),
       save: normalizeSave(defaultSave),
       savedAt: new Date().toISOString(),
       version: accountSaveVersion,
@@ -119,6 +147,7 @@ signInOrCreate = function signInOrCreateAccount(event) {
 
   const save = accountSaveLoad(username) || normalizeSave(defaultSave);
   if (els.accountPassword) els.accountPassword.value = "";
+  if (els.accountUsername) els.accountUsername.value = username;
   accountSaveApply(username, save);
 };
 
@@ -138,4 +167,5 @@ if (els.saveProgress) {
   }, true);
 }
 
+accountSaveMigrateAccounts(accountSaveGetAccounts());
 accountSaveSetLoggedInVisuals(false);
