@@ -3,27 +3,85 @@ body.account-required {
 }
 
 .account-gate-backdrop {
-  display: none !important;
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: none;
   pointer-events: none !important;
+  background:
+    radial-gradient(circle at 50% 26%, rgba(203, 255, 112, .16), transparent 32%),
+    rgba(5, 22, 9, .34);
+}
+
+body.account-required .account-gate-backdrop {
+  display: block;
 }
 
 .account-panel.popup-open {
-  position: static;
-  z-index: auto;
-  width: auto;
-  transform: none;
+  position: fixed;
+  z-index: 100;
+  left: 50%;
+  top: 50%;
+  width: min(590px, calc(100vw - 28px));
+  transform: translate(-50%, -50%);
+  grid-template-columns: 1fr;
+  padding: 22px;
+  border: 2px solid rgba(203, 255, 112, .9);
+  background:
+    radial-gradient(circle at 16% 8%, rgba(255, 215, 92, .18), transparent 30%),
+    radial-gradient(circle at 86% 16%, rgba(184, 255, 91, .18), transparent 34%),
+    linear-gradient(145deg, #2f6b38 0%, #164d27 48%, #082010 100%);
+  box-shadow:
+    0 0 36px rgba(184, 255, 91, .44),
+    0 0 76px rgba(32, 117, 43, .44),
+    0 28px 90px rgba(0,0,0,.62),
+    inset 0 0 0 1px rgba(255,255,255,.14);
 }
 
-.account-panel.popup-open::before,
+.account-panel.popup-open::before {
+  content: "ACCOUNT REQUIRED";
+  display: block;
+  color: #ffd75c;
+  font-size: 1.3rem;
+  font-weight: 900;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  text-shadow: 0 3px 0 #082010, 0 0 16px rgba(255, 215, 92, .46);
+}
+
 .account-panel.popup-open::after {
-  display: none;
+  content: "SIGN IN OR CREATE AN ACCOUNT. THE GAME WILL STAY CLICKABLE AND CLEAR.";
+  display: block;
+  color: #e8ffd0;
+  font-size: .86rem;
+  font-weight: 900;
+  letter-spacing: .04em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.account-panel.popup-open .account-form,
+.account-panel.popup-open .account-form label,
+.account-panel.popup-open .account-form input,
+.account-panel.popup-open #account-submit,
+.account-panel.popup-open #logout-account {
+  width: 100%;
+}
+
+.account-panel.popup-open .account-form {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.account-panel.popup-open #account-label {
+  text-align: left;
 }
 
 .account-panel.account-highlight {
   border-color: rgba(255, 215, 92, .95);
   box-shadow:
     0 0 28px rgba(255, 215, 92, .42),
-    0 0 52px rgba(125, 211, 252, .28),
+    0 0 52px rgba(184, 255, 91, .28),
     0 18px 50px rgba(0, 0, 0, .34),
     inset 0 0 0 1px rgba(255,255,255,.14);
 }
@@ -33,11 +91,10 @@ body.account-required {
 }
 
 #open-account {
-  border-color: rgba(125, 211, 252, 0.82);
-  color: #ffffff;
-  background: linear-gradient(135deg, #00c2ff, #0066cc 52%, #07266c);
+  border-color: rgba(203, 255, 112, 0.76);
+  color: #f9ffe6;
+  background: linear-gradient(135deg, #8ccf40, #287a30 52%, #0f3d1d);
   box-shadow:
-    0 0 22px rgba(125, 211, 252, 0.54),
-    0 0 38px rgba(0, 102, 204, 0.28),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+    0 0 18px rgba(184, 255, 91, 0.36),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
