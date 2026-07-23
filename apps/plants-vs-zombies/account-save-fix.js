@@ -1,4 +1,4 @@
-const accountSaveVersion = "account-save-v5";
+const accountSaveVersion = "account-save-v6";
 
 function accountSaveSetLoggedInVisuals(isLoggedIn) {
   document.body.classList.toggle("account-logged-in", Boolean(isLoggedIn));
@@ -37,6 +37,19 @@ function accountSaveIsProfileKey(key) {
   return String(key || "").startsWith("profile:");
 }
 
+function accountSaveCleanAccount(key, account) {
+  if (!account) return null;
+  const username = accountSaveNormalizeUsername(account.username || account.displayName || key.split(":")[1] || key);
+  const displayName = accountSaveDisplayName(account.displayName || account.username || username);
+  return {
+    ...account,
+    username,
+    displayName,
+    save: normalizeSave(account.save || defaultSave),
+    version: account.version || accountSaveVersion,
+  };
+}
+
 function accountSaveMigrateAccounts(accounts) {
   const migrated = {};
   let changed = false;
@@ -48,13 +61,8 @@ function accountSaveMigrateAccounts(accounts) {
     }
 
     if (accountSaveIsProfileKey(key)) {
-      migrated[key] = {
-        ...account,
-        username: accountSaveNormalizeUsername(account.username || account.displayName || key.split(":")[1]),
-        displayName: accountSaveDisplayName(account.displayName || account.username || key.split(":")[1]),
-        save: normalizeSave(account.save || defaultSave),
-        version: account.version || accountSaveVersion,
-      };
+      const cleaned = accountSaveCleanAccount(key, account);
+      if (cleaned) migrated[key] = cleaned;
       return;
     }
 
@@ -66,14 +74,8 @@ function accountSaveMigrateAccounts(accounts) {
     }
 
     const profileKey = accountSaveProfileKey(username, password);
-    if (profileKey !== key) changed = true;
-    migrated[profileKey] = {
-      ...account,
-      username,
-      displayName: accountSaveDisplayName(account.displayName || key),
-      save: normalizeSave(account.save || defaultSave),
-      version: account.version || accountSaveVersion,
-    };
+    migrated[profileKey] = accountSaveCleanAccount(profileKey, account);
+    changed = true;
   });
 
   if (changed) accountSaveWriteAccounts(migrated);
@@ -98,7 +100,7 @@ function accountSaveGetActiveAccount(accounts = accountSaveMigrateAccounts(accou
   return key && accounts[key] ? { key, account: accounts[key] } : null;
 }
 
-function accountSaveApply(profileKey, account) {
+function accountSaveRefreshAfterLogin(profileKey, account) {
   const save = normalizeSave(account.save || defaultSave);
   const displayName = accountSaveDisplayName(account.displayName || account.username);
   sessionStorage.setItem(activeAccountKey, profileKey);
@@ -115,8 +117,11 @@ function accountSaveApply(profileKey, account) {
   });
   lastSeedHtml = "";
   lastShopHtml = "";
-  setupRound(`Loaded ${displayName}'s saved account: ${save.coins} Seed Coins, wave ${save.wave}, and ${save.unlocked.length} unlocked plants.`);
+  if (els.accountPassword) els.accountPassword.value = "";
+  if (els.accountUsername) els.accountUsername.value = displayName;
   if (els.accountLabel) els.accountLabel.textContent = `Signed in as ${displayName}`;
+  setupRound(`Loaded ${displayName}'s saved account: ${save.coins} Seed Coins, wave ${save.wave}, and ${save.unlocked.length} unlocked plants.`);
+  if (window.closeAccountPopup) window.closeAccountPopup();
 }
 
 saveGame = function saveGameToAccount(note = "Account saved") {
@@ -143,57 +148,84 @@ saveGame = function saveGameToAccount(note = "Account saved") {
   render();
 };
 
+let accountSaveBusy = false;
 signInOrCreate = function signInOrCreateAccount(event) {
   if (event) {
     event.preventDefault();
+    event.stopPropagation();
     event.stopImmediatePropagation();
   }
+  if (accountSaveBusy) return;
+  accountSaveBusy = true;
 
-  const rawUsername = els.accountUsername.value;
-  const username = accountSaveNormalizeUsername(rawUsername);
-  const displayName = accountSaveDisplayName(rawUsername);
-  const password = els.accountPassword.value;
+  try {
+    const rawUsername = els.accountUsername ? els.accountUsername.value : "";
+    const username = accountSaveNormalizeUsername(rawUsername);
+    const displayName = accountSaveDisplayName(rawUsername);
+    const password = els.accountPassword ? els.accountPassword.value : "";
 
-  if (!username || !password) {
-    accountSaveSetLoggedInVisuals(false);
-    setMessage("Account needed", "Type a username and password first.");
-    return;
+    if (!username || !password) {
+      accountSaveSetLoggedInVisuals(false);
+      setMessage("Account needed", "Type a username and password first.");
+      return;
+    }
+
+    const accounts = accountSaveMigrateAccounts(accountSaveGetAccounts());
+    const profileKey = accountSaveProfileKey(username, password);
+
+    if (!accounts[profileKey]) {
+      accounts[profileKey] = {
+        username,
+        displayName,
+        password,
+        save: normalizeSave(defaultSave),
+        savedAt: new Date().toISOString(),
+        version: accountSaveVersion,
+      };
+      accountSaveWriteAccounts(accounts);
+    }
+
+    accountSaveRefreshAfterLogin(profileKey, accounts[profileKey]);
+  } finally {
+    setTimeout(() => { accountSaveBusy = false; }, 250);
   }
-
-  const accounts = accountSaveMigrateAccounts(accountSaveGetAccounts());
-  const profileKey = accountSaveProfileKey(username, password);
-
-  if (!accounts[profileKey]) {
-    accounts[profileKey] = {
-      username,
-      displayName,
-      password,
-      save: normalizeSave(defaultSave),
-      savedAt: new Date().toISOString(),
-      version: accountSaveVersion,
-    };
-    accountSaveWriteAccounts(accounts);
-  }
-
-  if (els.accountPassword) els.accountPassword.value = "";
-  if (els.accountUsername) els.accountUsername.value = displayName;
-  accountSaveApply(profileKey, accounts[profileKey]);
 };
 
+function accountSaveHandleSubmit(event) {
+  signInOrCreate(event);
+}
+
 if (els.accountForm) {
-  els.accountForm.addEventListener("submit", (event) => signInOrCreate(event), true);
+  els.accountForm.addEventListener("submit", accountSaveHandleSubmit, true);
+}
+
+const accountSubmitButton = document.querySelector("#account-submit");
+if (accountSubmitButton) {
+  accountSubmitButton.addEventListener("click", (event) => {
+    if (els.accountForm && typeof els.accountForm.requestSubmit === "function") {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      els.accountForm.requestSubmit();
+    }
+  }, true);
 }
 
 if (els.logoutAccount) {
-  els.logoutAccount.addEventListener("click", () => {
+  els.logoutAccount.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
     sessionStorage.removeItem(activeAccountKey);
     accountSaveSetLoggedInVisuals(false);
+    logoutAccount();
   }, true);
 }
 
 if (els.saveProgress) {
   els.saveProgress.addEventListener("click", (event) => {
     event.preventDefault();
+    event.stopPropagation();
     event.stopImmediatePropagation();
     saveGame("Account saved");
   }, true);
