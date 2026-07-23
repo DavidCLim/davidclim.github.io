@@ -9,7 +9,7 @@ const plantCatalog = [
   { id: "pea", name: "Peashooter", price: 0, cost: 50, role: "Balanced pea shots", hp: 90, fireRate: 1250, damage: 20, shot: "pea" },
   { id: "ice", name: "Ice Bloom", price: 0, cost: 75, role: "Slows zombies", hp: 90, fireRate: 1500, damage: 14, shot: "ice", slow: 1700 },
   { id: "fire", name: "Fire Bloom", price: 0, cost: 100, role: "Splash fireballs", hp: 85, fireRate: 1750, damage: 30, shot: "fire", splash: 0.72 },
-  { id: "spike", name: "Spike Leaf", price: 0, cost: 75, role: "Lane spike trap", hp: 170, fireRate: 420, damage: 12, trap: true },
+  { id: "spike", name: "Walnut", price: 0, cost: 50, role: "Tough blocker with no damage", hp: 420, blocker: true },
   { id: "chomper", name: "Chomper", price: 0, cost: 150, role: "Huge bite", hp: 170, fireRate: 2500, damage: 145, melee: true },
   { id: "volt", name: "Volt Sprout", price: 180, cost: 125, role: "Chains lightning", hp: 80, fireRate: 1900, damage: 24, shot: "volt", chain: 2 },
   { id: "angry", name: "Angry Pea", price: 230, cost: 125, role: "Fast heavy shots", hp: 95, fireRate: 930, damage: 18, shot: "angry" },
