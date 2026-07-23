@@ -185,7 +185,84 @@
   height: 11px !important;
 }
 
+.entity-layer .plant.sunflower {
+  width: min(7.8vw, 78px) !important;
+  height: min(8.2vw, 82px) !important;
+  --plant-line: #3a2105;
+}
+
+.entity-layer .plant.sunflower .plant-head {
+  left: 16% !important;
+  top: 3% !important;
+  width: 64% !important;
+  height: 62% !important;
+  z-index: 6 !important;
+  border: 4px solid #3a2105 !important;
+  border-radius: 50% !important;
+  background:
+    radial-gradient(circle at 35% 33%, #3a2105 0 7%, transparent 8%),
+    radial-gradient(circle at 65% 33%, #3a2105 0 7%, transparent 8%),
+    radial-gradient(ellipse at 50% 62%, #5d3109 0 12%, transparent 13%),
+    radial-gradient(circle at 50% 50%, #8a4a12 0 43%, transparent 44%),
+    conic-gradient(from 0deg, #ffe55b 0 12deg, #f4a72f 13deg 25deg, #ffe55b 26deg 38deg, #f4a72f 39deg 52deg, #ffe55b 53deg 66deg, #f4a72f 67deg 80deg, #ffe55b 81deg 94deg, #f4a72f 95deg 108deg, #ffe55b 109deg 122deg, #f4a72f 123deg 136deg, #ffe55b 137deg 150deg, #f4a72f 151deg 164deg, #ffe55b 165deg 178deg, #f4a72f 179deg 192deg, #ffe55b 193deg 206deg, #f4a72f 207deg 220deg, #ffe55b 221deg 234deg, #f4a72f 235deg 248deg, #ffe55b 249deg 262deg, #f4a72f 263deg 276deg, #ffe55b 277deg 290deg, #f4a72f 291deg 304deg, #ffe55b 305deg 318deg, #f4a72f 319deg 332deg, #ffe55b 333deg 346deg, #f4a72f 347deg 360deg) !important;
+  box-shadow: inset -5px -6px 0 rgba(92, 49, 9, .18), 0 0 16px rgba(255, 218, 74, .38), 0 5px 0 rgba(0,0,0,.18) !important;
+  animation-name: sunflower-smile !important;
+}
+
+.entity-layer .plant.sunflower .mouth,
+.entity-layer .plant.sunflower .crown,
+.entity-layer .plant.sunflower::before,
+.entity-layer .plant.sunflower::after {
+  content: none !important;
+  display: none !important;
+}
+
+.entity-layer .plant.sunflower .stem {
+  left: 45% !important;
+  top: 61% !important;
+  width: 11% !important;
+  height: 24% !important;
+  background: linear-gradient(145deg, #50c943, #1e8230) !important;
+}
+
+.entity-layer .plant.sunflower .leaves {
+  left: 19% !important;
+  top: 82% !important;
+  width: 58% !important;
+  height: 16% !important;
+  background: linear-gradient(145deg, #74de52, #238f33) !important;
+}
+
+.entity-layer .plant.sunflower.action .plant-head {
+  filter: drop-shadow(0 0 16px rgba(255, 226, 70, .85)) brightness(1.12) !important;
+}
+
+.seed-card .mini-plant.sunflower,
+.shop-card .mini-plant.sunflower {
+  border-color: #3a2105 !important;
+  background:
+    radial-gradient(circle at 35% 33%, #3a2105 0 7%, transparent 8%),
+    radial-gradient(circle at 65% 33%, #3a2105 0 7%, transparent 8%),
+    radial-gradient(ellipse at 50% 62%, #5d3109 0 12%, transparent 13%),
+    radial-gradient(circle at 50% 50%, #8a4a12 0 43%, transparent 44%),
+    conic-gradient(from 0deg, #ffe55b 0 12deg, #f4a72f 13deg 25deg, #ffe55b 26deg 38deg, #f4a72f 39deg 52deg, #ffe55b 53deg 66deg, #f4a72f 67deg 80deg, #ffe55b 81deg 94deg, #f4a72f 95deg 108deg, #ffe55b 109deg 122deg, #f4a72f 123deg 136deg, #ffe55b 137deg 150deg, #f4a72f 151deg 164deg, #ffe55b 165deg 178deg, #f4a72f 179deg 192deg, #ffe55b 193deg 206deg, #f4a72f 207deg 220deg, #ffe55b 221deg 234deg, #f4a72f 235deg 248deg, #ffe55b 249deg 262deg, #f4a72f 263deg 276deg, #ffe55b 277deg 290deg, #f4a72f 291deg 304deg, #ffe55b 305deg 318deg, #f4a72f 319deg 332deg, #ffe55b 333deg 346deg, #f4a72f 347deg 360deg) !important;
+  box-shadow: inset -4px -5px 0 rgba(92, 49, 9, .16), 2px 4px 0 rgba(0,0,0,.55), 0 0 13px rgba(255,218,74,.28) !important;
+}
+
+.seed-card .mini-plant.sunflower::before,
+.shop-card .mini-plant.sunflower::before,
+.seed-card .mini-plant.sunflower::after,
+.shop-card .mini-plant.sunflower::after {
+  content: none !important;
+  display: none !important;
+}
+
 @keyframes walnut-wobble {
   from { margin-top: -1px; transform: rotate(-1deg); }
   to { margin-top: 2px; transform: rotate(1deg); }
+}
+
+@keyframes sunflower-smile {
+  from { margin-top: -1px; transform: rotate(-2deg); }
+  to { margin-top: 2px; transform: rotate(2deg); }
 }
