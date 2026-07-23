@@ -1,0 +1,128 @@
+/* Final topbar layout: clean left title area and neat action controls. */
+.topbar {
+  display: grid !important;
+  grid-template-columns: minmax(88px, 120px) minmax(240px, 1fr) minmax(420px, 560px) !important;
+  align-items: center !important;
+  gap: 18px !important;
+  padding: 18px !important;
+}
+
+.topbar > div:first-of-type {
+  min-width: 0 !important;
+}
+
+.topbar h1 {
+  line-height: .92 !important;
+  margin: 0 !important;
+}
+
+.home-link {
+  width: 100% !important;
+  min-height: 54px !important;
+  padding: 0 14px !important;
+}
+
+.top-actions {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(118px, 1fr)) !important;
+  grid-auto-rows: 46px !important;
+  gap: 10px !important;
+  justify-self: stretch !important;
+  align-self: stretch !important;
+  padding: 10px !important;
+  border: 2px solid rgba(135, 224, 76, .38) !important;
+  border-radius: 14px !important;
+  background:
+    radial-gradient(circle at 10% 12%, rgba(216,255,118,.15), transparent 30%),
+    linear-gradient(145deg, rgba(9, 48, 15, .9), rgba(3, 23, 8, .9)) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.08),
+    0 12px 32px rgba(0,0,0,.28) !important;
+}
+
+.top-actions .changelog-link,
+.top-actions button {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 46px !important;
+  height: 46px !important;
+  padding: 0 10px !important;
+  white-space: nowrap !important;
+  font-size: clamp(.72rem, 1vw, .88rem) !important;
+  letter-spacing: .04em !important;
+}
+
+.top-actions #start-round {
+  grid-column: span 2 !important;
+  order: 1 !important;
+}
+
+.top-actions #new-game {
+  grid-column: span 1 !important;
+  order: 2 !important;
+}
+
+.top-actions #shop-button { order: 3 !important; }
+.top-actions #save-progress { order: 4 !important; }
+.top-actions #delete-plant { order: 5 !important; }
+.top-actions .changelog-link { order: 6 !important; }
+
+@media (max-width: 1120px) {
+  .topbar {
+    grid-template-columns: 110px 1fr !important;
+    grid-template-areas:
+      "home title"
+      "actions actions" !important;
+  }
+
+  .home-link { grid-area: home !important; }
+  .topbar > div:first-of-type { grid-area: title !important; }
+  .top-actions { grid-area: actions !important; grid-template-columns: repeat(3, minmax(120px, 1fr)) !important; }
+}
+
+@media (max-width: 720px) {
+  .topbar {
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "title"
+      "home"
+      "actions" !important;
+    gap: 12px !important;
+    padding: 14px !important;
+    text-align: center !important;
+  }
+
+  .home-link {
+    width: min(260px, 100%) !important;
+    justify-self: center !important;
+  }
+
+  .top-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    padding: 8px !important;
+  }
+
+  .top-actions #start-round,
+  .top-actions #new-game {
+    grid-column: span 2 !important;
+  }
+
+  .top-actions .changelog-link,
+  .top-actions button {
+    height: 44px !important;
+    min-height: 44px !important;
+    font-size: .72rem !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .top-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .top-actions #start-round,
+  .top-actions #new-game {
+    grid-column: span 1 !important;
+  }
+}
