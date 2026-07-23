@@ -1,0 +1,308 @@
+/* Clean dark garden theme: calmer, neater, darker, and consistent across the whole game. */
+:root {
+  --garden-bg-0: #020904;
+  --garden-bg-1: #06180a;
+  --garden-bg-2: #0b2a12;
+  --garden-panel: rgba(4, 24, 9, .92);
+  --garden-panel-2: rgba(7, 38, 14, .9);
+  --garden-line: rgba(105, 190, 76, .38);
+  --garden-line-bright: rgba(172, 245, 98, .78);
+  --garden-text: #efffe3;
+  --garden-muted: #9ec99a;
+  --garden-gold: #d7f06a;
+  --garden-danger: #b8482e;
+}
+
+html,
+body {
+  background: var(--garden-bg-0) !important;
+}
+
+body {
+  color: var(--garden-text) !important;
+  background:
+    radial-gradient(circle at 16% 5%, rgba(76, 158, 48, .2), transparent 25%),
+    radial-gradient(circle at 88% 15%, rgba(17, 90, 33, .3), transparent 32%),
+    radial-gradient(ellipse at 50% 115%, rgba(46, 120, 35, .28), transparent 48%),
+    linear-gradient(150deg, #0b2711 0%, #06180a 45%, #020904 100%) !important;
+}
+
+body::before {
+  opacity: .42 !important;
+  background:
+    radial-gradient(ellipse 170px 42px at 8% 16%, rgba(102, 188, 71, .22) 0 48%, transparent 50%),
+    radial-gradient(ellipse 220px 54px at 91% 20%, rgba(59, 145, 54, .2) 0 48%, transparent 50%),
+    radial-gradient(ellipse 190px 44px at 22% 82%, rgba(118, 195, 75, .16) 0 48%, transparent 50%),
+    repeating-linear-gradient(112deg, transparent 0 82px, rgba(129, 217, 78, .055) 84px 89px, transparent 91px 170px) !important;
+}
+
+body::after {
+  opacity: .2 !important;
+  background:
+    linear-gradient(90deg, transparent 0 18%, rgba(74, 150, 61, .15) 18.2% 18.45%, transparent 18.8% 48%, rgba(74, 150, 61, .12) 48.2% 48.45%, transparent 48.8% 100%),
+    radial-gradient(ellipse at 50% 110%, rgba(74, 150, 61, .16), transparent 55%) !important;
+}
+
+.game-shell {
+  width: min(1180px, calc(100% - 28px)) !important;
+  padding-top: 16px !important;
+}
+
+.topbar,
+.hud .stat-card,
+.loadout-panel,
+.seed-bank,
+.table,
+.message-panel,
+.shop-window {
+  border: 1px solid var(--garden-line) !important;
+  border-radius: 10px !important;
+  background:
+    linear-gradient(145deg, rgba(14, 52, 20, .68), rgba(3, 18, 7, .94)) !important;
+  box-shadow:
+    0 14px 38px rgba(0, 0, 0, .46),
+    inset 0 0 0 1px rgba(229, 255, 198, .045) !important;
+  backdrop-filter: none !important;
+}
+
+.topbar {
+  margin-bottom: 12px !important;
+}
+
+.topbar h1 {
+  color: #f3ffe2 !important;
+  text-shadow: 0 3px 0 #041307, 0 0 18px rgba(120, 222, 80, .28) !important;
+}
+
+.eyebrow,
+.loadout-header .eyebrow,
+.shop-header .eyebrow {
+  color: var(--garden-gold) !important;
+  opacity: .95 !important;
+}
+
+.hud {
+  gap: 8px !important;
+  margin-bottom: 12px !important;
+}
+
+.hud .stat-card {
+  padding: 10px 12px !important;
+  min-height: 68px !important;
+}
+
+.stat-card span,
+.seed-card small,
+.shop-card small,
+.shop-note,
+.message-panel p {
+  color: var(--garden-muted) !important;
+}
+
+.stat-card strong,
+#coin-count,
+#wave-count,
+#zombies-left,
+#status-label {
+  color: #bff06f !important;
+}
+
+#sun-count,
+.sun-card strong {
+  color: #e6cf5f !important;
+}
+
+.loadout-panel {
+  padding: 14px !important;
+  margin-bottom: 12px !important;
+}
+
+.loadout-header {
+  align-items: center !important;
+  gap: 12px !important;
+  margin-bottom: 10px !important;
+}
+
+.loadout-header h2,
+.message-panel h2,
+.shop-header h2 {
+  color: #f4ffe7 !important;
+  margin-bottom: 4px !important;
+}
+
+#loadout-count {
+  border: 1px solid rgba(170, 232, 99, .35) !important;
+  border-radius: 999px !important;
+  padding: 8px 12px !important;
+  color: #d7f06a !important;
+  background: rgba(7, 31, 10, .8) !important;
+  white-space: nowrap !important;
+}
+
+.seed-bank {
+  gap: 10px !important;
+  padding: 10px !important;
+  margin-bottom: 0 !important;
+}
+
+.seed-card,
+.shop-card,
+.home-link,
+.changelog-link,
+.top-actions button,
+#shop-button,
+#start-round,
+#delete-plant,
+#save-progress,
+#new-game,
+#close-shop {
+  border: 1px solid rgba(126, 207, 82, .58) !important;
+  border-radius: 8px !important;
+  color: #efffe3 !important;
+  background:
+    linear-gradient(180deg, rgba(34, 91, 34, .95), rgba(8, 37, 12, .98)) !important;
+  text-shadow: none !important;
+  box-shadow:
+    0 4px 0 rgba(0, 0, 0, .34),
+    inset 0 0 0 1px rgba(255,255,255,.07) !important;
+}
+
+.seed-card:hover,
+.shop-card:hover,
+.home-link:hover,
+.changelog-link:hover,
+.top-actions button:hover,
+#shop-button:hover,
+#start-round:hover,
+#delete-plant:hover,
+#save-progress:hover,
+#new-game:hover,
+#close-shop:hover {
+  transform: translateY(-1px) !important;
+  border-color: var(--garden-line-bright) !important;
+  background:
+    linear-gradient(180deg, rgba(49, 122, 45, .98), rgba(10, 48, 16, .98)) !important;
+  box-shadow:
+    0 6px 0 rgba(0, 0, 0, .36),
+    0 0 18px rgba(129, 231, 83, .22),
+    inset 0 0 0 1px rgba(255,255,255,.1) !important;
+}
+
+.seed-card.active,
+.shop-card.equipped {
+  border-color: #d5ef70 !important;
+  background:
+    linear-gradient(180deg, rgba(72, 128, 38, .98), rgba(20, 64, 17, .98)) !important;
+  box-shadow:
+    0 5px 0 rgba(0, 0, 0, .36),
+    0 0 22px rgba(193, 239, 96, .26),
+    inset 0 0 0 1px rgba(255,255,255,.12) !important;
+}
+
+#start-round,
+#save-progress {
+  color: #10260b !important;
+  background:
+    linear-gradient(180deg, #d7f06a, #75bd41 54%, #2c762c) !important;
+  font-weight: 1000 !important;
+}
+
+#delete-plant,
+#delete-plant.active {
+  color: #ffece6 !important;
+  border-color: rgba(210, 98, 72, .7) !important;
+  background:
+    linear-gradient(180deg, #9f402d, #5a1d15 58%, #220b08) !important;
+}
+
+.table {
+  padding: 12px !important;
+}
+
+.message-panel {
+  padding: 12px 14px !important;
+  margin-bottom: 12px !important;
+}
+
+.lawn-wrap {
+  border: 1px solid rgba(90, 153, 60, .38) !important;
+  border-radius: 10px !important;
+  background: rgba(2, 12, 4, .55) !important;
+  box-shadow: inset 0 0 28px rgba(0,0,0,.24) !important;
+}
+
+.lawn {
+  filter: saturate(1.03) contrast(1.03) brightness(.86) !important;
+}
+
+.tile {
+  border-color: rgba(26, 85, 23, .22) !important;
+}
+
+.shop-modal {
+  backdrop-filter: none !important;
+}
+
+.shop-backdrop {
+  background: rgba(1, 7, 3, .74) !important;
+}
+
+.shop-window {
+  width: min(930px, calc(100vw - 26px)) !important;
+  max-height: min(760px, calc(100vh - 28px)) !important;
+  padding: 16px !important;
+}
+
+.shop-header {
+  gap: 12px !important;
+  margin-bottom: 10px !important;
+}
+
+.plant-shop {
+  gap: 10px !important;
+}
+
+.shop-card {
+  min-height: 104px !important;
+  padding: 10px !important;
+}
+
+.top-actions {
+  background:
+    linear-gradient(145deg, rgba(6, 32, 10, .9), rgba(2, 13, 5, .92)) !important;
+  border-color: rgba(93, 164, 64, .32) !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.045) !important;
+}
+
+.top-actions .changelog-link,
+.top-actions button,
+.home-link {
+  font-weight: 950 !important;
+}
+
+@media (max-width: 860px) {
+  .hud {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .seed-bank {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .game-shell {
+    width: min(100% - 16px, 1180px) !important;
+    padding-top: 8px !important;
+  }
+
+  .hud,
+  .seed-bank {
+    grid-template-columns: 1fr !important;
+  }
+
+  .loadout-header {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+}
