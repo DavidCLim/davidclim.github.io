@@ -20,11 +20,18 @@
     const coins = Math.max(0, Math.floor(Number(save.coins) || 0));
     const allowed = new Set([...starterPlants, ...paidPlants]);
     const unlocked = [...new Set([...(save.unlocked || []), ...starterPlants])].filter((id) => allowed.has(id));
-    const equipped = (save.equipped || starterPlants).filter((id) => unlocked.includes(id)).slice(0, 5);
+    let equipped = (save.equipped || starterPlants).filter((id) => unlocked.includes(id)).slice(0, 5);
+
+    if (equipped.length !== 5) equipped = [...starterPlants];
+    if (!equipped.includes("sunflower")) {
+      equipped = equipped.filter((id) => id !== "sunflower").slice(0, 4);
+      equipped.push("sunflower");
+    }
+
     return {
       coins,
       unlocked,
-      equipped: equipped.length === 5 ? equipped : starterPlants,
+      equipped,
       wave: Math.max(1, Number(save.wave) || 1),
     };
   }
