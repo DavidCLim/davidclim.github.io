@@ -1,0 +1,281 @@
+/* Final distinct silhouettes for Vine Snare, Toxic Pea, Pea Cannon, and Triple Pea. */
+.entity-layer .plant.vine {
+  width: min(8.6vw, 86px) !important;
+  height: min(4.2vw, 44px) !important;
+  --plant-line: #170f06;
+}
+
+.entity-layer .plant.vine .plant-head {
+  left: 2% !important;
+  top: 38% !important;
+  width: 92% !important;
+  height: 42% !important;
+  border: 4px solid #170f06 !important;
+  border-radius: 48% 52% 44% 50% / 70% 70% 34% 34% !important;
+  background:
+    radial-gradient(ellipse at 34% 52%, #ff3647 0 5%, #4d130f 6% 12%, transparent 13%),
+    radial-gradient(ellipse at 64% 52%, #ff3647 0 5%, #4d130f 6% 12%, transparent 13%),
+    radial-gradient(ellipse at 50% 98%, rgba(38, 18, 4, .34), transparent 48%),
+    linear-gradient(145deg, #7b6418 0%, #4d3d0d 54%, #2b2107 100%) !important;
+  box-shadow: inset -8px -6px 0 rgba(0,0,0,.24), 0 5px 0 rgba(0,0,0,.24) !important;
+}
+
+.entity-layer .plant.vine .plant-head::before,
+.entity-layer .plant.vine .plant-head::after,
+.entity-layer .plant.vine .crown {
+  content: "" !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: absolute !important;
+  top: -72% !important;
+  width: 15% !important;
+  height: 86% !important;
+  border: 4px solid #170f06 !important;
+  border-radius: 55% 55% 42% 42% !important;
+  background: linear-gradient(145deg, #fff2a0, #b78a3a 72%) !important;
+  box-shadow: none !important;
+}
+
+.entity-layer .plant.vine .plant-head::before { left: 13% !important; transform: rotate(-11deg) !important; }
+.entity-layer .plant.vine .plant-head::after { left: 45% !important; transform: rotate(4deg) !important; }
+.entity-layer .plant.vine .crown { left: 75% !important; transform: rotate(12deg) !important; }
+
+.entity-layer .plant.vine .mouth,
+.entity-layer .plant.vine .stem,
+.entity-layer .plant.vine .leaves,
+.entity-layer .plant.vine::before,
+.entity-layer .plant.vine::after {
+  content: none !important;
+  display: none !important;
+}
+
+.entity-layer .plant.toxic {
+  width: min(8.8vw, 88px) !important;
+  height: min(8.9vw, 90px) !important;
+  --plant-line: #06120a;
+}
+
+.entity-layer .plant.toxic .plant-head {
+  left: 18% !important;
+  top: 12% !important;
+  width: 58% !important;
+  height: 56% !important;
+  border: 4px solid #050807 !important;
+  border-radius: 22% 24% 36% 34% / 22% 22% 44% 44% !important;
+  background:
+    radial-gradient(circle at 34% 44%, #8fff55 0 16%, #173d19 17% 31%, transparent 32%),
+    radial-gradient(circle at 69% 39%, #8fff55 0 16%, #173d19 17% 31%, transparent 32%),
+    radial-gradient(circle at 50% 80%, #8cff55 0 11%, transparent 12%),
+    linear-gradient(145deg, #555 0%, #252525 42%, #101010 100%) !important;
+  box-shadow: inset -8px -7px 0 rgba(0,0,0,.36), inset 5px 5px 0 rgba(255,255,255,.09), 0 5px 0 rgba(0,0,0,.24) !important;
+}
+
+.entity-layer .plant.toxic .plant-head::before {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  left: 34% !important;
+  bottom: -19% !important;
+  width: 25% !important;
+  height: 25% !important;
+  border: 4px solid #050807 !important;
+  border-radius: 50% !important;
+  background: repeating-linear-gradient(45deg, #80f84e 0 5px, #111 6px 9px) !important;
+}
+
+.entity-layer .plant.toxic .mouth {
+  right: -44% !important;
+  top: 40% !important;
+  width: 50% !important;
+  height: 42% !important;
+  border: 4px solid #06120a !important;
+  border-radius: 50% !important;
+  background:
+    radial-gradient(ellipse at 72% 55%, #041708 0 45%, #0d5f22 46% 58%, transparent 59%),
+    linear-gradient(145deg, #70ff4d, #168c2d 72%) !important;
+}
+
+.entity-layer .plant.toxic .mouth::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  right: 8% !important;
+  bottom: -38% !important;
+  width: 18% !important;
+  height: 34% !important;
+  border-radius: 50% 50% 70% 70% !important;
+  background: #7cff4e !important;
+  box-shadow: 0 7px 0 -2px #51d93e !important;
+}
+
+.entity-layer .plant.toxic .crown {
+  display: block !important;
+  left: -18% !important;
+  top: -17% !important;
+  width: 34% !important;
+  height: 36% !important;
+  border: 4px solid #063312 !important;
+  border-radius: 58% 12% 58% 18% !important;
+  background: linear-gradient(145deg, #93ff56, #2aab39) !important;
+  transform: rotate(-24deg) !important;
+}
+
+.entity-layer .plant.toxic .stem { left: 45% !important; top: 66% !important; height: 23% !important; }
+.entity-layer .plant.toxic .leaves { left: 13% !important; top: 82% !important; width: 70% !important; }
+
+.entity-layer .plant.cannon {
+  width: min(9.2vw, 92px) !important;
+  height: min(7vw, 72px) !important;
+  --plant-line: #06120a;
+}
+
+.entity-layer .plant.cannon .plant-head {
+  left: 7% !important;
+  top: 18% !important;
+  width: 54% !important;
+  height: 48% !important;
+  border: 4px solid #06120a !important;
+  border-radius: 50% !important;
+  background:
+    radial-gradient(circle at 28% 20%, rgba(255,255,255,.88) 0 9%, transparent 10%),
+    linear-gradient(145deg, #dfff66, #89dd42 47%, #39a928 100%) !important;
+  box-shadow: inset -6px -6px 0 rgba(0,60,16,.26), 0 4px 0 rgba(0,0,0,.24) !important;
+}
+
+.entity-layer .plant.cannon .plant-head::before,
+.entity-layer .plant.cannon .plant-head::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  top: 27% !important;
+  width: 9% !important;
+  height: 12% !important;
+  border-radius: 50% !important;
+  background: #06120a !important;
+}
+
+.entity-layer .plant.cannon .plant-head::before { left: 38% !important; }
+.entity-layer .plant.cannon .plant-head::after { left: 57% !important; }
+
+.entity-layer .plant.cannon .mouth {
+  right: -62% !important;
+  top: 22% !important;
+  width: 67% !important;
+  height: 55% !important;
+  border: 5px solid #06120a !important;
+  border-radius: 50% !important;
+  background:
+    radial-gradient(ellipse at 74% 52%, #051206 0 48%, #0d471c 49% 62%, transparent 63%),
+    linear-gradient(145deg, #9dff58, #49bd35 56%, #136b25 100%) !important;
+}
+
+.entity-layer .plant.cannon .crown {
+  display: block !important;
+  left: -10% !important;
+  top: 52% !important;
+  width: 96% !important;
+  height: 28% !important;
+  border: 4px solid #5b3812 !important;
+  border-radius: 8px !important;
+  background:
+    repeating-linear-gradient(90deg, #9a6a2c 0 14px, #6f4318 15px 20px),
+    linear-gradient(#b78336, #6f4318) !important;
+  z-index: -1 !important;
+}
+
+.entity-layer .plant.cannon .stem,
+.entity-layer .plant.cannon::before,
+.entity-layer .plant.cannon::after { display: none !important; }
+.entity-layer .plant.cannon .leaves {
+  left: 10% !important;
+  top: 76% !important;
+  width: 58% !important;
+  height: 18% !important;
+  border-radius: 50% !important;
+  background: radial-gradient(circle at 25% 50%, #9cff55 0 28%, transparent 29%), radial-gradient(circle at 75% 50%, #9cff55 0 28%, transparent 29%) !important;
+}
+
+.entity-layer .plant.triple {
+  width: min(9.8vw, 98px) !important;
+  height: min(9.3vw, 92px) !important;
+}
+
+.entity-layer .plant.triple .plant-head {
+  left: 36% !important;
+  top: 2% !important;
+  width: 34% !important;
+  height: 34% !important;
+}
+
+.entity-layer .plant.triple .plant-head > .crown {
+  left: -104% !important;
+  top: 74% !important;
+  width: 96% !important;
+  height: 96% !important;
+}
+
+.entity-layer .plant.triple::after {
+  display: block !important;
+  content: "" !important;
+  left: 59% !important;
+  top: 33% !important;
+  width: 33% !important;
+  height: 33% !important;
+  border: 4px solid #06120a !important;
+  border-radius: 50% !important;
+  background:
+    radial-gradient(circle at 28% 19%, rgba(255,255,255,.92) 0 9%, transparent 10%),
+    linear-gradient(145deg, #dfff66 0%, #8de34d 39%, #27ad47 70%, #087032 100%) !important;
+  box-shadow: inset -5px -5px 0 rgba(0,44,18,.22) !important;
+}
+
+.entity-layer .plant.triple .plant-head > .mouth,
+.entity-layer .plant.triple .plant-head > .crown::before,
+.entity-layer .plant.triple .plant-head > .crown::after {
+  width: 57% !important;
+  height: 46% !important;
+  border: 4px solid #06120a !important;
+  border-radius: 50% !important;
+  background:
+    radial-gradient(ellipse at 72% 52%, #000704 0 45%, #06451e 46% 57%, transparent 58%),
+    linear-gradient(145deg, #c8ff61 0%, #39bd48 50%, #06451e 100%) !important;
+}
+
+.entity-layer .plant.triple .plant-head > .mouth { right: -50% !important; top: 29% !important; }
+.entity-layer .plant.triple .plant-head > .crown::before { right: -50% !important; top: 30% !important; }
+.entity-layer .plant.triple .plant-head > .crown::after { left: 268% !important; top: 30% !important; }
+.entity-layer .plant.triple .stem { left: 43% !important; top: 37% !important; height: 44% !important; }
+.entity-layer .plant.triple .leaves { left: 15% !important; top: 78% !important; width: 70% !important; }
+
+.seed-card .mini-plant.vine,
+.shop-card .mini-plant.vine {
+  width: 58px !important;
+  height: 30px !important;
+  margin-top: 18px !important;
+  border-color: #170f06 !important;
+  border-radius: 48% 52% 44% 50% / 70% 70% 34% 34% !important;
+  background: linear-gradient(145deg, #7b6418, #332707) !important;
+}
+
+.seed-card .mini-plant.toxic,
+.shop-card .mini-plant.toxic {
+  border-color: #050807 !important;
+  border-radius: 22% 24% 36% 34% !important;
+  background:
+    radial-gradient(circle at 34% 44%, #8fff55 0 16%, #173d19 17% 31%, transparent 32%),
+    radial-gradient(circle at 69% 39%, #8fff55 0 16%, #173d19 17% 31%, transparent 32%),
+    linear-gradient(145deg, #555, #111) !important;
+}
+
+.seed-card .mini-plant.cannon,
+.shop-card .mini-plant.cannon {
+  transform: translateX(-8px) !important;
+}
+
+.seed-card .mini-plant.cannon::after,
+.shop-card .mini-plant.cannon::after {
+  right: -32px !important;
+  width: 42px !important;
+  height: 31px !important;
+}
