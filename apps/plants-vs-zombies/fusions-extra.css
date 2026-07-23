@@ -1,0 +1,169 @@
+/* Extra fusion visual layer for the expanded fusion tree. */
+.entity-layer .plant.gatlingPea .mouth {
+  width: 74% !important;
+  height: 54% !important;
+  right: -82% !important;
+  box-shadow:
+    18px -8px 0 -2px var(--mouth-b), 18px -8px 0 2px var(--plant-line),
+    32px 5px 0 -2px var(--mouth-b), 32px 5px 0 2px var(--plant-line),
+    16px 15px 0 -2px var(--mouth-b), 16px 15px 0 2px var(--plant-line),
+    inset -6px -6px 0 rgba(0,35,15,.3) !important;
+}
+
+.entity-layer .plant.steamPea,
+.entity-layer .plant.steamPea .plant-head {
+  --plant-line: #0c3336;
+  --plant-a: #f8ffff;
+  --plant-b: #9ff4db;
+  --plant-c: #ff9c47;
+  --plant-d: #276a60;
+  --mouth-a: #e8ffff;
+  --mouth-b: #61d8c4;
+  --mouth-c: #164f54;
+  filter: drop-shadow(0 0 10px rgba(204,255,235,.5));
+}
+
+.entity-layer .plant.solarFlare .plant-head,
+.entity-layer .plant.frostFlower .plant-head,
+.entity-layer .plant.stormFlower .plant-head,
+.entity-layer .plant.toxicSunflower .plant-head {
+  left: 11% !important;
+  top: 3% !important;
+  width: 74% !important;
+  height: 63% !important;
+  border-radius: 50% !important;
+}
+
+.entity-layer .plant.solarFlare .plant-head { filter: drop-shadow(0 0 13px rgba(255,104,33,.62)); }
+.entity-layer .plant.frostFlower .plant-head { filter: drop-shadow(0 0 13px rgba(130,236,255,.7)); }
+.entity-layer .plant.stormFlower .plant-head { filter: drop-shadow(0 0 15px rgba(118,255,234,.72)); }
+.entity-layer .plant.toxicSunflower .plant-head { filter: drop-shadow(0 0 14px rgba(146,255,80,.64)); }
+
+.entity-layer .plant.solarFlare .plant-head {
+  background: radial-gradient(circle at 30% 23%, rgba(255,255,205,.55) 0 9%, transparent 10%), linear-gradient(160deg, #fff067 0%, #ff9631 48%, #c52b18 100%) !important;
+}
+
+.entity-layer .plant.frostFlower .plant-head {
+  background: radial-gradient(circle at 30% 23%, rgba(255,255,255,.7) 0 9%, transparent 10%), linear-gradient(160deg, #f2ffff 0%, #8eeaff 48%, #2f8dd8 100%) !important;
+}
+
+.entity-layer .plant.stormFlower .plant-head {
+  background: radial-gradient(circle at 30% 23%, rgba(255,255,255,.72) 0 9%, transparent 10%), linear-gradient(160deg, #f1ffff 0%, #82fff1 48%, #178d85 100%) !important;
+}
+
+.entity-layer .plant.toxicSunflower .plant-head {
+  background: radial-gradient(circle at 30% 23%, rgba(255,255,220,.55) 0 9%, transparent 10%), linear-gradient(160deg, #dfff62 0%, #58d33e 48%, #713095 100%) !important;
+}
+
+.entity-layer .plant.frostnut .plant-head,
+.entity-layer .plant.embernut .plant-head,
+.entity-layer .plant.zapnut .plant-head,
+.entity-layer .plant.venomnut .plant-head,
+.entity-layer .plant.brambleNut .plant-head {
+  left: 12% !important;
+  top: 7% !important;
+  width: 74% !important;
+  height: 76% !important;
+  border: 5px solid #1c1005 !important;
+  border-radius: 45% 48% 42% 44% / 50% 48% 45% 44% !important;
+}
+
+.entity-layer .plant.frostnut .plant-head { background: linear-gradient(145deg, #e4ffff, #8eddf5 45%, #8a672d 100%) !important; }
+.entity-layer .plant.embernut .plant-head { background: linear-gradient(145deg, #ffd873, #bc7428 50%, #7a2b16 100%) !important; }
+.entity-layer .plant.zapnut .plant-head { background: linear-gradient(145deg, #ebfff5, #62e6c9 42%, #8a672d 100%) !important; }
+.entity-layer .plant.venomnut .plant-head { background: linear-gradient(145deg, #caff5e, #79512a 48%, #713095 100%) !important; }
+.entity-layer .plant.brambleNut .plant-head { background: linear-gradient(145deg, #d5a04a, #765122 55%, #34551b 100%) !important; }
+
+.entity-layer .plant.brambleNut .plant-head::before,
+.entity-layer .plant.brambleNut .plant-head::after,
+.entity-layer .plant.frostnut .plant-head::before,
+.entity-layer .plant.embernut .plant-head::before,
+.entity-layer .plant.zapnut .plant-head::before,
+.entity-layer .plant.venomnut .plant-head::before {
+  content: "" !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: absolute !important;
+  top: -10% !important;
+  width: 18% !important;
+  height: 26% !important;
+  border: 3px solid #1c1005 !important;
+  border-radius: 52% 52% 25% 25% !important;
+  background: #fff0b0 !important;
+}
+
+.entity-layer .plant.brambleNut .plant-head::before,
+.entity-layer .plant.frostnut .plant-head::before,
+.entity-layer .plant.embernut .plant-head::before,
+.entity-layer .plant.zapnut .plant-head::before,
+.entity-layer .plant.venomnut .plant-head::before { left: 22% !important; transform: rotate(-16deg) !important; }
+.entity-layer .plant.brambleNut .plant-head::after { left: 62% !important; transform: rotate(18deg) !important; }
+
+.entity-layer .plant.fireChomper .plant-head,
+.entity-layer .plant.toxicChomper .plant-head,
+.entity-layer .plant.voltChomper .plant-head,
+.entity-layer .plant.vineChomper .plant-head {
+  left: 10% !important;
+  top: 1% !important;
+  width: 75% !important;
+  height: 64% !important;
+  border-radius: 58% 47% 52% 54% / 48% 45% 60% 54% !important;
+}
+
+.entity-layer .plant.fireChomper .plant-head { background: linear-gradient(145deg, #ffb55d, #c42f1f 56%, #5d1533 100%) !important; filter: drop-shadow(0 0 16px rgba(255,82,33,.55)); }
+.entity-layer .plant.toxicChomper .plant-head { background: linear-gradient(145deg, #cfff62, #70d44b 42%, #6d2590 100%) !important; filter: drop-shadow(0 0 14px rgba(147,255,80,.48)); }
+.entity-layer .plant.voltChomper .plant-head { background: linear-gradient(145deg, #eaffff, #67eee0 42%, #552270 100%) !important; filter: drop-shadow(0 0 15px rgba(105,255,235,.55)); }
+.entity-layer .plant.vineChomper .plant-head { background: linear-gradient(145deg, #bfff65, #4bb84b 42%, #4f1f62 100%) !important; }
+
+.entity-layer .plant.fireChomper .mouth,
+.entity-layer .plant.toxicChomper .mouth,
+.entity-layer .plant.voltChomper .mouth,
+.entity-layer .plant.vineChomper .mouth,
+.entity-layer .plant.sunChomper .mouth {
+  width: 95% !important;
+  height: 52% !important;
+}
+
+.entity-layer .plant.snowThreepeater .plant-head,
+.entity-layer .plant.flameThreepeater .plant-head,
+.entity-layer .plant.voltThreepeater .plant-head,
+.entity-layer .plant.toxicThreepeater .plant-head {
+  left: 31% !important;
+  top: 7% !important;
+  width: 38% !important;
+  height: 36% !important;
+}
+
+.entity-layer .plant.snowThreepeater { --plant-line:#082844; --plant-a:#e4ffff; --plant-b:#86e9fb; --plant-c:#2fa8d6; --plant-d:#145886; --mouth-b:#45c7e4; --mouth-c:#073b5a; }
+.entity-layer .plant.flameThreepeater { --plant-line:#3b0500; --plant-a:#ffe27a; --plant-b:#ff8738; --plant-c:#d9341f; --plant-d:#781014; --mouth-b:#ef4d25; --mouth-c:#581008; }
+.entity-layer .plant.voltThreepeater { --plant-line:#05322b; --plant-a:#f2ffff; --plant-b:#91fff2; --plant-c:#18cbb2; --plant-d:#066d60; --mouth-b:#2bd6bf; --mouth-c:#044f45; }
+.entity-layer .plant.toxicThreepeater { --plant-line:#0a1c08; --plant-a:#caff63; --plant-b:#5ee04e; --plant-c:#238d42; --plant-d:#713095; --mouth-b:#43b94f; --mouth-c:#4b1c68; }
+
+.entity-layer .plant.meteorCannon .mouth,
+.entity-layer .plant.glacierCannon .mouth,
+.entity-layer .plant.railCannon .mouth,
+.entity-layer .plant.sludgeCannon .mouth {
+  right: -82% !important;
+  width: 88% !important;
+  height: 62% !important;
+  border-width: 5px !important;
+}
+
+.entity-layer .plant.meteorCannon { --plant-line:#3b0500; --mouth-b:#ef4d25; --mouth-c:#581008; filter: drop-shadow(0 0 13px rgba(255,82,33,.55)); }
+.entity-layer .plant.glacierCannon { --plant-line:#082844; --mouth-b:#45c7e4; --mouth-c:#073b5a; filter: drop-shadow(0 0 13px rgba(120,230,255,.65)); }
+.entity-layer .plant.railCannon { --plant-line:#05322b; --mouth-b:#2bd6bf; --mouth-c:#044f45; filter: drop-shadow(0 0 15px rgba(118,255,234,.72)); }
+.entity-layer .plant.sludgeCannon { --plant-line:#0a1c08; --mouth-b:#43b94f; --mouth-c:#4b1c68; filter: drop-shadow(0 0 13px rgba(130,255,64,.62)); }
+
+.entity-layer .plant.frostVine .plant-head,
+.entity-layer .plant.fireVine .plant-head,
+.entity-layer .plant.voltVine .plant-head,
+.entity-layer .plant.toxicVine .plant-head {
+  border-radius: 45% 25% 45% 25% !important;
+  transform: rotate(-18deg) !important;
+}
+
+.entity-layer .plant.frostVine { --plant-line:#082844; --plant-a:#e4ffff; --plant-b:#86e9fb; --plant-c:#2fa8d6; --plant-d:#145886; }
+.entity-layer .plant.fireVine { --plant-line:#3b0500; --plant-a:#ffe27a; --plant-b:#ff8738; --plant-c:#d9341f; --plant-d:#781014; }
+.entity-layer .plant.voltVine { --plant-line:#05322b; --plant-a:#f2ffff; --plant-b:#91fff2; --plant-c:#18cbb2; --plant-d:#066d60; }
+.entity-layer .plant.toxicVine { --plant-line:#0a1c08; --plant-a:#caff63; --plant-b:#5ee04e; --plant-c:#238d42; --plant-d:#713095; }
