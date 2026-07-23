@@ -57,6 +57,11 @@
   height: 20% !important;
 }
 
+.seed-card .mini-plant.triple,
+.shop-card .mini-plant.triple {
+  transform: translateX(-2px) !important;
+}
+
 .seed-card .mini-plant.triple::before,
 .shop-card .mini-plant.triple::before {
   left: -16px !important;
@@ -64,4 +69,123 @@
   width: 26px !important;
   height: 26px !important;
   box-shadow: 39px 0 0 -1px #27ad47 !important;
+}
+
+/* The old spike slot is now Walnut. It blocks only and does not attack. */
+.entity-layer .plant.spike {
+  width: min(7.5vw, 76px) !important;
+  height: min(7.8vw, 80px) !important;
+}
+
+.entity-layer .plant.spike .plant-head {
+  left: 16% !important;
+  top: 4% !important;
+  width: 68% !important;
+  height: 82% !important;
+  border: 4px solid #2d1c09 !important;
+  border-radius: 48% 44% 52% 46% / 42% 46% 54% 58% !important;
+  background:
+    radial-gradient(circle at 34% 22%, rgba(255, 246, 165, .82) 0 6%, transparent 7%),
+    radial-gradient(circle at 66% 20%, rgba(255, 246, 165, .72) 0 5%, transparent 6%),
+    radial-gradient(circle at 29% 38%, rgba(92, 55, 13, .48) 0 4%, transparent 5%),
+    radial-gradient(circle at 56% 49%, rgba(92, 55, 13, .38) 0 3%, transparent 4%),
+    radial-gradient(circle at 42% 69%, rgba(92, 55, 13, .36) 0 3%, transparent 4%),
+    linear-gradient(145deg, #d6a53b 0%, #b98222 45%, #7b5017 100%) !important;
+  box-shadow:
+    inset -9px -8px 0 rgba(63, 38, 10, .32),
+    inset 5px 5px 0 rgba(255,255,255,.16),
+    0 4px 0 rgba(0,0,0,.25) !important;
+  animation-name: walnut-wobble !important;
+}
+
+.entity-layer .plant.spike .plant-head::before,
+.entity-layer .plant.spike .plant-head::after {
+  content: "" !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: absolute !important;
+  top: 23% !important;
+  width: 18% !important;
+  height: 20% !important;
+  border: 3px solid #2b1a08 !important;
+  border-radius: 50% !important;
+  background: radial-gradient(circle at 54% 46%, #fff5b6 0 34%, #3a2309 35% 100%) !important;
+  box-shadow: none !important;
+}
+
+.entity-layer .plant.spike .plant-head::before { left: 24% !important; }
+.entity-layer .plant.spike .plant-head::after { right: 20% !important; }
+
+.entity-layer .plant.spike .mouth {
+  display: block !important;
+  left: 42% !important;
+  right: auto !important;
+  top: 52% !important;
+  width: 18% !important;
+  height: 9% !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: #43260b !important;
+  transform: rotate(-5deg) !important;
+  box-shadow: none !important;
+}
+
+.entity-layer .plant.spike .mouth::before,
+.entity-layer .plant.spike .mouth::after,
+.entity-layer .plant.spike .stem,
+.entity-layer .plant.spike .leaves,
+.entity-layer .plant.spike::before,
+.entity-layer .plant.spike::after,
+.entity-layer .plant.spike .crown {
+  content: none !important;
+  display: none !important;
+}
+
+.seed-card .mini-plant.spike,
+.shop-card .mini-plant.spike {
+  width: 48px !important;
+  height: 58px !important;
+  border: 3px solid #2d1c09 !important;
+  border-radius: 48% 44% 52% 46% / 42% 46% 54% 58% !important;
+  background:
+    radial-gradient(circle at 34% 22%, rgba(255, 246, 165, .82) 0 6%, transparent 7%),
+    radial-gradient(circle at 66% 20%, rgba(255, 246, 165, .72) 0 5%, transparent 6%),
+    radial-gradient(circle at 30% 39%, rgba(92, 55, 13, .48) 0 4%, transparent 5%),
+    radial-gradient(circle at 56% 51%, rgba(92, 55, 13, .38) 0 3%, transparent 4%),
+    linear-gradient(145deg, #d6a53b 0%, #b98222 45%, #7b5017 100%) !important;
+  box-shadow: inset -7px -7px 0 rgba(63, 38, 10, .3), 2px 4px 0 rgba(0,0,0,.55) !important;
+}
+
+.seed-card .mini-plant.spike::before,
+.shop-card .mini-plant.spike::before,
+.seed-card .mini-plant.spike::after,
+.shop-card .mini-plant.spike::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  border: 2px solid #2b1a08 !important;
+  border-radius: 50% !important;
+  background: radial-gradient(circle at 54% 46%, #fff5b6 0 34%, #3a2309 35% 100%) !important;
+}
+
+.seed-card .mini-plant.spike::before,
+.shop-card .mini-plant.spike::before {
+  left: 10px !important;
+  top: 13px !important;
+  width: 10px !important;
+  height: 11px !important;
+}
+
+.seed-card .mini-plant.spike::after,
+.shop-card .mini-plant.spike::after {
+  right: 9px !important;
+  top: 12px !important;
+  width: 10px !important;
+  height: 11px !important;
+}
+
+@keyframes walnut-wobble {
+  from { margin-top: -1px; transform: rotate(-1deg); }
+  to { margin-top: 2px; transform: rotate(1deg); }
 }
