@@ -1,0 +1,26 @@
+/* Accounts removed: keep old hidden hooks harmless, but show no account UI. */
+#open-account,
+.account-panel,
+.account-gate-backdrop {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+body.account-required {
+  overflow: auto !important;
+}
+
+.top-actions {
+  grid-template-columns: repeat(3, minmax(112px, 1fr)) !important;
+}
+
+.message-panel #message {
+  max-width: 78ch;
+}
+
+@media (max-width: 760px) {
+  .top-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
