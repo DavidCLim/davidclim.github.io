@@ -1,5 +1,5 @@
 (() => {
-  const fusionVersion = "fusion-v1";
+  const fusionVersion = "fusion-v2";
 
   const fusionPlants = {
     repeater: { id: "repeater", name: "Repeater", cost: 100, role: "Fused pea shooter that fires two peas", hp: 135, fireRate: 1120, damage: 20, shot: "pea", repeat: 2, fusion: true },
@@ -35,8 +35,11 @@
   addFusion("sunflower", "sunflower", "twinSunflower");
   addFusion("spike", "spike", "tallnut");
   addFusion("tallnut", "tallnut", "juggernut");
+  addFusion("tallnut", "spike", "juggernut");
   addFusion("ice", "chomper", "iceChomper");
   addFusion("iceChomper", "iceChomper", "doubleIceChomper");
+  addFusion("iceChomper", "ice", "doubleIceChomper");
+  addFusion("iceChomper", "chomper", "doubleIceChomper");
   addFusion("pea", "volt", "voltRepeater");
   addFusion("pea", "toxic", "toxicRepeater");
   addFusion("pea", "triple", "peaBattery");
@@ -48,7 +51,7 @@
   }
 
   function canSelectForFusion(id) {
-    return Boolean(plantStats[id]) && (state.equipped.includes(id) || plantStats[id].fusion);
+    return Boolean(plantStats[id]) && state.equipped.includes(id);
   }
 
   const originalPlantAt = plantAt;
@@ -203,7 +206,7 @@
     originalRenderSeedBank();
     els.seedBank.querySelectorAll(".seed-card").forEach((card) => {
       if (!card.querySelector(".fusion-hint")) {
-        card.insertAdjacentHTML("beforeend", '<span class="fusion-hint">FUSE</span>');
+        card.insertAdjacentHTML("beforeend", '<span class="fusion-hint">FUSE"</span>'.replace('"</span>', '</span>'));
       }
     });
   };
