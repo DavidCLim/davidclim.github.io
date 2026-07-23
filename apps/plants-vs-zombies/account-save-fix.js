@@ -1,4 +1,4 @@
-const accountSaveVersion = "account-save-v4";
+const accountSaveVersion = "account-save-v5";
 
 function accountSaveSetLoggedInVisuals(isLoggedIn) {
   document.body.classList.toggle("account-logged-in", Boolean(isLoggedIn));
@@ -21,27 +21,61 @@ function accountSaveNormalizeUsername(username) {
   return String(username || "").trim().replace(/\s+/g, "_").toLowerCase().slice(0, 18);
 }
 
+function accountSaveDisplayName(username) {
+  return String(username || "").trim().replace(/\s+/g, " ").slice(0, 18) || "Player";
+}
+
+function accountSavePasswordPart(password) {
+  return encodeURIComponent(String(password || ""));
+}
+
+function accountSaveProfileKey(username, password) {
+  return `profile:${accountSaveNormalizeUsername(username)}:${accountSavePasswordPart(password)}`;
+}
+
+function accountSaveIsProfileKey(key) {
+  return String(key || "").startsWith("profile:");
+}
+
 function accountSaveMigrateAccounts(accounts) {
   const migrated = {};
   let changed = false;
-  Object.entries(accounts).forEach(([name, account]) => {
-    const normalized = accountSaveNormalizeUsername(name);
-    if (!normalized) {
+
+  Object.entries(accounts || {}).forEach(([key, account]) => {
+    if (!account) {
       changed = true;
       return;
     }
-    if (normalized !== name) changed = true;
-    if (!migrated[normalized]) {
-      migrated[normalized] = { ...account, displayName: account.displayName || name };
+
+    if (accountSaveIsProfileKey(key)) {
+      migrated[key] = {
+        ...account,
+        username: accountSaveNormalizeUsername(account.username || account.displayName || key.split(":")[1]),
+        displayName: accountSaveDisplayName(account.displayName || account.username || key.split(":")[1]),
+        save: normalizeSave(account.save || defaultSave),
+        version: account.version || accountSaveVersion,
+      };
       return;
     }
-    changed = true;
-    const existingSave = normalizeSave(migrated[normalized].save || defaultSave);
-    const incomingSave = normalizeSave(account.save || defaultSave);
-    if ((incomingSave.wave > existingSave.wave) || (incomingSave.coins > existingSave.coins)) {
-      migrated[normalized] = { ...account, displayName: migrated[normalized].displayName || account.displayName || name };
+
+    const username = accountSaveNormalizeUsername(account.username || account.displayName || key);
+    const password = String(account.password || "");
+    if (!username || !password) {
+      changed = true;
+      return;
     }
+
+    const profileKey = accountSaveProfileKey(username, password);
+    if (profileKey !== key) changed = true;
+    migrated[profileKey] = {
+      ...account,
+      username,
+      displayName: accountSaveDisplayName(account.displayName || key),
+      save: normalizeSave(account.save || defaultSave),
+      version: account.version || accountSaveVersion,
+    };
   });
+
   if (changed) accountSaveWriteAccounts(migrated);
   return migrated;
 }
@@ -55,19 +89,22 @@ function accountSaveSnapshot() {
   });
 }
 
-function accountSaveLoad(username) {
-  const accounts = accountSaveMigrateAccounts(accountSaveGetAccounts());
-  const account = accounts[accountSaveNormalizeUsername(username)];
-  if (!account) return null;
-  return normalizeSave(account.save || defaultSave);
+function accountSaveGetActiveKey() {
+  return sessionStorage.getItem(activeAccountKey) || "";
 }
 
-function accountSaveApply(username, save) {
-  const normalized = accountSaveNormalizeUsername(username);
-  sessionStorage.setItem(activeAccountKey, normalized);
+function accountSaveGetActiveAccount(accounts = accountSaveMigrateAccounts(accountSaveGetAccounts())) {
+  const key = accountSaveGetActiveKey();
+  return key && accounts[key] ? { key, account: accounts[key] } : null;
+}
+
+function accountSaveApply(profileKey, account) {
+  const save = normalizeSave(account.save || defaultSave);
+  const displayName = accountSaveDisplayName(account.displayName || account.username);
+  sessionStorage.setItem(activeAccountKey, profileKey);
   accountSaveSetLoggedInVisuals(true);
   Object.assign(state, {
-    account: normalized,
+    account: displayName,
     coins: save.coins,
     unlocked: save.unlocked,
     equipped: save.equipped,
@@ -78,12 +115,14 @@ function accountSaveApply(username, save) {
   });
   lastSeedHtml = "";
   lastShopHtml = "";
-  setupRound(`Loaded ${normalized}'s saved account: ${save.coins} Seed Coins, wave ${save.wave}, and ${save.unlocked.length} unlocked plants.`);
+  setupRound(`Loaded ${displayName}'s saved account: ${save.coins} Seed Coins, wave ${save.wave}, and ${save.unlocked.length} unlocked plants.`);
+  if (els.accountLabel) els.accountLabel.textContent = `Signed in as ${displayName}`;
 }
 
 saveGame = function saveGameToAccount(note = "Account saved") {
-  const username = accountSaveNormalizeUsername(state.account || sessionStorage.getItem(activeAccountKey));
-  if (!username) {
+  const accounts = accountSaveMigrateAccounts(accountSaveGetAccounts());
+  const active = accountSaveGetActiveAccount(accounts);
+  if (!active) {
     accountSaveSetLoggedInVisuals(false);
     state.saveNote = "Sign in first";
     if (els.saveStatus) els.saveStatus.textContent = state.saveNote;
@@ -92,24 +131,15 @@ saveGame = function saveGameToAccount(note = "Account saved") {
     return;
   }
 
-  const accounts = accountSaveMigrateAccounts(accountSaveGetAccounts());
-  if (!accounts[username]) {
-    accountSaveSetLoggedInVisuals(false);
-    state.saveNote = "Account missing";
-    if (els.saveStatus) els.saveStatus.textContent = state.saveNote;
-    setMessage("Account missing", "Sign in again, then press Save.");
-    render();
-    return;
-  }
-
-  accounts[username].save = accountSaveSnapshot();
-  accounts[username].savedAt = new Date().toISOString();
-  accounts[username].version = accountSaveVersion;
+  active.account.save = accountSaveSnapshot();
+  active.account.savedAt = new Date().toISOString();
+  active.account.version = accountSaveVersion;
+  accounts[active.key] = active.account;
   accountSaveWriteAccounts(accounts);
   accountSaveSetLoggedInVisuals(true);
-  Object.assign(state, { account: username, dirty: false, saveNote: note });
+  Object.assign(state, { account: accountSaveDisplayName(active.account.displayName || active.account.username), dirty: false, saveNote: note });
   if (els.saveStatus) els.saveStatus.textContent = note;
-  setMessage("Account saved", `${username}'s Seed Coins, unlocked plants, equipped plants, and wave are saved to this account profile.`);
+  setMessage("Account saved", `${state.account}'s Seed Coins, unlocked plants, equipped plants, and wave are saved to this password profile.`);
   render();
 };
 
@@ -118,9 +148,12 @@ signInOrCreate = function signInOrCreateAccount(event) {
     event.preventDefault();
     event.stopImmediatePropagation();
   }
+
   const rawUsername = els.accountUsername.value;
   const username = accountSaveNormalizeUsername(rawUsername);
+  const displayName = accountSaveDisplayName(rawUsername);
   const password = els.accountPassword.value;
+
   if (!username || !password) {
     accountSaveSetLoggedInVisuals(false);
     setMessage("Account needed", "Type a username and password first.");
@@ -128,16 +161,13 @@ signInOrCreate = function signInOrCreateAccount(event) {
   }
 
   const accounts = accountSaveMigrateAccounts(accountSaveGetAccounts());
-  if (accounts[username]) {
-    if (accounts[username].password !== password) {
-      accountSaveSetLoggedInVisuals(false);
-      setMessage("Username already taken", "That account name already exists. Use the correct password or choose a different name.");
-      return;
-    }
-  } else {
-    accounts[username] = {
+  const profileKey = accountSaveProfileKey(username, password);
+
+  if (!accounts[profileKey]) {
+    accounts[profileKey] = {
+      username,
+      displayName,
       password,
-      displayName: rawUsername.trim().slice(0, 18),
       save: normalizeSave(defaultSave),
       savedAt: new Date().toISOString(),
       version: accountSaveVersion,
@@ -145,10 +175,9 @@ signInOrCreate = function signInOrCreateAccount(event) {
     accountSaveWriteAccounts(accounts);
   }
 
-  const save = accountSaveLoad(username) || normalizeSave(defaultSave);
   if (els.accountPassword) els.accountPassword.value = "";
-  if (els.accountUsername) els.accountUsername.value = username;
-  accountSaveApply(username, save);
+  if (els.accountUsername) els.accountUsername.value = displayName;
+  accountSaveApply(profileKey, accounts[profileKey]);
 };
 
 if (els.accountForm) {
@@ -156,7 +185,10 @@ if (els.accountForm) {
 }
 
 if (els.logoutAccount) {
-  els.logoutAccount.addEventListener("click", () => accountSaveSetLoggedInVisuals(false), true);
+  els.logoutAccount.addEventListener("click", () => {
+    sessionStorage.removeItem(activeAccountKey);
+    accountSaveSetLoggedInVisuals(false);
+  }, true);
 }
 
 if (els.saveProgress) {
