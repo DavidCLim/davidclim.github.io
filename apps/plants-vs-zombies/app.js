@@ -10,7 +10,8 @@ const plantCatalog = [
   { id: "ice", name: "Ice Bloom", price: 0, cost: 75, role: "Slows zombies", hp: 90, fireRate: 1500, damage: 14, shot: "ice", slow: 1700 },
   { id: "fire", name: "Fire Bloom", price: 0, cost: 100, role: "Splash fireballs", hp: 85, fireRate: 1750, damage: 30, shot: "fire", splash: 0.72 },
   { id: "spike", name: "Walnut", price: 0, cost: 50, role: "Tough blocker with no damage", hp: 420, blocker: true },
-  { id: "chomper", name: "Chomper", price: 0, cost: 150, role: "Huge bite", hp: 170, fireRate: 2500, damage: 145, melee: true },
+  { id: "sunflower", name: "Sunflower", price: 0, cost: 50, role: "Produces extra sun", hp: 80, sunRate: 6200, sunAmount: 50 },
+  { id: "chomper", name: "Chomper", price: 360, cost: 150, role: "Huge bite", hp: 170, fireRate: 2500, damage: 145, melee: true },
   { id: "volt", name: "Volt Sprout", price: 180, cost: 125, role: "Chains lightning", hp: 80, fireRate: 1900, damage: 24, shot: "volt", chain: 2 },
   { id: "angry", name: "Angry Pea", price: 230, cost: 125, role: "Fast heavy shots", hp: 95, fireRate: 930, damage: 18, shot: "angry" },
   { id: "vine", name: "Vine Snare", price: 300, cost: 100, role: "Grabs and weakens", hp: 120, fireRate: 720, damage: 8, trap: true, slowAura: 900 },
@@ -21,7 +22,7 @@ const plantCatalog = [
 
 const plantStats = Object.fromEntries(plantCatalog.map((plant) => [plant.id, plant]));
 const costs = Object.fromEntries(plantCatalog.map((plant) => [plant.id, plant.cost]));
-const starterPlants = ["pea", "ice", "fire", "spike", "chomper"];
+const starterPlants = ["pea", "ice", "fire", "spike", "sunflower"];
 const paidPlants = plantCatalog.filter((plant) => plant.price > 0).map((plant) => plant.id);
 const defaultSave = { coins: 0, unlocked: starterPlants, equipped: starterPlants, wave: 1 };
 
@@ -115,7 +116,7 @@ function normalizeSave(data) {
   const unlocked = [...new Set([...(data.unlocked || []), ...starterPlants])].filter((id) => plantStats[id]);
   const paidUnlocked = unlocked.filter((id) => paidPlants.includes(id));
   const cleanUnlocked = [...starterPlants, ...paidUnlocked];
-  const equipped = (data.equipped || starterPlants).filter((id) => cleanUnlocked.includes(id)).slice(0, maxEquipped);
+  const equipped = (data.equipped || starterPlants).map((id) => id === "chomper" && !cleanUnlocked.includes("chomper") ? "sunflower" : id).filter((id) => cleanUnlocked.includes(id)).slice(0, maxEquipped);
   return { coins, unlocked: cleanUnlocked, equipped: equipped.length === maxEquipped ? equipped : starterPlants, wave: Math.max(1, Number(data.wave) || 1) };
 }
 
@@ -247,7 +248,7 @@ function plantAt(row, col) {
   const stats = plantStats[state.selected];
   if (state.sun < stats.cost) return setMessage("Need more sun", `${stats.name} costs ${stats.cost} sun.`);
   state.sun -= stats.cost;
-  state.plants.push({ id: state.nextId += 1, type: state.selected, row, col, hp: stats.hp, cooldown: 420, action: 0 });
+  state.plants.push({ id: state.nextId += 1, type: state.selected, row, col, hp: stats.hp, cooldown: stats.sunRate || 420, action: 0 });
   setMessage(`${stats.name} planted`, stats.role);
   render();
 }
@@ -297,6 +298,15 @@ function updatePlants(dt) {
   for (const plant of state.plants) {
     const stats = plantStats[plant.type];
     plant.action = Math.max(0, plant.action - dt);
+    if (stats.sunRate) {
+      plant.cooldown -= dt;
+      if (plant.cooldown <= 0) {
+        state.sun += stats.sunAmount || 25;
+        plant.action = 500;
+        plant.cooldown = stats.sunRate;
+      }
+      continue;
+    }
     if (!stats.fireRate) continue;
     plant.cooldown -= dt;
     if (stats.trap) {
