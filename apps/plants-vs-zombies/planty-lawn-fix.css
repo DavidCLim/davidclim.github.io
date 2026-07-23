@@ -1,0 +1,67 @@
+/* Final micro-overrides for the triple pea shape. Loaded after the main garden layer. */
+.entity-layer .plant.triple .plant-head {
+  left: 35% !important;
+  top: 2% !important;
+  width: 34% !important;
+  height: 34% !important;
+}
+
+.entity-layer .plant.triple .plant-head > .crown {
+  left: -98% !important;
+  top: 64% !important;
+  width: 96% !important;
+  height: 96% !important;
+  z-index: 5 !important;
+}
+
+.entity-layer .plant.triple::after {
+  left: 57% !important;
+  top: 27% !important;
+  width: 33% !important;
+  height: 33% !important;
+  z-index: 5 !important;
+}
+
+.entity-layer .plant.triple .plant-head > .crown::before {
+  right: -48% !important;
+  top: 28% !important;
+  width: 54% !important;
+  height: 45% !important;
+}
+
+.entity-layer .plant.triple .plant-head > .crown::after {
+  left: 260% !important;
+  top: 28% !important;
+  width: 54% !important;
+  height: 45% !important;
+}
+
+.entity-layer .plant.triple .plant-head > .mouth {
+  right: -48% !important;
+  top: 29% !important;
+  width: 54% !important;
+  height: 45% !important;
+}
+
+.entity-layer .plant.triple .stem {
+  left: 42% !important;
+  top: 38% !important;
+  width: 11% !important;
+  height: 42% !important;
+}
+
+.entity-layer .plant.triple .leaves {
+  left: 19% !important;
+  top: 77% !important;
+  width: 62% !important;
+  height: 20% !important;
+}
+
+.seed-card .mini-plant.triple::before,
+.shop-card .mini-plant.triple::before {
+  left: -16px !important;
+  top: 17px !important;
+  width: 26px !important;
+  height: 26px !important;
+  box-shadow: 39px 0 0 -1px #27ad47 !important;
+}
