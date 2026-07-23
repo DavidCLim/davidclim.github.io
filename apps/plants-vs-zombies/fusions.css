@@ -1,0 +1,283 @@
+/* Fusion visuals loaded after the plant art layers. */
+.seed-card .fusion-hint {
+  display: block;
+  margin-top: 5px;
+  padding: 3px 7px;
+  border: 1px solid rgba(255, 240, 109, .72);
+  border-radius: 999px;
+  color: #fff06d;
+  background: rgba(18, 74, 20, .72);
+  font-size: .58rem;
+  font-weight: 1000;
+  letter-spacing: .08em;
+  text-shadow: 0 1px 0 #17370c;
+}
+
+.entity-layer .plant.repeater,
+.entity-layer .plant.snowRepeater,
+.entity-layer .plant.flameRepeater,
+.entity-layer .plant.voltRepeater,
+.entity-layer .plant.toxicRepeater,
+.entity-layer .plant.cannonRepeater {
+  width: min(8.2vw, 82px) !important;
+  height: min(7.6vw, 76px) !important;
+}
+
+.entity-layer .plant.repeater .plant-head,
+.entity-layer .plant.snowRepeater .plant-head,
+.entity-layer .plant.flameRepeater .plant-head,
+.entity-layer .plant.voltRepeater .plant-head,
+.entity-layer .plant.toxicRepeater .plant-head,
+.entity-layer .plant.cannonRepeater .plant-head {
+  left: 4% !important;
+  top: 10% !important;
+  width: 52% !important;
+  height: 52% !important;
+}
+
+.entity-layer .plant.repeater .mouth,
+.entity-layer .plant.snowRepeater .mouth,
+.entity-layer .plant.flameRepeater .mouth,
+.entity-layer .plant.voltRepeater .mouth,
+.entity-layer .plant.toxicRepeater .mouth,
+.entity-layer .plant.cannonRepeater .mouth {
+  right: -63% !important;
+  width: 62% !important;
+  height: 46% !important;
+  box-shadow:
+    22px 0 0 -2px var(--mouth-b),
+    22px 0 0 2px var(--plant-line),
+    inset -6px -6px 0 rgba(0,35,15,.3),
+    inset 4px 4px 0 rgba(255,255,255,.18) !important;
+}
+
+.entity-layer .plant.snowRepeater,
+.entity-layer .plant.snowRepeater .plant-head {
+  --plant-line: #082844;
+  --plant-a: #e4ffff;
+  --plant-b: #86e9fb;
+  --plant-c: #2fa8d6;
+  --plant-d: #145886;
+  --mouth-a: #d8ffff;
+  --mouth-b: #45c7e4;
+  --mouth-c: #073b5a;
+}
+
+.entity-layer .plant.flameRepeater,
+.entity-layer .plant.flameRepeater .plant-head {
+  --plant-line: #3b0500;
+  --plant-a: #ffe27a;
+  --plant-b: #ff8738;
+  --plant-c: #d9341f;
+  --plant-d: #781014;
+  --mouth-a: #ffc45a;
+  --mouth-b: #ef4d25;
+  --mouth-c: #581008;
+  filter: drop-shadow(0 0 9px rgba(255, 93, 42, .36));
+}
+
+.entity-layer .plant.voltRepeater,
+.entity-layer .plant.voltRepeater .plant-head {
+  --plant-line: #05322b;
+  --plant-a: #f2ffff;
+  --plant-b: #91fff2;
+  --plant-c: #18cbb2;
+  --plant-d: #066d60;
+  --mouth-a: #d8fff9;
+  --mouth-b: #2bd6bf;
+  --mouth-c: #044f45;
+  filter: drop-shadow(0 0 8px rgba(105,255,235,.44));
+}
+
+.entity-layer .plant.toxicRepeater,
+.entity-layer .plant.toxicRepeater .plant-head {
+  --plant-line: #0a1c08;
+  --plant-a: #caff63;
+  --plant-b: #5ee04e;
+  --plant-c: #238d42;
+  --plant-d: #713095;
+  --mouth-a: #bfff5f;
+  --mouth-b: #43b94f;
+  --mouth-c: #4b1c68;
+  filter: drop-shadow(0 0 9px rgba(140,255,70,.34));
+}
+
+.entity-layer .plant.cannonRepeater .mouth {
+  right: -82% !important;
+  width: 78% !important;
+  height: 56% !important;
+  border-width: 5px !important;
+  box-shadow:
+    28px 0 0 -2px #2a5b25,
+    28px 0 0 3px var(--plant-line),
+    inset -7px -7px 0 rgba(0,35,15,.34),
+    inset 4px 4px 0 rgba(255,255,255,.18) !important;
+}
+
+.entity-layer .plant.twinSunflower {
+  width: min(9vw, 90px) !important;
+  height: min(8.8vw, 88px) !important;
+}
+
+.entity-layer .plant.twinSunflower .plant-head {
+  left: 2% !important;
+  top: 6% !important;
+  width: 48% !important;
+  height: 48% !important;
+  border: 5px solid #2c1904 !important;
+  border-radius: 50% !important;
+  background: radial-gradient(circle at 34% 26%, rgba(255,255,220,.94) 0 9%, transparent 10%), linear-gradient(145deg, #fff46b 0%, #ffc934 42%, #f28f1f 78%, #b95716 100%) !important;
+  box-shadow: 38px 2px 0 -1px #ffc934, 38px 2px 0 4px #2c1904, 0 0 18px rgba(255, 230, 90, .35) !important;
+}
+
+.entity-layer .plant.twinSunflower .mouth {
+  left: 19% !important;
+  top: 41% !important;
+  width: 18% !important;
+  height: 11% !important;
+  border: 0 !important;
+  border-bottom: 3px solid #3a2005 !important;
+  border-radius: 0 0 50% 50% !important;
+  background: transparent !important;
+  box-shadow: 39px 1px 0 -1px transparent !important;
+}
+
+.entity-layer .plant.tallnut,
+.entity-layer .plant.juggernut {
+  width: min(8.8vw, 90px) !important;
+  height: min(11.4vw, 118px) !important;
+}
+
+.entity-layer .plant.tallnut .plant-head,
+.entity-layer .plant.juggernut .plant-head {
+  left: 14% !important;
+  top: 0% !important;
+  width: 68% !important;
+  height: 88% !important;
+  border: 5px solid #1c1005 !important;
+  border-radius: 45% 48% 42% 44% / 50% 48% 45% 44% !important;
+  background:
+    radial-gradient(circle at 32% 25%, rgba(255,255,208,.72) 0 8%, transparent 9%),
+    radial-gradient(circle at 56% 46%, rgba(108,66,21,.28) 0 10%, transparent 11%),
+    linear-gradient(145deg, #d9a247 0%, #9b681e 55%, #59350f 100%) !important;
+  box-shadow: inset -9px -10px 0 rgba(50,26,6,.3), 0 8px 0 rgba(0,0,0,.24) !important;
+}
+
+.entity-layer .plant.tallnut .mouth,
+.entity-layer .plant.juggernut .mouth {
+  left: 32% !important;
+  top: 53% !important;
+  width: 35% !important;
+  height: 12% !important;
+  border: 0 !important;
+  border-bottom: 4px solid #211207 !important;
+  border-radius: 0 0 50% 50% !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.entity-layer .plant.tallnut .stem,
+.entity-layer .plant.tallnut .leaves,
+.entity-layer .plant.juggernut .stem,
+.entity-layer .plant.juggernut .leaves {
+  display: none !important;
+}
+
+.entity-layer .plant.tallnut .plant-head::before,
+.entity-layer .plant.tallnut .plant-head::after,
+.entity-layer .plant.juggernut .plant-head::before,
+.entity-layer .plant.juggernut .plant-head::after {
+  content: "" !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: absolute !important;
+  top: 29% !important;
+  width: 12% !important;
+  height: 15% !important;
+  border: 3px solid #1c1005 !important;
+  border-radius: 50% !important;
+  background: #f9f0c5 !important;
+}
+
+.entity-layer .plant.tallnut .plant-head::before,
+.entity-layer .plant.juggernut .plant-head::before { left: 28% !important; }
+.entity-layer .plant.tallnut .plant-head::after,
+.entity-layer .plant.juggernut .plant-head::after { left: 58% !important; }
+
+.entity-layer .plant.juggernut {
+  width: min(12.4vw, 132px) !important;
+  height: min(11.8vw, 122px) !important;
+}
+
+.entity-layer .plant.juggernut .plant-head {
+  left: 4% !important;
+  width: 84% !important;
+  border-radius: 38% 44% 40% 42% / 48% 47% 45% 44% !important;
+  background:
+    radial-gradient(circle at 28% 24%, rgba(255,255,208,.7) 0 7%, transparent 8%),
+    radial-gradient(circle at 65% 40%, rgba(60,38,15,.32) 0 11%, transparent 12%),
+    linear-gradient(145deg, #dbaf56 0%, #93611f 48%, #45260b 100%) !important;
+}
+
+.entity-layer .plant.iceChomper,
+.entity-layer .plant.doubleIceChomper,
+.entity-layer .plant.sunChomper {
+  width: min(11.6vw, 118px) !important;
+  height: min(12vw, 122px) !important;
+}
+
+.entity-layer .plant.iceChomper .plant-head,
+.entity-layer .plant.doubleIceChomper .plant-head,
+.entity-layer .plant.sunChomper .plant-head {
+  left: 10% !important;
+  top: 1% !important;
+  width: 75% !important;
+  height: 64% !important;
+  border-radius: 58% 47% 52% 54% / 48% 45% 60% 54% !important;
+}
+
+.entity-layer .plant.iceChomper .plant-head,
+.entity-layer .plant.doubleIceChomper .plant-head {
+  border-color: #082844 !important;
+  background:
+    radial-gradient(circle at 30% 23%, rgba(235,255,255,.6) 0 10%, transparent 11%),
+    radial-gradient(circle at 54% 38%, rgba(72, 162, 214, .42) 0 10%, transparent 11%),
+    linear-gradient(145deg, #d9ffff 0%, #85dff4 38%, #8e66c7 72%, #552270 100%) !important;
+}
+
+.entity-layer .plant.sunChomper .plant-head {
+  background:
+    radial-gradient(circle at 32% 20%, rgba(255,246,170,.64) 0 10%, transparent 11%),
+    linear-gradient(145deg, #f4a7e8 0%, #bd65bf 36%, #7b298e 66%, #3f9650 100%) !important;
+}
+
+.entity-layer .plant.doubleIceChomper .mouth {
+  box-shadow:
+    27px -8px 0 -2px #79dcf2,
+    27px -8px 0 3px #082844,
+    inset 0 8px 0 #a6eff8,
+    inset 0 -8px 0 rgba(54, 5, 50, .48),
+    0 5px 0 rgba(0,0,0,.22) !important;
+}
+
+.shot.triple,
+.shot.pea {
+  box-shadow: 8px 0 0 rgba(128, 255, 89, .75), 0 0 8px rgba(177,255,89,.45) !important;
+}
+
+.shot.ice {
+  box-shadow: 8px 0 0 rgba(140, 238, 255, .75), 0 0 10px rgba(120,230,255,.68) !important;
+}
+
+.shot.fire {
+  box-shadow: 8px 0 0 rgba(255, 112, 42, .75), 0 0 12px rgba(255,90,32,.72) !important;
+}
+
+.shot.volt {
+  box-shadow: 8px 0 0 rgba(118, 255, 234, .75), 0 0 14px rgba(118,255,234,.8) !important;
+}
+
+.shot.toxic {
+  box-shadow: 8px 0 0 rgba(166, 255, 80, .75), 0 0 13px rgba(130,255,64,.72) !important;
+}
