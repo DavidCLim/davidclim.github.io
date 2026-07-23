@@ -1,0 +1,265 @@
+/* Backyard-inspired lawn polish and a stronger purple Chomper sprite. */
+.table {
+  background:
+    radial-gradient(ellipse at 13% 18%, rgba(255, 239, 170, .18), transparent 30%),
+    linear-gradient(135deg, rgba(219, 255, 143, .14), rgba(33, 139, 50, .10)),
+    rgba(16, 67, 26, .9) !important;
+}
+
+.lawn-wrap {
+  position: relative;
+  overflow: hidden;
+  padding: 14px 14px 14px 58px !important;
+  border: 5px solid #437733 !important;
+  border-radius: 10px !important;
+  background:
+    linear-gradient(90deg, #efe3bf 0 42px, #bfae85 42px 47px, transparent 47px),
+    linear-gradient(#237038, #124a25) !important;
+}
+
+.lawn-wrap::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 52px;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 26px 12%, #191919 0 7px, transparent 8px),
+    radial-gradient(circle at 26px 32%, #191919 0 7px, transparent 8px),
+    radial-gradient(circle at 26px 52%, #191919 0 7px, transparent 8px),
+    radial-gradient(circle at 26px 72%, #191919 0 7px, transparent 8px),
+    radial-gradient(circle at 26px 92%, #191919 0 7px, transparent 8px),
+    linear-gradient(90deg, rgba(155, 103, 58, .34), transparent 24px),
+    repeating-linear-gradient(0deg, #eee0b8 0 34px, #d4c292 35px 38px, #f5e9c6 39px 74px);
+  box-shadow: inset -5px 0 0 rgba(116, 93, 61, .42);
+}
+
+.lawn-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 10px 8px 10px 54px;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: 8px;
+  box-shadow:
+    inset 0 10px 0 rgba(20, 105, 31, .38),
+    inset 0 -10px 0 rgba(19, 99, 32, .36),
+    inset 10px 0 0 rgba(26, 119, 37, .36),
+    inset -10px 0 0 rgba(28, 116, 38, .36);
+}
+
+.lawn {
+  border: 0 !important;
+  border-radius: 4px !important;
+  background:
+    radial-gradient(circle at 9% 12%, rgba(240, 255, 110, .75) 0 2px, transparent 3px),
+    radial-gradient(circle at 21% 70%, rgba(255, 65, 51, .82) 0 2px, transparent 3px),
+    radial-gradient(circle at 73% 42%, rgba(250, 255, 112, .70) 0 2px, transparent 3px),
+    radial-gradient(circle at 91% 63%, rgba(255, 54, 43, .82) 0 2px, transparent 3px),
+    radial-gradient(ellipse 22px 8px at 12% 18%, rgba(8, 112, 35, .34) 0 48%, transparent 50%),
+    radial-gradient(ellipse 34px 12px at 30% 32%, rgba(12, 132, 41, .34) 0 48%, transparent 50%),
+    radial-gradient(ellipse 26px 9px at 61% 16%, rgba(8, 112, 35, .32) 0 48%, transparent 50%),
+    radial-gradient(ellipse 38px 14px at 78% 52%, rgba(10, 127, 38, .34) 0 48%, transparent 50%),
+    radial-gradient(ellipse 30px 10px at 44% 82%, rgba(5, 106, 33, .33) 0 48%, transparent 50%),
+    repeating-linear-gradient(92deg, rgba(255,255,255,.05) 0 1px, transparent 1px 9px),
+    conic-gradient(from 90deg, #56c641 25%, #41ad38 0 50%, #56c641 0 75%, #41ad38 0) 0 0 / calc(100% / 9 * 2) calc(100% / 5 * 2) !important;
+  box-shadow: inset 0 0 0 2px rgba(15, 95, 30, .62), inset 0 0 24px rgba(13, 94, 29, .36) !important;
+}
+
+.lawn::before {
+  opacity: .72 !important;
+  background:
+    radial-gradient(ellipse 16px 5px at 8% 8%, rgba(2, 96, 29, .45) 0 48%, transparent 50%),
+    radial-gradient(ellipse 20px 6px at 18% 28%, rgba(4, 119, 34, .38) 0 48%, transparent 50%),
+    radial-gradient(ellipse 18px 5px at 29% 58%, rgba(2, 94, 29, .42) 0 48%, transparent 50%),
+    radial-gradient(ellipse 22px 7px at 41% 18%, rgba(4, 116, 35, .36) 0 48%, transparent 50%),
+    radial-gradient(ellipse 18px 5px at 52% 70%, rgba(1, 93, 29, .42) 0 48%, transparent 50%),
+    radial-gradient(ellipse 20px 7px at 66% 30%, rgba(3, 116, 36, .38) 0 48%, transparent 50%),
+    radial-gradient(ellipse 24px 8px at 79% 76%, rgba(2, 96, 29, .42) 0 48%, transparent 50%),
+    radial-gradient(ellipse 18px 5px at 93% 22%, rgba(4, 117, 36, .38) 0 48%, transparent 50%),
+    repeating-linear-gradient(0deg, transparent 0 28px, rgba(255,255,255,.08) 29px 30px, transparent 31px 56px),
+    repeating-linear-gradient(90deg, transparent 0 28px, rgba(8, 101, 30, .12) 29px 31px, transparent 32px 58px) !important;
+}
+
+.tile {
+  border-color: rgba(26, 128, 36, .30) !important;
+  box-shadow: inset 0 0 12px rgba(255,255,255,.10), inset 0 -8px 14px rgba(5, 93, 27, .16) !important;
+}
+
+.tile::before {
+  inset: 2px !important;
+  opacity: .28 !important;
+  background:
+    radial-gradient(ellipse 14px 4px at 24% 22%, rgba(5, 113, 35, .34) 0 48%, transparent 50%),
+    radial-gradient(ellipse 12px 4px at 76% 68%, rgba(8, 133, 40, .28) 0 48%, transparent 50%),
+    repeating-linear-gradient(86deg, transparent 0 9px, rgba(234, 255, 174, .10) 10px 11px, transparent 12px 20px) !important;
+}
+
+.entity-layer .plant.chomper {
+  width: min(9.5vw, 94px) !important;
+  height: min(10.2vw, 102px) !important;
+  --plant-line: #101208;
+}
+
+.entity-layer .plant.chomper .plant-head {
+  left: 7% !important;
+  top: 2% !important;
+  width: 70% !important;
+  height: 62% !important;
+  z-index: 6 !important;
+  border: 5px solid #11160a !important;
+  border-radius: 56% 50% 50% 58% / 50% 48% 56% 52% !important;
+  background:
+    radial-gradient(circle at 32% 24%, rgba(245, 171, 229, .62) 0 8%, transparent 9%),
+    radial-gradient(circle at 60% 36%, rgba(122, 36, 130, .54) 0 10%, transparent 11%),
+    radial-gradient(circle at 28% 63%, rgba(117, 29, 124, .48) 0 9%, transparent 10%),
+    linear-gradient(145deg, #ee9ee0 0%, #be5fc0 38%, #7c248b 78%, #4d0f5e 100%) !important;
+  box-shadow: inset -10px -8px 0 rgba(45, 4, 55, .30), inset 5px 5px 0 rgba(255,255,255,.20), 0 6px 0 rgba(0,0,0,.24) !important;
+  animation-name: chomper-head-sway !important;
+}
+
+.entity-layer .plant.chomper .plant-head::before,
+.entity-layer .plant.chomper .plant-head::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  top: -18% !important;
+  width: 18% !important;
+  height: 34% !important;
+  z-index: 10 !important;
+  border: 4px solid #101208 !important;
+  border-radius: 58% 58% 42% 42% !important;
+  background: linear-gradient(145deg, #e7f0d2, #99c59e 75%) !important;
+  box-shadow: inset -3px -4px 0 rgba(34, 64, 35, .22) !important;
+}
+
+.entity-layer .plant.chomper .plant-head::before { left: 45% !important; transform: rotate(-8deg) !important; }
+.entity-layer .plant.chomper .plant-head::after { left: 70% !important; transform: rotate(13deg) !important; }
+
+.entity-layer .plant.chomper .mouth {
+  left: 16% !important;
+  right: auto !important;
+  top: 36% !important;
+  width: 86% !important;
+  height: 48% !important;
+  z-index: 12 !important;
+  border: 5px solid #11160a !important;
+  border-radius: 54% 50% 46% 58% / 46% 54% 55% 49% !important;
+  transform: rotate(-8deg) !important;
+  background:
+    linear-gradient(172deg, #9df06d 0 18%, #4fac42 19% 27%, transparent 28%),
+    conic-gradient(from 32deg at 50% 49%, #f8fff0 0 7deg, transparent 8deg 24deg, #f8fff0 25deg 34deg, transparent 35deg 55deg, #f8fff0 56deg 68deg, transparent 69deg 88deg, #f8fff0 89deg 100deg, transparent 101deg 360deg),
+    radial-gradient(ellipse at 54% 52%, #150719 0 58%, #4d173f 59% 100%) !important;
+  box-shadow: inset 0 8px 0 #8bdd61, inset 0 -7px 0 rgba(50, 5, 48, .46), 0 4px 0 rgba(0,0,0,.22) !important;
+  animation-name: chomper-mouth-chomp !important;
+}
+
+.entity-layer .plant.chomper .mouth::before {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  left: 28% !important;
+  top: 54% !important;
+  width: 26% !important;
+  height: 24% !important;
+  border: 0 !important;
+  border-radius: 50% 50% 45% 45% !important;
+  background: #e979a7 !important;
+  transform: rotate(-18deg) !important;
+}
+
+.entity-layer .plant.chomper .mouth::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  left: 36% !important;
+  top: 6% !important;
+  width: 44% !important;
+  height: 74% !important;
+  background:
+    conic-gradient(from 188deg at 16% 16%, transparent 0 308deg, #fff8e9 309deg 337deg, transparent 338deg),
+    conic-gradient(from 196deg at 44% 13%, transparent 0 304deg, #fff8e9 305deg 334deg, transparent 335deg),
+    conic-gradient(from 202deg at 75% 19%, transparent 0 305deg, #fff8e9 306deg 336deg, transparent 337deg),
+    conic-gradient(from 18deg at 22% 88%, transparent 0 304deg, #fff8e9 305deg 335deg, transparent 336deg),
+    conic-gradient(from 22deg at 58% 88%, transparent 0 305deg, #fff8e9 306deg 336deg, transparent 337deg) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.entity-layer .plant.chomper .stem {
+  left: 26% !important;
+  top: 58% !important;
+  width: 16% !important;
+  height: 33% !important;
+  border: 4px solid #101208 !important;
+  border-radius: 60% 40% 55% 45% !important;
+  transform: rotate(22deg) !important;
+  background: linear-gradient(115deg, #60d657, #1f8e38 72%) !important;
+  z-index: 4 !important;
+}
+
+.entity-layer .plant.chomper .leaves {
+  left: 10% !important;
+  top: 82% !important;
+  width: 54% !important;
+  height: 17% !important;
+  border: 4px solid #101208 !important;
+  border-radius: 50% 12% 50% 20% !important;
+  background: linear-gradient(145deg, #71e85c, #27983a 72%) !important;
+  box-shadow: 24px -2px 0 -5px #42c74a, 25px -2px 0 -1px #101208 !important;
+}
+
+.entity-layer .plant.chomper::before {
+  content: "" !important;
+  display: block !important;
+  left: -2% !important;
+  top: 34% !important;
+  width: 24% !important;
+  height: 24% !important;
+  border: 4px solid #101208 !important;
+  border-radius: 50% 12% 50% 20% !important;
+  background: linear-gradient(145deg, #6ae85e, #238d38) !important;
+  transform: rotate(-28deg) !important;
+  z-index: 3 !important;
+}
+
+.seed-card .mini-plant.chomper,
+.shop-card .mini-plant.chomper {
+  border-color: #101208 !important;
+  background:
+    radial-gradient(circle at 31% 25%, rgba(245, 171, 229, .58) 0 8%, transparent 9%),
+    radial-gradient(circle at 63% 42%, rgba(122, 36, 130, .50) 0 10%, transparent 11%),
+    linear-gradient(145deg, #ee9ee0 0%, #be5fc0 42%, #6b1b80 100%) !important;
+}
+
+.seed-card .mini-plant.chomper::after,
+.shop-card .mini-plant.chomper::after {
+  right: -28px !important;
+  top: 15px !important;
+  width: 42px !important;
+  height: 31px !important;
+  border: 3px solid #101208 !important;
+  border-radius: 54% 50% 46% 58% / 46% 54% 55% 49% !important;
+  background:
+    conic-gradient(from 40deg at 55% 50%, #fff8e9 0 14deg, transparent 15deg 40deg, #fff8e9 41deg 55deg, transparent 56deg 360deg),
+    radial-gradient(ellipse at 56% 52%, #150719 0 56%, #4d173f 57% 100%) !important;
+}
+
+@keyframes chomper-head-sway {
+  from { margin-top: -2px; margin-left: -1px; }
+  to { margin-top: 2px; margin-left: 2px; }
+}
+
+@keyframes chomper-mouth-chomp {
+  from { margin-left: -1px; filter: brightness(1); }
+  to { margin-left: 2px; filter: brightness(1.08); }
+}
+
+@media (max-width: 720px) {
+  .lawn-wrap { padding-left: 32px !important; }
+  .lawn-wrap::before { width: 28px; }
+  .lawn-wrap::after { inset-left: 34px; }
+}
