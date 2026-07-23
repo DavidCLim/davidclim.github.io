@@ -33,3 +33,24 @@
   border: 0 !important;
   box-shadow: none !important;
 }
+
+button,
+.home-link,
+.changelog-link,
+.seed-card,
+.shop-card,
+.seed-card strong,
+.seed-card small,
+.shop-card strong,
+.shop-card small,
+.shop-card em,
+#shop-button,
+#delete-plant,
+#save-progress,
+#start-round,
+#new-game,
+#close-shop {
+  font-family: "Arial Black", Impact, "Trebuchet MS", Arial, sans-serif !important;
+  letter-spacing: .04em !important;
+  text-transform: uppercase !important;
+}
