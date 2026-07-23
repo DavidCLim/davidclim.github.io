@@ -1,0 +1,25 @@
+.seed-card .fusion-hint {
+  display: none !important;
+}
+
+.seed-card[draggable="true"] {
+  cursor: grab;
+}
+
+.seed-card[draggable="true"]:active,
+.seed-card.dragging {
+  cursor: grabbing;
+  opacity: .82;
+  transform: translateY(-3px) scale(1.03) !important;
+  border-color: #f0ff83 !important;
+  box-shadow:
+    0 0 26px rgba(222, 255, 105, .56),
+    0 0 48px rgba(60, 205, 72, .34),
+    0 7px 0 rgba(36, 72, 18, .88),
+    inset 0 0 0 1px rgba(255,255,255,.22) !important;
+}
+
+.lawn.drag-ready .tile {
+  outline: 2px solid rgba(224, 255, 119, .35);
+  outline-offset: -5px;
+}
