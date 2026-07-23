@@ -1,0 +1,35 @@
+/* Last-loaded sprite cleanup: Walnut and Sunflower should be eyeless where requested. */
+.seed-card .mini-plant.spike::before,
+.seed-card .mini-plant.spike::after,
+.shop-card .mini-plant.spike::before,
+.shop-card .mini-plant.spike::after {
+  content: none !important;
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.seed-card .mini-plant.spike,
+.shop-card .mini-plant.spike {
+  border-radius: 45% 48% 42% 44% / 50% 48% 45% 44% !important;
+  background:
+    radial-gradient(circle at 31% 21%, rgba(255,238,151,.44) 0 10%, transparent 11%),
+    radial-gradient(circle at 63% 56%, rgba(70,39,13,.28) 0 10%, transparent 11%),
+    linear-gradient(145deg, #d49b3d 0%, #93611f 58%, #53300e 100%) !important;
+}
+
+.entity-layer .plant.sunflower .plant-head::before,
+.entity-layer .plant.sunflower .plant-head::after,
+.seed-card .mini-plant.sunflower::before,
+.shop-card .mini-plant.sunflower::before {
+  content: none !important;
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
