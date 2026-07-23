@@ -273,3 +273,132 @@ body::before {
   border-radius: 62% 62% 34% 34% !important;
   background: linear-gradient(145deg, #edf5d2, #9fbea2) !important;
 }
+
+/* Stability and sprite fixes for Walnut/Sunflower. */
+.entity-layer .plant.spike,
+.entity-layer .plant.sunflower {
+  animation: none !important;
+  filter: none !important;
+  contain: layout paint !important;
+  will-change: auto !important;
+}
+
+.entity-layer .plant.spike .plant-head,
+.entity-layer .plant.spike .plant-head::before,
+.entity-layer .plant.spike .plant-head::after,
+.entity-layer .plant.spike .mouth,
+.entity-layer .plant.spike .mouth::before,
+.entity-layer .plant.spike .mouth::after,
+.seed-card .mini-plant.spike::before,
+.seed-card .mini-plant.spike::after,
+.shop-card .mini-plant.spike::before,
+.shop-card .mini-plant.spike::after {
+  animation: none !important;
+}
+
+.entity-layer .plant.spike .plant-head::before,
+.entity-layer .plant.spike .plant-head::after,
+.entity-layer .plant.spike .mouth,
+.entity-layer .plant.spike .mouth::before,
+.entity-layer .plant.spike .mouth::after {
+  content: none !important;
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.entity-layer .plant.spike {
+  width: min(7vw, 70px) !important;
+  height: min(7vw, 70px) !important;
+}
+
+.entity-layer .plant.spike .plant-head {
+  left: 10% !important;
+  top: 12% !important;
+  width: 78% !important;
+  height: 72% !important;
+  border: 5px solid #1f1205 !important;
+  border-radius: 45% 48% 42% 44% / 50% 48% 45% 44% !important;
+  background:
+    radial-gradient(circle at 31% 21%, rgba(255,238,151,.44) 0 10%, transparent 11%),
+    radial-gradient(circle at 63% 56%, rgba(70,39,13,.28) 0 10%, transparent 11%),
+    linear-gradient(145deg, #d49b3d 0%, #93611f 58%, #53300e 100%) !important;
+  box-shadow: inset -7px -8px 0 rgba(50,26,6,.25), 0 5px 0 rgba(0,0,0,.22) !important;
+  transform: none !important;
+}
+
+.entity-layer .plant.spike .stem,
+.entity-layer .plant.spike .leaves,
+.entity-layer .plant.spike::before,
+.entity-layer .plant.spike::after {
+  display: none !important;
+  content: none !important;
+}
+
+.entity-layer .plant.sunflower {
+  width: min(7.2vw, 72px) !important;
+  height: min(8.2vw, 82px) !important;
+}
+
+.entity-layer .plant.sunflower .plant-head {
+  left: 15% !important;
+  top: 7% !important;
+  width: 64% !important;
+  height: 54% !important;
+  border-width: 4px !important;
+  box-shadow:
+    0 -16px 0 -8px #fff177,
+    10px -14px 0 -8px #ffe66a,
+    18px -5px 0 -9px #ffd65a,
+    18px 6px 0 -9px #ffc94e,
+    10px 16px 0 -8px #f7bd3f,
+    0 18px 0 -8px #f0ad34,
+    -10px 16px 0 -8px #ffd154,
+    -18px 6px 0 -9px #ffe160,
+    -18px -5px 0 -9px #fff177,
+    -10px -14px 0 -8px #fff48b,
+    0 5px 0 rgba(0,0,0,.22),
+    inset -6px -6px 0 rgba(117,55,9,.22) !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+.entity-layer .plant.sunflower .stem {
+  left: 46% !important;
+  top: 61% !important;
+  height: 25% !important;
+  border-width: 3px !important;
+}
+
+.entity-layer .plant.sunflower .leaves {
+  left: 20% !important;
+  top: 81% !important;
+  width: 60% !important;
+  height: 16% !important;
+  border-width: 3px !important;
+  box-shadow:
+    21px -5px 0 -6px #5cc64d,
+    22px -5px 0 -3px #08320f,
+    -14px -2px 0 -7px #75d651,
+    -15px -2px 0 -4px #08320f !important;
+}
+
+.seed-card .mini-plant.sunflower,
+.shop-card .mini-plant.sunflower {
+  width: 44px !important;
+  height: 40px !important;
+  margin-bottom: 9px !important;
+  box-shadow:
+    0 -11px 0 -7px #fff177,
+    8px -9px 0 -7px #ffe66a,
+    12px -2px 0 -7px #ffd65a,
+    11px 7px 0 -7px #ffc94e,
+    4px 11px 0 -7px #f7bd3f,
+    -5px 10px 0 -7px #ffd154,
+    -12px 3px 0 -7px #ffe160,
+    -10px -6px 0 -7px #fff48b,
+    2px 3px 0 rgba(0,0,0,.58) !important;
+}
