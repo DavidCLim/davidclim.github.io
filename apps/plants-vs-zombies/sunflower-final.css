@@ -1,0 +1,169 @@
+/* Final Sunflower-only layer: bright flower face, petals, stem, leaves, and matching icons. */
+.entity-layer .plant.sunflower {
+  width: min(8.2vw, 82px) !important;
+  height: min(8.8vw, 88px) !important;
+  overflow: visible !important;
+  --sun-line: #2c1904;
+}
+
+.entity-layer .plant.sunflower .plant-head {
+  left: 18% !important;
+  top: 4% !important;
+  width: 58% !important;
+  height: 58% !important;
+  z-index: 7 !important;
+  border: 5px solid var(--sun-line) !important;
+  border-radius: 50% !important;
+  overflow: visible !important;
+  background:
+    radial-gradient(circle at 34% 26%, rgba(255,255,220,.94) 0 9%, transparent 10%),
+    radial-gradient(circle at 62% 35%, rgba(255,238,104,.55) 0 13%, transparent 14%),
+    linear-gradient(145deg, #fff46b 0%, #ffc934 42%, #f28f1f 78%, #b95716 100%) !important;
+  box-shadow:
+    0 -18px 0 -7px #ffd33f,
+    13px -13px 0 -7px #ffb92f,
+    18px 0 0 -7px #f49a22,
+    13px 13px 0 -7px #e27f19,
+    0 18px 0 -7px #f09b20,
+    -13px 13px 0 -7px #ffc02d,
+    -18px 0 0 -7px #ffd84b,
+    -13px -13px 0 -7px #ffe569,
+    0 7px 0 rgba(0,0,0,.22),
+    inset -7px -7px 0 rgba(109,54,8,.22),
+    inset 4px 4px 0 rgba(255,255,255,.18) !important;
+  transform: rotate(var(--tilt)) translateY(var(--bob)) !important;
+  animation-name: sunflower-happy-sway !important;
+}
+
+.entity-layer .plant.sunflower .plant-head::before,
+.entity-layer .plant.sunflower .plant-head::after {
+  content: "" !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: absolute !important;
+  top: 31% !important;
+  width: 13% !important;
+  height: 16% !important;
+  z-index: 12 !important;
+  border: 3px solid #1d1204 !important;
+  border-radius: 50% !important;
+  background: radial-gradient(circle at 35% 30%, #fff7d1 0 22%, #2c1b07 24% 100%) !important;
+  box-shadow: none !important;
+}
+
+.entity-layer .plant.sunflower .plant-head::before { left: 30% !important; }
+.entity-layer .plant.sunflower .plant-head::after { left: 57% !important; }
+
+.entity-layer .plant.sunflower .mouth {
+  display: block !important;
+  left: 35% !important;
+  top: 55% !important;
+  width: 30% !important;
+  height: 16% !important;
+  z-index: 13 !important;
+  border: 0 !important;
+  border-bottom: 4px solid #3a2005 !important;
+  border-radius: 0 0 50% 50% !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: rotate(0deg) !important;
+}
+
+.entity-layer .plant.sunflower .mouth::before,
+.entity-layer .plant.sunflower .mouth::after {
+  content: none !important;
+  display: none !important;
+}
+
+.entity-layer .plant.sunflower .stem {
+  left: 45% !important;
+  top: 58% !important;
+  width: 12% !important;
+  height: 30% !important;
+  z-index: 3 !important;
+  border: 4px solid #06220c !important;
+  border-radius: 50% 50% 36% 36% !important;
+  background: linear-gradient(145deg, #8cf257 0%, #1c9a35 76%) !important;
+  box-shadow: inset -4px -4px 0 rgba(0,62,18,.25) !important;
+}
+
+.entity-layer .plant.sunflower .leaves {
+  left: 24% !important;
+  top: 78% !important;
+  width: 56% !important;
+  height: 18% !important;
+  z-index: 4 !important;
+  border: 4px solid #06220c !important;
+  border-radius: 52% 12% 52% 18% !important;
+  background: linear-gradient(145deg, #8cff5a, #22a63d 76%) !important;
+  box-shadow: 26px -2px 0 -6px #35bd42, 27px -2px 0 -2px #06220c !important;
+}
+
+.entity-layer .plant.sunflower::before,
+.entity-layer .plant.sunflower::after,
+.entity-layer .plant.sunflower .crown {
+  content: none !important;
+  display: none !important;
+}
+
+.seed-card .mini-plant.sunflower,
+.shop-card .mini-plant.sunflower {
+  width: 52px !important;
+  height: 52px !important;
+  margin: 0 auto 9px !important;
+  border: 3px solid #2c1904 !important;
+  border-radius: 50% !important;
+  overflow: visible !important;
+  background:
+    radial-gradient(circle at 34% 26%, rgba(255,255,220,.94) 0 9%, transparent 10%),
+    linear-gradient(145deg, #fff46b 0%, #ffc934 42%, #f28f1f 78%, #b95716 100%) !important;
+  box-shadow:
+    0 -13px 0 -6px #ffd33f,
+    10px -10px 0 -6px #ffb92f,
+    13px 0 0 -6px #f49a22,
+    10px 10px 0 -6px #e27f19,
+    0 13px 0 -6px #f09b20,
+    -10px 10px 0 -6px #ffc02d,
+    -13px 0 0 -6px #ffd84b,
+    -10px -10px 0 -6px #ffe569,
+    2px 3px 0 rgba(0,0,0,.68) !important;
+  transform: none !important;
+}
+
+.seed-card .mini-plant.sunflower::before,
+.shop-card .mini-plant.sunflower::before {
+  content: "" !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: absolute !important;
+  left: 15px !important;
+  top: 17px !important;
+  width: 7px !important;
+  height: 9px !important;
+  border: 2px solid #1d1204 !important;
+  border-radius: 50% !important;
+  background: #2c1b07 !important;
+  box-shadow: 16px 0 0 #2c1b07 !important;
+}
+
+.seed-card .mini-plant.sunflower::after,
+.shop-card .mini-plant.sunflower::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  left: 18px !important;
+  top: 30px !important;
+  width: 16px !important;
+  height: 8px !important;
+  border: 0 !important;
+  border-bottom: 3px solid #3a2005 !important;
+  border-radius: 0 0 50% 50% !important;
+  background: transparent !important;
+}
+
+@keyframes sunflower-happy-sway {
+  from { margin-top: -2px; }
+  to { margin-top: 3px; }
+}
