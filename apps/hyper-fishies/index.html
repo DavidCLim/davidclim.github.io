@@ -5,34 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>HYPER FISHIES</title>
     <meta name="description" content="A colorful underwater Hyper Fishies title card.">
-    <link rel="stylesheet" href="styles.css?v=2.0">
+    <link rel="stylesheet" href="styles.css?v=3.0">
   </head>
   <body>
     <main class="title-shell">
-      <a href="../../" class="home-link">HOME</a>
-
       <section class="title-card" aria-label="Hyper Fishies title card">
-        <div class="water-light"></div>
-        <div class="fish fish-one"></div>
-        <div class="fish fish-two"></div>
-        <div class="fish fish-three"></div>
-        <div class="bubble b1"></div>
-        <div class="bubble b2"></div>
-        <div class="bubble b3"></div>
-        <div class="bubble b4"></div>
-
-        <h1 class="logo-title" aria-label="HYPER fishies">
-          <span class="logo-row">
-            <span class="letter letter-h"><span class="panel"></span><span class="glyph">H</span></span>
-            <span class="letter letter-y"><span class="panel"></span><span class="glyph">Y</span></span>
-            <span class="letter letter-p"><span class="panel"></span><span class="glyph">P</span></span>
-            <span class="letter letter-e"><span class="panel"></span><span class="glyph">E</span></span>
-            <span class="letter letter-r"><span class="panel"></span><span class="glyph">R</span></span>
-          </span>
-          <span class="fishies-word">fishies</span>
-        </h1>
-
-        <p class="credits">BY DAVID<br>&amp; LUCAS TAN<br>&amp; VALERIUS KOH</p>
+        <img class="title-drawing" alt="Hyper Fishies drawing by David, Lucas Tan, and Valerius Koh" src="data:image/jpeg;base64,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">
       </section>
     </main>
   </body>
