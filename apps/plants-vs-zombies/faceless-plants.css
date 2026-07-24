@@ -1,0 +1,47 @@
+/* Final override: all plant sprites stay faceless in the lawn, seed bank, and shop. */
+.entity-layer .plant .plant-head::before,
+.entity-layer .plant .plant-head::after,
+.entity-layer .plant .mouth::after,
+.entity-layer .plant.sunflower .plant-head::before,
+.entity-layer .plant.sunflower .plant-head::after,
+.entity-layer .plant.sunflower .mouth,
+.entity-layer .plant.sunflower .mouth::before,
+.entity-layer .plant.sunflower .mouth::after,
+.seed-card .mini-plant::before,
+.seed-card .mini-plant.sunflower::before,
+.seed-card .mini-plant.sunflower::after,
+.seed-card .mini-plant.spike::before,
+.seed-card .mini-plant.spike::after,
+.shop-card .mini-plant::before,
+.shop-card .mini-plant.sunflower::before,
+.shop-card .mini-plant.sunflower::after,
+.shop-card .mini-plant.spike::before,
+.shop-card .mini-plant.spike::after {
+  content: none !important;
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.entity-layer .plant.sunflower .plant-head,
+.seed-card .mini-plant.sunflower,
+.shop-card .mini-plant.sunflower {
+  background:
+    radial-gradient(circle at 31% 24%, rgba(255, 244, 145, .52) 0 9%, transparent 10%),
+    radial-gradient(circle at 57% 58%, rgba(157, 77, 15, .18) 0 14%, transparent 15%),
+    linear-gradient(160deg, #ffda55 0%, #f7aa2c 50%, #bf641a 100%) !important;
+}
+
+.entity-layer .plant.spike .plant-head,
+.seed-card .mini-plant.spike,
+.shop-card .mini-plant.spike {
+  background:
+    radial-gradient(circle at 29% 21%, rgba(255, 238, 151, .44) 0 10%, transparent 11%),
+    radial-gradient(circle at 63% 56%, rgba(70, 39, 13, .28) 0 10%, transparent 11%),
+    linear-gradient(145deg, #d49b3d 0%, #93611f 58%, #53300e 100%) !important;
+}
