@@ -31,8 +31,7 @@ body::before {
     radial-gradient(circle at 9% 72%, rgba(255,255,255,.78) 0 6px, transparent 7px),
     radial-gradient(circle at 19% 34%, rgba(255,255,255,.52) 0 4px, transparent 5px),
     radial-gradient(circle at 76% 62%, rgba(255,255,255,.62) 0 7px, transparent 8px),
-    radial-gradient(circle at 91% 29%, rgba(255,255,255,.44) 0 5px, transparent 6px),
-    repeating-linear-gradient(102deg, transparent 0 82px, rgba(245, 255, 251, .18) 85px 96px, transparent 99px 170px);
+    radial-gradient(circle at 91% 29%, rgba(255,255,255,.44) 0 5px, transparent 6px);
   opacity: .82;
   animation: waterDrift 14s linear infinite;
 }
