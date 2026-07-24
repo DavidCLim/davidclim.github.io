@@ -5,13 +5,18 @@
 .hyper-fishies-card h3 {
   width: min(100%, 520px) !important;
   margin: 0 auto 4px !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background-color: transparent !important;
-  background-size: contain !important;
-  box-shadow: none !important;
-  filter: contrast(1.35) saturate(1.05) drop-shadow(0 5px 0 rgba(1, 60, 83, .28)) !important;
-  mix-blend-mode: multiply;
+  border: 4px solid rgba(245, 255, 252, .94) !important;
+  border-radius: 18px !important;
+  background-color: rgba(255, 255, 244, .96) !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  box-shadow:
+    inset 0 0 0 3px rgba(98, 213, 218, .24),
+    0 8px 0 rgba(4, 84, 110, .28),
+    0 18px 30px rgba(0, 45, 74, .28) !important;
+  filter: contrast(1.18) saturate(1.03) !important;
+  mix-blend-mode: normal !important;
 }
 
 .hyper-fishies-card h3::after,
