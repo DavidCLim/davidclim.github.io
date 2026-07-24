@@ -1,0 +1,31 @@
+.hyper-fishies-card {
+  gap: 18px;
+}
+
+.hyper-fishies-card h3 {
+  width: min(100%, 520px) !important;
+  margin: 0 auto 4px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+  background-size: contain !important;
+  box-shadow: none !important;
+  filter: contrast(1.35) saturate(1.05) drop-shadow(0 5px 0 rgba(1, 60, 83, .28)) !important;
+  mix-blend-mode: multiply;
+}
+
+.hyper-fishies-card h3::after,
+.hyper-fishies-card p {
+  content: none !important;
+  display: none !important;
+}
+
+.hyper-fishies-card .app-link {
+  margin-top: 6px;
+}
+
+@media (max-width: 560px) {
+  .hyper-fishies-card h3 {
+    width: min(100%, 390px) !important;
+  }
+}
