@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>HYPER FISHIES</title>
-    <meta name="description" content="A playable underwater rescue game by David, Lucas Tan, and Valerius Koh.">
-    <link rel="stylesheet" href="styles.css?v=4.0">
+    <meta name="description" content="A deep-sea fishing adventure inspired by abyss exploration and fishing collection games.">
+    <link rel="stylesheet" href="styles.css?v=4.1">
   </head>
   <body>
     <main class="game-shell">
@@ -16,29 +16,37 @@
             <span class="brand-main">HYPER</span>
             <span class="brand-sub">fishies</span>
           </div>
-          <button id="restartButton" class="game-button" type="button">NEW RUN</button>
+          <button id="restartButton" class="game-button" type="button">SURFACE</button>
         </div>
 
         <div class="hud" aria-live="polite">
-          <div class="hud-card"><span>SCORE</span><strong id="scoreText">0</strong></div>
-          <div class="hud-card"><span>FISHIES</span><strong id="fishText">0/5</strong></div>
-          <div class="hud-card"><span>LEVEL</span><strong id="levelText">1</strong></div>
+          <div class="hud-card"><span>COINS</span><strong id="coinsText">0</strong></div>
+          <div class="hud-card"><span>CARGO</span><strong id="cargoText">0/5</strong></div>
+          <div class="hud-card"><span>DEPTH</span><strong id="depthText">0m</strong></div>
+          <div class="hud-card"><span>ROD</span><strong id="rodText">I</strong></div>
           <div class="hud-card meter-card"><span>OXYGEN</span><div class="meter"><i id="oxygenBar"></i></div></div>
-          <div class="hud-card meter-card"><span>HEALTH</span><div class="meter health"><i id="healthBar"></i></div></div>
+          <div class="hud-card meter-card"><span>PRESSURE</span><div class="meter pressure"><i id="pressureBar"></i></div></div>
+        </div>
+
+        <div class="action-row">
+          <button id="castButton" class="game-button" type="button">CAST LINE</button>
+          <button id="sellButton" class="game-button" type="button">SELL CARGO</button>
+          <button id="upgradeButton" class="game-button" type="button">UPGRADE</button>
+          <div id="statusText" class="status-pill">Find fish schools, cast, and dive deeper for rarer catches.</div>
         </div>
 
         <div class="canvas-wrap">
           <canvas id="gameCanvas" width="960" height="560" aria-label="Hyper Fishies playable game area"></canvas>
           <div id="messagePanel" class="message-panel show">
             <h1>HYPER FISHIES</h1>
-            <p>Rescue the glowing fishies, grab bubbles for oxygen, and dodge jelly shocks.</p>
-            <button id="startButton" class="game-button big" type="button">START GAME</button>
+            <p>Dive into the abyss, catch fish, sell them, upgrade your gear, and reach deeper zones.</p>
+            <button id="startButton" class="game-button big" type="button">START DIVE</button>
           </div>
         </div>
 
-        <div class="controls-note">MOVE: WASD / ARROWS  |  DASH: SPACE  |  TOUCH: DRAG</div>
+        <div class="controls-note">MOVE: WASD / ARROWS | CAST: F / SPACE / BUTTON | SELL & UPGRADE AT SURFACE</div>
       </section>
     </main>
-    <script src="script.js?v=1.0"></script>
+    <script src="script.js?v=2.0"></script>
   </body>
 </html>
