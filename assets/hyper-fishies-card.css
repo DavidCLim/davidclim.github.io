@@ -1,1 +1,135 @@
-.hyper-fishies-card{position:relative;isolation:isolate;overflow:hidden;border-color:rgba(142,249,255,.86);background:radial-gradient(circle at 12% 16%,rgba(82,242,255,.42),transparent 30%),radial-gradient(circle at 82% 8%,rgba(255,107,214,.28),transparent 26%),radial-gradient(ellipse at 78% 92%,rgba(255,215,102,.22),transparent 28%),linear-gradient(145deg,rgba(4,88,118,.98),rgba(3,24,48,.96));box-shadow:0 0 0 1px rgba(255,255,255,.14) inset,0 0 26px rgba(82,242,255,.38),0 16px 42px rgba(0,0,0,.24)}.hyper-fishies-card:before,.hyper-fishies-card:after{position:absolute;content:"";pointer-events:none;z-index:0}.hyper-fishies-card:before{inset:0;background:radial-gradient(circle at 12% 72%,rgba(255,255,255,.72) 0 4px,transparent 5px),radial-gradient(circle at 22% 34%,rgba(255,255,255,.48) 0 3px,transparent 4px),radial-gradient(circle at 78% 68%,rgba(255,255,255,.5) 0 5px,transparent 6px),repeating-linear-gradient(105deg,transparent 0 70px,rgba(209,255,250,.13) 72px 78px,transparent 80px 148px);opacity:.72}.hyper-fishies-card:after{right:20px;bottom:18px;width:78px;height:42px;border:4px solid #05131b;border-radius:50%;background:linear-gradient(145deg,#ffd766,#ff8a4d);box-shadow:-44px 8px 0 -18px #52f2ff}.hyper-fishies-card>*{position:relative;z-index:1}.hyper-fishies-card h3{color:#fff8bf;font-family:"Arial Black",Impact,sans-serif;letter-spacing:.06em;text-transform:uppercase;text-shadow:0 4px 0 #06111a,0 0 18px rgba(82,242,255,.72)}.hyper-fishies-card p{color:#d4fff9}.hyper-fishies-card .app-link{position:relative;overflow:hidden;color:#03131c;border:1px solid rgba(194,255,250,.95);border-radius:4px;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);background:linear-gradient(90deg,rgba(255,215,102,.72),rgba(82,242,255,.68),rgba(45,224,181,.66)),linear-gradient(180deg,rgba(255,255,255,.22),transparent 54%);box-shadow:0 0 0 1px rgba(255,255,255,.28) inset,0 0 20px rgba(82,242,255,.66),0 0 34px rgba(45,224,181,.42);text-transform:uppercase;letter-spacing:.04em}.hyper-fishies-card .app-link:hover,.hyper-fishies-card .app-link:focus{color:#03131c;border-color:#fff;background:linear-gradient(90deg,#fff27e,#8ffff8,#ff9fe6);box-shadow:0 0 0 1px rgba(255,255,255,.28) inset,0 0 26px rgba(82,242,255,.84),0 0 46px rgba(255,107,214,.34)}
+.hyper-fishies-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 296px;
+  padding: 28px;
+  border: 2px solid rgba(142, 249, 255, .9);
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 11% 15%, rgba(141, 255, 248, .55), transparent 31%),
+    radial-gradient(circle at 86% 9%, rgba(255, 107, 214, .3), transparent 28%),
+    radial-gradient(ellipse at 76% 92%, rgba(255, 215, 102, .26), transparent 30%),
+    linear-gradient(180deg, rgba(6, 151, 184, .98), rgba(4, 82, 119, .98) 42%, rgba(3, 24, 48, .98));
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.16) inset,
+    0 0 34px rgba(82, 242, 255, .48),
+    0 0 72px rgba(33, 183, 207, .26),
+    0 22px 52px rgba(0,0,0,.28);
+}
+
+.hyper-fishies-card::before,
+.hyper-fishies-card::after {
+  position: absolute;
+  content: "";
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hyper-fishies-card::before {
+  inset: 0;
+  background:
+    radial-gradient(circle at 10% 74%, rgba(255,255,255,.78) 0 5px, transparent 6px),
+    radial-gradient(circle at 20% 36%, rgba(255,255,255,.5) 0 3px, transparent 4px),
+    radial-gradient(circle at 72% 64%, rgba(255,255,255,.54) 0 6px, transparent 7px),
+    radial-gradient(circle at 88% 30%, rgba(255,255,255,.42) 0 4px, transparent 5px),
+    repeating-linear-gradient(105deg, transparent 0 66px, rgba(209,255,250,.14) 68px 76px, transparent 78px 148px);
+  opacity: .82;
+}
+
+.hyper-fishies-card::after {
+  right: 26px;
+  bottom: 26px;
+  width: 118px;
+  height: 64px;
+  border: 5px solid #05131b;
+  border-radius: 56% 44% 48% 52%;
+  background:
+    radial-gradient(circle at 69% 38%, #05131b 0 5px, transparent 6px),
+    linear-gradient(145deg, #ffd766, #ff8a4d);
+  box-shadow:
+    -58px 12px 0 -22px #52f2ff,
+    -92px -22px 0 -26px #ff6bd6,
+    0 0 26px rgba(255,215,102,.42);
+}
+
+.hyper-fishies-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.hyper-fishies-card h3 {
+  max-width: 560px;
+  margin-bottom: 16px;
+  color: #fff8bf;
+  font-family: "Arial Black", Impact, sans-serif;
+  font-size: clamp(2.4rem, 7vw, 5.4rem);
+  line-height: .78;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  -webkit-text-stroke: 2px #06111a;
+  text-shadow:
+    5px 7px 0 rgba(0,0,0,.34),
+    0 0 18px rgba(82,242,255,.76),
+    0 0 34px rgba(255,107,214,.3);
+  transform: rotate(-2deg);
+}
+
+.hyper-fishies-card h3::after {
+  display: block;
+  content: "fishies";
+  margin-top: 10px;
+  margin-left: clamp(28px, 7vw, 90px);
+  color: #f4fffb;
+  font-family: "Comic Sans MS", "Trebuchet MS", cursive;
+  font-size: .48em;
+  font-weight: 400;
+  letter-spacing: .06em;
+  text-transform: lowercase;
+  -webkit-text-stroke: 0;
+  text-shadow: 0 3px 0 #06111a, 0 0 18px rgba(82,242,255,.72);
+}
+
+.hyper-fishies-card p {
+  max-width: 460px;
+  color: #d4fff9;
+  font-size: 1.08rem;
+}
+
+.hyper-fishies-card .app-link {
+  position: relative;
+  overflow: hidden;
+  min-height: 48px;
+  padding: 0 20px;
+  color: #03131c;
+  border: 2px solid rgba(194,255,250,.95);
+  border-radius: 6px;
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  background:
+    linear-gradient(90deg, rgba(255,215,102,.86), rgba(82,242,255,.76), rgba(45,224,181,.72)),
+    linear-gradient(180deg, rgba(255,255,255,.25), transparent 54%);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.3) inset,
+    0 0 22px rgba(82,242,255,.72),
+    0 0 38px rgba(45,224,181,.46);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.hyper-fishies-card .app-link:hover,
+.hyper-fishies-card .app-link:focus {
+  color: #03131c;
+  border-color: #ffffff;
+  background: linear-gradient(90deg, #fff27e, #8ffff8, #ff9fe6);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.28) inset,
+    0 0 30px rgba(82,242,255,.9),
+    0 0 56px rgba(255,107,214,.38);
+}
+
+@media (max-width: 560px) {
+  .hyper-fishies-card {
+    min-height: 220px;
+    padding: 22px;
+  }
+}
