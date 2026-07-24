@@ -121,11 +121,14 @@ body::after {
 }
 
 .logo-title {
-  position: relative;
+  position: absolute;
+  left: 50%;
+  top: 50%;
   z-index: 2;
-  width: min(960px, 100%);
+  width: min(980px, calc(100% - clamp(32px, 8vw, 120px)));
   margin: 0;
   text-align: center;
+  transform: translate(-50%, -50%);
 }
 
 .logo-row {
@@ -272,7 +275,8 @@ body::after {
 
 .fishies-word {
   display: block;
-  margin: clamp(16px, 2vw, 26px) 0 0 clamp(48px, 10vw, 170px);
+  width: fit-content;
+  margin: clamp(16px, 2vw, 26px) auto 0;
   color: #f7fffb;
   font-family: "Comic Sans MS", "Bradley Hand ITC", "Trebuchet MS", cursive;
   font-size: clamp(3.4rem, 9vw, 8rem);
@@ -284,7 +288,7 @@ body::after {
     0 5px 0 var(--ink),
     0 0 24px rgba(126,255,245,.72),
     0 0 42px rgba(255,123,220,.22);
-  transform: rotate(-2deg);
+  transform: translateX(8%) rotate(-2deg);
 }
 
 .credits {
@@ -362,5 +366,5 @@ body::after {
 @media (max-width: 720px) {
   body { overflow-y: auto; }
   .title-card { min-height: 720px; }
-  .credits { position: relative; right: auto; bottom: auto; margin-top: 28px; justify-self: end; }
+  .credits { position: absolute; right: 24px; bottom: 28px; }
 }
