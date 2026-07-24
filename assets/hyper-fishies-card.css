@@ -99,21 +99,24 @@
 .hyper-fishies-card .app-link {
   position: relative;
   overflow: hidden;
-  min-height: 48px;
-  padding: 0 20px;
+  min-width: min(100%, 260px);
+  min-height: 64px;
+  padding: 0 30px;
   color: #03131c;
-  border: 2px solid rgba(194,255,250,.95);
-  border-radius: 6px;
-  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  border: 3px solid rgba(194,255,250,.98);
+  border-radius: 8px;
+  clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px);
   background:
-    linear-gradient(90deg, rgba(255,215,102,.86), rgba(82,242,255,.76), rgba(45,224,181,.72)),
-    linear-gradient(180deg, rgba(255,255,255,.25), transparent 54%);
+    linear-gradient(90deg, rgba(255,215,102,.94), rgba(82,242,255,.86), rgba(45,224,181,.82)),
+    linear-gradient(180deg, rgba(255,255,255,.32), transparent 54%);
   box-shadow:
-    0 0 0 1px rgba(255,255,255,.3) inset,
-    0 0 22px rgba(82,242,255,.72),
-    0 0 38px rgba(45,224,181,.46);
+    0 0 0 1px rgba(255,255,255,.34) inset,
+    0 7px 0 rgba(0, 43, 59, .58),
+    0 0 28px rgba(82,242,255,.84),
+    0 0 52px rgba(45,224,181,.52);
+  font-size: 1.08rem;
   text-transform: uppercase;
-  letter-spacing: .04em;
+  letter-spacing: .08em;
 }
 
 .hyper-fishies-card .app-link:hover,
@@ -123,13 +126,19 @@
   background: linear-gradient(90deg, #fff27e, #8ffff8, #ff9fe6);
   box-shadow:
     0 0 0 1px rgba(255,255,255,.28) inset,
-    0 0 30px rgba(82,242,255,.9),
-    0 0 56px rgba(255,107,214,.38);
+    0 8px 0 rgba(0, 43, 59, .58),
+    0 0 36px rgba(82,242,255,.98),
+    0 0 68px rgba(255,107,214,.44);
 }
 
 @media (max-width: 560px) {
   .hyper-fishies-card {
     min-height: 220px;
     padding: 22px;
+  }
+
+  .hyper-fishies-card .app-link {
+    min-width: 100%;
+    min-height: 56px;
   }
 }
