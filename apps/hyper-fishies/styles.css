@@ -1,12 +1,14 @@
 :root {
   color-scheme: dark;
-  --surface: #78f2ff;
-  --mid: #138fcb;
-  --deep: #02172f;
+  --water: #1b9bd3;
+  --deep-water: #075e9f;
+  --wood: #b97838;
+  --wood-dark: #704217;
+  --sand: #e8ca86;
+  --grass: #77c76a;
   --ink: #05263d;
   --foam: #ecfffb;
   --gold: #ffe36e;
-  --coral: #ff7d87;
 }
 
 * { box-sizing: border-box; }
@@ -17,38 +19,24 @@ body {
   color: var(--foam);
   font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
   background:
-    radial-gradient(circle at 16% 10%, rgba(255,255,255,.36), transparent 19%),
-    radial-gradient(circle at 82% 16%, rgba(132,232,255,.25), transparent 24%),
-    linear-gradient(180deg, var(--surface) 0%, var(--mid) 42%, var(--deep) 100%);
+    radial-gradient(circle at 18% 12%, rgba(255,255,255,.34), transparent 20%),
+    radial-gradient(circle at 82% 18%, rgba(149,230,255,.28), transparent 24%),
+    linear-gradient(180deg, #73dff3 0%, #168fc7 50%, #064f8e 100%);
   overflow-x: hidden;
 }
 
-body::before,
-body::after {
+body::before {
   position: fixed;
   inset: 0;
   content: "";
   pointer-events: none;
-}
-
-body::before {
   background:
-    radial-gradient(circle at 10% 84%, rgba(255,255,255,.65) 0 5px, transparent 6px),
-    radial-gradient(circle at 23% 42%, rgba(255,255,255,.45) 0 4px, transparent 5px),
-    radial-gradient(circle at 78% 64%, rgba(255,255,255,.55) 0 7px, transparent 8px),
-    radial-gradient(circle at 91% 31%, rgba(255,255,255,.42) 0 5px, transparent 6px);
-  opacity: .65;
+    radial-gradient(circle at 10% 84%, rgba(255,255,255,.58) 0 5px, transparent 6px),
+    radial-gradient(circle at 23% 42%, rgba(255,255,255,.42) 0 4px, transparent 5px),
+    radial-gradient(circle at 78% 64%, rgba(255,255,255,.5) 0 7px, transparent 8px),
+    radial-gradient(circle at 91% 31%, rgba(255,255,255,.38) 0 5px, transparent 6px);
+  opacity: .6;
   animation: bubbles 16s linear infinite;
-}
-
-body::after {
-  top: auto;
-  height: 180px;
-  background:
-    radial-gradient(ellipse 82px 190px at 7% 110%, rgba(4, 113, 91, .9) 0 17%, transparent 18%),
-    radial-gradient(ellipse 62px 160px at 15% 110%, rgba(5, 166, 111, .8) 0 17%, transparent 18%),
-    radial-gradient(ellipse 90px 200px at 90% 112%, rgba(5, 95, 82, .86) 0 17%, transparent 18%),
-    linear-gradient(180deg, transparent 20%, rgba(221, 180, 97, .74) 22%);
 }
 
 @keyframes bubbles { to { transform: translateY(-90px); } }
@@ -71,11 +59,11 @@ body::after {
   padding: clamp(14px, 2vw, 22px);
   border: 4px solid rgba(235,255,250,.9);
   border-radius: 28px;
-  background: rgba(3, 32, 70, .46);
+  background: rgba(4, 61, 105, .42);
   box-shadow:
-    inset 0 0 0 6px rgba(255,255,255,.1),
-    0 18px 0 rgba(1, 24, 54, .46),
-    0 30px 70px rgba(0, 18, 40, .45);
+    inset 0 0 0 6px rgba(255,255,255,.12),
+    0 18px 0 rgba(1, 45, 76, .42),
+    0 30px 70px rgba(0, 30, 60, .35);
   backdrop-filter: blur(4px);
 }
 
@@ -95,7 +83,7 @@ body::after {
   align-items: end;
   gap: 10px;
   line-height: .9;
-  text-shadow: 0 4px 0 rgba(0,20,42,.48);
+  text-shadow: 0 4px 0 rgba(0,20,42,.44);
 }
 
 .brand-main {
@@ -128,7 +116,7 @@ body::after {
 
 .game-button:disabled {
   cursor: not-allowed;
-  filter: grayscale(.5) brightness(.72);
+  filter: grayscale(.55) brightness(.72);
 }
 
 .game-button.big { min-height: 64px; padding: 0 34px; font-size: 1.05rem; }
@@ -141,7 +129,7 @@ body::after {
   padding: 8px 14px;
   border: 2px solid rgba(229,255,252,.72);
   border-radius: 999px;
-  background: rgba(3, 23, 52, .55);
+  background: rgba(3, 31, 58, .56);
   color: var(--gold);
   font-weight: 1000;
   text-align: center;
@@ -153,12 +141,12 @@ body::after {
 }
 
 .hud-card {
-  min-width: 106px;
+  min-width: 112px;
   min-height: 58px;
   padding: 8px 12px;
   border: 2px solid rgba(229,255,252,.72);
   border-radius: 16px;
-  background: rgba(3, 23, 52, .58);
+  background: rgba(3, 31, 58, .58);
   box-shadow: inset 0 2px 0 rgba(255,255,255,.12);
 }
 
@@ -174,38 +162,17 @@ body::after {
   display: block;
   margin-top: 4px;
   color: var(--gold);
-  font-size: 1.35rem;
+  font-size: 1.18rem;
+  white-space: nowrap;
 }
-
-.meter-card { min-width: 170px; }
-
-.meter {
-  height: 16px;
-  margin-top: 9px;
-  overflow: hidden;
-  border: 2px solid rgba(255,255,255,.72);
-  border-radius: 999px;
-  background: rgba(0, 14, 32, .62);
-}
-
-.meter i {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #ffec62, #8cffed);
-  transition: width .18s ease;
-}
-
-.meter.pressure i { background: linear-gradient(90deg, #83ffdf, #ff5d68); }
 
 .canvas-wrap {
   position: relative;
   overflow: hidden;
   border: 4px solid rgba(235,255,250,.94);
   border-radius: 24px;
-  background: #02172f;
-  box-shadow: inset 0 0 0 6px rgba(255,255,255,.1), 0 12px 0 rgba(0,25,54,.5);
+  background: #0b72ad;
+  box-shadow: inset 0 0 0 6px rgba(255,255,255,.1), 0 12px 0 rgba(0,45,74,.42);
 }
 
 canvas {
@@ -224,7 +191,7 @@ canvas {
   gap: 14px;
   padding: 24px;
   text-align: center;
-  background: rgba(2, 18, 42, .76);
+  background: rgba(2, 35, 62, .75);
   backdrop-filter: blur(3px);
 }
 
@@ -235,7 +202,7 @@ canvas {
   color: var(--gold);
   font-size: clamp(2.4rem, 8vw, 5.8rem);
   line-height: .9;
-  text-shadow: 0 5px 0 rgba(0,20,42,.65);
+  text-shadow: 0 5px 0 rgba(0,20,42,.62);
 }
 
 .message-panel p {
@@ -243,6 +210,32 @@ canvas {
   margin: 0;
   font-weight: 900;
   font-size: clamp(1rem, 2vw, 1.3rem);
+}
+
+.joystick {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  width: 104px;
+  height: 104px;
+  display: none;
+  border: 3px solid rgba(255,255,255,.76);
+  border-radius: 50%;
+  background: rgba(2, 35, 62, .34);
+  box-shadow: inset 0 0 18px rgba(255,255,255,.18), 0 8px 20px rgba(0,0,0,.25);
+  touch-action: none;
+}
+
+.joystick div {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  border: 3px solid rgba(255,255,255,.85);
+  border-radius: 50%;
+  background: linear-gradient(180deg, #fff58e, #39c7b3);
+  transform: translate(-50%, -50%);
 }
 
 .controls-note {
@@ -253,10 +246,14 @@ canvas {
   text-shadow: 0 2px 0 rgba(0,20,42,.5);
 }
 
+@media (hover: none), (max-width: 780px) {
+  .joystick { display: block; }
+}
+
 @media (max-width: 700px) {
   body { overflow-y: auto; }
   .topbar { flex-wrap: wrap; justify-content: center; }
   .brand { order: -1; width: 100%; justify-content: center; }
-  .hud-card, .meter-card { flex: 1 1 130px; }
+  .hud-card { flex: 1 1 130px; }
   .controls-note { font-size: .75rem; }
 }
