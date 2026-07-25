@@ -144,52 +144,98 @@ function drawSketchPirate(x, y) {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
+  // One connected body silhouette so the pirate reads as a single person.
   ctx.fillStyle = "#3b2414";
-  sketchClosed([[-72,-34],[-30,8],[-24,104],[12,104],[20,8],[78,-34],[46,42],[58,112],[18,124],[-5,108],[-34,124],[-64,110],[-48,42]]);
-  ctx.fillStyle = "#c84a2f";
-  sketchClosed([[-30,8],[-10,-42],[22,-42],[20,8],[8,36],[-20,36]]);
-  ctx.fillStyle = "#f2c06b";
-  sketchClosed([[-55,-122],[-48,-66],[28,-66],[34,-122],[12,-146],[-34,-146]]);
-
-  ctx.fillStyle = "#111";
-  sketchLine([[-54,-104],[30,-86]]);
   ctx.beginPath();
-  ctx.ellipse(-28, -100, 17, 11, -0.2, 0, Math.PI * 2);
+  ctx.moveTo(-48, -42);
+  ctx.bezierCurveTo(-72, -36, -98, -20, -116, 6);
+  ctx.bezierCurveTo(-126, 22, -112, 40, -94, 34);
+  ctx.bezierCurveTo(-78, 28, -62, 18, -49, 8);
+  ctx.lineTo(-42, 82);
+  ctx.bezierCurveTo(-58, 102, -64, 122, -50, 133);
+  ctx.bezierCurveTo(-34, 144, -18, 126, -10, 107);
+  ctx.bezierCurveTo(-3, 125, 15, 144, 32, 132);
+  ctx.bezierCurveTo(48, 120, 39, 99, 25, 82);
+  ctx.lineTo(31, 8);
+  ctx.bezierCurveTo(49, 25, 70, 38, 90, 38);
+  ctx.bezierCurveTo(111, 37, 120, 16, 106, 2);
+  ctx.bezierCurveTo(84, -20, 58, -36, 34, -42);
+  ctx.bezierCurveTo(15, -50, -25, -50, -48, -42);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Coat collar and shirt are drawn inside the same body.
+  ctx.fillStyle = "#c84a2f";
+  sketchClosed([[-28,-39],[-7,-24],[16,-39],[20,28],[4,54],[-18,31]]);
+  ctx.fillStyle = "#f7d6a0";
+  sketchClosed([[-14,-38],[7,-38],[5,36],[-12,36]]);
+  ctx.strokeStyle = "#111";
+  ctx.lineWidth = 3.5;
+  sketchLine([[-43,-33],[-18,3],[-12,80]]);
+  sketchLine([[31,-33],[13,3],[8,80]]);
+  for (let yy = -18; yy < 30; yy += 16) {
+    ctx.beginPath();
+    ctx.arc(-5, yy, 2.3, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(7, yy, 2.3, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Connected head and neck.
+  ctx.fillStyle = "#f2c06b";
+  sketchClosed([[-14,-54],[7,-54],[9,-42],[-17,-42]]);
+  ctx.beginPath();
+  ctx.roundRect(-52, -128, 84, 78, 10);
+  ctx.fill();
+  ctx.stroke();
+
+  // Face.
+  ctx.fillStyle = "#111";
+  sketchLine([[-52,-103],[32,-88]]);
+  ctx.beginPath();
+  ctx.ellipse(-29, -101, 17, 11, -0.2, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
-  ctx.arc(6, -94, 5, 0, Math.PI * 2);
+  ctx.arc(7, -94, 5, 0, Math.PI * 2);
   ctx.stroke();
-  sketchLine([[-36,-76],[-20,-66],[-2,-74]]);
+  sketchLine([[-12,-98],[-18,-90],[-8,-89]]);
+  sketchLine([[-36,-76],[-20,-66],[-1,-74]]);
   sketchLine([[-34,-68],[-4,-68]]);
-  sketchLine([[-10,-98],[-16,-90],[-7,-89]]);
 
+  // Pirate hat attached to the head.
   ctx.fillStyle = "#191919";
   ctx.beginPath();
-  ctx.moveTo(-66, -140);
-  ctx.quadraticCurveTo(-8, -196, 50, -142);
-  ctx.lineTo(25, -126);
-  ctx.quadraticCurveTo(-18, -146, -56, -122);
+  ctx.moveTo(-66, -141);
+  ctx.quadraticCurveTo(-10, -198, 52, -143);
+  ctx.lineTo(27, -127);
+  ctx.quadraticCurveTo(-18, -147, -57, -122);
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
   ctx.fillStyle = "#f7d46c";
   ctx.beginPath();
-  ctx.arc(-16, -164, 10, 0, Math.PI * 2);
+  ctx.arc(-15, -165, 10, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
-  sketchLine([[26,-138],[64,-154],[78,-134]]);
+  sketchLine([[28,-138],[64,-154],[78,-134]]);
 
+  // Sword arm, drawn as one connected raised sleeve and hand.
+  ctx.fillStyle = "#3b2414";
+  sketchClosed([[-70,-26],[-91,-82],[-102,-155],[-76,-165],[-53,-61],[-39,-39]]);
   ctx.fillStyle = "#f2c06b";
-  sketchClosed([[-76,-32],[-118,-8],[-112,28],[-82,14]]);
-  sketchClosed([[68,-30],[98,-6],[88,32],[64,10]]);
-  sketchLine([[88,32],[106,18],[100,42],[118,28],[106,52]]);
-
+  sketchClosed([[-104,-164],[-75,-181],[-55,-160],[-84,-148]]);
   ctx.strokeStyle = "#111";
-  sketchLine([[-56,-38],[-92,-98],[-104,-168]]);
-  sketchLine([[-104,-168],[-72,-184],[-52,-162]]);
-  sketchLine([[-96,-178],[-38,-238],[70,-278]]);
-  sketchLine([[-90,-174],[44,-250]]);
+  ctx.lineWidth = 4;
+  sketchLine([[-96,-176],[-38,-238],[70,-278]]);
+  sketchLine([[-90,-172],[44,-250]]);
 
+  // Other connected hand.
+  ctx.fillStyle = "#f2c06b";
+  sketchClosed([[86,18],[104,4],[100,30],[117,18],[108,44],[88,39]]);
+
+  // Coin medallion/cape detail.
   ctx.fillStyle = "#f4d36c";
   ctx.beginPath();
   ctx.arc(82, -42, 27, 0, Math.PI * 2);
@@ -200,16 +246,10 @@ function drawSketchPirate(x, y) {
   ctx.textAlign = "center";
   ctx.fillText("$", 82, -34);
 
-  ctx.strokeStyle = "#111";
-  ctx.lineWidth = 4;
-  for (let yy = -28; yy < 24; yy += 17) {
-    ctx.beginPath();
-    ctx.arc(-8, yy, 2, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(8, yy, 2, 0, Math.PI * 2);
-    ctx.stroke();
-  }
+  // Boots.
+  ctx.fillStyle = "#1c120b";
+  sketchClosed([[-46,116],[-15,112],[-7,128],[-35,139],[-59,132]]);
+  sketchClosed([[6,113],[36,116],[51,130],[25,139],[0,128]]);
   ctx.restore();
 }
 
