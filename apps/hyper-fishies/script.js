@@ -79,7 +79,7 @@ function startGame() {
   panel.classList.remove("show");
   state.running = true;
   lastTime = performance.now();
-  say("Walk to the small top fishing dock to fish. CAST also works when you stand there.");
+  say("Walk to the small top fishing dock to fish. Visit SELL FISH to meet the pirate merchant.");
 }
 
 function showMessage(title, text, buttonText) {
@@ -96,19 +96,25 @@ function say(text) {
 function updateHud() {
   coinsText.textContent = state.progress.coins;
   bagText.textContent = `${state.bag.length}/${state.bagLimit}`;
-  areaText.textContent = state.mode === "fishing" ? "BANK" : "DOCK";
+  areaText.textContent = state.mode === "fishing" ? "BANK" : state.mode === "sell" ? "SELL" : "DOCK";
   rodText.textContent = roman(state.progress.rod);
   latestText.textContent = state.latest;
+
   const onSell = state.mode === "dock" && inRect(state.player, 78, 380, 130, 84);
   const onShop = state.mode === "dock" && inRect(state.player, 78, 110, 130, 84);
   const canStartFishing = state.mode === "dock" && atFishingDock(state.player);
   const canCastNow = state.mode === "fishing" && !state.cast && state.bag.length < state.bagLimit;
   const canReelNow = state.mode === "fishing" && state.cast && state.cast.phase === "bite";
   const canDockCast = canStartFishing && state.bag.length < state.bagLimit;
-  sellButton.disabled = !onSell || state.bag.length === 0;
-  upgradeButton.disabled = !onShop;
+
   castButton.textContent = canReelNow ? "REEL!" : state.cast ? "WAIT" : "CAST";
-  castButton.disabled = !(canCastNow || canReelNow || canDockCast);
+  castButton.disabled = state.mode === "sell" || !(canCastNow || canReelNow || canDockCast);
+
+  sellButton.textContent = state.mode === "sell" ? "YES SELL" : "SELL FISH";
+  sellButton.disabled = state.mode === "sell" ? state.bag.length === 0 : !onSell;
+
+  upgradeButton.textContent = state.mode === "sell" ? "NO LEAVE" : "UPGRADE ROD";
+  upgradeButton.disabled = state.mode === "sell" ? false : !onShop;
 }
 
 function roman(value) {
@@ -157,7 +163,7 @@ function updateDock(dt) {
   } else if (inRect(p, 78, 110, 130, 84)) {
     say(`Shop: upgrade rod for ${upgradeCost()} coins.`);
   } else if (inRect(p, 78, 380, 130, 84)) {
-    say("Sell bank: sell your bagged fish here.");
+    enterSellShop();
   } else {
     say("Walk to the small top fishing dock to fish. The circle is you.");
   }
@@ -196,6 +202,22 @@ function exitFishing() {
   say("Back on the dock. Sell fish or upgrade your rod.");
 }
 
+function enterSellShop() {
+  state.mode = "sell";
+  state.player.vx = 0;
+  state.player.vy = 0;
+  say(state.bag.length ? "B-LA-KA! Pirate merchant asks: sell your fish? Press YES SELL or NO LEAVE." : "B-LA-KA! Your bag is empty. Press NO LEAVE to return.");
+}
+
+function exitSellShop() {
+  state.mode = "dock";
+  state.player.x = 286;
+  state.player.y = 420;
+  state.player.vx = 0;
+  state.player.vy = 0;
+  say("Back on the dock. Catch more fish or return to the pirate later.");
+}
+
 function updateFishing(dt) {
   if (!state.cast) return;
   const cast = state.cast;
@@ -218,7 +240,7 @@ function updateFishing(dt) {
       cast.phase = "bite";
       cast.reel = 0.45;
       cast.fish = rollFish();
-      say(`BITE! Press REEL, CAST, SPACE, F, or tap the water fast!`);
+      say("BITE! Press REEL, CAST, SPACE, F, or tap the water fast!");
     }
   } else if (cast.phase === "bite") {
     cast.reel -= (0.08 + cast.fish.value / 3000) * dt;
@@ -230,7 +252,7 @@ function updateFishing(dt) {
 }
 
 function castLine() {
-  if (!state.running) return;
+  if (!state.running || state.mode === "sell") return;
   if (state.mode === "dock") {
     if (!atFishingDock(state.player)) {
       say("Walk onto the small FISH dock first, then press CAST.");
@@ -299,12 +321,21 @@ function catchFish(fish) {
 }
 
 function sellFish() {
-  if (state.mode !== "dock" || !inRect(state.player, 78, 380, 130, 84) || state.bag.length === 0) return;
+  if (state.mode === "dock") {
+    if (inRect(state.player, 78, 380, 130, 84)) enterSellShop();
+    return;
+  }
+  if (state.mode !== "sell") return;
+  if (state.bag.length === 0) {
+    say("The pirate has nothing to buy. Press NO LEAVE.");
+    return;
+  }
   const total = state.bag.reduce((sum, fish) => sum + fish.value, 0);
   state.progress.coins += total;
   state.bag = [];
   saveProgress();
-  say(`Sold all fish for ${total} coins.`);
+  burst(520, 310, "#ffe36e", 26);
+  say(`B-LA-KA! Sold everything for ${total} coins.`);
   updateHud();
 }
 
@@ -313,6 +344,10 @@ function upgradeCost() {
 }
 
 function upgradeRod() {
+  if (state.mode === "sell") {
+    exitSellShop();
+    return;
+  }
   if (state.mode !== "dock" || !inRect(state.player, 78, 110, 130, 84)) return;
   const cost = upgradeCost();
   if (state.progress.coins < cost) {
@@ -342,7 +377,8 @@ function burst(x, y, color, count) {
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   if (!state || state.mode === "dock") drawDockView();
-  else drawFishingView();
+  else if (state.mode === "fishing") drawFishingView();
+  else drawSellShopView();
 }
 
 function drawDockView() {
@@ -411,7 +447,7 @@ function drawDockLabels() {
   ctx.fillStyle = "rgba(255,255,255,.9)";
   ctx.font = "900 18px Trebuchet MS";
   ctx.fillText("TOP VIEW DOCK", 18, 32);
-  ctx.fillText("Stand on the small FISH dock, then press CAST", 18, 56);
+  ctx.fillText("Walk into SELL FISH to visit the pirate merchant", 18, 56);
 }
 
 function drawCirclePlayer() {
@@ -462,6 +498,120 @@ function drawFishingView() {
   ctx.fillText("SIDE VIEW FISHING BANK", 18, 32);
   ctx.fillText("Press CAST / SPACE / F. When BITE appears, tap REEL fast.", 18, 56);
   ctx.fillText("Press S or DOWN to leave fishing bank.", 18, 80);
+}
+
+function drawSellShopView() {
+  drawTopWater();
+  const hut = ctx.createLinearGradient(0, 70, 0, 500);
+  hut.addColorStop(0, "#c9924a");
+  hut.addColorStop(1, "#6f3d17");
+  rounded(130, 95, 700, 370, 34, hut, "#3f220e", 8);
+  rounded(112, 72, 736, 78, 24, "#6a2f16", "#2a1208", 7);
+  rounded(165, 360, 630, 105, 18, "#8b4d1f", "#3f220e", 7);
+  rounded(380, 60, 200, 58, 16, "#ffe36e", "#4a230d", 5);
+  ctx.fillStyle = "#4a230d";
+  ctx.font = "900 36px Trebuchet MS";
+  ctx.textAlign = "center";
+  ctx.fillText("SELL", 480, 101);
+
+  drawPirateMerchant(275, 300);
+  drawSpeechBubble(492, 170, state.bag.length ? "Arrr... do ya have anything ya like to sell to aye?" : "B-LA-KA! Yer bag be empty.");
+  drawFishInventory(515, 330);
+  drawRipples();
+
+  ctx.fillStyle = "rgba(255,255,255,.92)";
+  ctx.font = "900 18px Trebuchet MS";
+  ctx.textAlign = "left";
+  ctx.fillText("FRONT VIEW PIRATE SHOP", 18, 32);
+  ctx.fillText("YES SELL sells your bag. NO LEAVE returns to the dock.", 18, 56);
+}
+
+function drawPirateMerchant(x, y) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.strokeStyle = "#1b120c";
+  ctx.lineWidth = 5;
+  ctx.fillStyle = "#f0c17d";
+  ctx.beginPath();
+  ctx.roundRect(-42, -92, 84, 72, 16);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = "#171717";
+  ctx.beginPath();
+  ctx.arc(-18, -62, 10, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#171717";
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(-42, -68); ctx.lineTo(-2, -54); ctx.stroke();
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath(); ctx.arc(19, -63, 6, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#111";
+  ctx.beginPath(); ctx.arc(20, -63, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "#331700";
+  ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(-12, -34); ctx.quadraticCurveTo(0, -24, 16, -34); ctx.stroke();
+
+  ctx.fillStyle = "#6c2a18";
+  ctx.beginPath();
+  ctx.moveTo(-54, -94); ctx.quadraticCurveTo(0, -145, 62, -92); ctx.lineTo(40, -82); ctx.quadraticCurveTo(0, -105, -47, -82); ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#ffe36e";
+  ctx.beginPath(); ctx.arc(6, -116, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#174b69";
+  ctx.beginPath(); ctx.moveTo(-82, -27); ctx.lineTo(82, -27); ctx.lineTo(54, 70); ctx.lineTo(-54, 70); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#f0c17d";
+  ctx.beginPath(); ctx.roundRect(-96, -8, 54, 24, 9); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.roundRect(42, -8, 54, 24, 9); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = "#222";
+  ctx.lineWidth = 8;
+  ctx.beginPath(); ctx.moveTo(53, -42); ctx.quadraticCurveTo(88, -82, 105, -132); ctx.stroke();
+  ctx.restore();
+}
+
+function drawSpeechBubble(x, y, text) {
+  rounded(x, y, 330, 122, 18, "#fff7d6", "#3f220e", 5);
+  ctx.beginPath();
+  ctx.moveTo(x, y + 68);
+  ctx.lineTo(x - 36, y + 90);
+  ctx.lineTo(x + 8, y + 88);
+  ctx.closePath();
+  ctx.fillStyle = "#fff7d6";
+  ctx.fill();
+  ctx.strokeStyle = "#3f220e";
+  ctx.lineWidth = 5;
+  ctx.stroke();
+  ctx.fillStyle = "#3f220e";
+  ctx.font = "900 19px Trebuchet MS";
+  ctx.textAlign = "left";
+  const words = text.split(" ");
+  let line = "";
+  let yLine = y + 38;
+  for (const word of words) {
+    const test = line + word + " ";
+    if (ctx.measureText(test).width > 285) {
+      ctx.fillText(line, x + 22, yLine);
+      line = word + " ";
+      yLine += 25;
+    } else {
+      line = test;
+    }
+  }
+  ctx.fillText(line, x + 22, yLine);
+}
+
+function drawFishInventory(x, y) {
+  const total = state.bag.reduce((sum, fish) => sum + fish.value, 0);
+  rounded(x, y, 250, 96, 16, "rgba(12,53,71,.72)", "rgba(255,255,255,.78)", 4);
+  ctx.fillStyle = "#ecfffb";
+  ctx.font = "900 18px Trebuchet MS";
+  ctx.textAlign = "left";
+  ctx.fillText(`SELL INVENTORY: ${state.bag.length}/${state.bagLimit}`, x + 18, y + 30);
+  ctx.fillText(`TOTAL OFFER: ${total} COINS`, x + 18, y + 60);
+  if (!state.bag.length) ctx.fillText("NO FISH HELD", x + 18, y + 86);
+  for (let i = 0; i < Math.min(5, state.bag.length); i++) {
+    drawSmallFish(x + 24 + i * 39, y + 82, 13, state.bag[i].color);
+  }
 }
 
 function drawFisherCircle() {
@@ -584,6 +734,8 @@ window.addEventListener("keydown", event => {
     castLine();
   }
   if (state.mode === "fishing" && (key === "s" || key === "arrowdown") && !state.cast) exitFishing();
+  if (state.mode === "sell" && (key === "n" || key === "escape" || key === "s" || key === "arrowdown")) exitSellShop();
+  if (state.mode === "sell" && key === "y") sellFish();
 });
 window.addEventListener("keyup", event => keys.delete(event.key.toLowerCase()));
 
