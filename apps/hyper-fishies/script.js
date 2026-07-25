@@ -81,7 +81,7 @@ function startGame() {
   panel.classList.remove("show");
   state.running = true;
   lastTime = performance.now();
-  say("Walk into SELL FISH to meet the pirate merchant, or go to the FISH dock to cast.");
+  say("Catch fish, then press SELL FISH or walk into the sell dock to visit the pirate.");
 }
 
 function updateHud() {
@@ -98,7 +98,7 @@ function updateHud() {
   castButton.disabled = !(canReel || canCast || canDockCast);
 
   sellButton.textContent = state.mode === "sell" ? "YES SELL" : "SELL FISH";
-  sellButton.disabled = state.mode === "sell" ? state.bag.length === 0 : !(state.mode === "dock" && atSellDock(state.player));
+  sellButton.disabled = state.mode === "fishing";
 
   upgradeButton.textContent = state.mode === "sell" ? "NO LEAVE" : "UPGRADE ROD";
   upgradeButton.disabled = state.mode === "sell" ? false : !(state.mode === "dock" && atShopDock(state.player));
@@ -167,7 +167,7 @@ function enterSellShop() {
   state.mode = "sell";
   state.player.vx = 0;
   state.player.vy = 0;
-  say(state.bag.length ? "B-LA-KA! Pirate merchant asks: sell your fish? Press YES SELL or NO LEAVE." : "B-LA-KA! Your bag is empty. Press NO LEAVE to return.");
+  say(state.bag.length ? "B-LA-KA! Pirate merchant asks: sell your fish? Press YES SELL, Y, or tap YES." : "B-LA-KA! Your bag is empty. Catch fish first or press NO LEAVE.");
 }
 function exitSellShop() {
   state.mode = "dock";
@@ -267,12 +267,12 @@ function catchFish(fish) {
 }
 function sellFish() {
   if (state.mode === "dock") {
-    if (atSellDock(state.player)) enterSellShop();
+    enterSellShop();
     return;
   }
   if (state.mode !== "sell") return;
   if (!state.bag.length) {
-    say("The pirate has nothing to buy. Press NO LEAVE.");
+    say("The pirate has nothing to buy yet. Go catch a fish, then come back.");
     return;
   }
   const total = state.bag.reduce((sum, fish) => sum + fish.value, 0);
@@ -359,7 +359,7 @@ function drawDockLabels() {
   ctx.fillStyle = "rgba(255,255,255,.9)";
   ctx.font = "900 18px Trebuchet MS";
   ctx.fillText("TOP VIEW DOCK", 18, 32);
-  ctx.fillText("Walk into SELL FISH to visit the pirate merchant", 18, 56);
+  ctx.fillText("Walk into SELL FISH or press SELL FISH to visit the pirate", 18, 56);
 }
 function drawCirclePlayer() {
   const p = state.player;
@@ -391,53 +391,72 @@ function drawFishingView() {
 function drawSellShopView() {
   drawTopWater();
   const hut = ctx.createLinearGradient(0, 70, 0, 500);
-  hut.addColorStop(0, "#c9924a"); hut.addColorStop(1, "#6f3d17");
-  rounded(130, 95, 700, 370, 34, hut, "#3f220e", 8);
-  rounded(112, 72, 736, 78, 24, "#6a2f16", "#2a1208", 7);
-  rounded(165, 360, 630, 105, 18, "#8b4d1f", "#3f220e", 7);
-  rounded(380, 60, 200, 58, 16, "#ffe36e", "#4a230d", 5);
-  ctx.fillStyle = "#4a230d"; ctx.font = "900 36px Trebuchet MS"; ctx.textAlign = "center"; ctx.fillText("SELL", 480, 101);
-  drawPirateMerchant(275, 300);
-  drawSpeechBubble(492, 170, state.bag.length ? "Arrr... do ya have anything ya like to sell to aye?" : "B-LA-KA! Yer bag be empty.");
-  drawFishInventory(515, 330); drawRipples();
-  ctx.fillStyle = "rgba(255,255,255,.92)"; ctx.font = "900 18px Trebuchet MS"; ctx.textAlign = "left";
-  ctx.fillText("FRONT VIEW PIRATE SHOP", 18, 32);
-  ctx.fillText("YES SELL sells your bag. NO LEAVE returns to the dock.", 18, 56);
+  hut.addColorStop(0, "#cf9b55"); hut.addColorStop(1, "#704018");
+  rounded(96, 88, 770, 386, 30, hut, "#2b1609", 8);
+  rounded(76, 62, 810, 82, 20, "#5d2813", "#1c0d07", 7);
+  rounded(166, 358, 628, 112, 16, "#8b4d1f", "#2f180b", 7);
+  drawSellBanner(652, 92);
+  drawPirateMerchant(285, 305);
+  drawSpeechBubble(460, 164, state.bag.length ? "Arrr... do ya have anything ya like to sell to aye?" : "B-LA-KA! Yer bag be empty. Catch fish first.");
+  drawChoiceButton(524, 272, 116, 48, "YES");
+  drawChoiceButton(662, 272, 116, 48, "NO");
+  drawFishInventory(500, 346);
+  drawRipples();
+  ctx.fillStyle = "rgba(255,255,255,.94)"; ctx.font = "900 18px Trebuchet MS"; ctx.textAlign = "left";
+  ctx.fillText("TAP YES / PRESS Y / YES SELL TO SELL", 18, 32);
+  ctx.fillText("TAP NO / PRESS N / NO LEAVE TO RETURN", 18, 56);
+}
+function drawSellBanner(x, y) {
+  ctx.save(); ctx.translate(x, y);
+  ctx.fillStyle = "#f7df9a"; ctx.strokeStyle = "#2b1609"; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(-74, -28); ctx.quadraticCurveTo(0, -46, 74, -28); ctx.lineTo(62, 30); ctx.quadraticCurveTo(0, 46, -62, 30); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#3b1b0d"; ctx.font = "900 42px Trebuchet MS"; ctx.textAlign = "center"; ctx.fillText("SELL", 0, 14);
+  ctx.beginPath(); ctx.arc(91, -6, 18, 0, Math.PI * 2); ctx.fillStyle = "#ffe36e"; ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#4a230d"; ctx.font = "900 22px Trebuchet MS"; ctx.fillText("$", 91, 2);
+  ctx.restore();
+}
+function drawChoiceButton(x, y, w, h, text) {
+  rounded(x, y, w, h, 8, "#fff7d6", "#2b1609", 4);
+  ctx.fillStyle = "#2b1609"; ctx.font = "900 23px Trebuchet MS"; ctx.textAlign = "center"; ctx.fillText(text, x + w / 2, y + 32);
 }
 function drawPirateMerchant(x, y) {
-  ctx.save(); ctx.translate(x, y); ctx.strokeStyle = "#1b120c"; ctx.lineWidth = 5;
-  ctx.fillStyle = "#f0c17d"; ctx.beginPath(); ctx.roundRect(-42, -92, 84, 72, 16); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = "#171717"; ctx.beginPath(); ctx.arc(-18, -62, 10, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = "#171717"; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(-42, -68); ctx.lineTo(-2, -54); ctx.stroke();
-  ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(19, -63, 6, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(20, -63, 3, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = "#331700"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-12, -34); ctx.quadraticCurveTo(0, -24, 16, -34); ctx.stroke();
-  ctx.fillStyle = "#6c2a18"; ctx.beginPath(); ctx.moveTo(-54, -94); ctx.quadraticCurveTo(0, -145, 62, -92); ctx.lineTo(40, -82); ctx.quadraticCurveTo(0, -105, -47, -82); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = "#ffe36e"; ctx.beginPath(); ctx.arc(6, -116, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = "#174b69"; ctx.beginPath(); ctx.moveTo(-82, -27); ctx.lineTo(82, -27); ctx.lineTo(54, 70); ctx.lineTo(-54, 70); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = "#f0c17d"; ctx.beginPath(); ctx.roundRect(-96, -8, 54, 24, 9); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.roundRect(42, -8, 54, 24, 9); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = "#222"; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(53, -42); ctx.quadraticCurveTo(88, -82, 105, -132); ctx.stroke();
+  ctx.save(); ctx.translate(x, y); ctx.strokeStyle = "#16100b"; ctx.lineWidth = 5; ctx.lineCap = "round"; ctx.lineJoin = "round";
+  ctx.fillStyle = "#173b5a"; ctx.beginPath(); ctx.moveTo(-82, -25); ctx.lineTo(82, -25); ctx.lineTo(54, 78); ctx.lineTo(-54, 78); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#f2c47e"; ctx.beginPath(); ctx.roundRect(-46, -98, 92, 76, 15); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = "#111"; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(-48, -74); ctx.lineTo(0, -58); ctx.stroke();
+  ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(-18, -67, 13, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(21, -67, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(22, -67, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "#34180b"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-18, -36); ctx.quadraticCurveTo(2, -23, 23, -38); ctx.stroke();
+  ctx.fillStyle = "#6a2a17"; ctx.beginPath(); ctx.moveTo(-64, -100); ctx.quadraticCurveTo(0, -157, 70, -96); ctx.lineTo(44, -86); ctx.quadraticCurveTo(0, -113, -54, -86); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#f7df9a"; ctx.beginPath(); ctx.arc(4, -127, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#f2c47e"; ctx.beginPath(); ctx.roundRect(-112, -8, 62, 26, 8); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.roundRect(52, -13, 56, 28, 8); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = "#2b1609"; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(100, -16); ctx.lineTo(140, -78); ctx.stroke();
+  ctx.strokeStyle = "#e8edf2"; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(140, -78); ctx.quadraticCurveTo(188, -122, 218, -142); ctx.stroke();
+  ctx.strokeStyle = "#2b1609"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(140, -78); ctx.quadraticCurveTo(188, -122, 218, -142); ctx.stroke();
+  ctx.fillStyle = "#f7df9a"; ctx.beginPath(); ctx.arc(0, 18, 25, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#4a230d"; ctx.font = "900 24px Trebuchet MS"; ctx.textAlign = "center"; ctx.fillText("$", 0, 27);
   ctx.restore();
 }
 function drawSpeechBubble(x, y, text) {
-  rounded(x, y, 330, 122, 18, "#fff7d6", "#3f220e", 5);
-  ctx.beginPath(); ctx.moveTo(x, y + 68); ctx.lineTo(x - 36, y + 90); ctx.lineTo(x + 8, y + 88); ctx.closePath(); ctx.fillStyle = "#fff7d6"; ctx.fill(); ctx.strokeStyle = "#3f220e"; ctx.lineWidth = 5; ctx.stroke();
-  ctx.fillStyle = "#3f220e"; ctx.font = "900 19px Trebuchet MS"; ctx.textAlign = "left";
-  const words = text.split(" "); let line = ""; let yLine = y + 38;
+  rounded(x, y, 350, 98, 12, "#fff7d6", "#2b1609", 5);
+  ctx.beginPath(); ctx.moveTo(x, y + 56); ctx.lineTo(x - 34, y + 77); ctx.lineTo(x + 8, y + 76); ctx.closePath(); ctx.fillStyle = "#fff7d6"; ctx.fill(); ctx.strokeStyle = "#2b1609"; ctx.lineWidth = 5; ctx.stroke();
+  ctx.fillStyle = "#2b1609"; ctx.font = "900 19px Trebuchet MS"; ctx.textAlign = "left";
+  const words = text.split(" "); let line = ""; let yLine = y + 32;
   for (const word of words) {
     const test = line + word + " ";
-    if (ctx.measureText(test).width > 285) { ctx.fillText(line, x + 22, yLine); line = word + " "; yLine += 25; } else line = test;
+    if (ctx.measureText(test).width > 305) { ctx.fillText(line, x + 20, yLine); line = word + " "; yLine += 24; } else line = test;
   }
-  ctx.fillText(line, x + 22, yLine);
+  ctx.fillText(line, x + 20, yLine);
 }
 function drawFishInventory(x, y) {
   const total = state.bag.reduce((sum, fish) => sum + fish.value, 0);
-  rounded(x, y, 250, 96, 16, "rgba(12,53,71,.72)", "rgba(255,255,255,.78)", 4);
-  ctx.fillStyle = "#ecfffb"; ctx.font = "900 18px Trebuchet MS"; ctx.textAlign = "left";
-  ctx.fillText(`SELL INVENTORY: ${state.bag.length}/${state.bagLimit}`, x + 18, y + 30);
-  ctx.fillText(`TOTAL OFFER: ${total} COINS`, x + 18, y + 60);
-  if (!state.bag.length) ctx.fillText("NO FISH HELD", x + 18, y + 86);
-  for (let i = 0; i < Math.min(5, state.bag.length); i++) drawSmallFish(x + 24 + i * 39, y + 82, 13, state.bag[i].color);
+  rounded(x, y, 278, 82, 10, "rgba(12,53,71,.78)", "rgba(255,255,255,.8)", 4);
+  ctx.fillStyle = "#ecfffb"; ctx.font = "900 17px Trebuchet MS"; ctx.textAlign = "left";
+  ctx.fillText(`SELL INVENTORY: ${state.bag.length}/${state.bagLimit}`, x + 16, y + 27);
+  ctx.fillText(`TOTAL OFFER: ${total} COINS`, x + 16, y + 55);
+  for (let i = 0; i < Math.min(5, state.bag.length); i++) drawSmallFish(x + 185 + i * 18, y + 58, 8, state.bag[i].color);
 }
 function drawFisherCircle() {
   ctx.fillStyle = "#ff5d68"; ctx.strokeStyle = "#05263d"; ctx.lineWidth = 5;
@@ -468,6 +487,10 @@ function drawSmallFish(x, y, size, color) {
 function rounded(x, y, w, h, r, fill, stroke, line = 3) {
   ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = stroke; ctx.lineWidth = line; ctx.stroke();
 }
+function canvasPoint(event) {
+  const rect = canvas.getBoundingClientRect();
+  return { x: (event.clientX - rect.left) * (canvas.width / rect.width), y: (event.clientY - rect.top) * (canvas.height / rect.height) };
+}
 function loop(now) {
   const dt = Math.min(0.033, (now - lastTime) / 1000 || 0);
   lastTime = now; update(dt); draw(); requestAnimationFrame(loop);
@@ -491,7 +514,15 @@ window.addEventListener("keydown", event => {
   if (state.mode === "sell" && key === "y") sellFish();
 });
 window.addEventListener("keyup", event => keys.delete(event.key.toLowerCase()));
-canvas.addEventListener("pointerdown", () => { if (state.running && state.mode === "fishing" && state.cast && state.cast.phase === "bite") reel(); });
+canvas.addEventListener("pointerdown", event => {
+  const point = canvasPoint(event);
+  if (state.running && state.mode === "sell") {
+    if (inRect(point, 524, 272, 116, 48)) sellFish();
+    if (inRect(point, 662, 272, 116, 48)) exitSellShop();
+    return;
+  }
+  if (state.running && state.mode === "fishing" && state.cast && state.cast.phase === "bite") reel();
+});
 joystick.addEventListener("pointerdown", event => { joy.active = true; joystick.setPointerCapture(event.pointerId); joystickVector(event); });
 joystick.addEventListener("pointermove", event => { if (joy.active) joystickVector(event); });
 joystick.addEventListener("pointerup", stopJoystick);
