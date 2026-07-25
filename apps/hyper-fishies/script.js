@@ -100,8 +100,8 @@ function updateHud() {
   rodText.textContent = roman(state.progress.rod);
   latestText.textContent = state.latest;
 
-  const onSell = state.mode === "dock" && inRect(state.player, 78, 380, 130, 84);
-  const onShop = state.mode === "dock" && inRect(state.player, 78, 110, 130, 84);
+  const onSell = state.mode === "dock" && atSellDock(state.player);
+  const onShop = state.mode === "dock" && inRect(state.player, 66, 100, 220, 104);
   const canStartFishing = state.mode === "dock" && atFishingDock(state.player);
   const canCastNow = state.mode === "fishing" && !state.cast && state.bag.length < state.bagLimit;
   const canReelNow = state.mode === "fishing" && state.cast && state.cast.phase === "bite";
@@ -127,6 +127,10 @@ function inRect(p, x, y, w, h) {
 
 function atFishingDock(p) {
   return p.x >= 388 && p.x <= 572 && p.y >= 40 && p.y <= 158;
+}
+
+function atSellDock(p) {
+  return p.x >= 66 && p.x <= 286 && p.y >= 368 && p.y <= 472;
 }
 
 function update(dt) {
@@ -160,9 +164,9 @@ function updateDock(dt) {
 
   if (atFishingDock(p)) {
     say("Fishing dock: press CAST, SPACE, or F to switch to side view and fish.");
-  } else if (inRect(p, 78, 110, 130, 84)) {
+  } else if (inRect(p, 66, 100, 220, 104)) {
     say(`Shop: upgrade rod for ${upgradeCost()} coins.`);
-  } else if (inRect(p, 78, 380, 130, 84)) {
+  } else if (atSellDock(p)) {
     enterSellShop();
   } else {
     say("Walk to the small top fishing dock to fish. The circle is you.");
@@ -172,18 +176,18 @@ function updateDock(dt) {
 function constrainToDock(p) {
   const dock = { x: 250, y: 112, w: 460, h: 342 };
   const topPier = { x: 410, y: 48, w: 140, h: 104 };
-  const leftPier = { x: 72, y: 106, w: 188, h: 92 };
-  const sellPier = { x: 72, y: 374, w: 188, h: 92 };
+  const leftPier = { x: 66, y: 100, w: 220, h: 104 };
+  const sellPier = { x: 66, y: 368, w: 220, h: 104 };
   const inside = rectContains(p, dock) || rectContains(p, topPier) || rectContains(p, leftPier) || rectContains(p, sellPier);
   if (inside) return;
   p.x -= p.vx * 0.02;
   p.y -= p.vy * 0.02;
-  p.x = clamp(p.x, 88, 696);
-  p.y = clamp(p.y, 58, 448);
+  p.x = clamp(p.x, 66, 710);
+  p.y = clamp(p.y, 48, 472);
 }
 
 function rectContains(p, rect) {
-  return p.x >= rect.x + p.r && p.x <= rect.x + rect.w - p.r && p.y >= rect.y + p.r && p.y <= rect.y + rect.h - p.r;
+  return p.x >= rect.x && p.x <= rect.x + rect.w && p.y >= rect.y && p.y <= rect.y + rect.h;
 }
 
 function enterFishing() {
@@ -200,8 +204,7 @@ function exitFishing() {
   state.player.y = 158;
   state.cast = null;
   say("Back on the dock. Sell fish or upgrade your rod.");
-}
-
+}\n
 function enterSellShop() {
   state.mode = "sell";
   state.player.vx = 0;
@@ -211,7 +214,7 @@ function enterSellShop() {
 
 function exitSellShop() {
   state.mode = "dock";
-  state.player.x = 286;
+  state.player.x = 300;
   state.player.y = 420;
   state.player.vx = 0;
   state.player.vy = 0;
@@ -322,7 +325,7 @@ function catchFish(fish) {
 
 function sellFish() {
   if (state.mode === "dock") {
-    if (inRect(state.player, 78, 380, 130, 84)) enterSellShop();
+    if (atSellDock(state.player)) enterSellShop();
     return;
   }
   if (state.mode !== "sell") return;
@@ -348,7 +351,7 @@ function upgradeRod() {
     exitSellShop();
     return;
   }
-  if (state.mode !== "dock" || !inRect(state.player, 78, 110, 130, 84)) return;
+  if (state.mode !== "dock" || !inRect(state.player, 66, 100, 220, 104)) return;
   const cost = upgradeCost();
   if (state.progress.coins < cost) {
     say(`Need ${cost} coins for the next rod upgrade.`);
@@ -426,8 +429,8 @@ function drawIslandAndDock() {
   }
   rounded(410, 48, 140, 104, 14, "#b97838", "#704217", 6);
   rounded(452, 104, 56, 48, 8, "#b97838", "#704217", 5);
-  rounded(66, 100, 200, 104, 18, "#b97838", "#704217", 6);
-  rounded(66, 368, 200, 104, 18, "#b97838", "#704217", 6);
+  rounded(66, 100, 220, 104, 18, "#b97838", "#704217", 6);
+  rounded(66, 368, 220, 104, 18, "#b97838", "#704217", 6);
   rounded(392, 236, 176, 98, 20, "rgba(255,238,140,.24)", "rgba(255,255,255,.5)", 3);
   drawSign(88, 122, "SHOP");
   drawSign(88, 390, "SELL FISH");
