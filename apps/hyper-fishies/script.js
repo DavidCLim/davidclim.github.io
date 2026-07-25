@@ -72,14 +72,14 @@ function resetGame() {
   state = freshState();
   state.progress = progress;
   updateHud();
-  showMessage("HYPER FISHIES", "Walk around the wooden dock. Go to the small top fishing dock, then cast for fish.", "PLAY");
+  showMessage("HYPER FISHIES", "Walk around the wooden dock. Go to the small top fishing dock, then press CAST to fish.", "PLAY");
 }
 
 function startGame() {
   panel.classList.remove("show");
   state.running = true;
   lastTime = performance.now();
-  say("Walk to the small top fishing dock to fish. Use the shop and sell spots on the dock.");
+  say("Walk to the small top fishing dock to fish. CAST also works when you stand there.");
 }
 
 function showMessage(title, text, buttonText) {
@@ -101,9 +101,10 @@ function updateHud() {
   latestText.textContent = state.latest;
   const onSell = state.mode === "dock" && inRect(state.player, 78, 380, 130, 84);
   const onShop = state.mode === "dock" && inRect(state.player, 78, 110, 130, 84);
+  const canStartFishing = state.mode === "dock" && atFishingDock(state.player);
   sellButton.disabled = !onSell || state.bag.length === 0;
   upgradeButton.disabled = !onShop;
-  castButton.disabled = state.mode !== "fishing" || !!state.cast || state.bag.length >= state.bagLimit;
+  castButton.disabled = !(state.mode === "fishing" || canStartFishing) || !!state.cast || state.bag.length >= state.bagLimit;
 }
 
 function roman(value) {
@@ -115,7 +116,7 @@ function inRect(p, x, y, w, h) {
 }
 
 function atFishingDock(p) {
-  return p.x >= 420 && p.x <= 540 && p.y >= 58 && p.y <= 128;
+  return p.x >= 388 && p.x <= 572 && p.y >= 40 && p.y <= 158;
 }
 
 function update(dt) {
@@ -148,7 +149,7 @@ function updateDock(dt) {
   constrainToDock(p);
 
   if (atFishingDock(p)) {
-    enterFishing();
+    say("Fishing dock: press CAST, SPACE, or F to switch to side view and fish.");
   } else if (inRect(p, 78, 110, 130, 84)) {
     say(`Shop: upgrade rod for ${upgradeCost()} coins.`);
   } else if (inRect(p, 78, 380, 130, 84)) {
@@ -160,7 +161,7 @@ function updateDock(dt) {
 
 function constrainToDock(p) {
   const dock = { x: 250, y: 112, w: 460, h: 342 };
-  const topPier = { x: 420, y: 58, w: 120, h: 82 };
+  const topPier = { x: 410, y: 48, w: 140, h: 104 };
   const leftPier = { x: 72, y: 106, w: 188, h: 92 };
   const sellPier = { x: 72, y: 374, w: 188, h: 92 };
   const inside = rectContains(p, dock) || rectContains(p, topPier) || rectContains(p, leftPier) || rectContains(p, sellPier);
@@ -168,7 +169,7 @@ function constrainToDock(p) {
   p.x -= p.vx * 0.02;
   p.y -= p.vy * 0.02;
   p.x = clamp(p.x, 88, 696);
-  p.y = clamp(p.y, 76, 448);
+  p.y = clamp(p.y, 58, 448);
 }
 
 function rectContains(p, rect) {
@@ -180,13 +181,13 @@ function enterFishing() {
   state.player.x = 150;
   state.player.y = 324;
   state.cast = null;
-  say("Fishing bank: press CAST, SPACE, or F to throw your line.");
+  say("Camera changed to side view. Press CAST, SPACE, or F to throw your line.");
 }
 
 function exitFishing() {
   state.mode = "dock";
   state.player.x = 480;
-  state.player.y = 148;
+  state.player.y = 158;
   state.cast = null;
   say("Back on the dock. Sell fish or upgrade your rod.");
 }
@@ -226,9 +227,12 @@ function updateFishing(dt) {
 
 function castLine() {
   if (!state.running) return;
-  if (state.mode !== "fishing") {
-    say("You need to stand at the small top fishing dock first.");
-    return;
+  if (state.mode === "dock") {
+    if (!atFishingDock(state.player)) {
+      say("Walk onto the small FISH dock first, then press CAST.");
+      return;
+    }
+    enterFishing();
   }
   if (state.bag.length >= state.bagLimit) {
     say("Your bag is full. Go sell your fish.");
@@ -380,14 +384,14 @@ function drawIslandAndDock() {
     ctx.lineTo(708, y + Math.sin(y) * 2);
     ctx.stroke();
   }
-  rounded(420, 58, 120, 82, 14, "#b97838", "#704217", 6);
-  rounded(452, 104, 56, 42, 8, "#b97838", "#704217", 5);
+  rounded(410, 48, 140, 104, 14, "#b97838", "#704217", 6);
+  rounded(452, 104, 56, 48, 8, "#b97838", "#704217", 5);
   rounded(66, 100, 200, 104, 18, "#b97838", "#704217", 6);
   rounded(66, 368, 200, 104, 18, "#b97838", "#704217", 6);
   rounded(392, 236, 176, 98, 20, "rgba(255,238,140,.24)", "rgba(255,255,255,.5)", 3);
   drawSign(88, 122, "SHOP");
   drawSign(88, 390, "SELL FISH");
-  drawSign(427, 72, "FISH");
+  drawSign(423, 70, "FISH");
 }
 
 function drawSign(x, y, text) {
@@ -403,7 +407,7 @@ function drawDockLabels() {
   ctx.fillStyle = "rgba(255,255,255,.9)";
   ctx.font = "900 18px Trebuchet MS";
   ctx.fillText("TOP VIEW DOCK", 18, 32);
-  ctx.fillText("Walk into the small FISH dock to switch view", 18, 56);
+  ctx.fillText("Stand on the small FISH dock, then press CAST", 18, 56);
 }
 
 function drawCirclePlayer() {
