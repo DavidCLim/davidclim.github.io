@@ -15,7 +15,7 @@ const upgradeButton = document.getElementById("upgradeButton");
 const joystick = document.getElementById("joystick");
 const joystickKnob = document.getElementById("joystickKnob");
 
-const saveKey = "hyperFishiesFischPrototypeV1";
+const saveKey = "hyperFishiesFischPrototypeV2";
 const keys = new Set();
 let joy = { active: false, x: 0, y: 0 };
 let lastTime = 0;
@@ -34,55 +34,60 @@ const fishTypes = [
 ];
 const rarityWeights = { Common: 50, Unusual: 28, Rare: 14, Epic: 6, Legendary: 2 };
 const rarityColors = { Common: "#ecfffb", Unusual: "#84ffd7", Rare: "#80bdff", Epic: "#d594ff", Legendary: "#ffe36e" };
+const defaultProgress = { coins: 0, rod: 1, bestFish: "None", caught: {} };
 const rand = (min, max) => min + Math.random() * (max - min);
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+const buttonZones = [];
 
-function loadProgress() {
-  try { return JSON.parse(localStorage.getItem(saveKey)) || { coins: 0, rod: 1, bestFish: "None", caught: {} }; }
-  catch { return { coins: 0, rod: 1, bestFish: "None", caught: {} }; }
+function loadSave() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(saveKey));
+    if (!saved) return { progress: { ...defaultProgress }, bag: [], latest: "None" };
+    if (saved.progress) return { progress: { ...defaultProgress, ...saved.progress }, bag: saved.bag || [], latest: saved.latest || "None" };
+    return { progress: { ...defaultProgress, ...saved }, bag: [], latest: saved.bestFish || "None" };
+  } catch {
+    return { progress: { ...defaultProgress }, bag: [], latest: "None" };
+  }
 }
-function saveProgress() { localStorage.setItem(saveKey, JSON.stringify(state.progress)); }
+function saveGame() {
+  localStorage.setItem(saveKey, JSON.stringify({ progress: state.progress, bag: state.bag, latest: state.latest }));
+}
 function roman(value) { return ["0", "I", "II", "III", "IV", "V", "VI", "VII"][value] || String(value); }
-function say(text) { statusText.textContent = text; }
+function say(text) { state.message = text; if (statusText) statusText.textContent = text; }
 function inRect(p, x, y, w, h) { return p.x >= x && p.x <= x + w && p.y >= y && p.y <= y + h; }
 function atFishingDock(p) { return inRect(p, 388, 40, 184, 118); }
 function atSellDock(p) { return inRect(p, 66, 368, 220, 104); }
 function atShopDock(p) { return inRect(p, 66, 100, 220, 104); }
 
 function freshState() {
-  const progress = loadProgress();
+  const saved = loadSave();
   return {
-    running: false,
+    running: true,
     mode: "dock",
     player: { x: 480, y: 340, r: 18, vx: 0, vy: 0 },
-    bag: [],
-    bagLimit: 5 + progress.rod,
-    latest: "None",
+    bag: saved.bag,
+    bagLimit: 5 + saved.progress.rod,
+    latest: saved.latest,
     cast: null,
     ripples: [],
-    progress
+    message: "Auto-saved. Walk to FISH, SELL, or SHOP.",
+    progress: saved.progress
   };
 }
 
 function resetGame() {
-  const progress = state ? state.progress : loadProgress();
+  const saved = loadSave();
   state = freshState();
-  state.progress = progress;
-  updateHud();
-  showMessage("HYPER FISHIES", "Walk around the wooden dock. Go to the small top fishing dock, then press CAST to fish.", "PLAY");
-}
-function showMessage(title, text, buttonText) {
-  panel.querySelector("h1").textContent = title;
-  panel.querySelector("p").textContent = text;
-  startButton.textContent = buttonText;
-  panel.classList.add("show");
-}
-function startGame() {
-  panel.classList.remove("show");
+  state.progress = saved.progress;
+  state.bag = saved.bag;
+  state.latest = saved.latest;
   state.running = true;
-  lastTime = performance.now();
-  say("Catch fish, then press SELL FISH or walk into the sell dock to visit the pirate.");
+  panel.classList.remove("show");
+  say("Auto-saved. Walk to FISH, SELL, or SHOP.");
+  updateHud();
 }
+function showMessage() { panel.classList.remove("show"); }
+function startGame() { panel.classList.remove("show"); state.running = true; }
 
 function updateHud() {
   coinsText.textContent = state.progress.coins;
@@ -90,22 +95,9 @@ function updateHud() {
   areaText.textContent = state.mode === "fishing" ? "BANK" : state.mode === "sell" ? "SELL" : "DOCK";
   rodText.textContent = roman(state.progress.rod);
   latestText.textContent = state.latest;
-
-  const canReel = state.mode === "fishing" && state.cast && state.cast.phase === "bite";
-  const canCast = state.mode === "fishing" && !state.cast && state.bag.length < state.bagLimit;
-  const canDockCast = state.mode === "dock" && atFishingDock(state.player) && state.bag.length < state.bagLimit;
-  castButton.textContent = canReel ? "REEL!" : state.cast ? "WAIT" : "CAST";
-  castButton.disabled = !(canReel || canCast || canDockCast);
-
-  sellButton.textContent = state.mode === "sell" ? "YES SELL" : "SELL FISH";
-  sellButton.disabled = state.mode === "fishing";
-
-  upgradeButton.textContent = state.mode === "sell" ? "NO LEAVE" : "UPGRADE ROD";
-  upgradeButton.disabled = state.mode === "sell" ? false : !(state.mode === "dock" && atShopDock(state.player));
 }
 
 function update(dt) {
-  if (!state.running) return;
   if (state.mode === "dock") updateDock(dt);
   if (state.mode === "fishing") updateFishing(dt);
   state.ripples = state.ripples.filter(r => (r.life -= dt) > 0);
@@ -130,9 +122,8 @@ function updateDock(dt) {
   constrainToDock(p);
 
   if (atSellDock(p)) enterSellShop();
-  else if (atFishingDock(p)) say("Fishing dock: press CAST, SPACE, or F to switch to side view and fish.");
+  else if (atFishingDock(p)) say("Fishing dock: tap CAST or press Space/F.");
   else if (atShopDock(p)) say(`Shop: upgrade rod for ${upgradeCost()} coins.`);
-  else say("Walk around the dock. The circle is you.");
 }
 
 function constrainToDock(p) {
@@ -154,20 +145,21 @@ function enterFishing() {
   state.player.x = 150;
   state.player.y = 324;
   state.cast = null;
-  say("Camera changed to side view. Press CAST, SPACE, or F to throw your line.");
+  say("Side view. Tap CAST, Space, or F to throw your line.");
 }
 function exitFishing() {
   state.mode = "dock";
   state.player.x = 480;
   state.player.y = 158;
   state.cast = null;
-  say("Back on the dock. Sell fish or upgrade your rod.");
+  say("Back on the dock. Auto-saved.");
+  saveGame();
 }
 function enterSellShop() {
   state.mode = "sell";
   state.player.vx = 0;
   state.player.vy = 0;
-  say(state.bag.length ? "B-LA-KA! Pirate merchant asks: sell your fish? Press YES SELL, Y, or tap YES." : "B-LA-KA! Your bag is empty. Catch fish first or press NO LEAVE.");
+  say(state.bag.length ? "B-LA-KA! Tap YES to sell, NO to leave." : "B-LA-KA! Yer bag be empty. Tap NO to leave.");
 }
 function exitSellShop() {
   state.mode = "dock";
@@ -175,7 +167,8 @@ function exitSellShop() {
   state.player.y = 420;
   state.player.vx = 0;
   state.player.vy = 0;
-  say("Back on the dock. Catch more fish or return to the pirate later.");
+  say("Back on the dock. Auto-saved.");
+  saveGame();
 }
 
 function updateFishing(dt) {
@@ -200,7 +193,7 @@ function updateFishing(dt) {
       cast.phase = "bite";
       cast.reel = 0.45;
       cast.fish = rollFish();
-      say("BITE! Press REEL, CAST, SPACE, F, or tap the water fast!");
+      say("BITE! Tap REEL fast!");
     }
   } else if (cast.phase === "bite") {
     cast.reel -= (0.08 + cast.fish.value / 3000) * dt;
@@ -212,28 +205,14 @@ function updateFishing(dt) {
 }
 
 function castLine() {
-  if (!state.running || state.mode === "sell") return;
+  if (state.mode === "sell") return;
   if (state.mode === "dock") {
-    if (!atFishingDock(state.player)) {
-      say("Walk onto the small FISH dock first, then press CAST.");
-      return;
-    }
+    if (!atFishingDock(state.player)) return say("Walk onto the small FISH dock first.");
     enterFishing();
   }
-  if (state.bag.length >= state.bagLimit) {
-    say("Your bag is full. Go sell your fish.");
-    return;
-  }
-  if (state.cast) {
-    reel();
-    return;
-  }
-  state.cast = {
-    phase: "fly", timer: 0, hookX: 184, hookY: 300,
-    vx: 260 + state.progress.rod * 22,
-    vy: -170 - state.progress.rod * 8,
-    waterY: 345, reel: 0, fish: null
-  };
+  if (state.bag.length >= state.bagLimit) return say("Your bag is full. Go sell your fish.");
+  if (state.cast) return reel();
+  state.cast = { phase: "fly", timer: 0, hookX: 184, hookY: 300, vx: 260 + state.progress.rod * 22, vy: -170 - state.progress.rod * 8, waterY: 345, reel: 0, fish: null };
   say("Cast! Watch the bobber land.");
 }
 function reel() {
@@ -260,40 +239,35 @@ function catchFish(fish) {
   state.latest = `${fish.rarity} ${fish.name}`;
   state.progress.bestFish = state.latest;
   state.progress.caught[fish.name] = (state.progress.caught[fish.name] || 0) + 1;
-  saveProgress();
   burst(state.cast.hookX, state.cast.hookY, rarityColors[fish.rarity], 18);
   state.cast = null;
-  say(`Caught ${fish.rarity} ${fish.name}! Worth ${value} coins.`);
+  saveGame();
+  say(`Caught ${fish.rarity} ${fish.name}! Auto-saved.`);
 }
 function sellFish() {
-  if (state.mode === "dock") {
-    enterSellShop();
-    return;
-  }
+  if (state.mode === "dock") return enterSellShop();
   if (state.mode !== "sell") return;
-  if (!state.bag.length) {
-    say("The pirate has nothing to buy yet. Go catch a fish, then come back.");
-    return;
-  }
+  if (!state.bag.length) return say("The pirate has nothing to buy yet. Catch fish first.");
   const total = state.bag.reduce((sum, fish) => sum + fish.value, 0);
   state.progress.coins += total;
   state.bag = [];
-  saveProgress();
   burst(520, 310, "#ffe36e", 26);
-  say(`B-LA-KA! Sold everything for ${total} coins.`);
+  saveGame();
+  say(`B-LA-KA! Sold for ${total} coins. Auto-saved.`);
 }
 function upgradeCost() { return state.progress.rod * 150; }
 function upgradeRod() {
   if (state.mode === "sell") return exitSellShop();
-  if (state.mode !== "dock" || !atShopDock(state.player)) return;
+  if (state.mode !== "dock" || !atShopDock(state.player)) return say("Walk onto SHOP first.");
   const cost = upgradeCost();
   if (state.progress.coins < cost) return say(`Need ${cost} coins for the next rod upgrade.`);
   state.progress.coins -= cost;
   state.progress.rod += 1;
   state.bagLimit = 5 + state.progress.rod;
-  saveProgress();
-  say(`Rod upgraded to ${roman(state.progress.rod)}. Better casts and better fish chances.`);
+  saveGame();
+  say(`Rod upgraded to ${roman(state.progress.rod)}. Auto-saved.`);
 }
+function goHome() { window.location.href = "../../"; }
 
 function makeRipple(x, y) { state.ripples.push({ x, y, life: 0.65 }); }
 function burst(x, y, color, count) {
@@ -304,38 +278,26 @@ function burst(x, y, color, count) {
 }
 
 function draw() {
+  buttonZones.length = 0;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (!state || state.mode === "dock") drawDockView();
+  if (state.mode === "dock") drawDockView();
   else if (state.mode === "fishing") drawFishingView();
   else drawSellShopView();
+  drawGameHud();
+  drawGameButtons();
 }
-function drawDockView() {
-  drawTopWater();
-  drawIslandAndDock();
-  drawDockLabels();
-  drawCirclePlayer();
-}
+function drawDockView() { drawTopWater(); drawIslandAndDock(); drawDockLabels(); drawCirclePlayer(); }
 function drawTopWater() {
   const water = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-  water.addColorStop(0, "#45c7e8");
-  water.addColorStop(1, "#0872ad");
-  ctx.fillStyle = water;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.strokeStyle = "rgba(255,255,255,.18)";
-  ctx.lineWidth = 3;
-  for (let i = 0; i < 18; i++) {
-    const y = 30 + i * 34;
-    ctx.beginPath();
-    ctx.moveTo(-30, y);
-    for (let x = -30; x < canvas.width + 30; x += 70) ctx.quadraticCurveTo(x + 35, y + Math.sin(i + performance.now() / 900) * 8, x + 70, y);
-    ctx.stroke();
-  }
+  water.addColorStop(0, "#45c7e8"); water.addColorStop(1, "#0872ad");
+  ctx.fillStyle = water; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = "rgba(255,255,255,.18)"; ctx.lineWidth = 3;
+  for (let i = 0; i < 18; i++) { const y = 30 + i * 34; ctx.beginPath(); ctx.moveTo(-30, y); for (let x = -30; x < canvas.width + 30; x += 70) ctx.quadraticCurveTo(x + 35, y + Math.sin(i + performance.now() / 900) * 8, x + 70, y); ctx.stroke(); }
 }
 function drawIslandAndDock() {
   rounded(235, 88, 490, 390, 34, "#e7ca83", "#8b6e39", 5);
   rounded(252, 105, 456, 350, 18, "#b97838", "#704217", 6);
-  ctx.strokeStyle = "rgba(70,39,12,.55)";
-  ctx.lineWidth = 4;
+  ctx.strokeStyle = "rgba(70,39,12,.55)"; ctx.lineWidth = 4;
   for (let x = 272; x < 704; x += 46) { ctx.beginPath(); ctx.moveTo(x, 112); ctx.lineTo(x, 450); ctx.stroke(); }
   for (let y = 146; y < 446; y += 58) { ctx.beginPath(); ctx.moveTo(252, y); ctx.lineTo(708, y); ctx.stroke(); }
   rounded(410, 48, 140, 104, 14, "#b97838", "#704217", 6);
@@ -343,186 +305,67 @@ function drawIslandAndDock() {
   rounded(66, 100, 220, 104, 18, "#b97838", "#704217", 6);
   rounded(66, 368, 220, 104, 18, "#b97838", "#704217", 6);
   rounded(392, 236, 176, 98, 20, "rgba(255,238,140,.24)", "rgba(255,255,255,.5)", 3);
-  drawSign(88, 122, "SHOP");
-  drawSign(88, 390, "SELL FISH");
-  drawSign(423, 70, "FISH");
+  drawSign(88, 122, "SHOP"); drawSign(88, 390, "SELL FISH"); drawSign(423, 70, "FISH");
 }
-function drawSign(x, y, text) {
-  rounded(x, y, 114, 42, 10, "#ffe36e", "#704217", 4);
-  ctx.fillStyle = "#48270c";
-  ctx.font = "900 18px Trebuchet MS";
-  ctx.textAlign = "center";
-  ctx.fillText(text, x + 57, y + 27);
-  ctx.textAlign = "left";
-}
-function drawDockLabels() {
-  ctx.fillStyle = "rgba(255,255,255,.9)";
-  ctx.font = "900 18px Trebuchet MS";
-  ctx.fillText("TOP VIEW DOCK", 18, 32);
-  ctx.fillText("Walk into SELL FISH or press SELL FISH to visit the pirate", 18, 56);
-}
-function drawCirclePlayer() {
-  const p = state.player;
-  ctx.save();
-  ctx.translate(p.x, p.y);
-  ctx.fillStyle = "#ff5d68";
-  ctx.strokeStyle = "#05263d";
-  ctx.lineWidth = 5;
-  ctx.beginPath(); ctx.arc(0, 0, p.r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = "rgba(255,255,255,.55)";
-  ctx.beginPath(); ctx.arc(-6, -7, 5, 0, Math.PI * 2); ctx.fill();
-  ctx.restore();
-}
+function drawSign(x, y, text) { rounded(x, y, 114, 42, 10, "#ffe36e", "#704217", 4); ctx.fillStyle = "#48270c"; ctx.font = "900 18px Trebuchet MS"; ctx.textAlign = "center"; ctx.fillText(text, x + 57, y + 27); ctx.textAlign = "left"; }
+function drawDockLabels() { ctx.fillStyle = "rgba(255,255,255,.9)"; ctx.font = "900 18px Trebuchet MS"; ctx.fillText("TOP VIEW DOCK", 18, 74); }
+function drawCirclePlayer() { const p = state.player; ctx.save(); ctx.translate(p.x, p.y); ctx.fillStyle = "#ff5d68"; ctx.strokeStyle = "#05263d"; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(0, 0, p.r, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.fillStyle = "rgba(255,255,255,.55)"; ctx.beginPath(); ctx.arc(-6, -7, 5, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
 function drawFishingView() {
-  const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  sky.addColorStop(0, "#84eaff"); sky.addColorStop(0.46, "#36aee0"); sky.addColorStop(0.47, "#0f78b8"); sky.addColorStop(1, "#074a87");
+  const sky = ctx.createLinearGradient(0, 0, 0, canvas.height); sky.addColorStop(0, "#84eaff"); sky.addColorStop(0.46, "#36aee0"); sky.addColorStop(0.47, "#0f78b8"); sky.addColorStop(1, "#074a87");
   ctx.fillStyle = sky; ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#b97838"; ctx.fillRect(0, 300, 230, 92);
-  ctx.strokeStyle = "#704217"; ctx.lineWidth = 6;
+  ctx.fillStyle = "#b97838"; ctx.fillRect(0, 300, 230, 92); ctx.strokeStyle = "#704217"; ctx.lineWidth = 6;
   for (let x = 12; x < 220; x += 42) { ctx.beginPath(); ctx.moveTo(x, 302); ctx.lineTo(x, 390); ctx.stroke(); }
-  ctx.fillStyle = "rgba(255,255,255,.2)";
-  for (let i = 0; i < 7; i++) { ctx.beginPath(); ctx.ellipse(320 + i * 95, 380 + Math.sin(performance.now() / 400 + i) * 12, 48, 9, 0, 0, Math.PI * 2); ctx.fill(); }
+  ctx.fillStyle = "rgba(255,255,255,.2)"; for (let i = 0; i < 7; i++) { ctx.beginPath(); ctx.ellipse(320 + i * 95, 380 + Math.sin(performance.now() / 400 + i) * 12, 48, 9, 0, 0, Math.PI * 2); ctx.fill(); }
   drawFisherCircle(); drawFishSilhouettes(); drawFishingLine(); drawRipples();
-  ctx.fillStyle = "rgba(255,255,255,.9)"; ctx.font = "900 18px Trebuchet MS";
-  ctx.fillText("SIDE VIEW FISHING BANK", 18, 32);
-  ctx.fillText("Press CAST / SPACE / F. When BITE appears, tap REEL fast.", 18, 56);
-  ctx.fillText("Press S or DOWN to leave fishing bank.", 18, 80);
 }
 function drawSellShopView() {
   drawTopWater();
-  const hut = ctx.createLinearGradient(0, 70, 0, 500);
-  hut.addColorStop(0, "#cf9b55"); hut.addColorStop(1, "#704018");
-  rounded(96, 88, 770, 386, 30, hut, "#2b1609", 8);
-  rounded(76, 62, 810, 82, 20, "#5d2813", "#1c0d07", 7);
-  rounded(166, 358, 628, 112, 16, "#8b4d1f", "#2f180b", 7);
-  drawSellBanner(652, 92);
-  drawPirateMerchant(285, 305);
-  drawSpeechBubble(460, 164, state.bag.length ? "Arrr... do ya have anything ya like to sell to aye?" : "B-LA-KA! Yer bag be empty. Catch fish first.");
-  drawChoiceButton(524, 272, 116, 48, "YES");
-  drawChoiceButton(662, 272, 116, 48, "NO");
-  drawFishInventory(500, 346);
-  drawRipples();
-  ctx.fillStyle = "rgba(255,255,255,.94)"; ctx.font = "900 18px Trebuchet MS"; ctx.textAlign = "left";
-  ctx.fillText("TAP YES / PRESS Y / YES SELL TO SELL", 18, 32);
-  ctx.fillText("TAP NO / PRESS N / NO LEAVE TO RETURN", 18, 56);
+  rounded(98, 80, 765, 392, 18, "#fbf4dd", "#1b120b", 7);
+  drawSellBanner(688, 94);
+  drawPirateMerchant(285, 302);
+  drawSpeechBubble(478, 170, state.bag.length ? "Arrr... Do ya have anything ya like to sell to aye?" : "B-LA-KA! Yer bag be empty.");
+  drawChoiceButton(542, 286, 106, 44, "YES"); drawChoiceButton(674, 286, 106, 44, "NO");
+  drawFishInventory(492, 380); drawRipples();
 }
-function drawSellBanner(x, y) {
-  ctx.save(); ctx.translate(x, y);
-  ctx.fillStyle = "#f7df9a"; ctx.strokeStyle = "#2b1609"; ctx.lineWidth = 5;
-  ctx.beginPath(); ctx.moveTo(-74, -28); ctx.quadraticCurveTo(0, -46, 74, -28); ctx.lineTo(62, 30); ctx.quadraticCurveTo(0, 46, -62, 30); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = "#3b1b0d"; ctx.font = "900 42px Trebuchet MS"; ctx.textAlign = "center"; ctx.fillText("SELL", 0, 14);
-  ctx.beginPath(); ctx.arc(91, -6, 18, 0, Math.PI * 2); ctx.fillStyle = "#ffe36e"; ctx.fill(); ctx.stroke();
-  ctx.fillStyle = "#4a230d"; ctx.font = "900 22px Trebuchet MS"; ctx.fillText("$", 91, 2);
-  ctx.restore();
-}
-function drawChoiceButton(x, y, w, h, text) {
-  rounded(x, y, w, h, 8, "#fff7d6", "#2b1609", 4);
-  ctx.fillStyle = "#2b1609"; ctx.font = "900 23px Trebuchet MS"; ctx.textAlign = "center"; ctx.fillText(text, x + w / 2, y + 32);
-}
+function drawSellBanner(x, y) { ctx.save(); ctx.translate(x, y); ctx.fillStyle = "#fff4ce"; ctx.strokeStyle = "#17100a"; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(-78, -28); ctx.quadraticCurveTo(0, -50, 78, -28); ctx.lineTo(62, 34); ctx.quadraticCurveTo(0, 51, -62, 34); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = "#20130b"; ctx.font = "900 42px Trebuchet MS"; ctx.textAlign = "center"; ctx.fillText("SELL", 0, 15); ctx.beginPath(); ctx.arc(96, -4, 18, 0, Math.PI * 2); ctx.fillStyle = "#fff0a4"; ctx.fill(); ctx.stroke(); ctx.fillStyle = "#20130b"; ctx.font = "900 21px Trebuchet MS"; ctx.fillText("$", 96, 3); ctx.restore(); }
+function drawChoiceButton(x, y, w, h, text) { rounded(x, y, w, h, 3, "#fffdf1", "#17100a", 4); ctx.fillStyle = "#17100a"; ctx.font = "900 22px Trebuchet MS"; ctx.textAlign = "center"; ctx.fillText(text, x + w / 2, y + 29); }
 function drawPirateMerchant(x, y) {
-  ctx.save(); ctx.translate(x, y); ctx.strokeStyle = "#16100b"; ctx.lineWidth = 5; ctx.lineCap = "round"; ctx.lineJoin = "round";
-  ctx.fillStyle = "#173b5a"; ctx.beginPath(); ctx.moveTo(-82, -25); ctx.lineTo(82, -25); ctx.lineTo(54, 78); ctx.lineTo(-54, 78); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = "#f2c47e"; ctx.beginPath(); ctx.roundRect(-46, -98, 92, 76, 15); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = "#111"; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(-48, -74); ctx.lineTo(0, -58); ctx.stroke();
-  ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(-18, -67, 13, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(21, -67, 7, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(22, -67, 3, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = "#34180b"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-18, -36); ctx.quadraticCurveTo(2, -23, 23, -38); ctx.stroke();
-  ctx.fillStyle = "#6a2a17"; ctx.beginPath(); ctx.moveTo(-64, -100); ctx.quadraticCurveTo(0, -157, 70, -96); ctx.lineTo(44, -86); ctx.quadraticCurveTo(0, -113, -54, -86); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = "#f7df9a"; ctx.beginPath(); ctx.arc(4, -127, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = "#f2c47e"; ctx.beginPath(); ctx.roundRect(-112, -8, 62, 26, 8); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.roundRect(52, -13, 56, 28, 8); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = "#2b1609"; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(100, -16); ctx.lineTo(140, -78); ctx.stroke();
-  ctx.strokeStyle = "#e8edf2"; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(140, -78); ctx.quadraticCurveTo(188, -122, 218, -142); ctx.stroke();
-  ctx.strokeStyle = "#2b1609"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(140, -78); ctx.quadraticCurveTo(188, -122, 218, -142); ctx.stroke();
-  ctx.fillStyle = "#f7df9a"; ctx.beginPath(); ctx.arc(0, 18, 25, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = "#4a230d"; ctx.font = "900 24px Trebuchet MS"; ctx.textAlign = "center"; ctx.fillText("$", 0, 27);
+  ctx.save(); ctx.translate(x, y); ctx.strokeStyle = "#14100c"; ctx.lineWidth = 5; ctx.lineCap = "round"; ctx.lineJoin = "round";
+  ctx.fillStyle = "#213f57"; ctx.beginPath(); ctx.moveTo(-26, -128); ctx.lineTo(16, -128); ctx.lineTo(6, -36); ctx.lineTo(-54, -34); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#f4c481"; ctx.beginPath(); ctx.roundRect(-56, -140, 72, 78, 6); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = "#101010"; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(-56, -112); ctx.lineTo(15, -92); ctx.stroke();
+  ctx.fillStyle = "#101010"; ctx.beginPath(); ctx.ellipse(-31, -105, 16, 12, -0.2, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(-1, -102, 6, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(0, -102, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "#2a160b"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-42, -78); ctx.quadraticCurveTo(-22, -62, 0, -80); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-35, -75); ctx.lineTo(-5, -76); ctx.stroke();
+  ctx.fillStyle = "#f7f0d7"; ctx.beginPath(); ctx.moveTo(-63, -151); ctx.quadraticCurveTo(-18, -190, 28, -148); ctx.lineTo(18, -134); ctx.quadraticCurveTo(-22, -153, -56, -132); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#fff4ce"; ctx.beginPath(); ctx.arc(-18, -168, 10, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#f4c481"; ctx.beginPath(); ctx.roundRect(-74, -38, 40, 90, 8); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.roundRect(-2, -40, 40, 90, 8); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#f7f0d7"; ctx.beginPath(); ctx.roundRect(-78, 40, 48, 22, 4); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.roundRect(0, 40, 48, 22, 4); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = "#101010"; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(-2, -40); ctx.quadraticCurveTo(26, -92, 73, -142); ctx.stroke(); ctx.strokeStyle = "#e9eef2"; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(73, -142); ctx.quadraticCurveTo(115, -186, 166, -204); ctx.stroke(); ctx.strokeStyle = "#101010"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(73, -142); ctx.quadraticCurveTo(115, -186, 166, -204); ctx.stroke();
+  ctx.fillStyle = "#fff4ce"; ctx.beginPath(); ctx.arc(58, -32, 28, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.fillStyle = "#20130b"; ctx.font = "900 25px Trebuchet MS"; ctx.textAlign = "center"; ctx.fillText("$", 58, -22);
+  ctx.strokeStyle = "#101010"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-64, -36); ctx.lineTo(-98, -54); ctx.lineTo(-88, -14); ctx.stroke();
   ctx.restore();
 }
-function drawSpeechBubble(x, y, text) {
-  rounded(x, y, 350, 98, 12, "#fff7d6", "#2b1609", 5);
-  ctx.beginPath(); ctx.moveTo(x, y + 56); ctx.lineTo(x - 34, y + 77); ctx.lineTo(x + 8, y + 76); ctx.closePath(); ctx.fillStyle = "#fff7d6"; ctx.fill(); ctx.strokeStyle = "#2b1609"; ctx.lineWidth = 5; ctx.stroke();
-  ctx.fillStyle = "#2b1609"; ctx.font = "900 19px Trebuchet MS"; ctx.textAlign = "left";
-  const words = text.split(" "); let line = ""; let yLine = y + 32;
-  for (const word of words) {
-    const test = line + word + " ";
-    if (ctx.measureText(test).width > 305) { ctx.fillText(line, x + 20, yLine); line = word + " "; yLine += 24; } else line = test;
-  }
-  ctx.fillText(line, x + 20, yLine);
-}
-function drawFishInventory(x, y) {
-  const total = state.bag.reduce((sum, fish) => sum + fish.value, 0);
-  rounded(x, y, 278, 82, 10, "rgba(12,53,71,.78)", "rgba(255,255,255,.8)", 4);
-  ctx.fillStyle = "#ecfffb"; ctx.font = "900 17px Trebuchet MS"; ctx.textAlign = "left";
-  ctx.fillText(`SELL INVENTORY: ${state.bag.length}/${state.bagLimit}`, x + 16, y + 27);
-  ctx.fillText(`TOTAL OFFER: ${total} COINS`, x + 16, y + 55);
-  for (let i = 0; i < Math.min(5, state.bag.length); i++) drawSmallFish(x + 185 + i * 18, y + 58, 8, state.bag[i].color);
-}
-function drawFisherCircle() {
-  ctx.fillStyle = "#ff5d68"; ctx.strokeStyle = "#05263d"; ctx.lineWidth = 5;
-  ctx.beginPath(); ctx.arc(142, 285, 22, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = "#5a310d"; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(160, 270); ctx.quadraticCurveTo(235, 220, 308, 246); ctx.stroke();
-}
-function drawFishSilhouettes() {
-  for (let i = 0; i < 8; i++) drawSmallFish(330 + i * 80 + Math.sin(performance.now() / 700 + i) * 20, 420 + (i % 3) * 34 + Math.cos(performance.now() / 800 + i) * 6, 18 + (i % 3) * 4, "rgba(0,35,70,.38)");
-}
-function drawFishingLine() {
-  if (!state.cast) return;
-  const c = state.cast;
-  ctx.strokeStyle = "rgba(255,255,255,.82)"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(305, 245); ctx.lineTo(c.hookX, c.hookY); ctx.stroke();
-  ctx.fillStyle = c.phase === "bite" ? "#ffe36e" : "#ffffff"; ctx.strokeStyle = "#05263d"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(c.hookX, c.hookY, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  if (c.phase === "bite") { ctx.strokeStyle = rarityColors[c.fish.rarity]; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(c.hookX, c.hookY, 28, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * clamp(c.reel, 0, 1)); ctx.stroke(); }
-}
-function drawRipples() {
-  for (const r of state.ripples) {
-    ctx.globalAlpha = clamp(r.life, 0, 1); ctx.strokeStyle = r.color || "rgba(255,255,255,.65)"; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.ellipse(r.x, r.y, (1 - r.life) * 42 + 8, (1 - r.life) * 13 + 3, 0, 0, Math.PI * 2); ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
-}
-function drawSmallFish(x, y, size, color) {
-  ctx.fillStyle = color; ctx.beginPath(); ctx.ellipse(x, y, size, size * 0.56, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(x - size * 0.8, y); ctx.lineTo(x - size * 1.45, y - size * 0.55); ctx.lineTo(x - size * 1.25, y); ctx.lineTo(x - size * 1.45, y + size * 0.55); ctx.closePath(); ctx.fill();
-}
-function rounded(x, y, w, h, r, fill, stroke, line = 3) {
-  ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = stroke; ctx.lineWidth = line; ctx.stroke();
-}
-function canvasPoint(event) {
-  const rect = canvas.getBoundingClientRect();
-  return { x: (event.clientX - rect.left) * (canvas.width / rect.width), y: (event.clientY - rect.top) * (canvas.height / rect.height) };
-}
-function loop(now) {
-  const dt = Math.min(0.033, (now - lastTime) / 1000 || 0);
-  lastTime = now; update(dt); draw(); requestAnimationFrame(loop);
-}
-function joystickVector(event) {
-  const rect = joystick.getBoundingClientRect();
-  const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
-  const dx = event.clientX - cx, dy = event.clientY - cy;
-  const len = Math.hypot(dx, dy), max = rect.width * 0.34, scale = len > max ? max / len : 1;
-  joy.x = clamp(dx / max, -1, 1); joy.y = clamp(dy / max, -1, 1);
-  joystickKnob.style.transform = `translate(calc(-50% + ${dx * scale}px), calc(-50% + ${dy * scale}px))`;
-}
+function drawSpeechBubble(x, y, text) { rounded(x, y, 340, 144, 2, "#fffdf1", "#17100a", 5); ctx.beginPath(); ctx.moveTo(x, y + 42); ctx.lineTo(x - 32, y + 70); ctx.lineTo(x, y + 72); ctx.closePath(); ctx.fillStyle = "#fffdf1"; ctx.fill(); ctx.strokeStyle = "#17100a"; ctx.lineWidth = 5; ctx.stroke(); ctx.fillStyle = "#17100a"; ctx.font = "900 20px Trebuchet MS"; ctx.textAlign = "left"; ctx.fillText("B-LA-KA", x + 242, y + 25); wrapText(text, x + 22, y + 58, 280, 25); }
+function wrapText(text, x, y, width, gap) { const words = text.split(" "); let line = ""; for (const word of words) { const test = line + word + " "; if (ctx.measureText(test).width > width) { ctx.fillText(line, x, y); line = word + " "; y += gap; } else line = test; } ctx.fillText(line, x, y); }
+function drawFishInventory(x, y) { const total = state.bag.reduce((sum, fish) => sum + fish.value, 0); rounded(x, y, 290, 56, 2, "#fffdf1", "#17100a", 4); ctx.fillStyle = "#17100a"; ctx.font = "900 16px Trebuchet MS"; ctx.textAlign = "left"; ctx.fillText(`SELL INVENTORY ${state.bag.length}/${state.bagLimit}`, x + 14, y + 23); ctx.fillText(`SELL HELD ITEM: ${total} COINS`, x + 14, y + 45); }
+function drawFisherCircle() { ctx.fillStyle = "#ff5d68"; ctx.strokeStyle = "#05263d"; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(142, 285, 22, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.strokeStyle = "#5a310d"; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(160, 270); ctx.quadraticCurveTo(235, 220, 308, 246); ctx.stroke(); }
+function drawFishSilhouettes() { for (let i = 0; i < 8; i++) drawSmallFish(330 + i * 80 + Math.sin(performance.now() / 700 + i) * 20, 420 + (i % 3) * 34 + Math.cos(performance.now() / 800 + i) * 6, 18 + (i % 3) * 4, "rgba(0,35,70,.38)"); }
+function drawFishingLine() { if (!state.cast) return; const c = state.cast; ctx.strokeStyle = "rgba(255,255,255,.82)"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(305, 245); ctx.lineTo(c.hookX, c.hookY); ctx.stroke(); ctx.fillStyle = c.phase === "bite" ? "#ffe36e" : "#ffffff"; ctx.strokeStyle = "#05263d"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(c.hookX, c.hookY, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); if (c.phase === "bite") { ctx.strokeStyle = rarityColors[c.fish.rarity]; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(c.hookX, c.hookY, 28, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * clamp(c.reel, 0, 1)); ctx.stroke(); } }
+function drawRipples() { for (const r of state.ripples) { ctx.globalAlpha = clamp(r.life, 0, 1); ctx.strokeStyle = r.color || "rgba(255,255,255,.65)"; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(r.x, r.y, (1 - r.life) * 42 + 8, (1 - r.life) * 13 + 3, 0, 0, Math.PI * 2); ctx.stroke(); } ctx.globalAlpha = 1; }
+function drawSmallFish(x, y, size, color) { ctx.fillStyle = color; ctx.beginPath(); ctx.ellipse(x, y, size, size * 0.56, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.moveTo(x - size * 0.8, y); ctx.lineTo(x - size * 1.45, y - size * 0.55); ctx.lineTo(x - size * 1.25, y); ctx.lineTo(x - size * 1.45, y + size * 0.55); ctx.closePath(); ctx.fill(); }
+function drawGameHud() { rounded(12, 8, 936, 46, 12, "rgba(2,35,62,.62)", "rgba(236,255,251,.65)", 2); ctx.fillStyle = "#ecfffb"; ctx.font = "900 16px Trebuchet MS"; ctx.textAlign = "left"; ctx.fillText(`COINS ${state.progress.coins}`, 28, 37); ctx.fillText(`BAG ${state.bag.length}/${state.bagLimit}`, 140, 37); ctx.fillText(`AREA ${state.mode.toUpperCase()}`, 250, 37); ctx.fillText(`ROD ${roman(state.progress.rod)}`, 370, 37); ctx.fillStyle = "#ffe36e"; ctx.fillText(state.message, 470, 37); }
+function drawGameButtons() { const y = 500; drawUiButton(18, y, 104, 42, "HOME", goHome); drawUiButton(132, y, 108, 42, "RESET", resetGame); if (state.mode === "sell") { drawUiButton(604, y, 142, 42, "YES SELL", sellFish); drawUiButton(760, y, 142, 42, "NO LEAVE", exitSellShop); return; } drawUiButton(604, y, 94, 42, state.cast && state.cast.phase === "bite" ? "REEL!" : "CAST", castLine); drawUiButton(710, y, 108, 42, "SELL", sellFish); drawUiButton(830, y, 108, 42, "UPGRADE", upgradeRod); }
+function drawUiButton(x, y, w, h, text, action) { buttonZones.push({ x, y, w, h, action }); rounded(x, y, w, h, 12, "#fff58e", "#05263d", 3); ctx.fillStyle = "#05263d"; ctx.font = "900 15px Trebuchet MS"; ctx.textAlign = "center"; ctx.fillText(text, x + w / 2, y + 27); }
+function rounded(x, y, w, h, r, fill, stroke, line = 3) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = stroke; ctx.lineWidth = line; ctx.stroke(); }
+function canvasPoint(event) { const rect = canvas.getBoundingClientRect(); return { x: (event.clientX - rect.left) * (canvas.width / rect.width), y: (event.clientY - rect.top) * (canvas.height / rect.height) }; }
+function loop(now) { const dt = Math.min(0.033, (now - lastTime) / 1000 || 0); lastTime = now; update(dt); draw(); requestAnimationFrame(loop); }
+function joystickVector(event) { const rect = joystick.getBoundingClientRect(); const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2; const dx = event.clientX - cx, dy = event.clientY - cy; const len = Math.hypot(dx, dy), max = rect.width * 0.34, scale = len > max ? max / len : 1; joy.x = clamp(dx / max, -1, 1); joy.y = clamp(dy / max, -1, 1); joystickKnob.style.transform = `translate(calc(-50% + ${dx * scale}px), calc(-50% + ${dy * scale}px))`; }
 function stopJoystick() { joy = { active: false, x: 0, y: 0 }; joystickKnob.style.transform = "translate(-50%, -50%)"; }
 
-window.addEventListener("keydown", event => {
-  const key = event.key.toLowerCase();
-  keys.add(key);
-  if ((key === "f" || event.code === "Space") && state.running) { event.preventDefault(); castLine(); }
-  if (state.mode === "fishing" && (key === "s" || key === "arrowdown") && !state.cast) exitFishing();
-  if (state.mode === "sell" && (key === "n" || key === "escape" || key === "s" || key === "arrowdown")) exitSellShop();
-  if (state.mode === "sell" && key === "y") sellFish();
-});
+window.addEventListener("keydown", event => { const key = event.key.toLowerCase(); keys.add(key); if ((key === "f" || event.code === "Space") && state.running) { event.preventDefault(); castLine(); } if (state.mode === "fishing" && (key === "s" || key === "arrowdown") && !state.cast) exitFishing(); if (state.mode === "sell" && (key === "n" || key === "escape" || key === "s" || key === "arrowdown")) exitSellShop(); if (state.mode === "sell" && key === "y") sellFish(); });
 window.addEventListener("keyup", event => keys.delete(event.key.toLowerCase()));
-canvas.addEventListener("pointerdown", event => {
-  const point = canvasPoint(event);
-  if (state.running && state.mode === "sell") {
-    if (inRect(point, 524, 272, 116, 48)) sellFish();
-    if (inRect(point, 662, 272, 116, 48)) exitSellShop();
-    return;
-  }
-  if (state.running && state.mode === "fishing" && state.cast && state.cast.phase === "bite") reel();
-});
+canvas.addEventListener("pointerdown", event => { const point = canvasPoint(event); const ui = buttonZones.find(b => inRect(point, b.x, b.y, b.w, b.h)); if (ui) return ui.action(); if (state.mode === "sell") { if (inRect(point, 542, 286, 106, 44)) sellFish(); if (inRect(point, 674, 286, 106, 44)) exitSellShop(); return; } if (state.mode === "fishing" && state.cast && state.cast.phase === "bite") reel(); });
 joystick.addEventListener("pointerdown", event => { joy.active = true; joystick.setPointerCapture(event.pointerId); joystickVector(event); });
 joystick.addEventListener("pointermove", event => { if (joy.active) joystickVector(event); });
 joystick.addEventListener("pointerup", stopJoystick);
@@ -534,5 +377,6 @@ sellButton.addEventListener("click", sellFish);
 upgradeButton.addEventListener("click", upgradeRod);
 
 state = freshState();
-resetGame();
+panel.classList.remove("show");
+lastTime = performance.now();
 requestAnimationFrame(loop);
