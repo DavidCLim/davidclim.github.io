@@ -3,10 +3,35 @@ function playFromMenu() {
   state.menuPage = "";
   state.player.x = 480;
   state.player.y = 340;
-  say("Walk to FISH or SELL. Progress saves automatically.");
+  say("Walk to FISH, SELL, or ROD SHOP. Progress saves automatically.");
 }
 
-updateDock = function updateDockWithoutShop(dt) {
+// Home screen only: no SHOP button here. The in-game dock shop stays open.
+drawHomeScreen = function drawHomeScreenWithoutMenuShop() {
+  drawTopWater();
+  drawMenuFish(734, 194, 54, "#ffd45f");
+  drawMenuFish(214, 126, 32, "#ff7c87");
+  drawMenuFish(780, 402, 36, "#8dffda");
+
+  ctx.save();
+  rounded(190, 86, 580, 388, 0, "rgba(235,249,238,.92)", "#09283d", 5);
+  ctx.fillStyle = "#09283d";
+  ctx.font = "900 18px Trebuchet MS";
+  ctx.textAlign = "left";
+  ctx.fillText("If you see this icon in the bottom right corner, do not leave, it's saving your game.", 214, 100);
+  drawSavingIcon(476, 82, true);
+
+  drawHandTitle(480, 212);
+  drawMenuButton(382, 320, 196, 46, "PLAY", playFromMenu);
+  drawMenuButton(382, 382, 196, 46, "CREDITS", creditsFromMenu);
+
+  if (state.menuPage === "credits") drawCreditsPanel();
+  ctx.restore();
+};
+
+// Restore the real in-game dock/shop controls after the menu-only override loads.
+updateDock = function updateDockWithInGameRodShop(dt) {
+  normalizeRodProgress();
   const p = state.player;
   let ax = 0, ay = 0;
   if (keys.has("arrowleft") || keys.has("a")) ax -= 1;
@@ -24,11 +49,11 @@ updateDock = function updateDockWithoutShop(dt) {
   p.y += p.vy * dt;
   constrainToDock(p);
   if (atSellDock(p)) enterSellShop();
-  else if (atShopDock(p)) say("Rod shop is closed for now. Go fish or sell your catch.");
+  else if (atShopDock(p)) enterRodShop();
   else if (atFishingDock(p)) say("Fishing dock: tap CAST or press Space/F.");
 };
 
-drawIslandAndDock = function drawIslandAndDockNoShop() {
+drawIslandAndDock = function drawIslandAndDockWithInGameRodShop() {
   ctx.save();
   rounded(225, 82, 510, 402, 40, "#f2d28a", "#8b6e39", 6);
   rounded(246, 102, 468, 356, 20, "#c17b37", "#62370f", 7);
@@ -56,39 +81,17 @@ drawIslandAndDock = function drawIslandAndDockNoShop() {
 
   rounded(410, 42, 140, 112, 16, "#bb7432", "#62370f", 7);
   rounded(452, 104, 56, 52, 8, "#bb7432", "#62370f", 5);
-  rounded(66, 96, 220, 108, 18, "#8d5b34", "#62370f", 7);
+  rounded(66, 96, 220, 108, 18, "#bb7432", "#62370f", 7);
   rounded(66, 368, 220, 108, 18, "#bb7432", "#62370f", 7);
 
   rounded(392, 232, 176, 102, 24, "rgba(255,238,140,.28)", "rgba(255,255,255,.6)", 3);
-  drawSign(91, 122, "CLOSED");
+  drawSign(88, 122, "ROD SHOP");
   drawSign(88, 390, "SELL FISH");
   drawSign(423, 70, "FISH");
   ctx.restore();
 };
 
-drawHomeScreen = function drawHomeScreenNoShop() {
-  drawTopWater();
-  drawMenuFish(734, 194, 54, "#ffd45f");
-  drawMenuFish(214, 126, 32, "#ff7c87");
-  drawMenuFish(780, 402, 36, "#8dffda");
-
-  ctx.save();
-  rounded(190, 86, 580, 388, 0, "rgba(235,249,238,.92)", "#09283d", 5);
-  ctx.fillStyle = "#09283d";
-  ctx.font = "900 18px Trebuchet MS";
-  ctx.textAlign = "left";
-  ctx.fillText("If you see this icon in the bottom right corner, do not leave, it's saving your game.", 214, 100);
-  drawSavingIcon(476, 82, true);
-
-  drawHandTitle(480, 212);
-  drawMenuButton(382, 320, 196, 46, "PLAY", playFromMenu);
-  drawMenuButton(382, 382, 196, 46, "CREDITS", creditsFromMenu);
-
-  if (state.menuPage === "credits") drawCreditsPanel();
-  ctx.restore();
-};
-
-drawGameButtons = function drawGameButtonsNoShop() {
+drawGameButtons = function drawGameButtonsWithInGameRodShop() {
   const y = 500;
   if (state.mode === "menu") return;
   if (state.mode === "sell") {
@@ -96,10 +99,13 @@ drawGameButtons = function drawGameButtonsNoShop() {
     buttonZones.push({ x: 714, y: 360, w: 84, h: 46, action: exitSellShop });
     return;
   }
+  if (state.mode === "rodshop") {
+    drawUiButton(20, y, 104, 42, "BACK", exitRodShop);
+    return;
+  }
   drawUiButton(18, y, 104, 42, "HOME", goHome);
   drawUiButton(132, y, 108, 42, "RESET", resetGame);
-  drawUiButton(650, y, 112, 42, state.cast && state.cast.phase === "bite" ? "REEL!" : "CAST", castLine);
-  drawUiButton(778, y, 120, 42, "SELL", sellFish);
+  drawUiButton(604, y, 94, 42, state.cast && state.cast.phase === "bite" ? "REEL!" : "CAST", castLine);
+  drawUiButton(710, y, 108, 42, "SELL", sellFish);
+  drawUiButton(830, y, 108, 42, "RODS", upgradeRod);
 };
-
-if (state.mode === "rodshop") playFromMenu();
