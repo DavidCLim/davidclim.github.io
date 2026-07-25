@@ -102,9 +102,13 @@ function updateHud() {
   const onSell = state.mode === "dock" && inRect(state.player, 78, 380, 130, 84);
   const onShop = state.mode === "dock" && inRect(state.player, 78, 110, 130, 84);
   const canStartFishing = state.mode === "dock" && atFishingDock(state.player);
+  const canCastNow = state.mode === "fishing" && !state.cast && state.bag.length < state.bagLimit;
+  const canReelNow = state.mode === "fishing" && state.cast && state.cast.phase === "bite";
+  const canDockCast = canStartFishing && state.bag.length < state.bagLimit;
   sellButton.disabled = !onSell || state.bag.length === 0;
   upgradeButton.disabled = !onShop;
-  castButton.disabled = !(state.mode === "fishing" || canStartFishing) || !!state.cast || state.bag.length >= state.bagLimit;
+  castButton.textContent = canReelNow ? "REEL!" : state.cast ? "WAIT" : "CAST";
+  castButton.disabled = !(canCastNow || canReelNow || canDockCast);
 }
 
 function roman(value) {
@@ -212,12 +216,12 @@ function updateFishing(dt) {
     cast.hookY += Math.sin(performance.now() / 160) * 0.15;
     if (cast.biteIn <= 0) {
       cast.phase = "bite";
-      cast.reel = 0.25;
+      cast.reel = 0.45;
       cast.fish = rollFish();
-      say(`BITE! Reel in the ${cast.fish.rarity} fish!`);
+      say(`BITE! Press REEL, CAST, SPACE, F, or tap the water fast!`);
     }
   } else if (cast.phase === "bite") {
-    cast.reel -= (0.18 + cast.fish.value / 1800) * dt;
+    cast.reel -= (0.08 + cast.fish.value / 3000) * dt;
     if (cast.reel <= 0) {
       state.cast = null;
       say("The fish got away. Cast again.");
@@ -264,7 +268,7 @@ function reel() {
     return;
   }
   if (state.cast.phase !== "bite") return;
-  state.cast.reel += 0.22 + state.progress.rod * 0.055;
+  state.cast.reel += 0.26 + state.progress.rod * 0.065;
   makeRipple(state.cast.hookX, state.cast.hookY);
   if (state.cast.reel >= 1) catchFish(state.cast.fish);
 }
@@ -456,7 +460,7 @@ function drawFishingView() {
   ctx.fillStyle = "rgba(255,255,255,.9)";
   ctx.font = "900 18px Trebuchet MS";
   ctx.fillText("SIDE VIEW FISHING BANK", 18, 32);
-  ctx.fillText("Press CAST / SPACE / F. When BITE appears, tap fast.", 18, 56);
+  ctx.fillText("Press CAST / SPACE / F. When BITE appears, tap REEL fast.", 18, 56);
   ctx.fillText("Press S or DOWN to leave fishing bank.", 18, 80);
 }
 
@@ -582,6 +586,10 @@ window.addEventListener("keydown", event => {
   if (state.mode === "fishing" && (key === "s" || key === "arrowdown") && !state.cast) exitFishing();
 });
 window.addEventListener("keyup", event => keys.delete(event.key.toLowerCase()));
+
+canvas.addEventListener("pointerdown", () => {
+  if (state.running && state.mode === "fishing" && state.cast && state.cast.phase === "bite") reel();
+});
 
 joystick.addEventListener("pointerdown", event => {
   joy.active = true;
