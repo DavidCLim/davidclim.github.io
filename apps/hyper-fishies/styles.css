@@ -38,14 +38,6 @@ body {
   box-shadow: none;
 }
 
-.topbar,
-.hud,
-.action-row,
-.controls-note,
-.message-panel {
-  display: none !important;
-}
-
 .canvas-wrap {
   position: relative;
   overflow: hidden;
@@ -61,6 +53,22 @@ canvas {
   width: 100%;
   aspect-ratio: 12 / 7;
   touch-action: none;
+}
+
+.screen-hidden,
+.topbar,
+.hud,
+.action-row,
+.controls-note,
+.message-panel {
+  position: absolute !important;
+  left: -10000px !important;
+  top: -10000px !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 .joystick {
