@@ -6,106 +6,191 @@ function drawSketchPirate(x, y) {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
-  // Clean single-pose pirate: one square head, matched eyes/mouth, arms connected to shoulders.
-  ctx.fillStyle = "#21130c";
-  roundedLocal(-52, -34, 104, 114, 10, "#21130c");
-  ctx.fillStyle = "#b8332d";
-  roundedLocal(-24, -28, 48, 96, 7, "#b8332d");
-  ctx.fillStyle = "#f7d8a2";
-  roundedLocal(-9, -30, 18, 90, 4, "#f7d8a2");
+  // Colored version of the user's exact pirate design: small coat body, raised sword,
+  // square face, eye patch, right-side cape/coin, feather, and little boots.
+  ctx.save();
+  ctx.translate(-8, 2);
+  ctx.rotate(-0.08);
+
+  // Long skinny coat and shirt from the drawing.
+  ctx.fillStyle = "#2a1b13";
+  ctx.beginPath();
+  ctx.moveTo(-56, -40);
+  ctx.lineTo(-12, -20);
+  ctx.lineTo(34, -42);
+  ctx.lineTo(20, 86);
+  ctx.lineTo(-24, 88);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#f4d49d";
+  ctx.beginPath();
+  ctx.moveTo(-18, -25);
+  ctx.lineTo(10, -25);
+  ctx.lineTo(13, 76);
+  ctx.lineTo(-13, 78);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#8f2d28";
+  ctx.beginPath();
+  ctx.moveTo(-52, -36);
+  ctx.lineTo(-17, -18);
+  ctx.lineTo(-10, 82);
+  ctx.lineTo(-34, 78);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(32, -38);
+  ctx.lineTo(11, -18);
+  ctx.lineTo(18, 82);
+  ctx.lineTo(38, 74);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
 
   ctx.strokeStyle = "#111";
-  ctx.lineWidth = 4;
-  sketchLine([[-49, -24], [-23, 10], [-18, 70]]);
-  sketchLine([[49, -24], [23, 10], [18, 70]]);
-  for (let yy = -10; yy <= 34; yy += 15) {
+  ctx.lineWidth = 3.5;
+  for (let yy = -10; yy < 44; yy += 16) {
     ctx.beginPath(); ctx.arc(-5, yy, 2.4, 0, Math.PI * 2); ctx.stroke();
     ctx.beginPath(); ctx.arc(7, yy, 2.4, 0, Math.PI * 2); ctx.stroke();
   }
 
-  // Attached blocky legs and boots.
-  ctx.fillStyle = "#21130c";
-  roundedLocal(-43, 70, 34, 68, 7, "#21130c");
-  roundedLocal(9, 70, 34, 68, 7, "#21130c");
-  ctx.fillStyle = "#0d0a07";
-  roundedLocal(-61, 130, 55, 20, 7, "#0d0a07");
-  roundedLocal(3, 130, 55, 20, 7, "#0d0a07");
+  // Boots: one side boot/peg feel, one little boot like the reference.
+  ctx.fillStyle = "#111";
+  roundedLocal(-35, 82, 18, 55, 6, "#111");
+  roundedLocal(8, 82, 18, 55, 6, "#111");
+  roundedLocal(-46, 130, 36, 16, 6, "#111");
+  roundedLocal(2, 130, 36, 16, 6, "#111");
 
-  // Left shoulder to raised sword arm. The sleeve and hand sit on one line.
-  ctx.fillStyle = "#21130c";
-  ctx.save();
-  ctx.translate(-44, -22);
-  ctx.rotate(-0.48);
-  roundedLocal(-22, -98, 34, 104, 8, "#21130c");
+  // Left sleeve raised with hand gripping the sword.
+  ctx.fillStyle = "#8f2d28";
+  ctx.beginPath();
+  ctx.moveTo(-48, -38);
+  ctx.lineTo(-78, -86);
+  ctx.lineTo(-90, -158);
+  ctx.lineTo(-62, -162);
+  ctx.lineTo(-39, -56);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
   ctx.fillStyle = "#f2c06b";
-  roundedLocal(-25, -122, 40, 28, 9, "#f2c06b");
-  ctx.restore();
+  ctx.beginPath();
+  ctx.roundRect(-98, -174, 38, 27, 8);
+  ctx.fill();
+  ctx.stroke();
 
-  // Right arm bends down/out like the reference, with hand beside body.
-  ctx.fillStyle = "#21130c";
-  ctx.save();
-  ctx.translate(48, -20);
-  ctx.rotate(0.36);
-  roundedLocal(-6, 0, 34, 88, 8, "#21130c");
-  ctx.restore();
-  ctx.fillStyle = "#f2c06b";
-  sketchClosed([[83, 27], [101, 12], [100, 36], [116, 27], [105, 52], [86, 47]]);
-
-  // Sword is lined up with the raised hand.
+  // Sword curved upward just like the drawing.
   ctx.strokeStyle = "#111";
   ctx.lineWidth = 4;
-  sketchLine([[-103, -158], [-42, -238], [72, -279]]);
-  sketchLine([[-96, -153], [45, -250]]);
-  sketchLine([[-118, -143], [-78, -180], [-52, -151]]);
+  ctx.beginPath();
+  ctx.moveTo(-92, -166);
+  ctx.quadraticCurveTo(-35, -238, 82, -270);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-84, -160);
+  ctx.quadraticCurveTo(-22, -224, 58, -250);
+  ctx.stroke();
+  sketchLine([[-111, -151], [-78, -184], [-51, -151]]);
 
-  // Neck and head.
+  // Right short sleeve and claw/fingers beside the body.
+  ctx.fillStyle = "#8f2d28";
+  ctx.beginPath();
+  ctx.moveTo(29, -34);
+  ctx.lineTo(72, -4);
+  ctx.lineTo(58, 35);
+  ctx.lineTo(27, 8);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
   ctx.fillStyle = "#f2c06b";
-  roundedLocal(-14, -56, 28, 24, 5, "#f2c06b");
-  roundedLocal(-48, -132, 88, 82, 9, "#f2c06b");
+  sketchClosed([[63, 28], [84, 12], [79, 36], [98, 24], [86, 50], [65, 44]]);
 
-  // Face: one eyepatch, one visible eye, mouth centered under nose.
+  // Neck and square head.
+  ctx.fillStyle = "#f2c06b";
+  roundedLocal(-15, -58, 26, 22, 5, "#f2c06b");
+  ctx.beginPath();
+  ctx.roundRect(-48, -132, 86, 82, 8);
+  ctx.fill();
+  ctx.stroke();
+
+  // Face: aligned eyepatch strap, one visible eye, nose, moustache/mouth.
   ctx.strokeStyle = "#111";
   ctx.lineWidth = 4;
-  sketchLine([[-45, -104], [38, -91]]);
+  sketchLine([[-46, -106], [38, -90]]);
   ctx.fillStyle = "#111";
   ctx.beginPath();
-  ctx.ellipse(-21, -100, 17, 11, -0.15, 0, Math.PI * 2);
+  ctx.ellipse(-23, -101, 17, 11, -0.15, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
-  ctx.arc(15, -94, 5.5, 0, Math.PI * 2);
+  ctx.arc(13, -94, 5.5, 0, Math.PI * 2);
   ctx.fill();
-  sketchLine([[-4, -94], [-11, -84], [1, -83]]);
-  ctx.lineWidth = 5;
-  sketchLine([[-28, -70], [-13, -61], [6, -69], [20, -63]]);
+  ctx.strokeStyle = "#111";
   ctx.lineWidth = 3;
-  sketchLine([[-21, -76], [-6, -73], [10, -76]]);
+  sketchLine([[-6, -96], [-13, -84], [0, -82]]);
+  ctx.lineWidth = 5;
+  sketchLine([[-31, -72], [-15, -62], [2, -72], [20, -64]]);
+  ctx.lineWidth = 3;
+  sketchLine([[-22, -78], [-6, -74], [10, -78]]);
 
-  // Hat and feather/coin details match the reference silhouette.
-  ctx.fillStyle = "#111";
+  // Tricorn/bandana hat and little feather to the right.
+  ctx.fillStyle = "#101010";
   ctx.beginPath();
-  ctx.moveTo(-66, -142);
-  ctx.quadraticCurveTo(-10, -198, 55, -144);
-  ctx.lineTo(31, -126);
-  ctx.quadraticCurveTo(-18, -149, -58, -123);
+  ctx.moveTo(-68, -142);
+  ctx.quadraticCurveTo(-10, -198, 54, -144);
+  ctx.lineTo(29, -126);
+  ctx.quadraticCurveTo(-19, -150, -58, -122);
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
   ctx.fillStyle = "#f7d46c";
   ctx.beginPath();
-  ctx.arc(-14, -166, 10, 0, Math.PI * 2);
+  ctx.arc(-15, -166, 10, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
-  sketchLine([[30, -138], [68, -154], [80, -134]]);
+  ctx.fillStyle = "#e9f1ff";
+  ctx.beginPath();
+  ctx.moveTo(33, -137);
+  ctx.quadraticCurveTo(69, -159, 82, -132);
+  ctx.quadraticCurveTo(62, -126, 36, -119);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  sketchLine([[49, -135], [70, -144]]);
 
+  // Big cape/shoulder piece on the right with the coin symbol, as in the sketch.
+  ctx.fillStyle = "#ead1a0";
+  ctx.beginPath();
+  ctx.moveTo(32, -58);
+  ctx.quadraticCurveTo(92, -74, 116, -22);
+  ctx.quadraticCurveTo(86, -5, 39, -17);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
   ctx.fillStyle = "#f4d36c";
   ctx.beginPath();
-  ctx.arc(82, -42, 27, 0, Math.PI * 2);
+  ctx.arc(78, -40, 22, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
   ctx.fillStyle = "#111";
-  ctx.font = "900 25px Trebuchet MS";
+  ctx.font = "900 22px Trebuchet MS";
   ctx.textAlign = "center";
-  ctx.fillText("$", 82, -34);
+  ctx.fillText("$", 78, -33);
+
+  // Rolled tube/gun-like shape behind the left shoulder from the drawing.
+  ctx.save();
+  ctx.translate(-72, -44);
+  ctx.rotate(-0.98);
+  roundedLocal(-11, -28, 22, 70, 6, "#d8c1a0");
+  ctx.strokeStyle = "#111";
+  sketchLine([[-11, -14], [11, -14]]);
+  sketchLine([[-11, 24], [11, 24]]);
+  ctx.restore();
+
+  ctx.restore();
   ctx.restore();
 }
 
@@ -131,7 +216,6 @@ function drawRodShopKeeper(x, y) {
   sketchLine([[-50, 18], [-18, 46], [-14, 116]]);
   sketchLine([[50, 18], [18, 46], [14, 116]]);
 
-  // Left arm reaches left to grip the rod, not backwards.
   ctx.fillStyle = "#264f7c";
   ctx.save();
   ctx.translate(-48, 18);
@@ -141,7 +225,6 @@ function drawRodShopKeeper(x, y) {
   ctx.fillStyle = "#f2c06b";
   roundedLocal(-132, -82, 38, 26, 8, "#f2c06b");
 
-  // Right arm reaches right to grip the rod.
   ctx.fillStyle = "#264f7c";
   ctx.save();
   ctx.translate(48, 18);
@@ -151,7 +234,6 @@ function drawRodShopKeeper(x, y) {
   ctx.fillStyle = "#f2c06b";
   roundedLocal(95, -82, 38, 26, 8, "#f2c06b");
 
-  // Legs and boots.
   ctx.fillStyle = "#334159";
   roundedLocal(-46, 112, 38, 70, 7, "#334159");
   roundedLocal(8, 112, 38, 70, 7, "#334159");
@@ -159,7 +241,6 @@ function drawRodShopKeeper(x, y) {
   roundedLocal(-58, 174, 54, 20, 7, "#111");
   roundedLocal(4, 174, 54, 20, 7, "#111");
 
-  // Face is centered and readable.
   ctx.fillStyle = "#111";
   ctx.beginPath(); ctx.arc(-15, -56, 5, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(17, -56, 5, 0, Math.PI * 2); ctx.fill();
@@ -174,7 +255,6 @@ function drawRodShopKeeper(x, y) {
   ctx.fill();
   ctx.stroke();
 
-  // Wavy shop rod goes left-to-right across the gripped hands.
   ctx.strokeStyle = "#111";
   ctx.lineWidth = 10;
   ctx.beginPath();
