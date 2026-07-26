@@ -1,9 +1,14 @@
 const rodCatalog = [
   { id: 1, name: "Driftwood Rod", price: 0, luck: 1.00, control: 1.00, color: "#8b5a2b", glow: "#f3c47b", note: "Free starter rod. Honest, bendy, slightly embarrassing." },
-  { id: 2, name: "Coral Rod", price: 180, luck: 1.18, control: 1.08, color: "#ff7f73", glow: "#ffd2a7", note: "Coral grip. Better luck with unusual fish." },
-  { id: 3, name: "Tide Rod", price: 420, luck: 1.38, control: 1.17, color: "#4ed8ff", glow: "#d9fbff", note: "Smooth casts. Rare fish notice this one." },
-  { id: 4, name: "Storm Rod", price: 900, luck: 1.68, control: 1.28, color: "#8c77ff", glow: "#f0dcff", note: "Lightning-fast reel. Epic fish start showing up more." },
-  { id: 5, name: "Abyss Rod", price: 1600, luck: 2.05, control: 1.42, color: "#192a68", glow: "#88ffea", note: "Deep-sea magic. Legendary fish become less impossible." }
+  { id: 2, name: "Bamboo Rod", price: 220, luck: 1.10, control: 1.06, color: "#7fd36b", glow: "#d7ffc7", note: "Light and cheap. A first real upgrade." },
+  { id: 3, name: "Coral Rod", price: 650, luck: 1.23, control: 1.13, color: "#ff7f73", glow: "#ffd2a7", note: "Coral grip. Better luck with unusual fish." },
+  { id: 4, name: "Tide Rod", price: 1450, luck: 1.40, control: 1.22, color: "#4ed8ff", glow: "#d9fbff", note: "Smooth casts. Rare fish notice this one." },
+  { id: 5, name: "Pearl Rod", price: 3200, luck: 1.62, control: 1.34, color: "#fff0c8", glow: "#ffffff", note: "A clean rod with pearly luck." },
+  { id: 6, name: "Storm Rod", price: 7200, luck: 1.92, control: 1.48, color: "#8c77ff", glow: "#f0dcff", note: "Lightning-fast reel. Epic fish start showing up more." },
+  { id: 7, name: "Royal Rod", price: 15000, luck: 2.28, control: 1.64, color: "#ffd85f", glow: "#fff4ad", note: "Fancy, expensive, and very lucky." },
+  { id: 8, name: "Abyss Rod", price: 35000, luck: 2.75, control: 1.84, color: "#192a68", glow: "#88ffea", note: "Deep-sea magic. Legendary fish become less impossible." },
+  { id: 9, name: "Mythic Rod", price: 85000, luck: 3.35, control: 2.08, color: "#ff66e5", glow: "#ffd6fb", note: "A late-game rod for serious collectors." },
+  { id: 10, name: "Hyper Rod", price: 200000, luck: 4.10, control: 2.40, color: "#6dffcb", glow: "#ffffff", note: "The dream rod. Almost unfair, but you earned it." }
 ];
 
 function normalizeRodProgress() {
@@ -13,7 +18,7 @@ function normalizeRodProgress() {
   if (!state.progress.currentRod) state.progress.currentRod = state.progress.rod || 1;
   if (!state.progress.ownedRods.includes(state.progress.currentRod)) state.progress.currentRod = 1;
   state.progress.rod = state.progress.currentRod;
-  state.bagLimit = 5 + state.progress.currentRod;
+  state.bagLimit = 5 + Math.ceil(state.progress.currentRod / 2);
 }
 
 function currentRod() {
@@ -26,7 +31,7 @@ function enterRodShop() {
   state.mode = "rodshop";
   state.player.vx = 0;
   state.player.vy = 0;
-  say("Welcome to Hooker's Lucky Rods. Pick a rod, kid. The ocean likes style.");
+  say("Welcome to Hooker's Lucky Rods. Better rods cost more now, but the ocean respects them.");
 }
 
 function exitRodShop() {
@@ -48,7 +53,7 @@ function buyOrEquipRod(rodId) {
   if (owned) {
     state.progress.currentRod = rod.id;
     state.progress.rod = rod.id;
-    state.bagLimit = 5 + rod.id;
+    state.bagLimit = 5 + Math.ceil(rod.id / 2);
     saveGame();
     say(`${rod.name} equipped. Luck x${rod.luck.toFixed(2)}. Auto-saved.`);
     return;
@@ -61,8 +66,8 @@ function buyOrEquipRod(rodId) {
   state.progress.ownedRods.push(rod.id);
   state.progress.currentRod = rod.id;
   state.progress.rod = rod.id;
-  state.bagLimit = 5 + rod.id;
-  burst(700, 170 + rod.id * 62, rod.glow, 20);
+  state.bagLimit = 5 + Math.ceil(rod.id / 2);
+  burst(700, 170 + rod.id * 38, rod.glow, 20);
   saveGame();
   say(`Bought and equipped ${rod.name}! Better luck unlocked.`);
 }
@@ -97,7 +102,7 @@ rollFish = function rollFishWithRodLuck() {
     if (fish.rarity === "Rare") weight *= 1 + (rod.luck - 1) * 1.05;
     if (fish.rarity === "Epic") weight *= 1 + (rod.luck - 1) * 1.75;
     if (fish.rarity === "Legendary") weight *= 1 + (rod.luck - 1) * 2.55;
-    if (fish.rarity === "Common") weight *= Math.max(0.58, 1 - (rod.luck - 1) * 0.34);
+    if (fish.rarity === "Common") weight *= Math.max(0.45, 1 - (rod.luck - 1) * 0.34);
     return { fish, weight: Math.max(1, weight) };
   });
   const total = weighted.reduce((sum, item) => sum + item.weight, 0);
@@ -137,7 +142,7 @@ updateFishing = function updateFishingHarder(dt) {
     }
   } else if (cast.phase === "bite") {
     const rarityPain = { Common: 0.03, Unusual: 0.05, Rare: 0.08, Epic: 0.115, Legendary: 0.16 }[cast.fish.rarity] || 0.05;
-    cast.reel -= (0.16 + rarityPain + cast.fish.value / 2400 - rod.control * 0.025) * dt;
+    cast.reel -= (0.16 + rarityPain + cast.fish.value / 600 - rod.control * 0.025) * dt;
     cast.hookX += Math.sin(performance.now() / 95) * cast.shake * 0.22;
     if (cast.reel <= 0) {
       state.cast = null;
@@ -216,7 +221,7 @@ function drawRodShopView() {
   rounded(70, 382, 820, 92, 14, "#71401e", "#231006", 6);
   drawRodShopKeeper(245, 238);
   drawRodShopSpeech(390, 92);
-  drawRodRack(420, 224);
+  drawRodRack(420, 170);
 }
 
 function drawRodShopKeeper(x, y) {
@@ -273,54 +278,54 @@ function drawRodShopSpeech(x, y) {
   ctx.fill();
   ctx.stroke();
   ctx.fillStyle = "#111";
-  ctx.font = "900 22px Trebuchet MS";
+  ctx.font = "900 20px Trebuchet MS";
   ctx.textAlign = "left";
-  wrapText("Hooker's Lucky Rods! Better rods look flashier, boost luck, and help with the tougher reel fight.", x + 24, y + 34, 390, 27);
+  wrapText("Hooker's Lucky Rods! Fish sell for less now, so big rods are real treasure.", x + 24, y + 34, 390, 25);
   ctx.restore();
 }
 
 function drawRodRack(x, y) {
   normalizeRodProgress();
   ctx.save();
-  ctx.font = "900 16px Trebuchet MS";
+  ctx.font = "900 13px Trebuchet MS";
   ctx.textAlign = "left";
   rodCatalog.forEach((rod, index) => {
-    const yPos = y + index * 48;
+    const yPos = y + index * 29;
     const owned = state.progress.ownedRods.includes(rod.id);
     const equipped = state.progress.currentRod === rod.id;
-    rounded(x, yPos, 432, 38, 10, equipped ? "#d9fff4" : owned ? "#b9efff" : "#ffe59a", "#111", 3);
-    drawTinyRod(x + 22, yPos + 22, rod);
+    rounded(x, yPos, 432, 25, 8, equipped ? "#d9fff4" : owned ? "#b9efff" : "#ffe59a", "#111", 2);
+    drawTinyRod(x + 16, yPos + 15, rod);
     ctx.fillStyle = "#111";
-    ctx.fillText(rod.name.toUpperCase(), x + 58, yPos + 24);
+    ctx.fillText(rod.name.toUpperCase(), x + 46, yPos + 17);
     ctx.fillStyle = "#0b4e4d";
-    ctx.fillText(`LUCK x${rod.luck.toFixed(2)}`, x + 214, yPos + 24);
-    const label = equipped ? "EQUIPPED" : owned ? "EQUIP" : `${rod.price} COINS`;
+    ctx.fillText(`x${rod.luck.toFixed(2)}`, x + 216, yPos + 17);
+    const label = equipped ? "EQUIPPED" : owned ? "EQUIP" : `${rod.price}`;
     ctx.fillStyle = equipped ? "#0b6f34" : "#111";
     ctx.textAlign = "right";
-    ctx.fillText(label, x + 412, yPos + 24);
+    ctx.fillText(label, x + 414, yPos + 17);
     ctx.textAlign = "left";
-    buttonZones.push({ x, y: yPos, w: 432, h: 38, action: () => buyOrEquipRod(rod.id) });
+    buttonZones.push({ x, y: yPos, w: 432, h: 25, action: () => buyOrEquipRod(rod.id) });
   });
   ctx.fillStyle = "#ffe36e";
-  ctx.font = "900 18px Trebuchet MS";
-  ctx.fillText(`COINS ${state.progress.coins}`, x, y + 264);
+  ctx.font = "900 17px Trebuchet MS";
+  ctx.fillText(`COINS ${state.progress.coins}`, x, y + 310);
   ctx.restore();
 }
 
 function drawTinyRod(x, y, rod) {
   ctx.save();
   ctx.strokeStyle = rod.color;
-  ctx.lineWidth = 5;
+  ctx.lineWidth = 4;
   ctx.shadowColor = rod.glow;
-  ctx.shadowBlur = 12;
+  ctx.shadowBlur = 10;
   ctx.beginPath();
-  ctx.moveTo(x - 10, y + 8);
-  ctx.quadraticCurveTo(x + 22, y - 18, x + 42, y - 12);
+  ctx.moveTo(x - 8, y + 5);
+  ctx.quadraticCurveTo(x + 16, y - 13, x + 34, y - 9);
   ctx.stroke();
   ctx.shadowBlur = 0;
   ctx.fillStyle = rod.glow;
   ctx.beginPath();
-  ctx.arc(x + 43, y - 12, 5, 0, Math.PI * 2);
+  ctx.arc(x + 35, y - 9, 4, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
@@ -341,7 +346,7 @@ drawFisherCircle = function drawFisherCircleWithRodLook() {
   ctx.lineWidth = 6;
   ctx.beginPath();
   ctx.moveTo(160, 270);
-  ctx.quadraticCurveTo(235, 210 - rod.id * 4, 308, 246);
+  ctx.quadraticCurveTo(235, 210 - rod.id * 3, 308, 246);
   ctx.stroke();
   ctx.shadowBlur = 0;
 };
