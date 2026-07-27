@@ -1,6 +1,11 @@
 // Compatibility bridge for the restored polished Hyper Fishies script stack.
 (function () {
   window.joy = window.joy || { x: 0, y: 0, active: false };
+  if (typeof keys !== "undefined" && typeof keys.has !== "function") {
+    keys.has = function hasKey(key) {
+      return !!this[key] || !!this[String(key).toLowerCase()];
+    };
+  }
 
   if (typeof state !== "undefined") {
     state.ripples = state.ripples || [];
