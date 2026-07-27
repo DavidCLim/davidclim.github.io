@@ -1,3 +1,37 @@
+function goHome() {
+  state.mode = "menu";
+  state.menuPage = "home";
+  if (state.player) {
+    state.player.vx = 0;
+    state.player.vy = 0;
+    state.player.pose = "idle";
+  }
+  say("Welcome to Hyper Fishies.");
+}
+
+function resetGame() {
+  state.mode = "dock";
+  state.menuPage = "";
+  state.cast = null;
+  state.castPower = null;
+  state.player.x = 480;
+  state.player.y = 340;
+  state.player.vx = 0;
+  state.player.vy = 0;
+  state.player.pose = "idle";
+  say("Back on the dock.");
+}
+
+function exitSellShop() {
+  state.mode = "dock";
+  say("Back to the dock.");
+}
+
+function exitRodShop() {
+  state.mode = "dock";
+  say("Back to the dock.");
+}
+
 // Compatibility bridge for the restored polished Hyper Fishies script stack.
 (function () {
   window.joy = window.joy || { x: 0, y: 0, active: false };
@@ -19,39 +53,10 @@
     }
   }
 
-  window.goHome = window.goHome || function goHomeCompat() {
-    state.mode = "menu";
-    state.menuPage = "home";
-    if (state.player) {
-      state.player.vx = 0;
-      state.player.vy = 0;
-      state.player.pose = "idle";
-    }
-    say("Welcome to Hyper Fishies.");
-  };
-
-  window.resetGame = window.resetGame || function resetGameCompat() {
-    state.mode = "dock";
-    state.menuPage = "";
-    state.cast = null;
-    state.castPower = null;
-    state.player.x = 480;
-    state.player.y = 340;
-    state.player.vx = 0;
-    state.player.vy = 0;
-    state.player.pose = "idle";
-    say("Back on the dock.");
-  };
-
-  window.exitSellShop = window.exitSellShop || function exitSellShopCompat() {
-    state.mode = "dock";
-    say("Back to the dock.");
-  };
-
-  window.exitRodShop = window.exitRodShop || function exitRodShopCompat() {
-    state.mode = "dock";
-    say("Back to the dock.");
-  };
+  window.goHome = window.goHome || goHome;
+  window.resetGame = window.resetGame || resetGame;
+  window.exitSellShop = window.exitSellShop || exitSellShop;
+  window.exitRodShop = window.exitRodShop || exitRodShop;
 
   if (typeof drawGameHud !== "function") {
     window.drawGameHud = function drawGameHudBase() {
