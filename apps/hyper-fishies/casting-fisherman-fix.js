@@ -204,6 +204,14 @@
     }
   };
 
+  const oldDrawUiButton = drawUiButton;
+  drawUiButton = function drawUiButtonWithoutDeadShopShortcuts(x, y, w, h, label, action) {
+    const text = String(label || "").toUpperCase();
+    const isBottomRightShortcut = (state.mode === "dock" || state.mode === "fishing") && x >= 650 && y >= 455;
+    if (isBottomRightShortcut && (text.includes("SELL") || text.includes("ROD"))) return;
+    oldDrawUiButton(x, y, w, h, label, action);
+  };
+
   const oldDraw = draw;
   draw = function drawWithFinalCastingFisherman() {
     oldDraw();
@@ -212,5 +220,5 @@
     }
   };
 
-  say("Casting minigame fisherman now holds the rod.");
+  say("Casting minigame fisherman now holds the rod. Dead bottom-right shop buttons removed.");
 })();
