@@ -1,11 +1,17 @@
 // Compatibility bridge for the restored polished Hyper Fishies script stack.
 (function () {
+  window.joy = window.joy || { x: 0, y: 0, active: false };
+
   if (typeof state !== "undefined") {
     state.ripples = state.ripples || [];
     state.menuPage = state.menuPage || "";
     state.progress = state.progress || { coins: 0, caught: {}, bestFish: "None", ownedRods: [0], rod: 0 };
     state.progress.ownedRods = state.progress.ownedRods || [0];
     state.progress.caught = state.progress.caught || {};
+    if (state.mode === "home") {
+      state.mode = "menu";
+      state.menuPage = "home";
+    }
   }
 
   if (typeof drawGameHud !== "function") {
@@ -41,11 +47,17 @@
   if (typeof drawHomeScreen !== "function") {
     window.drawHomeScreen = function drawHomeScreenBase() {
       drawTopWater();
-      rounded(190, 56, 580, 420, 28, "rgba(5,63,93,.72)", "#dff8ff", 5);
-      writeText("HYPER", 480, 165, 70, "#ffe36e");
-      writeText("FISHIES", 480, 225, 44, "#effcff", "center", 500);
-      drawUiButton(365, 265, 230, 54, "PLAY", function () { state.mode = "dock"; });
-      drawUiButton(365, 332, 230, 54, "CREDITS", function () { state.menuPage = "credits"; });
+      rounded(150, 46, 660, 438, 28, "rgba(5,63,93,.76)", "#dff8ff", 5);
+      writeText("HYPER", 480, 152, 72, "#ffe36e");
+      writeText("FISHIES", 480, 214, 44, "#effcff", "center", 500);
+      writeText(`Coins: ${state.progress.coins || 0}  |  Best: ${state.progress.bestFish || "None"}`, 480, 252, 16, "#dff8ff");
+      drawUiButton(365, 292, 230, 56, "PLAY", function () { state.mode = "dock"; state.menuPage = ""; });
+      drawUiButton(365, 364, 230, 56, "CREDITS", function () { state.menuPage = "credits"; });
+      if (state.menuPage === "credits") {
+        rounded(236, 270, 488, 124, 18, "rgba(236,255,251,.92)", "#06334b", 4);
+        writeText("BY DAVID, LUCAS, AND FRIENDS", 480, 326, 22, "#06334b");
+        drawUiButton(405, 344, 150, 42, "BACK", function () { state.menuPage = "home"; });
+      }
     };
   }
 
