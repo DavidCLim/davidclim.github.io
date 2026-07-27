@@ -1,116 +1,119 @@
-// Movement failsafe loaded absolutely last. It focuses the game and listens for laptop
-// keys on every useful target, then moves the player immediately on each tap and while held.
+// Final movement layer. Loaded last so laptop keys always move the same player the game draws.
 (function () {
-  const pressed = Object.create(null);
-  const walkModes = new Set(["dock", "home", "menu"]);
+  var pressed = Object.create(null);
+  var moveKeys = {
+    a: true, d: true, w: true, s: true,
+    keya: true, keyd: true, keyw: true, keys: true,
+    arrowleft: true, arrowright: true, arrowup: true, arrowdown: true
+  };
 
-  function keyParts(event) {
-    return {
-      key: String(event.key || "").toLowerCase(),
-      code: String(event.code || "").toLowerCase()
-    };
+  function lower(value) {
+    return String(value || "").toLowerCase();
   }
 
-  function isMove(key, code) {
-    return key === "a" || key === "d" || key === "w" || key === "s" ||
-      key === "arrowleft" || key === "arrowright" || key === "arrowup" || key === "arrowdown" ||
-      code === "keya" || code === "keyd" || code === "keyw" || code === "keys";
-  }
+  function remember(event, value) {
+    var key = lower(event.key);
+    var code = lower(event.code);
+    if (key) pressed[key] = value;
+    if (code) pressed[code] = value;
 
-  function record(event, value) {
-    const parts = keyParts(event);
-    if (!parts.key && !parts.code) return parts;
-    pressed[parts.key] = value;
-    pressed[parts.code] = value;
     if (typeof keys !== "undefined") {
-      keys[parts.key] = value;
-      keys[parts.code] = value;
-      keys[parts.key.toLowerCase()] = value;
-      keys[parts.code.toLowerCase()] = value;
+      if (key) keys[key] = value;
+      if (code) keys[code] = value;
+      keys.a = !!(pressed.a || pressed.keya || pressed.arrowleft);
+      keys.d = !!(pressed.d || pressed.keyd || pressed.arrowright);
+      keys.w = !!(pressed.w || pressed.keyw || pressed.arrowup);
+      keys.s = !!(pressed.s || pressed.keys || pressed.arrowdown);
+      keys.arrowleft = !!(pressed.a || pressed.keya || pressed.arrowleft);
+      keys.arrowright = !!(pressed.d || pressed.keyd || pressed.arrowright);
+      keys.arrowup = !!(pressed.w || pressed.keyw || pressed.arrowup);
+      keys.arrowdown = !!(pressed.s || pressed.keys || pressed.arrowdown);
     }
-    if (isMove(parts.key, parts.code) || parts.key === " " || parts.code === "space") {
+
+    if (moveKeys[key] || moveKeys[code] || key === " " || code === "space") {
       event.preventDefault();
       event.stopPropagation();
     }
-    return parts;
   }
 
-  function directionFrom(parts) {
-    if (parts.key === "a" || parts.key === "arrowleft" || parts.code === "keya") return { x: -1, y: 0 };
-    if (parts.key === "d" || parts.key === "arrowright" || parts.code === "keyd") return { x: 1, y: 0 };
-    if (parts.key === "w" || parts.key === "arrowup" || parts.code === "keyw") return { x: 0, y: -1 };
-    if (parts.key === "s" || parts.key === "arrowdown" || parts.code === "keys") return { x: 0, y: 1 };
-    return { x: 0, y: 0 };
-  }
-
-  function heldDirection() {
+  function heldAxis() {
     return {
       x: (pressed.d || pressed.keyd || pressed.arrowright ? 1 : 0) - (pressed.a || pressed.keya || pressed.arrowleft ? 1 : 0),
       y: (pressed.s || pressed.keys || pressed.arrowdown ? 1 : 0) - (pressed.w || pressed.keyw || pressed.arrowup ? 1 : 0)
     };
   }
 
-  function ensureDock() {
-    if (!state || !state.player) return false;
-    if (state.mode === "home" || state.mode === "menu") {
+  function playableMode() {
+    if (typeof state === "undefined" || !state.player) return false;
+    if (state.mode === "home" || state.mode === "menu" || state.mode === "credits" || state.mode === "inventory") {
       state.mode = "dock";
       state.menuPage = "";
-      state.player.x = state.player.x || 480;
-      state.player.y = state.player.y || 340;
+      state.message = "Laptop movement ready: WASD or arrow keys.";
     }
-    return walkModes.has(state.mode);
+    return state.mode === "dock";
   }
 
-  function movePlayer(dx, dy, amount) {
-    if (!ensureDock()) return;
-    const mag = Math.hypot(dx, dy);
-    if (!mag) return;
-    dx /= mag;
-    dy /= mag;
+  function forceMove(dt, tapBoost) {
+    if (!playableMode()) return;
+    var dir = heldAxis();
+    if (window.joy) {
+      dir.x += joy.x || 0;
+      dir.y += joy.y || 0;
+    }
+    var mag = Math.hypot(dir.x, dir.y);
+    if (mag < 0.05) return;
 
-    const p = state.player;
-    p.x += dx * amount;
-    p.y += dy * amount;
-    p.vx = dx * 260;
-    p.vy = dy * 260;
+    dir.x /= mag;
+    dir.y /= mag;
+
+    var p = state.player;
+    var speed = tapBoost || 245 * Math.max(0.012, Math.min(0.04, dt || 0.016));
+    p.x += dir.x * speed;
+    p.y += dir.y * speed;
+    p.vx = dir.x * 245;
+    p.vy = dir.y * 245;
     p.pose = "walk";
-    p.facing = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? "left" : "right") : (dy < 0 ? "up" : "down");
-    state.walkFrame = (state.walkFrame || 0) + 0.24;
-    state.message = "Moving with laptop keys.";
+    p.facing = Math.abs(dir.x) > Math.abs(dir.y) ? (dir.x < 0 ? "left" : "right") : (dir.y < 0 ? "up" : "down");
+    state.walkFrame = (state.walkFrame || 0) + 0.22;
 
-    p.x = Math.max(70, Math.min(890, p.x));
-    p.y = Math.max(50, Math.min(460, p.y));
+    p.x = Math.max(64, Math.min(896, p.x));
+    p.y = Math.max(42, Math.min(456, p.y));
     if (typeof constrainToDock === "function") constrainToDock(p);
   }
 
-  function onKeyDown(event) {
-    const parts = record(event, true);
-    const dir = directionFrom(parts);
-    if (dir.x || dir.y) movePlayer(dir.x, dir.y, 32);
+  function keyDown(event) {
+    remember(event, true);
+    var key = lower(event.key);
+    var code = lower(event.code);
 
-    if ((parts.key === " " || parts.code === "space" || parts.key === "f") && state && state.mode === "fishing") {
-      if (state.castPower) stopCastBar();
-      else if (state.cast && state.cast.phase === "bite") reel();
-      else castLine();
+    if (moveKeys[key] || moveKeys[code]) forceMove(0.016, 26);
+
+    if ((key === " " || code === "space" || key === "f") && typeof state !== "undefined" && state.mode === "fishing") {
+      if (state.castPower && typeof stopCastBar === "function") stopCastBar();
+      else if (state.cast && state.cast.phase === "bite" && typeof reel === "function") reel();
+      else if (typeof castLine === "function") castLine();
     }
   }
 
-  function onKeyUp(event) {
-    record(event, false);
+  function keyUp(event) {
+    remember(event, false);
   }
 
   function attach(target) {
-    if (!target || target.__hyperFishiesKeysAttached) return;
-    target.__hyperFishiesKeysAttached = true;
-    target.addEventListener("keydown", onKeyDown, true);
-    target.addEventListener("keypress", onKeyDown, true);
-    target.addEventListener("keyup", onKeyUp, true);
+    if (!target) return;
+    target.addEventListener("keydown", keyDown, true);
+    target.addEventListener("keypress", keyDown, true);
+    target.addEventListener("keyup", keyUp, true);
   }
 
   attach(window);
   attach(document);
   attach(document.body);
   attach(canvas);
+  window.onkeydown = keyDown;
+  window.onkeyup = keyUp;
+  document.onkeydown = keyDown;
+  document.onkeyup = keyUp;
 
   canvas.tabIndex = 0;
   document.body.tabIndex = 0;
@@ -119,24 +122,23 @@
 
   function focusGame() {
     try { canvas.focus({ preventScroll: true }); } catch (error) { try { canvas.focus(); } catch (ignored) {} }
-    try { window.focus(); } catch (ignored) {}
+    try { document.body.focus({ preventScroll: true }); } catch (ignored2) {}
   }
+
   focusGame();
   window.addEventListener("load", focusGame);
-  canvas.addEventListener("pointerdown", focusGame, true);
   document.addEventListener("pointerdown", focusGame, true);
+  canvas.addEventListener("pointerdown", focusGame, true);
+
+  var previousUpdate = typeof update === "function" ? update : null;
+  if (previousUpdate) {
+    update = function updateWithGuaranteedLaptopMovement(dt) {
+      previousUpdate(dt);
+      forceMove(dt, 0);
+    };
+  }
 
   window.addEventListener("blur", function () {
-    Object.keys(pressed).forEach(key => pressed[key] = false);
+    Object.keys(pressed).forEach(function (name) { pressed[name] = false; });
   });
-
-  let last = performance.now();
-  function tick(now) {
-    const dt = Math.min(0.033, (now - last) / 1000);
-    last = now;
-    const dir = heldDirection();
-    if (dir.x || dir.y) movePlayer(dir.x, dir.y, 260 * dt);
-    requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
 })();
