@@ -1,4 +1,4 @@
-// Final rod fix: cheaper rod prices plus one shared smaller brown rod sprite for shop and casting.
+// Final rod fix: cheaper rod prices plus shared rod sprite shape for shop and casting.
 (function () {
   const cheapPrices = {
     1: 0,
@@ -24,7 +24,13 @@
     });
   }
 
-  function drawSharedBrownRod(x, y, scale, angle) {
+  function drawSharedRod(x, y, scale, angle, options) {
+    options = options || {};
+    const mainColor = options.color || "#9b5a22";
+    const glowColor = options.glow || "#d49a48";
+    const gripColor = options.grip || "#744019";
+    const reelColor = options.reel || mainColor;
+
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle || 0);
@@ -32,7 +38,10 @@
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
-    // Rod outline and warm wooden body.
+    ctx.shadowColor = glowColor;
+    ctx.shadowBlur = options.glowSize || 0;
+
+    // Rod outline and colored body.
     ctx.strokeStyle = "#2b1608";
     ctx.lineWidth = 10;
     ctx.beginPath();
@@ -41,17 +50,19 @@
     ctx.quadraticCurveTo(42, -36, 126, -50);
     ctx.stroke();
 
-    const wood = ctx.createLinearGradient(-58, 50, 126, -50);
-    wood.addColorStop(0, "#5f3214");
-    wood.addColorStop(0.42, "#9b5a22");
-    wood.addColorStop(1, "#d49a48");
-    ctx.strokeStyle = wood;
+    const rodGradient = ctx.createLinearGradient(-58, 50, 126, -50);
+    rodGradient.addColorStop(0, gripColor);
+    rodGradient.addColorStop(0.44, mainColor);
+    rodGradient.addColorStop(1, glowColor);
+    ctx.strokeStyle = rodGradient;
     ctx.lineWidth = 6;
     ctx.beginPath();
     ctx.moveTo(-58, 50);
     ctx.lineTo(-18, 14);
     ctx.quadraticCurveTo(42, -36, 126, -50);
     ctx.stroke();
+
+    ctx.shadowBlur = 0;
 
     // Grip.
     ctx.strokeStyle = "#1b0d05";
@@ -60,7 +71,7 @@
     ctx.moveTo(-82, 74);
     ctx.lineTo(-52, 46);
     ctx.stroke();
-    ctx.strokeStyle = "#744019";
+    ctx.strokeStyle = gripColor;
     ctx.lineWidth = 5;
     ctx.beginPath();
     ctx.moveTo(-82, 74);
@@ -68,20 +79,20 @@
     ctx.stroke();
 
     // Reel.
-    ctx.fillStyle = "#c88b42";
+    ctx.fillStyle = reelColor;
     ctx.strokeStyle = "#1b0d05";
     ctx.lineWidth = 5;
     ctx.beginPath();
     ctx.arc(-4, 42, 22, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
-    ctx.fillStyle = "#754118";
+    ctx.fillStyle = gripColor;
     ctx.beginPath();
     ctx.arc(-4, 42, 10, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 
-    // Line guides, same on shop and casting rod.
+    // Line guides, same shape for every rod.
     const guides = [
       { x: 28, y: -14, r: 7 },
       { x: 62, y: -32, r: 5.5 },
@@ -94,17 +105,37 @@
       ctx.beginPath();
       ctx.arc(guide.x, guide.y + 8, guide.r, Math.PI * 0.12, Math.PI * 1.85);
       ctx.stroke();
-      ctx.fillStyle = "#2b1608";
+      ctx.fillStyle = mainColor;
       ctx.beginPath();
       ctx.roundRect(guide.x - 5, guide.y - 4, 10, 11, 3);
       ctx.fill();
+      ctx.strokeStyle = "#1b0d05";
+      ctx.lineWidth = 2;
+      ctx.stroke();
     });
 
     ctx.restore();
   }
 
-  window.drawTinyRod = function drawTinyBrownRod(x, y) {
-    drawSharedBrownRod(x + 2, y - 1, 0.18, -0.16);
+  function drawBrownCastingRod(x, y, scale, angle) {
+    drawSharedRod(x, y, scale, angle, {
+      color: "#9b5a22",
+      glow: "#d49a48",
+      grip: "#744019",
+      reel: "#c88b42",
+      glowSize: 0
+    });
+  }
+
+  window.drawTinyRod = function drawTinyColoredRod(x, y, rod) {
+    const catalogRod = rod || { color: "#9b5a22", glow: "#d49a48" };
+    drawSharedRod(x + 2, y - 1, 0.18, -0.16, {
+      color: catalogRod.color || "#9b5a22",
+      glow: catalogRod.glow || catalogRod.color || "#d49a48",
+      grip: "#5f3214",
+      reel: catalogRod.color || "#c88b42",
+      glowSize: 10
+    });
   };
 
   const sideRodTip = { x: 265, y: 202 };
@@ -149,7 +180,7 @@
 
   window.drawFisherCircle = function drawSmallBrownRodCastingPose() {
     drawCastingFisherman();
-    drawSharedBrownRod(178, 252, 0.58, -0.22);
+    drawBrownCastingRod(178, 252, 0.58, -0.22);
   };
 
   window.drawFishingLine = function drawLineFromSmallBrownRod() {
@@ -180,6 +211,6 @@
   };
 
   if (typeof say === "function") {
-    say("Rod prices fixed. Casting rod is now smaller, brown, and matches the shop sprite.");
+    say("Shop rods now keep their own colors. Casting rod stays small and brown.");
   }
 })();
