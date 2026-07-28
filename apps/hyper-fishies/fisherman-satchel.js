@@ -164,8 +164,6 @@
     const y = 500;
     if (state.mode === "sell") {
       if (state.sellSatchelOpen) {
-        buttonZones.push({ x: 582, y: 360, w: 84, h: 46, action: openSellSatchel });
-        buttonZones.push({ x: 714, y: 360, w: 84, h: 46, action: exitSellShop });
         drawSatchelPanel("sell");
         return;
       }
@@ -195,17 +193,6 @@
       ctx.restore();
     }
   };
-
-  const oldCanvasPointerDown = canvas.onpointerdown;
-  canvas.addEventListener("pointerdown", function (event) {
-    const point = canvasPoint(event);
-    if (state.mode !== "sell" && state.satchelOpen) {
-      const closeArea = { x: 678, y: 420, w: 94, h: 42 };
-      if (!inRect(point, closeArea.x, closeArea.y, closeArea.w, closeArea.h) && point.y < 495) {
-        // Let drawn item cards absorb clicks, but keep the satchel from accidentally casting.
-      }
-    }
-  });
 
   if (typeof say === "function") say("Fisherman satchel added. Open it to inspect fish.");
 })();
