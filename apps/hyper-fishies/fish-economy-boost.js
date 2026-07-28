@@ -3,15 +3,15 @@
   if (typeof fishTypes === "undefined" || typeof rarityWeights === "undefined") return;
 
   const boostedValues = {
-    Sweetfish: 45,
-    Clownfish: 60,
-    Saltfish: 105,
-    "Flying Fish": 135,
-    Shrimp: 200,
-    "Monster Fish": 300,
-    Swordfish: 480,
-    "Sea Star": 550,
-    "Golden Shark": 1000
+    Sweetfish: 90,
+    Clownfish: 120,
+    Saltfish: 220,
+    "Flying Fish": 280,
+    Shrimp: 430,
+    "Monster Fish": 650,
+    Swordfish: 1050,
+    "Sea Star": 1200,
+    "Golden Shark": 2500
   };
 
   fishTypes.forEach(function (fish) {
@@ -27,6 +27,6 @@
   });
 
   if (typeof say === "function") {
-    say("Fish are easier to find now, and every catch sells for more.");
+    say("Fish are easier to find now, and every catch sells for a lot more.");
   }
 })();
