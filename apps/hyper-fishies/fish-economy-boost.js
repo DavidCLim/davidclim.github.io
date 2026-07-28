@@ -19,20 +19,20 @@
   });
 
   Object.assign(rarityWeights, {
-    Common: 34,
-    Unusual: 30,
-    Rare: 24,
-    Epic: 17,
-    Legendary: 12,
-    Mythical: 8,
-    Extinct: 5,
-    Gargantuan: 4,
-    Abyss: 3,
-    Abyssal: 3,
-    "???": 2
+    Common: 52,
+    Unusual: 18,
+    Rare: 16,
+    Epic: 8,
+    Legendary: 4,
+    Mythical: 2.2,
+    Extinct: 1.1,
+    Gargantuan: 0.55,
+    Abyss: 0.25,
+    Abyssal: 0.25,
+    "???": 0.08
   });
 
   if (typeof say === "function") {
-    say("Fish are easier to find now, but sell for less coins.");
+    say("Rare fish are harder to find now. Better rods matter more.");
   }
 })();
