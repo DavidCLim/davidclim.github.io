@@ -1,6 +1,6 @@
-// Final fishing pass: clearer side-view rod plus harder cast and reel minigames.
+// Final fishing pass: clearer side-view rod, easier casting, and a more skill-based reeling minigame.
 (function () {
-  const CAST_BAR_SPEED = 2.85;
+  const CAST_BAR_SPEED = 1.45;
   const SIDE_ROD_TIP = { x: 306, y: 190 };
 
   function drawVisibleBrownRod(x, y, scale, angle) {
@@ -11,7 +11,6 @@
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
-    // Shadow makes the rod readable against the water.
     ctx.strokeStyle = "rgba(3, 18, 24, .45)";
     ctx.lineWidth = 14;
     ctx.beginPath();
@@ -20,7 +19,6 @@
     ctx.quadraticCurveTo(32, -34, 162, -68);
     ctx.stroke();
 
-    // Dark outline.
     ctx.strokeStyle = "#2b1608";
     ctx.lineWidth = 10;
     ctx.beginPath();
@@ -29,7 +27,6 @@
     ctx.quadraticCurveTo(32, -34, 162, -68);
     ctx.stroke();
 
-    // Brown rod body.
     const wood = ctx.createLinearGradient(-78, 74, 162, -68);
     wood.addColorStop(0, "#5b2d10");
     wood.addColorStop(0.5, "#9a5721");
@@ -42,7 +39,6 @@
     ctx.quadraticCurveTo(32, -34, 162, -68);
     ctx.stroke();
 
-    // Handle.
     ctx.strokeStyle = "#1b0d05";
     ctx.lineWidth = 8;
     ctx.beginPath();
@@ -56,7 +52,6 @@
     ctx.lineTo(-74, 70);
     ctx.stroke();
 
-    // Reel.
     ctx.fillStyle = "#c88b42";
     ctx.strokeStyle = "#1b0d05";
     ctx.lineWidth = 5;
@@ -70,7 +65,6 @@
     ctx.fill();
     ctx.stroke();
 
-    // Guides.
     [
       { x: 20, y: -18, r: 7 },
       { x: 62, y: -39, r: 6 },
@@ -117,7 +111,6 @@
     ctx.fillStyle = "#2f75a8";
     ctx.beginPath(); ctx.moveTo(-16, -6); ctx.lineTo(0, 22); ctx.lineTo(16, -6); ctx.lineTo(12, 20); ctx.quadraticCurveTo(0, 30, -12, 20); ctx.closePath(); ctx.fill(); ctx.stroke();
 
-    // Front arm grips the rod.
     ctx.strokeStyle = "#10202c";
     ctx.lineWidth = 6;
     ctx.beginPath(); ctx.moveTo(-15, -4); ctx.lineTo(-31, 10); ctx.stroke();
@@ -132,6 +125,85 @@
     ctx.fillStyle = "#275f88";
     ctx.beginPath(); ctx.ellipse(0, -54, 21, 9, 0, Math.PI, 0); ctx.lineTo(18, -43); ctx.quadraticCurveTo(0, -37, -18, -43); ctx.closePath(); ctx.fill(); ctx.stroke();
 
+    ctx.restore();
+  }
+
+  function reelTimingStats(cast) {
+    const rarity = cast.fish ? cast.fish.rarity : "Common";
+    const size = {
+      Common: 0.24,
+      Unusual: 0.22,
+      Rare: 0.19,
+      Epic: 0.16,
+      Legendary: 0.135,
+      Mythical: 0.115,
+      Extinct: 0.10,
+      Gargantuan: 0.09,
+      Abyss: 0.08,
+      Abyssal: 0.08,
+      "???": 0.065
+    }[rarity] || 0.18;
+    const speed = {
+      Common: 0.72,
+      Unusual: 0.82,
+      Rare: 0.96,
+      Epic: 1.12,
+      Legendary: 1.32,
+      Mythical: 1.48,
+      Extinct: 1.66,
+      Gargantuan: 1.84,
+      Abyss: 2.02,
+      Abyssal: 2.02,
+      "???": 2.28
+    }[rarity] || 1;
+    return { size, speed };
+  }
+
+  function circularDistance(a, b) {
+    const diff = Math.abs(a - b) % 1;
+    return Math.min(diff, 1 - diff);
+  }
+
+  function drawReelTimingRing(cast) {
+    if (!cast || cast.phase !== "bite") return;
+    const stats = reelTimingStats(cast);
+    const cx = cast.hookX;
+    const cy = cast.hookY;
+    const radius = 46;
+    const target = cast.reelTarget || 0.78;
+    const needle = cast.reelNeedle || 0;
+    const start = -Math.PI / 2 + (target - stats.size / 2) * Math.PI * 2;
+    const end = -Math.PI / 2 + (target + stats.size / 2) * Math.PI * 2;
+    const needleAngle = -Math.PI / 2 + needle * Math.PI * 2;
+
+    ctx.save();
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "rgba(236,255,251,.28)";
+    ctx.lineWidth = 9;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = "#ffe36e";
+    ctx.lineWidth = 11;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, start, end);
+    ctx.stroke();
+
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(needleAngle) * (radius + 12), cy + Math.sin(needleAngle) * (radius + 12));
+    ctx.stroke();
+
+    ctx.textAlign = "center";
+    ctx.font = "900 12px Trebuchet MS";
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "rgba(3, 32, 61, .95)";
+    ctx.fillStyle = "#ffffff";
+    ctx.strokeText("TIME TAP", cx, cy - radius - 16);
+    ctx.fillText("TIME TAP", cx, cy - radius - 16);
     ctx.restore();
   }
 
@@ -164,10 +236,11 @@
       ctx.beginPath();
       ctx.arc(c.hookX, c.hookY, 28, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * clamp(c.reel, 0, 1));
       ctx.stroke();
+      drawReelTimingRing(c);
     }
   };
 
-  window.updateFishing = function updateFishingHardest(dt) {
+  window.updateFishing = function updateFishingBalanced(dt) {
     if (state.castPower) {
       state.castPower.power += state.castPower.dir * dt * CAST_BAR_SPEED;
       if (state.castPower.power > 1) {
@@ -202,52 +275,73 @@
       cast.hookY += Math.sin(performance.now() / 130) * 0.2;
       if (cast.biteIn <= 0) {
         cast.phase = "bite";
-        cast.reel = 0.28;
+        cast.reel = 0.34;
         cast.fish = rollFish();
         cast.shake = rand(1.15, 2.25);
-        say(`${cast.fish.rarity.toUpperCase()} BITE! Tap fast or it escapes!`);
+        cast.reelNeedle = 0;
+        cast.reelTarget = rand(0.12, 0.88);
+        say(`${cast.fish.rarity.toUpperCase()} BITE! Tap when the needle hits gold!`);
       }
     } else if (cast.phase === "bite") {
+      const stats = reelTimingStats(cast);
       const rarityDrain = {
-        Common: 0.11,
-        Unusual: 0.15,
-        Rare: 0.21,
-        Epic: 0.29,
-        Legendary: 0.39,
-        Mythical: 0.48,
-        Extinct: 0.58,
-        Gargantuan: 0.68,
-        Abyss: 0.78,
-        Abyssal: 0.78,
-        "???": 0.95
-      }[cast.fish.rarity] || 0.18;
-      cast.reel -= (0.20 + rarityDrain - rod.control * 0.045) * dt;
+        Common: 0.09,
+        Unusual: 0.13,
+        Rare: 0.18,
+        Epic: 0.25,
+        Legendary: 0.34,
+        Mythical: 0.43,
+        Extinct: 0.52,
+        Gargantuan: 0.62,
+        Abyss: 0.72,
+        Abyssal: 0.72,
+        "???": 0.88
+      }[cast.fish.rarity] || 0.16;
+      cast.reelNeedle = (cast.reelNeedle + dt * stats.speed) % 1;
+      cast.reel -= (0.16 + rarityDrain - rod.control * 0.045) * dt;
       cast.hookX += Math.sin(performance.now() / 62) * cast.shake * 0.36;
       cast.hookY += Math.cos(performance.now() / 75) * cast.shake * 0.10;
       if (cast.reel <= 0) {
         state.cast = null;
-        say("The fish fought free. Faster taps and better rods help.");
+        say("The fish fought free. Time your taps on the gold ring.");
       }
     }
   };
 
-  window.reel = function reelHarderFinal() {
+  window.reel = function reelTimingTap() {
     if (!state.cast) return castLine();
     if (state.cast.phase !== "bite") return;
+    const cast = state.cast;
     const rod = currentRod();
-    state.cast.reel += 0.105 + rod.control * 0.034;
-    makeRipple(state.cast.hookX, state.cast.hookY);
-    if (state.cast.reel >= 1) catchFish(state.cast.fish);
+    const stats = reelTimingStats(cast);
+    const distance = circularDistance(cast.reelNeedle || 0, cast.reelTarget || 0.78);
+
+    if (distance <= stats.size / 2) {
+      cast.reel += 0.17 + rod.control * 0.044;
+      cast.reelTarget = rand(0.08, 0.92);
+      cast.reelNeedle = (cast.reelNeedle + 0.18) % 1;
+      makeRipple(cast.hookX, cast.hookY);
+      say("Perfect reel!");
+    } else if (distance <= stats.size) {
+      cast.reel += 0.07 + rod.control * 0.024;
+      makeRipple(cast.hookX, cast.hookY);
+      say("Good reel.");
+    } else {
+      cast.reel -= 0.065;
+      say("Missed timing!");
+    }
+
+    if (cast.reel >= 1) catchFish(cast.fish);
   };
 
   const oldCastLine = castLine;
-  window.castLine = function castLineHarderFinal() {
+  window.castLine = function castLineBalanced() {
     if (state.mode === "sell" || state.mode === "rodshop") return;
     if (state.mode === "dock") {
       if (!atFishingDock(state.player)) return say("Walk onto the FISHING PIER first.");
       enterFishing();
       state.castPower = { power: 0, dir: 1 };
-      say("CAST FOR LUCK: the meter is faster now.");
+      say("CAST FOR LUCK: easier timing, bigger sweet spot.");
       return;
     }
     if (state.mode !== "fishing") return oldCastLine();
@@ -255,29 +349,29 @@
     if (state.castPower) {
       const rod = currentRod();
       const rawPower = clamp(state.castPower.power, 0.05, 1);
-      const accuracy = 1 - Math.abs(rawPower - 0.86) / 0.86;
-      const power = clamp(rawPower * 0.74 + Math.max(0, accuracy) * 0.26, 0.12, 1);
+      const accuracy = 1 - Math.abs(rawPower - 0.78) / 0.78;
+      const power = clamp(rawPower * 0.62 + Math.max(0, accuracy) * 0.38, 0.2, 1);
       state.castPower = null;
       state.cast = {
         phase: "fly",
         timer: 0,
         hookX: 184,
         hookY: 300,
-        vx: 170 + power * 270 + rod.id * 12,
-        vy: -116 - power * 135 - rod.id * 4,
+        vx: 185 + power * 285 + rod.id * 12,
+        vy: -120 - power * 135 - rod.id * 4,
         waterY: 345,
         reel: 0,
         fish: null
       };
-      say(power > 0.82 ? "Great cast!" : power > 0.55 ? "Decent cast." : "Weak cast. Better timing helps.");
+      say(power > 0.78 ? "Great cast!" : power > 0.45 ? "Good cast." : "Short cast, but still fishable.");
       return;
     }
     if (state.cast) return reel();
     state.castPower = { power: 0, dir: 1 };
-    say("CAST FOR LUCK: the meter is faster now.");
+    say("CAST FOR LUCK: easier timing, bigger sweet spot.");
   };
 
-  window.drawPowerMeter = function drawHarderPowerMeter() {
+  window.drawPowerMeter = function drawEasierPowerMeter() {
     if (!state.castPower) return;
     const x = 240;
     const y = 422;
@@ -287,20 +381,19 @@
 
     const grad = ctx.createLinearGradient(x + 10, y, x + w - 10, y);
     grad.addColorStop(0, "#4db9ff");
-    grad.addColorStop(.56, "#63ff93");
-    grad.addColorStop(.82, "#ffe36e");
-    grad.addColorStop(.91, "#ffffff");
+    grad.addColorStop(.52, "#63ff93");
+    grad.addColorStop(.74, "#ffe36e");
+    grad.addColorStop(.88, "#ffffff");
     grad.addColorStop(1, "#ff7a52");
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.roundRect(x + 10, y + 9, w - 20, h - 18, 10);
     ctx.fill();
 
-    // Smaller perfect zone makes casting harder.
     ctx.strokeStyle = "#ffffff";
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.roundRect(x + w * 0.83, y + 5, w * 0.065, h - 10, 8);
+    ctx.roundRect(x + w * 0.68, y + 5, w * 0.20, h - 10, 8);
     ctx.stroke();
 
     const px = x + 10 + state.castPower.power * (w - 20);
@@ -324,6 +417,6 @@
   };
 
   if (typeof say === "function") {
-    say("Fishing minigames are harder, and the side-view rod is clearly visible.");
+    say("Casting is easier now. Reeling uses timing taps on the gold ring.");
   }
 })();
