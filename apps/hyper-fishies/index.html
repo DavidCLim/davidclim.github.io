@@ -1,31 +1,64 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hyper Fishies</title>
-  <link rel="stylesheet" href="styles.css?v=1.1" />
-</head>
-<body>
-  <main class="game-shell">
-    <canvas id="gameCanvas" width="960" height="540" aria-label="Hyper Fishies game canvas"></canvas>
-    <div id="joystick" aria-label="Movement joystick">
-      <div id="joystickKnob"></div>
-    </div>
-  </main>
-  <script src="game.js?v=2.0"></script>
-  <script src="hyperfishies-compat.js?v=1.4"></script>
-  <script src="rod-shop.js?v=1.0"></script>
-  <script src="fisch-polish.js?v=1.0"></script>
-  <script src="fortress-dock.js?v=1.0"></script>
-  <script src="movement-rod-pirate-fix.js?v=1.0"></script>
-  <script src="rod-line-fix.js?v=1.0"></script>
-  <script src="top-view-hollow-animation.js?v=1.0"></script>
-  <script src="fisherman-character.js?v=1.0"></script>
-  <script src="gameplay-polish-fix.js?v=1.0"></script>
-  <script src="casting-fisherman-fix.js?v=1.1"></script>
-  <script src="home-movement-fix.js?v=1.1"></script>
-  <script src="movement-failsafe.js?v=1.4"></script>
-  <script src="final-controls-fix.js?v=1.0"></script>
-</body>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>HYPER FISHIES</title>
+    <meta name="description" content="A Fisch-style dock fishing game with top-down walking and side-view casting.">
+    <link rel="stylesheet" href="styles.css?v=5.3">
+  </head>
+  <body>
+    <main class="game-shell">
+      <section class="game-panel" aria-label="Hyper Fishies game">
+        <div class="canvas-wrap">
+          <canvas id="gameCanvas" width="960" height="560" aria-label="Hyper Fishies playable game area"></canvas>
+
+          <div class="screen-hidden" aria-hidden="true">
+            <a class="back-link" href="../../">HOME</a>
+            <button id="restartButton" class="game-button" type="button">RESET</button>
+            <strong id="coinsText">0</strong>
+            <strong id="bagText">0/6</strong>
+            <strong id="areaText">DOCK</strong>
+            <strong id="rodText">I</strong>
+            <strong id="latestText">NONE</strong>
+            <button id="castButton" class="game-button" type="button">CAST</button>
+            <button id="sellButton" class="game-button" type="button">SELL FISH</button>
+            <button id="upgradeButton" class="game-button" type="button">UPGRADE ROD</button>
+            <div id="statusText">Walk to the small top fishing dock to start fishing.</div>
+            <div id="messagePanel"><h1>HYPER FISHIES</h1><p></p><button id="startButton" type="button">PLAY</button></div>
+          </div>
+
+          <div id="joystick" class="joystick" aria-label="Mobile joystick"><div id="joystickKnob"></div></div>
+        </div>
+      </section>
+    </main>
+    <script src="script.js?v=3.9"></script>
+    <script src="sell-style.js?v=1.1"></script>
+    <script src="rod-shop.js?v=1.1"></script>
+    <script src="roblox-anatomy.js?v=1.0"></script>
+    <script src="fisch-polish.js?v=1.0"></script>
+    <script src="no-shop.js?v=1.1"></script>
+    <script src="fish-catch.js?v=1.0"></script>
+    <script src="character-fix.js?v=1.1"></script>
+    <script src="dock-inventory-polish.js?v=1.0"></script>
+    <script src="adventure-update.js?v=1.0"></script>
+    <script src="final-polish.js?v=1.2"></script>
+    <script src="graphics-upgrade.js?v=1.0"></script>
+    <script src="economy-rods.js?v=1.0"></script>
+    <script src="player-dock-fix.js?v=1.0"></script>
+    <script src="pirate-roblox-fix.js?v=1.0"></script>
+    <script src="save-player-cast-fix.js?v=1.1"></script>
+    <script src="fortress-dock.js?v=1.0"></script>
+    <script src="reset-rods-fortress.js?v=1.1"></script>
+    <script src="cast-label-fix.js?v=1.1"></script>
+    <script src="fortress-expansion.js?v=1.1"></script>
+    <script src="movement-rod-pirate-fix.js?v=1.0"></script>
+    <script src="fish-roster-rarities.js?v=1.0"></script>
+    <script src="hollow-animations-minigame-fix.js?v=1.0"></script>
+    <script src="rod-line-fix.js?v=1.0"></script>
+    <script src="soundscape.js?v=1.0"></script>
+    <script src="top-view-hollow-animation.js?v=1.0"></script>
+    <script src="fisherman-character.js?v=1.0"></script>
+    <script src="final-audio-fix.js?v=1.0"></script>
+  </body>
 </html>
