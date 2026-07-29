@@ -1,88 +1,122 @@
-// Makes the timing-ring reeling minigame easier while keeping the skill-based feel.
+// New reeling minigame: keep your hook marker inside the moving fish zone.
 (function () {
   const SIDE_ROD_TIP = { x: 306, y: 190 };
 
-  function easierReelStats(cast) {
+  function reelStats(cast) {
     const rarity = cast.fish ? cast.fish.rarity : "Common";
-    const size = {
-      Common: 0.36,
-      Unusual: 0.33,
-      Rare: 0.30,
-      Epic: 0.26,
-      Legendary: 0.23,
+    const zone = {
+      Common: 0.34,
+      Unusual: 0.32,
+      Rare: 0.29,
+      Epic: 0.255,
+      Legendary: 0.225,
       Mythical: 0.20,
       Extinct: 0.18,
       Gargantuan: 0.165,
       Abyss: 0.15,
       Abyssal: 0.15,
-      "???": 0.13
+      "???": 0.135
     }[rarity] || 0.28;
     const speed = {
-      Common: 0.46,
-      Unusual: 0.52,
-      Rare: 0.60,
-      Epic: 0.70,
-      Legendary: 0.82,
-      Mythical: 0.94,
-      Extinct: 1.05,
-      Gargantuan: 1.16,
-      Abyss: 1.28,
-      Abyssal: 1.28,
-      "???": 1.44
-    }[rarity] || 0.66;
-    return { size, speed };
+      Common: 0.34,
+      Unusual: 0.38,
+      Rare: 0.44,
+      Epic: 0.52,
+      Legendary: 0.60,
+      Mythical: 0.69,
+      Extinct: 0.78,
+      Gargantuan: 0.88,
+      Abyss: 1.00,
+      Abyssal: 1.00,
+      "???": 1.15
+    }[rarity] || 0.48;
+    return { zone, speed };
   }
 
-  function circularDistance(a, b) {
-    const diff = Math.abs(a - b) % 1;
-    return Math.min(diff, 1 - diff);
+  function setupReelGame(cast) {
+    if (cast.reelGame) return;
+    cast.reelGame = {
+      hook: 0.48,
+      hookVel: 0,
+      fish: rand(0.24, 0.76),
+      fishVel: rand(0.18, 0.34) * (Math.random() < 0.5 ? -1 : 1),
+      focus: 0.18
+    };
   }
 
-  function drawEasierReelRing(cast) {
+  function drawHookZoneGame(cast) {
     if (!cast || cast.phase !== "bite") return;
-    const stats = easierReelStats(cast);
-    const cx = cast.hookX;
-    const cy = cast.hookY;
-    const radius = 48;
-    const target = cast.reelTarget || 0.78;
-    const needle = cast.reelNeedle || 0;
-    const start = -Math.PI / 2 + (target - stats.size / 2) * Math.PI * 2;
-    const end = -Math.PI / 2 + (target + stats.size / 2) * Math.PI * 2;
-    const needleAngle = -Math.PI / 2 + needle * Math.PI * 2;
+    setupReelGame(cast);
+    const game = cast.reelGame;
+    const stats = reelStats(cast);
+    const x = 248;
+    const y = 424;
+    const w = 464;
+    const h = 44;
+    const fishX = x + game.fish * w;
+    const hookX = x + game.hook * w;
+    const zoneW = stats.zone * w;
 
     ctx.save();
-    ctx.lineCap = "round";
-    ctx.strokeStyle = "rgba(236,255,251,.28)";
-    ctx.lineWidth = 10;
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.stroke();
+    rounded(x, y, w, h, 20, "rgba(3, 32, 61, .9)", "#ecfffb", 4);
 
+    const water = ctx.createLinearGradient(x, y, x + w, y);
+    water.addColorStop(0, "#1ba7e8");
+    water.addColorStop(0.5, "#63ffdd");
+    water.addColorStop(1, "#0d5ea8");
+    ctx.fillStyle = water;
+    ctx.beginPath();
+    ctx.roundRect(x + 10, y + 10, w - 20, h - 20, 12);
+    ctx.fill();
+
+    ctx.fillStyle = "rgba(255, 227, 110, .38)";
     ctx.strokeStyle = "#ffe36e";
-    ctx.lineWidth = 13;
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.arc(cx, cy, radius, start, end);
+    ctx.roundRect(fishX - zoneW / 2, y + 6, zoneW, h - 12, 13);
+    ctx.fill();
     ctx.stroke();
 
-    ctx.strokeStyle = "#ffffff";
+    drawSmallFish(fishX, y + h / 2, 18, cast.fish.color || rarityColors[cast.fish.rarity] || "#ffe36e");
+
+    ctx.strokeStyle = "#05263d";
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(hookX, y - 7);
+    ctx.lineTo(hookX, y + h + 8);
+    ctx.stroke();
+    ctx.fillStyle = "#ffffff";
+    ctx.strokeStyle = "#05263d";
     ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + Math.cos(needleAngle) * (radius + 12), cy + Math.sin(needleAngle) * (radius + 12));
+    ctx.arc(hookX, y + h / 2, 13, 0, Math.PI * 2);
+    ctx.fill();
     ctx.stroke();
+    ctx.strokeStyle = "#05263d";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(hookX, y + h / 2 + 4, 7, 0.2, Math.PI * 1.32);
+    ctx.stroke();
+
+    const progressX = x;
+    const progressY = y - 34;
+    rounded(progressX, progressY, w, 18, 9, "rgba(3, 32, 61, .75)", "rgba(236,255,251,.7)", 2);
+    ctx.fillStyle = "#ffe36e";
+    ctx.beginPath();
+    ctx.roundRect(progressX + 4, progressY + 4, (w - 8) * clamp(cast.reel, 0, 1), 10, 5);
+    ctx.fill();
 
     ctx.textAlign = "center";
-    ctx.font = "900 12px Trebuchet MS";
-    ctx.lineWidth = 4;
+    ctx.font = "900 14px Trebuchet MS";
+    ctx.lineWidth = 5;
     ctx.strokeStyle = "rgba(3, 32, 61, .95)";
     ctx.fillStyle = "#ffffff";
-    ctx.strokeText("EASY TIMING", cx, cy - radius - 16);
-    ctx.fillText("EASY TIMING", cx, cy - radius - 16);
+    ctx.strokeText("TAP TO PULL THE HOOK INTO THE FISH ZONE", x + w / 2, y - 46);
+    ctx.fillText("TAP TO PULL THE HOOK INTO THE FISH ZONE", x + w / 2, y - 46);
     ctx.restore();
   }
 
-  const previousDrawFishingLine = drawFishingLine;
-  drawFishingLine = function drawEasierReelFishingLine() {
+  drawFishingLine = function drawHookZoneFishingLine() {
     if (!state.cast) return;
     const c = state.cast;
     ctx.strokeStyle = "rgba(236,255,251,.84)";
@@ -100,17 +134,10 @@
     ctx.fill();
     ctx.stroke();
 
-    if (c.phase === "bite") {
-      ctx.strokeStyle = rarityColors[c.fish.rarity] || "#ecfffb";
-      ctx.lineWidth = 8;
-      ctx.beginPath();
-      ctx.arc(c.hookX, c.hookY, 28, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * clamp(c.reel, 0, 1));
-      ctx.stroke();
-      drawEasierReelRing(c);
-    }
+    if (c.phase === "bite") drawHookZoneGame(c);
   };
 
-  updateFishing = function updateFishingEasierReel(dt) {
+  updateFishing = function updateFishingHookZone(dt) {
     if (state.castPower) {
       state.castPower.power += state.castPower.dir * dt * 1.45;
       if (state.castPower.power > 1) {
@@ -145,64 +172,61 @@
       cast.hookY += Math.sin(performance.now() / 130) * 0.2;
       if (cast.biteIn <= 0) {
         cast.phase = "bite";
-        cast.reel = 0.46;
+        cast.reel = 0.12;
         cast.fish = rollFish();
         cast.shake = rand(0.85, 1.55);
-        cast.reelNeedle = 0;
-        cast.reelTarget = rand(0.12, 0.88);
-        say(`${cast.fish.rarity.toUpperCase()} BITE! Tap when the needle hits gold!`);
+        cast.reelGame = null;
+        say(`${cast.fish.rarity.toUpperCase()} BITE! Keep the hook in the fish zone!`);
       }
     } else if (cast.phase === "bite") {
-      const stats = easierReelStats(cast);
-      const rarityDrain = {
-        Common: 0.04,
-        Unusual: 0.06,
-        Rare: 0.085,
-        Epic: 0.12,
-        Legendary: 0.17,
-        Mythical: 0.22,
-        Extinct: 0.28,
-        Gargantuan: 0.34,
-        Abyss: 0.42,
-        Abyssal: 0.42,
-        "???": 0.52
-      }[cast.fish.rarity] || 0.08;
-      cast.reelNeedle = (cast.reelNeedle + dt * stats.speed) % 1;
-      cast.reel -= (0.08 + rarityDrain - rod.control * 0.035) * dt;
+      setupReelGame(cast);
+      const game = cast.reelGame;
+      const stats = reelStats(cast);
+
+      game.fish += game.fishVel * stats.speed * dt;
+      if (game.fish < 0.12 || game.fish > 0.88) {
+        game.fish = clamp(game.fish, 0.12, 0.88);
+        game.fishVel *= -1;
+      }
+      game.fishVel += Math.sin(performance.now() / 520) * 0.08 * dt;
+      game.fishVel = clamp(game.fishVel, -0.7, 0.7);
+
+      game.hookVel -= 1.45 * dt;
+      game.hook += game.hookVel * dt;
+      game.hookVel *= Math.pow(0.08, dt);
+      game.hook = clamp(game.hook, 0.04, 0.96);
+      if (game.hook <= 0.04 || game.hook >= 0.96) game.hookVel *= -0.22;
+
+      const distance = Math.abs(game.hook - game.fish);
+      const inZone = distance <= stats.zone / 2;
+      if (inZone) {
+        cast.reel += (0.20 + rod.control * 0.045) * dt;
+      } else {
+        cast.reel -= (0.075 + distance * 0.12) * dt;
+      }
+      cast.reel = clamp(cast.reel, 0, 1);
+
       cast.hookX += Math.sin(performance.now() / 70) * cast.shake * 0.24;
       cast.hookY += Math.cos(performance.now() / 84) * cast.shake * 0.08;
-      if (cast.reel <= 0) {
+      if (cast.reel <= 0 && cast.timer > 1.2) {
         state.cast = null;
-        say("The fish got away. Try tapping when the needle hits gold.");
+        say("The fish escaped. Keep the hook inside the moving zone.");
+      } else if (cast.reel >= 1) {
+        catchFish(cast.fish);
       }
     }
   };
 
-  reel = function reelEasierTimingTap() {
+  reel = function pullHookTowardFishZone() {
     if (!state.cast) return castLine();
     if (state.cast.phase !== "bite") return;
-    const cast = state.cast;
+    setupReelGame(state.cast);
+    const game = state.cast.reelGame;
     const rod = currentRod();
-    const stats = easierReelStats(cast);
-    const distance = circularDistance(cast.reelNeedle || 0, cast.reelTarget || 0.78);
-
-    if (distance <= stats.size / 2) {
-      cast.reel += 0.24 + rod.control * 0.055;
-      cast.reelTarget = rand(0.08, 0.92);
-      cast.reelNeedle = (cast.reelNeedle + 0.12) % 1;
-      makeRipple(cast.hookX, cast.hookY);
-      say("Perfect reel!");
-    } else if (distance <= stats.size * 1.25) {
-      cast.reel += 0.13 + rod.control * 0.035;
-      makeRipple(cast.hookX, cast.hookY);
-      say("Good reel.");
-    } else {
-      cast.reel -= 0.025;
-      say("Missed timing, but the fish is still close!");
-    }
-
-    if (cast.reel >= 1) catchFish(cast.fish);
+    game.hookVel += 0.34 + rod.control * 0.035;
+    game.hookVel = clamp(game.hookVel, -1.2, 1.65);
+    makeRipple(state.cast.hookX, state.cast.hookY);
   };
 
-  if (typeof say === "function") say("Reeling is easier now: wider gold zone, slower needle, softer misses.");
+  if (typeof say === "function") say("New reeling minigame added: keep the hook inside the moving fish zone.");
 })();
