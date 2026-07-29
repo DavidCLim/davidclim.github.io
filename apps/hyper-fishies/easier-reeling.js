@@ -5,41 +5,41 @@
   function reelStats(cast) {
     const rarity = cast.fish ? cast.fish.rarity : "Common";
     const zone = {
-      Common: 0.34,
-      Unusual: 0.32,
-      Rare: 0.29,
-      Epic: 0.255,
-      Legendary: 0.225,
-      Mythical: 0.20,
-      Extinct: 0.18,
-      Gargantuan: 0.165,
-      Abyss: 0.15,
-      Abyssal: 0.15,
-      "???": 0.135
-    }[rarity] || 0.28;
+      Common: 0.46,
+      Unusual: 0.43,
+      Rare: 0.40,
+      Epic: 0.36,
+      Legendary: 0.32,
+      Mythical: 0.29,
+      Extinct: 0.265,
+      Gargantuan: 0.245,
+      Abyss: 0.225,
+      Abyssal: 0.225,
+      "???": 0.20
+    }[rarity] || 0.38;
     const speed = {
-      Common: 0.34,
-      Unusual: 0.38,
-      Rare: 0.44,
-      Epic: 0.52,
-      Legendary: 0.60,
-      Mythical: 0.69,
-      Extinct: 0.78,
-      Gargantuan: 0.88,
-      Abyss: 1.00,
-      Abyssal: 1.00,
-      "???": 1.15
-    }[rarity] || 0.48;
+      Common: 0.22,
+      Unusual: 0.25,
+      Rare: 0.29,
+      Epic: 0.35,
+      Legendary: 0.42,
+      Mythical: 0.49,
+      Extinct: 0.56,
+      Gargantuan: 0.64,
+      Abyss: 0.72,
+      Abyssal: 0.72,
+      "???": 0.86
+    }[rarity] || 0.32;
     return { zone, speed };
   }
 
   function setupReelGame(cast) {
     if (cast.reelGame) return;
     cast.reelGame = {
-      hook: 0.48,
+      hook: 0.50,
       hookVel: 0,
-      fish: rand(0.24, 0.76),
-      fishVel: rand(0.18, 0.34) * (Math.random() < 0.5 ? -1 : 1),
+      fish: rand(0.30, 0.70),
+      fishVel: rand(0.12, 0.24) * (Math.random() < 0.5 ? -1 : 1),
       focus: 0.18
     };
   }
@@ -172,9 +172,9 @@
       cast.hookY += Math.sin(performance.now() / 130) * 0.2;
       if (cast.biteIn <= 0) {
         cast.phase = "bite";
-        cast.reel = 0.12;
+        cast.reel = 0.22;
         cast.fish = rollFish();
-        cast.shake = rand(0.85, 1.55);
+        cast.shake = rand(0.7, 1.25);
         cast.reelGame = null;
         say(`${cast.fish.rarity.toUpperCase()} BITE! Keep the hook in the fish zone!`);
       }
@@ -184,31 +184,31 @@
       const stats = reelStats(cast);
 
       game.fish += game.fishVel * stats.speed * dt;
-      if (game.fish < 0.12 || game.fish > 0.88) {
-        game.fish = clamp(game.fish, 0.12, 0.88);
+      if (game.fish < 0.16 || game.fish > 0.84) {
+        game.fish = clamp(game.fish, 0.16, 0.84);
         game.fishVel *= -1;
       }
-      game.fishVel += Math.sin(performance.now() / 520) * 0.08 * dt;
-      game.fishVel = clamp(game.fishVel, -0.7, 0.7);
+      game.fishVel += Math.sin(performance.now() / 620) * 0.045 * dt;
+      game.fishVel = clamp(game.fishVel, -0.48, 0.48);
 
-      game.hookVel -= 1.45 * dt;
+      game.hookVel -= 1.05 * dt;
       game.hook += game.hookVel * dt;
-      game.hookVel *= Math.pow(0.08, dt);
+      game.hookVel *= Math.pow(0.12, dt);
       game.hook = clamp(game.hook, 0.04, 0.96);
-      if (game.hook <= 0.04 || game.hook >= 0.96) game.hookVel *= -0.22;
+      if (game.hook <= 0.04 || game.hook >= 0.96) game.hookVel *= -0.16;
 
       const distance = Math.abs(game.hook - game.fish);
       const inZone = distance <= stats.zone / 2;
       if (inZone) {
-        cast.reel += (0.20 + rod.control * 0.045) * dt;
+        cast.reel += (0.32 + rod.control * 0.065) * dt;
       } else {
-        cast.reel -= (0.075 + distance * 0.12) * dt;
+        cast.reel -= (0.035 + distance * 0.055) * dt;
       }
       cast.reel = clamp(cast.reel, 0, 1);
 
-      cast.hookX += Math.sin(performance.now() / 70) * cast.shake * 0.24;
-      cast.hookY += Math.cos(performance.now() / 84) * cast.shake * 0.08;
-      if (cast.reel <= 0 && cast.timer > 1.2) {
+      cast.hookX += Math.sin(performance.now() / 70) * cast.shake * 0.18;
+      cast.hookY += Math.cos(performance.now() / 84) * cast.shake * 0.06;
+      if (cast.reel <= 0 && cast.timer > 2.0) {
         state.cast = null;
         say("The fish escaped. Keep the hook inside the moving zone.");
       } else if (cast.reel >= 1) {
@@ -223,10 +223,10 @@
     setupReelGame(state.cast);
     const game = state.cast.reelGame;
     const rod = currentRod();
-    game.hookVel += 0.34 + rod.control * 0.035;
-    game.hookVel = clamp(game.hookVel, -1.2, 1.65);
+    game.hookVel += 0.42 + rod.control * 0.045;
+    game.hookVel = clamp(game.hookVel, -1.0, 1.9);
     makeRipple(state.cast.hookX, state.cast.hookY);
   };
 
-  if (typeof say === "function") say("New reeling minigame added: keep the hook inside the moving fish zone.");
+  if (typeof say === "function") say("Reeling is easier: bigger fish zone, slower movement, and gentler misses.");
 })();
