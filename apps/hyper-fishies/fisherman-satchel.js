@@ -1,4 +1,4 @@
-// Fisherman satchel: view caught fish anywhere, and sell individual fish from B-LA-KA's shop.
+// Fisherman satchel: view caught fish anywhere, and sell individual fish only from B-LA-KA's shop.
 (function () {
   const oldFreshState = freshState;
   freshState = function freshStateWithSatchel() {
@@ -15,7 +15,7 @@
   function toggleSatchel() {
     state.satchelOpen = !state.satchelOpen;
     state.sellSatchelOpen = false;
-    say(state.satchelOpen ? "Fisherman satchel opened." : "Fisherman satchel closed.");
+    say(state.satchelOpen ? "Fisherman satchel opened. Selling only works at B-LA-KA's shop." : "Fisherman satchel closed.");
   }
 
   function openSellSatchel() {
@@ -31,6 +31,7 @@
   }
 
   function sellOneFish(index) {
+    if (state.mode !== "sell") return say("You can only sell fish at B-LA-KA's shop.");
     if (index < 0 || index >= state.bag.length) return;
     const fish = state.bag.splice(index, 1)[0];
     state.progress.coins += fish.value;
@@ -174,7 +175,7 @@
     ctx.fillText(selling ? "B-LA-KA'S SATCHEL" : "FISHERMAN SATCHEL", x + 100, y + 60);
     ctx.fillStyle = "#ffe36e";
     ctx.font = "900 15px Trebuchet MS";
-    ctx.fillText(state.bag.length ? "Click a fish to inspect or sell" : "Your leather satchel is empty", x + 102, y + 84);
+    ctx.fillText(state.bag.length ? (selling ? "Click a fish to sell it" : "Check your fish anywhere - selling only at B-LA-KA") : "Your leather satchel is empty", x + 102, y + 84);
 
     if (!state.bag.length) {
       ctx.textAlign = "center";
@@ -188,7 +189,7 @@
       state.bag.slice(0, 8).forEach(function (fish, i) {
         const ix = x + 40 + (i % cols) * (itemW + 20);
         const iy = y + 142 + Math.floor(i / cols) * 76;
-        drawFishBadge(fish, ix, iy, itemW, itemH, selling ? function () { sellOneFish(i); } : function () {}, selling ? "SELL" : "IN BAG");
+        drawFishBadge(fish, ix, iy, itemW, itemH, selling ? function () { sellOneFish(i); } : function () { say("Bring your satchel to B-LA-KA if you want to sell this fish."); }, selling ? "SELL" : "IN BAG");
       });
     }
 
@@ -199,6 +200,8 @@
   drawGameHud = function drawGameHudWithSatchel() {
     oldDrawGameHud();
     if (state.mode === "sell") return;
+    buttonZones.push({ x: 812, y: 10, w: 128, h: 40, action: toggleSatchel });
+    rounded(808, 10, 134, 40, 12, "rgba(39, 18, 7, .54)", "rgba(255, 227, 110, .7)", 2);
     drawSatchelIcon(836, 31, 0.75);
     ctx.fillStyle = "#ecfffb";
     ctx.font = "900 13px Trebuchet MS";
@@ -220,7 +223,7 @@
 
     oldDrawGameButtons();
     drawUiButton(482, y, 108, 42, "SATCHEL", toggleSatchel);
-    if (state.satchelOpen) drawSatchelPanel("dock");
+    if (state.satchelOpen) drawSatchelPanel("view");
   };
 
   const oldDrawSellShopView = drawSellShopView;
@@ -240,5 +243,5 @@
     }
   };
 
-  if (typeof say === "function") say("B-LA-KA now only uses the satchel for selling.");
+  if (typeof say === "function") say("The satchel can now open anywhere. Selling still belongs to B-LA-KA.");
 })();
