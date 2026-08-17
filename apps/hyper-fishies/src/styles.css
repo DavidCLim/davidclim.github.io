@@ -1,0 +1,2690 @@
+:root {
+  --water-deep: #02202f;
+  --water-mid: #0b2733;
+  --gold: #ffb454;
+  --gold-dim: #d69a4a;
+  --blood: #7a2e2e;
+  --mint: #5fe3c0;
+  --mint-light: #8fe9d9;
+  --coral: #ff6f59;
+  --ink: #0c1a1e;
+  --wood-dark: #241708;
+  --wood-mid: #3c2a1a;
+  --parchment: #ead9ae;
+  --parchment-ink: #3a2a16;
+  --panel-bg: linear-gradient(165deg, #4a3320 0%, #2c1e10 100%);
+  --panel-border: rgba(255, 180, 84, 0.55);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: #010e15;
+  overflow: hidden;
+  font-family: 'Nunito', sans-serif;
+  color: #eaf6f1;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
+
+#app {
+  width: 100vw;
+  height: 100dvh;
+  position: relative;
+}
+
+#game-root {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at 50% 20%, #0b2733 0%, #010e15 75%);
+  overflow: hidden;
+}
+
+#game-canvas {
+  display: block;
+  border-radius: 6px;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.5);
+  touch-action: none;
+}
+
+/* ---------- HUD ---------- */
+.hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 10px 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* The weather wheel + day/night clock (below) float in the true top-left
+   corner, outside this row's own flex flow — reserving that width here via
+   padding, plus matching it on the right, keeps the centered stat cluster's
+   centering axis in the middle of the REMAINING space rather than the full
+   viewport, so it can never slide under the corner widgets on any desktop-
+   width window. */
+.hud-row.hud-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  width: 100%;
+  padding: 0 235px;
+}
+
+/* Below ~700px there isn't enough width left for that horizontal padding
+   trick to work (235px a side would eat the whole viewport) — instead the
+   stat row just drops below the wheel widgets entirely, trading the
+   side-by-side layout for a stacked one so the two can never overlap
+   regardless of how narrow the window gets. */
+@media (max-width: 700px) {
+  .hud-row.hud-top {
+    padding: 0 8px;
+    margin-top: 160px;
+  }
+
+}
+
+/* One shared pill wrapping every stat instead of six separate ones — see
+   ui/hud.js's statCluster. */
+.hud-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  background: linear-gradient(165deg, rgba(74, 51, 32, 0.9), rgba(28, 18, 8, 0.9));
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  padding: 5px 10px;
+  backdrop-filter: blur(2px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+.hud-stat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff6ea;
+  white-space: nowrap;
+}
+
+.hud-stat-icon {
+  font-size: 13px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5));
+}
+
+/* Location reads first and slightly brighter — it's the header of the
+   cluster ("where"), everything after it is a personal stat. */
+.hud-stat-location { color: var(--gold); font-weight: 800; }
+.hud-stat-rod .hud-value { max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
+
+/* A full bag (ui/hud.js) — the next catch would just get released, so this
+   flags it right in the stat the player's already glancing at instead of
+   only finding out after the fact from the catch toast. */
+.hud-stat-bag-full {
+  animation: hudBagFullPulse 1.4s ease-in-out infinite;
+}
+.hud-stat-bag-full .hud-value { color: #ff8a7a; }
+.hud-stat-bag-full .hud-stat-icon { filter: drop-shadow(0 0 4px rgba(255, 111, 89, 0.9)); }
+@keyframes hudBagFullPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+/* A Streak Milestone Buff (data/streakMilestones.js) glows the flame chip
+   gold rather than pulsing red like the bag-full warning — this is a good
+   thing happening, not something that needs your attention fixed. */
+.hud-stat-streak-active .hud-value { color: #ffd670; }
+.hud-stat-streak-active .hud-stat-icon { filter: drop-shadow(0 0 5px rgba(255, 214, 112, 0.9)); }
+
+.hud-divider {
+  width: 1px;
+  align-self: stretch;
+  margin: 2px 0;
+  background: linear-gradient(rgba(255, 180, 84, 0), rgba(255, 180, 84, 0.45), rgba(255, 180, 84, 0));
+}
+
+.hud-value { color: #fff6ea; }
+
+.hud-prompt {
+  background: rgba(122, 46, 46, 0.35);
+  border: 1px solid rgba(255, 180, 84, 0.55);
+  color: #ffe0b0;
+  font-family: 'Pirata One', 'Baloo 2', cursive;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 15px;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.hud-prompt.visible { opacity: 1; transform: translateY(0); }
+
+.hud-toast {
+  background: rgba(28, 18, 8, 0.82);
+  border: 1px solid var(--panel-border);
+  color: #f0e2c4;
+  padding: 6px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0;
+  /* No CSS transform/transition here on purpose — the drop-and-bounce
+     entrance is driven frame-by-frame by a real matter.js spring
+     (ui/hud.js's toastBounce, util/matterWorld.js) via an inline
+     translateY, and a competing CSS transition would just lag one step
+     behind the physics instead of tracking it. */
+  transition: opacity 0.2s ease;
+}
+.hud-toast.visible { opacity: 1; }
+
+/* A long, thin EXP strip between the chip row and the "Press Space..."
+   prompt — always visible (unlike the toast/prompt) since EXP ticks up
+   constantly, from every catch, landmark, and quest. */
+.hud-exp-bar {
+  width: min(560px, 92vw);
+  pointer-events: none;
+}
+.hud-exp-track {
+  position: relative;
+  width: 100%;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(58, 42, 22, 0.5);
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+.hud-exp-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #d6893a, #ffd670 70%, #fff3c8);
+  box-shadow: 0 0 6px rgba(255, 214, 112, 0.6);
+  transition: width 0.35s ease;
+}
+.hud-exp-level {
+  margin-top: 2px;
+  text-align: center;
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: var(--gold);
+  opacity: 0.85;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* ---------- HUD icon toolbar ---------- */
+/* One flex column holding every icon button (see main.js) instead of each
+   button carrying its own `position:absolute; right:Npx` — a new button
+   just becomes another flex child and can never silently land on top of
+   an existing one the way a missed offset used to (see the Achievements-
+   vs-Captain's-Log bug this replaced). Stacked down the left edge, under
+   the weather wheel + day/night clock row, rather than across the top
+   right — keeps the whole left side one organized instrument column
+   instead of splitting environment readouts and menu buttons across two
+   opposite corners. */
+.hud-toolbar {
+  position: absolute;
+  top: 162px;
+  left: 12px;
+  z-index: 21;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-toolbar-divider {
+  height: 1px;
+  align-self: stretch;
+  margin: 6px 0;
+  background: linear-gradient(90deg, rgba(255, 180, 84, 0), rgba(255, 180, 84, 0.5), rgba(255, 180, 84, 0));
+}
+
+.almanac-btn {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: linear-gradient(165deg, #5a3f28, #2c1e10);
+  border: 2px solid var(--gold-dim);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+}
+.almanac-btn:hover { border-color: var(--gold); background: linear-gradient(165deg, #6b4a30, #3c2a1a); transform: translateY(-1px); }
+.almanac-btn canvas { display: block; width: 38px; height: 38px; }
+
+/* A small hover/focus label beside each icon button, sourced straight from
+   its own aria-label — no separate copy to keep in sync, and it means a
+   player never has to guess what an icon opens (the exact confusion behind
+   "there is no captain log button to press"). Opens to the right rather
+   than growing left from the button's right edge — the toolbar now sits
+   flush against the left screen edge (see .hud-toolbar), so a tooltip
+   growing leftward would clip straight off-screen. */
+.almanac-btn::after {
+  content: attr(aria-label);
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  margin-left: 8px;
+  transform: translateY(-50%) translateX(-4px);
+  background: rgba(12, 8, 4, 0.92);
+  border: 1px solid var(--panel-border);
+  color: #f0e2c4;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 30;
+}
+.almanac-btn:hover::after, .almanac-btn:focus-visible::after { opacity: 1; transform: translateY(-50%) translateX(0); }
+
+/* ---------- Touch controls ---------- */
+#touch-controls {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 25;
+}
+
+.joy-base {
+  position: absolute;
+  left: 26px;
+  bottom: 26px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: rgba(28, 18, 8, 0.55);
+  border: 2px solid rgba(255, 180, 84, 0.4);
+  pointer-events: auto;
+}
+
+.joy-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 46px;
+  height: 46px;
+  margin: -23px 0 0 -23px;
+  border-radius: 50%;
+  background: rgba(255, 180, 84, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  transition: transform 0.02s linear;
+}
+
+.action-btn {
+  position: absolute;
+  right: 30px;
+  bottom: 34px;
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  background: rgba(122, 46, 46, 0.55);
+  border: 2px solid rgba(255, 180, 84, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #fff6ea;
+  pointer-events: auto;
+  user-select: none;
+}
+.action-btn.pressed {
+  background: rgba(122, 46, 46, 0.85);
+  transform: scale(0.94);
+}
+
+/* ---------- Overlay panels ---------- */
+.overlay-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(1, 10, 15, 0.65);
+  z-index: 40;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.18s ease, visibility 0s linear 0s;
+}
+/* `visibility` (not `display`) is what actually gates clicks/tab-focus
+   through a hidden backdrop — delayed on the way out so the fade gets to
+   finish, instant on the way back in so re-opening never feels laggy. This
+   is what makes the fade-and-scale on .panel below possible in the first
+   place: display:none can't be transitioned, so every panel used to just
+   hard-cut in and out. */
+.overlay-backdrop.hidden {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.18s ease, visibility 0s linear 0.18s;
+}
+
+.panel {
+  position: absolute;
+  z-index: 50;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(560px, 94vw);
+  max-height: 84vh;
+  /* Solid color FIRST, gradient SECOND: `background: <gradient>` alone
+     resets background-color to transparent as a shorthand side effect, so
+     if the gradient ever fails to paint (some Windows accessibility/
+     high-contrast modes strip background-image but keep background-color)
+     there'd be nothing behind it. Declaring background-color on its own
+     line after the shorthand guarantees a solid opaque layer survives
+     regardless of what happens to the gradient on top of it. */
+  background: var(--panel-bg);
+  background-color: #2c1e10;
+  border: 3px solid var(--panel-border);
+  border-radius: 10px;
+  /* A banded rope-and-brass trim: a dark groove, a rope-twist ring, then a
+     bright inner bevel — reads as a lashed ship's-chest edge instead of a
+     flat UI border, without touching border-image (which ignores
+     border-radius in most browsers and would square off these corners). */
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.4),
+    inset 0 0 0 6px rgba(20, 12, 6, 0.55),
+    inset 0 0 0 9px var(--panel-border),
+    inset 0 0 0 11px rgba(20, 12, 6, 0.4);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Fades and scales in on open instead of a hard display:none cut — every
+     panel built through buildPanelFrame (overlayShell.js) gets this for
+     free. Relies on the same display:none -> flex box-regeneration restart
+     that .panel-book's own bookOpen animation already uses below (a plain
+     CSS transition can't retrigger this way, which is why this is a
+     keyframe animation instead) — .panel-book's later, more specific
+     animation declaration simply overrides this one for that one panel, so
+     there's no double-animation conflict. */
+  animation: panelOpen 0.18s ease;
+}
+.panel.hidden { display: none; }
+
+@keyframes panelOpen {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.94); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* Brass corner rivets, one radial-gradient per corner so no extra markup
+   is needed and every panel that uses buildPanelFrame gets them for free. */
+.panel::after, .dialogue-box::after, .boot-box::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 5;
+  background-image:
+    radial-gradient(circle at 14px 14px, #ffe0a0 0%, #ffb454 35%, #7a4a1a 75%, transparent 78%),
+    radial-gradient(circle at calc(100% - 14px) 14px, #ffe0a0 0%, #ffb454 35%, #7a4a1a 75%, transparent 78%),
+    radial-gradient(circle at 14px calc(100% - 14px), #ffe0a0 0%, #ffb454 35%, #7a4a1a 75%, transparent 78%),
+    radial-gradient(circle at calc(100% - 14px) calc(100% - 14px), #ffe0a0 0%, #ffb454 35%, #7a4a1a 75%, transparent 78%);
+  background-repeat: no-repeat;
+  background-size: 7px 7px;
+  opacity: 0.9;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.3));
+  border-bottom: 2px solid var(--panel-border);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+  font-family: 'Pirata One', 'Baloo 2', cursive;
+}
+.panel-header h2 { margin: 0; font-size: 28px; font-weight: 400; letter-spacing: 0.03em; color: var(--gold); text-shadow: 0 1px 0 rgba(0,0,0,0.6); }
+
+/* Wax-seal close button — a stamped disc of sealing wax instead of a plain
+   square X, to match the rest of the "ship's log" chrome. */
+.panel-close {
+  position: relative;
+  background: radial-gradient(circle at 35% 30%, #b84a3a, #7a1f1f 60%, #4a1010 100%);
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  color: #ffe0c0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.25), inset 0 -3px 5px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+.panel-close:hover { background: radial-gradient(circle at 35% 30%, #cc5a48, #8a2626 60%, #5a1414 100%); transform: scale(1.08); }
+
+.panel-body {
+  padding: 14px 18px 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--parchment);
+  color: var(--parchment-ink);
+  background-image:
+    radial-gradient(rgba(122, 46, 46, 0.05) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(122, 90, 50, 0.08), rgba(122, 90, 50, 0.02));
+  background-size: 6px 6px, auto;
+  /* Firefox's scrollbar theming — the ::-webkit-* rules below cover
+     Chromium. Every panel built through buildPanelFrame shares this class,
+     so this one rule replaces the plain OS scrollbar everywhere at once. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold-dim) rgba(58, 42, 22, 0.15);
+}
+.panel-body::-webkit-scrollbar { width: 10px; }
+.panel-body::-webkit-scrollbar-track { background: rgba(58, 42, 22, 0.12); border-radius: 999px; }
+.panel-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--gold-dim), #8a6239);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.panel-body::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, var(--gold), var(--gold-dim)); background-clip: padding-box; }
+
+.shop-row {
+  display: flex;
+  /* `flex-wrap` + `min-width: 0` are the actual overlap fix: without them a
+     row's flex children (icon + info + button) can never shrink below their
+     own content's natural width, so a long name/badge/button combo forces
+     the row wider than its CSS-grid track (the grid doesn't clip it) and it
+     visually bleeds into the next column. With this, a too-tight row just
+     wraps its button onto its own line instead of ever overlapping a
+     neighboring card. */
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  background: rgba(122, 46, 46, 0.16);
+  border: 1px solid rgba(58, 42, 22, 0.28);
+  border-radius: 9px;
+  padding: 10px 12px;
+  min-width: 0;
+  /* A little lift-on-hover "juice" — every panel built on .shop-row (Rod
+     Shop, Tackle, Trading Post, Grizelda's, the Forge, the Notebook) gets
+     this for free, so a single pass here reads across the whole game
+     instead of needing a bespoke treatment per panel. */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
+}
+.shop-row:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 180, 84, 0.4);
+}
+
+/* Hook/Line shop rows (ui/rodShopPanel.js) stand in for a bespoke canvas
+   icon with a big emoji in a same-sized box, so they line up with the rod
+   rows' 36x36 canvas icons instead of looking undersized next to them. */
+.gear-emoji-icon {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+}
+.shop-row.active { border-color: rgba(122, 46, 46, 0.6); background: rgba(122, 46, 46, 0.26); }
+
+/* A finished Quest Notebook entry — a soft green wash instead of the usual
+   maroon, plus the checkmark disc (below) standing in for an action button
+   there's no longer anything to do with. */
+.shop-row.quest-done { border-color: rgba(122, 200, 120, 0.45); background: rgba(90, 170, 100, 0.14); }
+/* A locked Achievements entry — dimmed and titled "???", same treatment
+   the almanac gives an undiscovered fish, so there's always a visible
+   count of what's still left to chase. */
+.shop-row.achievement-locked { opacity: 0.55; }
+
+/* A numeric-threshold achievement's "how close am I" bar (data/
+   achievements.js's `progress`) — locked entries still show "???" for the
+   name, but the bar itself gives a real sense of progress instead of a
+   flat, uninformative locked state. */
+.achievement-progress-track {
+  margin-top: 5px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(58, 42, 22, 0.35);
+  overflow: hidden;
+}
+.achievement-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ffb454, #ffd670);
+  transition: width 0.35s ease;
+}
+.achievement-progress-label {
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+/* A Shiny catch (data/mutations.js) sitting in the Satchel or Trading Post —
+   the same gold treatment the catch card gets, so it's recognizable at a
+   glance in every list it turns up in, not just the moment you land it. */
+.shop-row.shiny-item { border-color: rgba(255, 224, 102, 0.55); background: rgba(255, 224, 102, 0.1); }
+.shop-row.giant-item { border-color: rgba(143, 212, 255, 0.55); background: rgba(143, 212, 255, 0.1); }
+.quest-check {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 800;
+  color: #123018;
+  background: radial-gradient(circle at 35% 30%, #a8f2a0, #4fb85a 60%, #2e7a38 100%);
+  border: 1px solid rgba(20, 60, 20, 0.5);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.shop-row-info {
+  flex: 1 1 140px;
+  min-width: 0;
+}
+
+.shop-row-name {
+  font-weight: 800;
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 15px;
+  color: var(--parchment-ink);
+  text-shadow: 0 0 3px rgba(58, 42, 22, 0.3);
+  overflow-wrap: break-word;
+}
+.shop-row-stats { font-size: 13px; opacity: 0.78; margin-top: 2px; color: var(--parchment-ink); overflow-wrap: break-word; }
+
+/* Gear comparison tags (ui/rodShopPanel.js's deltaSpan) — a quick "is this
+   actually better than what I have" cue next to a rod/hook/line's stat
+   bar, so shopping doesn't require memorizing the currently-equipped
+   numbers and doing the subtraction by hand. */
+.stat-delta {
+  margin-left: 6px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  opacity: 1;
+}
+.stat-delta-up { color: #5fe38f; }
+.stat-delta-down { color: #ff6f6f; }
+
+/* Daily Bounty rows (ui/notebookPanel.js) — a rarity-colored dot ahead of
+   the name, and a thin progress bar in place of the plain status line the
+   quest rows use, since a bounty's whole point is watching a number climb
+   toward a goal. */
+.bounty-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 6px;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+  vertical-align: middle;
+}
+.bounty-progress-track {
+  margin-top: 5px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(58, 42, 22, 0.35);
+  overflow: hidden;
+}
+.bounty-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.35s ease;
+}
+
+/* The "you're standing at their stand" banner (ui/shopBanner.js) that now
+   opens every shop panel — the same scene ui/dialogue.js shows the moment
+   you first talk to a shopkeeper, shrunk into a strip up top so the buy
+   panel itself reads as that specific person's counter instead of a
+   generic parchment list. Negative side margins pull it flush to the
+   panel's own edges/top (panel-body still has its usual padding on every
+   other row) so the scene reads as a real window into the stall rather
+   than a canvas floating inside a padded card. */
+.shop-banner {
+  margin: -14px -18px 4px;
+  border-bottom: 2px solid var(--shop-accent, var(--gold));
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+  line-height: 0;
+}
+.shop-banner-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* A themed "medallion" frame behind every shop-row icon (rod/bait/rune/
+   fish/gear canvases and the plain-emoji stand-ins alike) — one shared rule
+   instead of styling each icon class separately, so a buy-panel row reads
+   as an item slot instead of a bare, unframed sprite floating in the row. */
+.rod-icon, .bait-icon, .rune-icon, .market-fish-icon, .almanac-icon, .gear-emoji-icon {
+  border-radius: 10px;
+  background: radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.28) 72%);
+  border: 2px solid var(--shop-accent, rgba(255, 180, 84, 0.5));
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.08);
+}
+
+/* Flavor tagline under a shop's title, and the rank/potency badge next to
+   each row's name — the "way more fisherman/pirate" pass on Rod Shop and
+   Bait Shop. */
+.shop-tagline {
+  font-family: 'Pirata One', 'Baloo 2', cursive;
+  font-size: 15px;
+  color: var(--shop-accent, var(--gold));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  padding-bottom: 8px;
+  margin-bottom: 2px;
+}
+.bounty-countdown {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(240, 226, 196, 0.55);
+}
+/* Badges (tier/rarity/rune-buff/rune-slot) used to share a flex line with
+   the row's name, which meant they sat beside the name when it was short
+   enough to leave room, and wrapped underneath it when it wasn't — so the
+   exact same badge would land in a different place row to row depending on
+   nothing but how long that particular name happened to be. Splitting the
+   badges into their own block-level row, always rendered under the name,
+   removes that ambiguity entirely: badges are never sharing a line box
+   with the name, so they can never "sometimes" sit beside it. */
+.shop-row-name-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.shop-row-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 3px; }
+.tier-badge {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+/* Cross-references Grizelda's shop from a rod row — "this rod can hold N
+   runes" — in her own green so it visually reads as a pointer to the witch
+   shop rather than another rank badge. */
+.rune-slot-badge {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid #8fe97a;
+  background: rgba(143, 233, 122, 0.16);
+  color: #8fe97a;
+  white-space: nowrap;
+}
+.tier-deckhand   { background: #6b7d78; color: #f0f5f2; }
+.tier-journeyman { background: #4d7a8f; color: #eaf6fb; }
+.tier-master     { background: #7a5a2e; color: #fff3d6; }
+.tier-captain    { background: #7a2e2e; color: #ffe0d6; }
+.tier-legendary  { background: linear-gradient(120deg, #ffb454, #ff8ad1); color: #2c1e10; }
+/* Navy-and-gold, like an admiral's dress uniform braid — the rank above
+   Captain's, replacing the old "Legendary" badge (see ui/rodShopPanel.js). */
+.tier-admiral    { background: linear-gradient(120deg, #1f3a5f, #3f6fa8 55%, #ffb454); color: #fff3d6; }
+/* Cursed — the one badge that isn't part of the Deckhand..Admiral's cost
+   ladder at all (ui/rodShopPanel.js's rodTier). Only the Devil's Rod ever
+   wears this: a pulsing blood-red/black gradient with its own glow, so it
+   reads as wrong next to every other rank badge in the game on sight. */
+.tier-cursed {
+  background: linear-gradient(120deg, #3a0a14, #7a0f2c 55%, #1c0410);
+  color: #ff6f8c;
+  border-color: #ff2050;
+  box-shadow: 0 0 8px -1px #ff2050;
+  animation: cursedPulse 2.4s ease-in-out infinite;
+}
+@keyframes cursedPulse {
+  0%, 100% { box-shadow: 0 0 6px -1px rgba(255, 32, 80, 0.6); }
+  50% { box-shadow: 0 0 12px 1px rgba(255, 32, 80, 0.95); }
+}
+
+/* Richy's Special's "never runs dry" badge (Satchel only) — a lettered
+   pill instead of a bare "∞" glyph floating in the item name, so it reads
+   as a proper badge alongside the tier badge rather than a stray symbol. */
+.unlimited-badge {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid #c896ff;
+  background: linear-gradient(120deg, rgba(200, 150, 255, 0.22), rgba(155, 110, 255, 0.22));
+  color: #c896ff;
+  white-space: nowrap;
+}
+
+.btn {
+  background: linear-gradient(165deg, #5a3f28, #2c1e10);
+  border: 1px solid var(--gold-dim);
+  color: #f0e2c4;
+  padding: 10px 16px;
+  border-radius: 9px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35), 0 3px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+}
+.btn:hover { background: linear-gradient(165deg, #6b4a30, #3c2a1a); transform: translateY(-1px); box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35), 0 5px 10px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12); }
+.btn:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1); }
+.btn:disabled { opacity: 0.5; cursor: default; box-shadow: none; }
+.btn-equipped { background: linear-gradient(165deg, #ffb454, #d6893a); border-color: #a5661f; color: #2c1e10; }
+.btn-primary { align-self: flex-end; background: linear-gradient(165deg, #7a2e2e, #4a1c1c); border-color: #a5453f; color: #ffe0d6; }
+
+/* Small pick-a-rune buttons in Grizelda's socket list — same button look,
+   just compact enough to sit several to a row. */
+.rune-chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.btn-chip { padding: 5px 10px; font-size: 12px; }
+
+/* ---------- Witch shop: Socket & Remove, one card per owned rod ---------- */
+/* A rod card holds its icon/name header plus one row per rune slot — since
+   different rods now hold different numbers of slots (data/rods.js's
+   rodRuneSlots), this is what actually shows that difference instead of a
+   single flat row that could only ever have one rune. */
+.rune-rod-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(122, 46, 46, 0.16);
+  border: 1px solid rgba(58, 42, 22, 0.28);
+  border-radius: 9px;
+  padding: 12px;
+}
+.rune-rod-header { display: flex; align-items: center; gap: 12px; }
+.rune-slot-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 12px;
+  border-left: 2px solid rgba(255, 255, 255, 0.14);
+  margin-left: 6px;
+}
+.rune-slot-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  min-width: 0;
+}
+.rune-slot-index {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  font-family: 'Baloo 2', sans-serif;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: inherit;
+}
+.rune-slot-row.filled .rune-slot-index {
+  background: rgba(143, 233, 122, 0.2);
+  border-color: #8fe97a;
+  color: #8fe97a;
+}
+.rune-slot-body { flex: 1 1 140px; min-width: 0; }
+.rune-slot-empty-label { opacity: 0.65; font-style: italic; font-size: 13px; }
+
+.panel-themed .rune-rod-card { background: var(--shop-row); border-color: rgba(255, 255, 255, 0.14); }
+.panel-themed .rune-slot-list { border-left-color: rgba(255, 255, 255, 0.2); }
+
+/* Compact colored buff badge next to a rune's name — same slot as the rod/
+   bait tier-badge, but colored per-rune (from data/runes.js's `hue`) and
+   showing the actual bonus instead of a rank word, since runes have no
+   rarity tiers. Keeping this out of the row's description line is what
+   keeps a rune row the same height as a rod/bait row instead of wrapping
+   the flavor text + bonus text together into a wall of text. */
+.rune-badge {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+/* A fish's rarity used to show up as plain text buried in a stats line on
+   some panels (Trading Post, Satchel's Fish tab, the Captain's Log) while
+   Rod Shop/Tackle/Witch's Runes all put their equivalent badge inline right
+   after the name — same information, two different places depending on
+   which panel you happened to be looking at. This is the one badge shape
+   for "rarity," always sitting inline next to the name like every other
+   badge in the game, colored per-rarity via inline style (data/rarity.js
+   has 8 colors, too many for fixed CSS classes the way tier-badge does it). */
+.rarity-badge {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid;
+  white-space: nowrap;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.market-summary { font-weight: 800; font-family: 'Baloo 2', sans-serif; color: var(--blood); }
+.market-empty { opacity: 0.75; font-style: italic; padding: 10px 0; }
+
+/* An unfilled Smokehouse rack (ui/marketPanel.js) — a dashed border reads
+   as "nothing here yet" without needing its own illustration. */
+.smokehouse-slot-empty { border-style: dashed; opacity: 0.6; }
+
+/* Today's Hot Catch (ui/marketPanel.js, data/hotCatch.js) — a warm-orange
+   variant of the shared rarity-badge look, so a matching bag row reads as
+   "worth more today" at a glance without needing its own layout. */
+.hot-catch-badge {
+  background: rgba(255, 140, 60, 0.18);
+  border-color: #ff8c3c;
+  color: #ffb454;
+}
+.market-upgrade {
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px dashed rgba(58,42,22,0.3); margin-top: 6px; padding-top: 10px;
+}
+
+/* ---------- Landscape shop panels ---------- */
+.panel-landscape { width: min(880px, 96vw); }
+
+.panel-body-landscape {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-auto-rows: min-content;
+  align-content: start;
+  gap: 10px;
+}
+/* Summary lines, sell-all, bag-upgrade, hints, section headers — anything
+   that should run the full width of the grid instead of sitting in one
+   column. */
+.shop-grid-full { grid-column: 1 / -1; }
+
+/* ---------- Captain's Log: a literal open book ---------- */
+.panel-book {
+  width: min(920px, 96vw);
+  max-height: 88vh;
+  transform-origin: 50% 50%;
+  animation: bookOpen 0.5s cubic-bezier(0.22, 0.85, 0.3, 1);
+}
+@keyframes bookOpen {
+  0% { transform: translate(-50%, -50%) scaleX(0.06) scaleY(0.92); opacity: 0.3; }
+  55% { transform: translate(-50%, -50%) scaleX(1.03) scaleY(1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scaleX(1) scaleY(1); }
+}
+
+.panel-body-book {
+  padding: 0;
+  background: var(--parchment);
+  background-image: none;
+  overflow: hidden;
+  /* Without flex:1/min-height:0 here, this flex child (and the grid+scroll
+     children nested inside it) never gets a bounded height to overflow
+     against — it just grows to fit its content instead, so .book-page's
+     own overflow-y:auto never actually kicks in and there's nothing to
+     scroll. This is what made the log look "stuck" with no scrollbar. */
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+}
+
+.book-spread {
+  display: grid;
+  grid-template-columns: 1fr 20px 1fr;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+}
+
+.book-page {
+  min-height: 0;
+  padding: 20px 22px;
+  overflow-y: auto;
+  background:
+    radial-gradient(rgba(122, 46, 46, 0.05) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(122, 90, 50, 0.08), rgba(122, 90, 50, 0.02));
+  background-size: 6px 6px, auto;
+  color: var(--parchment-ink);
+  position: relative;
+}
+.book-page-left { box-shadow: inset -14px 0 20px -16px rgba(20, 12, 6, 0.55); }
+.book-page-right { box-shadow: inset 14px 0 20px -16px rgba(20, 12, 6, 0.55); }
+
+/* A stack of thin page edges along each page's OUTER side (away from the
+   spine) — reads as "many leaves bound together" instead of two flat
+   parchment cards. */
+.book-page-left::before,
+.book-page-right::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: 5px;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(58, 42, 22, 0.32) 0px, rgba(58, 42, 22, 0.32) 1px,
+    rgba(255, 248, 228, 0.55) 1px, rgba(255, 248, 228, 0.55) 2.6px
+  );
+  pointer-events: none;
+}
+.book-page-left::before { left: 0; }
+.book-page-right::before { right: 0; }
+
+/* A soft curled-corner shadow in each page's bottom outer corner. */
+.book-page-left::after,
+.book-page-right::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  width: 50px;
+  height: 44px;
+  pointer-events: none;
+}
+.book-page-left::after { left: 0; background: radial-gradient(circle at 0% 100%, rgba(20, 12, 6, 0.28), transparent 70%); }
+.book-page-right::after { right: 0; background: radial-gradient(circle at 100% 100%, rgba(20, 12, 6, 0.28), transparent 70%); }
+
+/* The gutter between the two pages — a shadowed spine so the panel reads
+   as a bound book lying open, not two side-by-side cards. */
+.book-spine {
+  position: relative;
+  background: linear-gradient(90deg, rgba(20, 12, 6, 0.05), rgba(20, 12, 6, 0.45) 45%, rgba(20, 12, 6, 0.45) 55%, rgba(20, 12, 6, 0.05));
+  box-shadow: 0 0 14px 4px rgba(20, 12, 6, 0.3);
+}
+/* A ribbon bookmark hanging out of the spine — the one detail that reads
+   unmistakably as "bound book" rather than "two parchment cards." */
+.book-spine::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 11px;
+  height: 50px;
+  background: linear-gradient(180deg, #a5453f, #6b1f1f);
+  clip-path: polygon(0 0, 100% 0, 100% 84%, 50% 100%, 0 84%);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.45);
+}
+
+.book-page-title {
+  font-family: 'Pirata One', 'Baloo 2', cursive;
+  font-size: 24px;
+  color: var(--blood, #7a2e2e);
+}
+.book-page-rule {
+  height: 2px;
+  margin: 6px 0 14px;
+  background: linear-gradient(90deg, rgba(58, 42, 22, 0.5), rgba(58, 42, 22, 0.05));
+}
+
+/* Log / Trophies toggle (ui/almanacPanel.js) — a two-way pill switch sitting
+   right under the page title, styled like a small wax-stamped tab rather
+   than a generic button pair. */
+.book-view-toggles { display: flex; gap: 6px; margin-top: 8px; }
+.book-view-toggle {
+  flex: 1;
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(58, 42, 22, 0.3);
+  background: rgba(58, 42, 22, 0.08);
+  color: var(--parchment-ink);
+  opacity: 0.7;
+  cursor: pointer;
+  transition: opacity 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.book-view-toggle:hover { opacity: 0.9; }
+.book-view-toggle.active {
+  opacity: 1;
+  background: var(--blood, #7a2e2e);
+  border-color: var(--blood, #7a2e2e);
+  color: #ffe0d6;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Trophy Case (ui/almanacPanel.js) — one row per rarity tier, rarest first,
+   showing the single biggest specimen landed in it. */
+.trophy-list { display: flex; flex-direction: column; gap: 8px; }
+.trophy-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: rgba(122, 46, 46, 0.1);
+  border: 1px solid rgba(58, 42, 22, 0.22);
+  transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
+}
+.trophy-row:not(.trophy-empty):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  border-color: var(--gold);
+}
+.trophy-row.trophy-empty { opacity: 0.55; }
+/* A mounted Shiny/Giant trophy gets the same gold/blue treatment those
+   catches already carry everywhere else (Satchel, Trading Post) — the
+   rarity itself isn't the only thing worth bragging about on this wall. */
+.trophy-row.trophy-shiny { border-color: rgba(255, 224, 102, 0.6); background: rgba(255, 224, 102, 0.12); }
+.trophy-row.trophy-giant { border-color: rgba(143, 212, 255, 0.6); background: rgba(143, 212, 255, 0.12); }
+.trophy-mut-tag {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.trophy-mut-shiny { background: rgba(255, 224, 102, 0.25); color: #a6790a; border: 1px solid rgba(166, 121, 10, 0.4); }
+.trophy-mut-giant { background: rgba(143, 212, 255, 0.25); color: #1a6a99; border: 1px solid rgba(26, 106, 153, 0.4); }
+.trophy-icon { flex-shrink: 0; }
+.trophy-row-info { min-width: 0; flex: 1; }
+.trophy-row-name-line { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.trophy-row-name {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--parchment-ink);
+  overflow-wrap: break-word;
+}
+.trophy-row-meta { font-size: 12px; opacity: 0.75; margin-top: 2px; }
+.trophy-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; gap: 8px; }
+.trophy-mounted-count {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.75;
+  white-space: nowrap;
+}
+.book-summary-big {
+  font-family: 'Pirata One', 'Baloo 2', cursive;
+  font-size: 40px;
+  line-height: 1;
+  color: var(--parchment-ink);
+}
+.book-summary-label { font-size: 12px; opacity: 0.75; margin-top: 4px; }
+/* A slim completion bar under the big fraction — the one glanceable "how
+   close am I" cue, echoing the HUD's own thin EXP bar (see .hud-exp-bar). */
+.book-progress {
+  height: 6px;
+  margin: 8px 0 18px;
+  border-radius: 3px;
+  background: rgba(58, 42, 22, 0.22);
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(20, 12, 6, 0.35);
+}
+.book-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #c9a227, #ffd670);
+  box-shadow: 0 0 6px rgba(255, 214, 112, 0.6);
+  transition: width 0.4s ease;
+}
+.book-rarity-list { display: flex; flex-direction: column; gap: 9px; }
+.book-rarity-row { font-size: 13px; }
+.book-rarity-row-top { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+.book-rarity-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(0,0,0,0.25); }
+.book-rarity-name { flex: 1; font-weight: 700; }
+.book-rarity-count { opacity: 0.75; font-variant-numeric: tabular-nums; }
+.book-rarity-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(58, 42, 22, 0.18);
+  overflow: hidden;
+}
+.book-rarity-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+
+/* Rod Mastery (data/rodMastery.js) — a tiny progress strip under a rod's
+   stats in the Satchel, same visual language as the almanac's rarity bars,
+   so "how close is this rod to its next level" reads at a glance. */
+.rod-mastery-row { margin-top: 5px; }
+.rod-mastery-label { font-size: 11px; opacity: 0.75; }
+.rod-mastery-bar {
+  height: 4px;
+  margin-top: 3px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+.rod-mastery-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #ffb454, #ffd670);
+  transition: width 0.4s ease;
+}
+
+/* The weather wheel (ui/weatherWheel.js) — a standalone circular widget in
+   the top-left corner, outside the HUD's own top-center chip row entirely,
+   so it doesn't compete with the rest of the row for space. */
+.weather-wheel {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 21;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+}
+.weather-wheel-canvas {
+  display: block;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.5));
+}
+.weather-wheel-label {
+  background: rgba(28, 18, 8, 0.82);
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #f0e2c4;
+  white-space: nowrap;
+}
+
+/* The day/night clock (ui/dayNightClock.js) — same standalone-widget
+   treatment as the weather wheel, parked right beside it so the top-left
+   corner reads as one "environment" instrument pair. */
+.daynight-clock {
+  position: absolute;
+  top: 12px;
+  left: 130px;
+  z-index: 21;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+}
+.daynight-clock-canvas {
+  display: block;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.5));
+}
+.daynight-clock-label {
+  background: rgba(28, 18, 8, 0.82);
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #f0e2c4;
+  white-space: nowrap;
+}
+
+.book-page-number {
+  margin-top: 16px;
+  text-align: center;
+  font-family: 'Pirata One', 'Baloo 2', cursive;
+  font-size: 13px;
+  opacity: 0.55;
+}
+
+/* A huge, near-invisible anchor watermark behind the left page's summary —
+   a real logbook's cover often carries an embossed emblem like this; purely
+   decorative, sits behind every other left-page element via z-index. */
+.book-page-watermark {
+  position: absolute;
+  top: 6px;
+  right: 4px;
+  font-size: 150px;
+  line-height: 1;
+  opacity: 0.05;
+  color: var(--parchment-ink);
+  pointer-events: none;
+  z-index: 0;
+  user-select: none;
+}
+.book-page-left > *:not(.book-page-watermark) { position: relative; z-index: 1; }
+
+/* The rarity filter shelf sitting above the fish grid — one chip per tier
+   (plus "All"), each carrying its own caught/total so a whole tier's
+   completion reads before you even open it. Necessary now that the roster
+   is 200 species deep: without this, "browse the log" meant paging through
+   every rarity back to back instead of jumping straight to the one you
+   care about. */
+.almanac-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.almanac-filter-row { display: flex; flex-wrap: wrap; gap: 5px; flex: 1 1 auto; }
+.almanac-filter-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--chip-color, rgba(58, 42, 22, 0.35));
+  background: color-mix(in srgb, var(--chip-color, rgba(58, 42, 22, 0.5)) 12%, transparent);
+  color: var(--parchment-ink);
+  opacity: 0.75;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+.almanac-filter-chip:hover { opacity: 1; transform: translateY(-1px); }
+.almanac-filter-chip.active {
+  opacity: 1;
+  background: color-mix(in srgb, var(--chip-color, var(--blood)) 30%, transparent);
+  box-shadow: 0 0 0 1px var(--chip-color, var(--blood)) inset, 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.almanac-filter-count { opacity: 0.7; font-variant-numeric: tabular-nums; font-size: 10px; }
+.almanac-sort-toggle { display: flex; gap: 4px; flex: 0 0 auto; }
+.almanac-sort-toggle .book-view-toggle { padding: 4px 10px; font-size: 11px; }
+
+.almanac-grid { padding-bottom: 4px; }
+
+/* The fish grid is paginated now (ui/almanacPanel.js's PAGE_SIZE) instead
+   of one endless scroll — every turn to a new page rebuilds this element
+   fresh, so the settle-flip below replays on every navigation, not just
+   the first time the log is opened. */
+.book-page-right {
+  animation: pageFlip 0.32s ease;
+  transform-origin: left center;
+}
+@keyframes pageFlip {
+  0% { transform: perspective(900px) rotateY(-9deg) scaleX(0.97); opacity: 0.6; }
+  100% { transform: perspective(900px) rotateY(0deg) scaleX(1); opacity: 1; }
+}
+
+/* Page-turn controls, sitting where a reader's thumb would be — bottom of
+   the right leaf, below the fish grid and above the roman-numeral folio. */
+.book-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(58, 42, 22, 0.28);
+}
+.book-nav-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(58, 42, 22, 0.45);
+  background: linear-gradient(165deg, rgba(255, 246, 224, 0.65), rgba(216, 195, 147, 0.55));
+  color: #3a2a16;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.book-nav-btn:hover:not(:disabled) { transform: scale(1.12); background: rgba(255, 246, 224, 0.95); }
+.book-nav-btn:disabled { opacity: 0.32; cursor: default; }
+.book-nav-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--parchment-ink);
+  opacity: 0.8;
+  min-width: 92px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Per-shop theming ---------- */
+/* Each shop panel gets its own dark, atmospheric palette (set via CSS
+   custom properties from ui/shopTheme.js) instead of sharing the generic
+   parchment look — a rope-and-wood rigging cabin, a mossy bait shed, a
+   warm merchant's ledger post. */
+.panel-themed {
+  background: linear-gradient(165deg, var(--shop-bg1), var(--shop-bg2));
+  background-color: var(--shop-bg2);
+  border-color: var(--shop-accent);
+}
+.panel-themed .panel-header {
+  background: rgba(0, 0, 0, 0.28);
+  border-bottom-color: var(--shop-accent);
+}
+.panel-themed .panel-header h2 { color: var(--shop-accent); }
+.panel-themed .panel-close { border-color: var(--shop-accent); }
+
+.panel-themed .panel-body {
+  background: transparent;
+  background-image: none;
+  color: #f0e2c4;
+}
+.panel-themed .shop-row {
+  background: var(--shop-row);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+.panel-themed .shop-row.active {
+  border-color: var(--shop-accent);
+  box-shadow: 0 0 0 1px var(--shop-accent) inset;
+}
+.panel-themed .shop-row-name {
+  color: #fbf3e2;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.8), 0 0 6px rgba(0,0,0,0.6);
+}
+.panel-themed .shop-row-stats { color: rgba(240, 226, 196, 0.85); text-shadow: 0 1px 2px rgba(0,0,0,0.6); }
+.market-fish-icon { display: block; flex-shrink: 0; }
+.panel-themed .market-summary { color: var(--shop-accent); }
+.panel-themed .market-empty { color: rgba(240, 226, 196, 0.75); }
+.panel-themed .market-upgrade { border-top-color: rgba(255, 255, 255, 0.2); }
+/* Buttons used to be the same brown-wood gradient in every single shop
+   regardless of theme — only their border picked up the shop's accent. That
+   left the actual biggest element in each row (the button) looking
+   identical whether you were in the rigging cabin or the witch's shack.
+   Now the button body itself is built from the shop's own row/bg colors,
+   and lights up to a solid accent fill on hover instead of just a lighter
+   version of the same brown. */
+/* ---------- Per-shop "vibe" texture washes ---------- */
+/* Rod Shop: faint horizontal plank-grain bands over the themed body, same
+   idea as the boardwalk's wood grain (render/drawBoardwalk.js) but as a
+   cheap CSS wash instead of canvas — reads as a wooden rigging counter
+   instead of a flat color panel. */
+.panel-rodshop .panel-body {
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.09) 0px, rgba(0, 0, 0, 0.09) 2px,
+    transparent 2px, transparent 22px
+  );
+}
+/* Witch's Runes: a scattering of tiny starlight dots over the themed body —
+   the one cue that this shop's ceiling is the night sky, not a roof. */
+.panel-witch .panel-body {
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 1.6px),
+    radial-gradient(rgba(143, 233, 122, 0.12) 1px, transparent 1.6px);
+  background-size: 34px 34px, 22px 22px;
+  background-position: 0 0, 11px 17px;
+}
+
+/* The Forge: a scatter of small ember-orange embers over the themed body,
+   echoing the world stall's own drifting sparks (render/drawProps.js's
+   drawForgeEmbers) so the panel reads as "the same fire" as the stall you
+   just walked up to. */
+.panel-forge .panel-body {
+  background-image: radial-gradient(rgba(255, 140, 60, 0.18) 1px, transparent 1.8px);
+  background-size: 26px 26px;
+}
+
+/* Rod Reinforcement (ui/forgePanel.js) — a small standalone card rather
+   than a plain shop-row, since it isn't a list item like the parts/rods
+   above it, it's a standing offer against whatever's currently equipped. */
+.forge-reinforce {
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 140, 60, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+.forge-reinforce .btn { margin-top: 6px; }
+
+/* Forge Enchants (ui/forgePanel.js) — one card per enchant, same shape as
+   .forge-reinforce's standing-offer card but laid out as a row (info left,
+   button right) since there are several of them stacked in a list. */
+.forge-enchant-row {
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 140, 60, 0.3);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.forge-enchant-row.active {
+  border-color: var(--gold);
+  background: rgba(255, 180, 84, 0.12);
+}
+.forge-enchant-row .shop-row-name { font-size: 15px; }
+.forge-enchant-row .btn { flex-shrink: 0; }
+
+/* Trading Post: a burlap/crate crosshatch instead of a flat wash — cargo
+   hold, not counting-house. */
+.panel-market .panel-body {
+  background-image:
+    repeating-linear-gradient(45deg, rgba(0,0,0,0.05) 0px, rgba(0,0,0,0.05) 1px, transparent 1px, transparent 9px),
+    repeating-linear-gradient(-45deg, rgba(0,0,0,0.05) 0px, rgba(0,0,0,0.05) 1px, transparent 1px, transparent 9px);
+}
+
+/* Bait & Barnacles: a faint rippled-water wash, like the counter's always
+   a little damp. */
+.panel-tackle .panel-body {
+  background-image: repeating-radial-gradient(circle at 20% 30%, rgba(143, 233, 217, 0.06) 0px, transparent 3px, transparent 16px);
+}
+
+/* Quest Notebook: faint horizontal rules, like an actual ruled page. */
+.panel-notebook .panel-body {
+  background-image: repeating-linear-gradient(180deg, transparent 0px, transparent 25px, rgba(201, 162, 39, 0.16) 26px);
+}
+
+/* Satchel: a worn leather crosshatch instead of the default parchment
+   speckle — it's a bag you're carrying, not a ledger. */
+.panel-satchel .panel-body {
+  background-image:
+    repeating-linear-gradient(60deg, rgba(0,0,0,0.05) 0px, rgba(0,0,0,0.05) 1px, transparent 1px, transparent 12px),
+    repeating-linear-gradient(-60deg, rgba(0,0,0,0.05) 0px, rgba(0,0,0,0.05) 1px, transparent 1px, transparent 12px);
+}
+
+/* Grizelda's Conjure buttons get a soft glow in the shop's own accent —
+   crafting a rune should feel a little more charged than buying a bobber. */
+.btn-conjure { box-shadow: 0 0 10px 0 rgba(143, 233, 122, 0.35); }
+.panel-themed .btn-conjure { box-shadow: 0 0 10px 0 var(--shop-accent); }
+
+.panel-themed .btn {
+  border-color: var(--shop-accent);
+  background: linear-gradient(165deg, var(--shop-row), var(--shop-bg2));
+  color: #f0e2c4;
+}
+.panel-themed .btn:hover {
+  background: linear-gradient(165deg, var(--shop-accent), var(--shop-row));
+  color: var(--shop-bg2);
+}
+.panel-themed .btn:disabled,
+.panel-themed .btn:disabled:hover {
+  background: linear-gradient(165deg, var(--shop-row), var(--shop-bg2));
+  color: #f0e2c4;
+}
+.panel-themed .btn-primary {
+  background: linear-gradient(165deg, var(--shop-accent), #4a1c1c);
+  color: #2c1e10;
+}
+/* `.btn-equipped`/`.btn-primary` are both more specific in intent than the
+   generic `.panel-themed .btn` rule above, but that rule outranks them by
+   raw CSS specificity (two classes beats one) — without this, "Equipped"
+   would silently lose its gold highlight and blend into every other button
+   the moment a panel got a theme. */
+.panel-themed .btn-equipped {
+  background: linear-gradient(165deg, var(--shop-accent), var(--shop-bg2));
+  border-color: var(--shop-accent);
+  color: var(--shop-bg2);
+}
+
+/* ---------- Profile panel ---------- */
+.profile-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.profile-portrait-frame {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: rgba(122, 46, 46, 0.08);
+  border: 1px solid rgba(58, 42, 22, 0.2);
+  border-radius: 10px;
+  padding: 10px;
+}
+.profile-portrait { display: block; }
+.profile-name {
+  font-family: 'Pirata One', 'Baloo 2', cursive;
+  font-size: 18px;
+  color: var(--blood);
+}
+
+.profile-stats {
+  flex: 1 1 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 200px;
+  align-self: stretch;
+  justify-content: center;
+}
+.profile-stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: rgba(122, 46, 46, 0.14);
+  border: 1px solid rgba(58, 42, 22, 0.22);
+  border-radius: 8px;
+  padding: 10px 12px;
+  transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
+}
+.profile-stat-row:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 180, 84, 0.4);
+}
+.profile-stat-label-line { display: flex; align-items: center; gap: 8px; }
+.profile-stat-icon { font-size: 15px; opacity: 0.9; }
+
+/* Until now the only way back to the save-slot screen was closing the tab
+   — this is the one panel button that leaves the current session, so it
+   sits alone below everything else with its own quieter, more neutral
+   styling (not the usual gold/blood accent) instead of blending in. */
+.profile-quit-btn {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  padding: 10px;
+  background: rgba(58, 42, 22, 0.35);
+  border: 1px solid rgba(58, 42, 22, 0.5);
+  border-radius: 8px;
+  color: var(--parchment-ink);
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.profile-quit-btn:hover { background: rgba(122, 46, 46, 0.3); border-color: var(--blood); }
+.profile-stat-label {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--parchment-ink);
+  opacity: 0.75;
+}
+.profile-stat-value {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--parchment-ink);
+  text-align: right;
+}
+
+.profile-rank {
+  font-family: 'Pirata One', 'Baloo 2', cursive;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+/* EXP bar to the next level — a gold-filled track under the rank line,
+   same rounded-pill language as every other badge in the game. */
+.exp-bar-wrap { width: 100%; margin-top: 8px; }
+.exp-bar-track {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(58, 42, 22, 0.4);
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+.exp-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #d6893a, #ffd670 70%, #fff3c8);
+  box-shadow: 0 0 6px rgba(255, 214, 112, 0.6);
+  transition: width 0.35s ease;
+}
+.exp-bar-label {
+  margin-top: 3px;
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  opacity: 0.7;
+  text-align: center;
+}
+
+/* The current rank's passive buff (data/ranks.js) — a small badge-like
+   caption under the EXP bar so "why do I care about my rank" has an answer
+   right there instead of being buried in a wiki. */
+.profile-buff {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(255, 180, 84, 0.14);
+  border: 1px solid rgba(255, 180, 84, 0.35);
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold);
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Title picker (ui/profilePanel.js) — a wrapping row of pill chips, one per
+   title (data/titles.js), full-width under the portrait/stats columns.
+   Locked ones stay visible (so there's always something to chase) but
+   dimmed and unclickable until their achievement lands. */
+.profile-titles { margin-top: 14px; }
+.profile-titles-label {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--gold);
+  opacity: 0.85;
+  margin-bottom: 6px;
+}
+.profile-titles-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.profile-title-chip {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 180, 84, 0.3);
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--parchment-ink, #f0e2c4);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+}
+.profile-title-chip:hover:not(.locked) { border-color: var(--gold); transform: translateY(-1px); }
+.profile-title-chip.active {
+  background: linear-gradient(120deg, #ffb454, #ff8ad1);
+  border-color: transparent;
+  color: #2c1e10;
+}
+.profile-title-chip.locked { opacity: 0.4; cursor: not-allowed; }
+
+/* Current Build (ui/profilePanel.js) — the live output of
+   effectiveRodStats(state), read as a row of small stat chips. Same
+   pill-and-label rhythm as the title chips just above, but non-interactive
+   (a readout, not a picker). */
+.profile-build-stats { margin-top: 14px; }
+.build-stats-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.build-stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 180, 84, 0.3);
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--parchment-ink, #f0e2c4);
+}
+.build-stat-icon { font-size: 12px; }
+.build-stat-label { opacity: 0.75; }
+.build-stat-value { color: var(--gold); }
+.build-enchant-line {
+  margin-top: 8px;
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(240, 226, 196, 0.8);
+}
+
+/* Wardrobe (ui/profilePanel.js) — collapsed behind a toggle by default,
+   since 5 rows of swatches would otherwise dominate an already busy panel.
+   Reuses the exact swatch styling from the avatar customizer (.avatar-row*)
+   so re-picking your look here looks identical to picking it the first time. */
+.profile-wardrobe { margin-top: 14px; }
+.profile-wardrobe-toggle {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--gold);
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 180, 84, 0.3);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.profile-wardrobe-toggle:hover { border-color: var(--gold); }
+.profile-wardrobe-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.12);
+}
+.profile-wardrobe-rows .avatar-row-swatches { flex-wrap: wrap; }
+.profile-wardrobe-rows .avatar-swatch { width: 26px; height: 26px; border-radius: 6px; }
+
+/* Mahogany grain wash, same trick as .panel-rodshop's plank bands but
+   diagonal instead of horizontal — a captain's desk, not a ship's deck. */
+.panel-profile .panel-body {
+  background-image: repeating-linear-gradient(
+    115deg,
+    rgba(0, 0, 0, 0.07) 0px, rgba(0, 0, 0, 0.07) 2px,
+    transparent 2px, transparent 20px
+  );
+}
+/* A double-ring "porthole" frame around the portrait instead of a plain
+   box — alternating dark/gold rings read as a ship's brass porthole. */
+.panel-themed .profile-portrait-frame {
+  background: var(--shop-row);
+  border: 2px solid var(--shop-bg2);
+  box-shadow:
+    0 0 0 2px var(--shop-accent),
+    0 0 0 4px var(--shop-bg2),
+    0 3px 8px rgba(0, 0, 0, 0.4);
+}
+.panel-themed .profile-name { color: var(--shop-accent); text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6); }
+.panel-themed .profile-rank { color: rgba(240, 226, 196, 0.7); }
+.panel-themed .profile-stat-row { background: var(--shop-row); border-color: rgba(255, 255, 255, 0.14); }
+.panel-themed .profile-stat-label { color: rgba(240, 226, 196, 0.75); opacity: 1; }
+.panel-themed .profile-stat-value { color: #fbf3e2; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6); }
+.panel-themed .profile-buff {
+  background: color-mix(in srgb, var(--shop-accent) 16%, rgba(10, 10, 10, 0.4));
+  border-color: var(--shop-accent);
+  color: var(--shop-accent);
+}
+
+.shop-section-title {
+  grid-column: 1 / -1;
+  font-family: 'Pirata One', 'Baloo 2', cursive;
+  font-size: 18px;
+  color: var(--shop-accent, var(--gold));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  padding-bottom: 4px;
+  margin-top: 4px;
+}
+
+/* How to Play: a faint compass-rose-like dot scatter instead of a flat
+   wash, echoing the map/reference feel without competing with the cards. */
+.panel-help .panel-body {
+  background-image: radial-gradient(rgba(143, 233, 217, 0.14) 1px, transparent 1.8px);
+  background-size: 24px 24px;
+}
+
+/* How to Play (ui/helpPanel.js) — a categorized card grid instead of a
+   plain scrolling list: satchel-style tabs pick a topic group, each entry
+   is its own bordered card with a big icon, so the panel reads as a real
+   reference deck rather than a wall of text. */
+.help-card {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  padding: 12px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.help-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--shop-accent, var(--gold));
+  background: rgba(0, 0, 0, 0.28);
+}
+.help-card-head { display: flex; align-items: center; gap: 8px; }
+.help-card-icon {
+  font-size: 20px;
+  width: 32px; height: 32px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+}
+.help-card-title {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: 13.5px;
+  color: var(--shop-accent, var(--gold));
+}
+.help-card-desc {
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(240, 226, 196, 0.85);
+}
+.help-card-settings { grid-column: 1 / -1; }
+.help-card-settings .help-card-head { margin-bottom: 2px; }
+.help-intro {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 13px;
+  color: rgba(240, 226, 196, 0.7);
+  margin-bottom: 2px;
+}
+
+/* Inventory-style category tabs, sitting between the panel header and the
+   body (Satchel: All / Rods / Bait / Fish) so you can jump straight to one
+   category instead of scrolling past everything. */
+.satchel-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 20px;
+  background: rgba(0, 0, 0, 0.18);
+  border-bottom: 2px solid var(--shop-accent, var(--panel-border));
+}
+.satchel-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: rgba(240, 226, 196, 0.6);
+  font-family: 'Pirata One', 'Baloo 2', cursive;
+  font-size: 16px;
+  padding: 8px 14px 6px;
+  cursor: pointer;
+}
+.satchel-tab:hover { color: rgba(240, 226, 196, 0.9); }
+.satchel-tab.active {
+  color: var(--shop-accent, var(--gold));
+  border-bottom-color: var(--shop-accent, var(--gold));
+}
+
+/* Fish sort control (ui/satchelPanel.js's Fish tab) — display order only,
+   never touches state.bag.items itself. */
+.fish-sort-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.fish-sort-label { font-size: 12px; font-weight: 700; color: rgba(240, 226, 196, 0.65); }
+.fish-sort-btn {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 180, 84, 0.3);
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--parchment-ink, #f0e2c4);
+  cursor: pointer;
+}
+.fish-sort-btn:hover { border-color: var(--gold); }
+.fish-sort-btn.active {
+  background: var(--shop-accent, var(--gold));
+  border-color: transparent;
+  color: #2c1e10;
+}
+
+/* ---------- Satchel: leather-bag chrome ---------- */
+/* A clipped trapezoid strip standing in for the bag's actual flap, with a
+   brass buckle hanging off its bottom edge into the tab row below — the
+   one bit of "this is a bag" silhouette the panel needed, since otherwise
+   it was just another parchment ledger like every other shop panel. */
+.satchel-flap {
+  position: relative;
+  height: 28px;
+  margin: 0 16px;
+  background: linear-gradient(165deg, #8a6239, #5a3f28);
+  clip-path: polygon(4% 0, 96% 0, 88% 100%, 12% 100%);
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+.satchel-buckle {
+  position: absolute;
+  left: 50%;
+  bottom: -11px;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 24px;
+  border-radius: 4px;
+  background: linear-gradient(165deg, #ffd670, #a5751a);
+  border: 2px solid #5a3f10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
+}
+.satchel-buckle::after {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border: 2px solid rgba(90, 63, 16, 0.7);
+  border-radius: 2px;
+}
+
+.almanac-grid, .satchel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 10px;
+}
+.almanac-cell {
+  background: rgba(122, 46, 46, 0.16);
+  border: 1px solid rgba(58, 42, 22, 0.3);
+  border-radius: 9px;
+  padding: 9px;
+  text-align: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+/* Every caught species gets a border + soft glow in its own rarity color
+   (set via the --cell-color/--cell-glow custom properties, almanacPanel.js)
+   instead of one flat tint for the whole grid — the log now reads as
+   sorted-by-rarity at a glance, and a hover lifts the entry like an actual
+   page cutting stamp catching the light. */
+.almanac-cell.discovered {
+  border-color: var(--cell-color, rgba(58, 42, 22, 0.3));
+  box-shadow: inset 0 0 12px -4px var(--cell-glow, transparent);
+}
+.almanac-cell.discovered:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), inset 0 0 14px -3px var(--cell-glow, transparent);
+  border-color: var(--cell-color, rgba(58, 42, 22, 0.5));
+}
+.almanac-cell.undiscovered { opacity: 0.55; }
+.almanac-cell.undiscovered:hover { opacity: 0.75; }
+.almanac-icon { display: block; margin: 0 auto; }
+.almanac-name-line { margin-top: 4px; }
+.almanac-name-line .rarity-badge { display: inline-block; margin-top: 3px; }
+.almanac-name {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--parchment-ink);
+  text-shadow: 0 0 3px rgba(58, 42, 22, 0.3);
+}
+.almanac-meta { font-size: 11px; opacity: 0.78; color: var(--parchment-ink); }
+.satchel-hint { opacity: 0.75; font-style: italic; padding: 8px 0 2px; font-size: 13px; }
+
+/* ---------- Catch card ---------- */
+.catch-card-wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  pointer-events: none;
+}
+.catch-card-wrap.hidden { display: none; }
+
+.catch-card {
+  --rarity-color: #5fe3c0;
+  --rarity-glow: #8fe9d9;
+  width: min(280px, 80vw);
+  background: linear-gradient(165deg, var(--parchment), #d8c393);
+  border: 3px solid var(--rarity-color);
+  box-shadow: 0 0 40px var(--rarity-glow), 0 20px 60px rgba(0,0,0,0.6);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  animation: card-pop 0.28s ease;
+}
+@keyframes card-pop {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+/* A Shiny catch (data/mutations.js) gets a slow gold shimmer sweeping across
+   the card on top of the normal pop-in, so it reads as something special
+   the instant the card appears, before you've even read the badge text. */
+.catch-card.shiny {
+  background: linear-gradient(165deg, #fff3c4, #e8c97a);
+  animation: card-pop 0.28s ease, shiny-shimmer 2.2s ease-in-out infinite;
+}
+@keyframes shiny-shimmer {
+  0%, 100% { box-shadow: 0 0 40px var(--rarity-glow), 0 20px 60px rgba(0,0,0,0.6); }
+  50% { box-shadow: 0 0 60px var(--rarity-glow), 0 20px 60px rgba(0,0,0,0.6); }
+}
+/* Giant (data/mutations.js) gets its own icy-blue card treatment — a
+   slower, heavier pulse than Shiny's shimmer, reading as "big and looming"
+   rather than "glittering". Stacks visually fine on a catch that's both:
+   .shiny's gold background still wins (set second in the DOM order below),
+   this only applies when a catch is Giant but not also Shiny. */
+.catch-card.giant:not(.shiny) {
+  background: linear-gradient(165deg, #cfe9ff, #7ab8e0);
+  animation: card-pop 0.28s ease, giant-loom 2.8s ease-in-out infinite;
+}
+@keyframes giant-loom {
+  0%, 100% { box-shadow: 0 0 36px var(--rarity-glow), 0 20px 60px rgba(0,0,0,0.6); transform: scale(1); }
+  50% { box-shadow: 0 0 56px var(--rarity-glow), 0 20px 60px rgba(0,0,0,0.6); transform: scale(1.015); }
+}
+
+.catch-card-icon { display: block; margin: 0 auto 6px; }
+.catch-card-title { font-family: 'Pirata One', 'Baloo 2', cursive; font-size: 22px; font-weight: 400; color: var(--parchment-ink); }
+.catch-card-rarity {
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 12px;
+  margin-top: 2px;
+  text-shadow: 0 0 3px rgba(58, 42, 22, 0.3);
+}
+.catch-card-stats { margin-top: 8px; font-size: 13px; color: var(--parchment-ink); }
+.catch-card-badge { margin-top: 6px; font-size: 12px; color: var(--blood); font-weight: 700; min-height: 14px; }
+.catch-card-badge.hidden { visibility: hidden; }
+.catch-card-hint { margin-top: 10px; font-size: 11px; opacity: 0.65; color: var(--parchment-ink); }
+
+/* ---------- Dialogue (Forge-style branching chat) ---------- */
+.dialogue-wrap {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 55;
+  padding: 0 14px 18px;
+}
+.dialogue-wrap.hidden { display: none; }
+
+.dialogue-box {
+  position: relative;
+  width: min(560px, 100%);
+  display: flex;
+  flex-direction: column;
+  background: var(--panel-bg);
+  background-color: #2c1e10;
+  border: 3px solid var(--panel-border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.6),
+    inset 0 0 0 6px rgba(20, 12, 6, 0.55),
+    inset 0 0 0 9px var(--panel-border),
+    inset 0 0 0 11px rgba(20, 12, 6, 0.4);
+}
+
+/* The "popup of the NPC standing at their stand" — a wide scene banner
+   across the top of the dialogue box rather than a small bust icon. */
+.dialogue-portrait {
+  display: block;
+  width: 100%;
+  /* `auto` (not a fixed 270px) so the canvas keeps its own 560:270 aspect
+     ratio as .dialogue-box's own width shrinks below 560px on a narrow
+     phone screen — a fixed height there squished every NPC horizontally
+     instead of letting the whole banner scale down proportionally. */
+  height: auto;
+  background: rgba(0,0,0,0.25);
+  border-bottom: 3px solid var(--panel-border);
+}
+
+.dialogue-main { padding: 14px; min-width: 0; }
+
+.dialogue-name {
+  font-family: 'Pirata One', 'Baloo 2', cursive;
+  font-size: 20px;
+  color: var(--gold);
+}
+
+.dialogue-text {
+  margin-top: 3px;
+  font-size: 15px;
+  color: #f0e2c4;
+  line-height: 1.45;
+}
+
+.dialogue-options {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dialogue-option {
+  text-align: left;
+  background: rgba(255, 180, 84, 0.1);
+  border: 1px solid rgba(255, 180, 84, 0.35);
+  color: #f0e2c4;
+  padding: 10px 14px;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+}
+.dialogue-option:hover { background: rgba(255, 180, 84, 0.22); }
+
+/* ---------- Treasure map ---------- */
+.map-wrap { position: absolute; inset: 0; z-index: 50; }
+.map-wrap.hidden { display: none; }
+/* Wider than a typical panel on purpose — the chart's region tags are
+   fixed-size HTML overlays (percentage-positioned, not scaled with the
+   canvas), so more on-screen room is the only real lever for keeping
+   neighboring tags from crowding each other. */
+.map-wrap .panel { width: min(680px, 94vw); }
+
+.map-body { padding: 12px; }
+
+.map-frame {
+  position: relative;
+  width: 100%;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 2px solid rgba(58, 42, 22, 0.35);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 0 24px rgba(20, 12, 6, 0.35);
+}
+
+.map-canvas { display: block; width: 100%; height: auto; }
+
+.map-markers { position: absolute; inset: 0; }
+
+.map-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  color: var(--parchment-ink);
+  transition: filter 0.15s ease;
+}
+/* An ink-stamped X, like a spot marked by hand on a chart — not a bright
+   UI pin — to match the map's single-tone sepia engraving style. Current
+   location gets the one intentional flourish (a small pulsing gold ring)
+   since that's a real usability need, not decoration. */
+.map-marker-icon {
+  position: relative;
+  width: calc(15px * var(--map-tag-scale, 1)); height: calc(15px * var(--map-tag-scale, 1));
+  transition: filter 0.15s ease;
+}
+.map-marker-icon::before,
+.map-marker-icon::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: calc(16px * var(--map-tag-scale, 1)); height: calc(2.4px * var(--map-tag-scale, 1));
+  background: rgba(74, 50, 24, 0.85);
+  border-radius: 1px;
+}
+.map-marker-icon::before { transform: translate(-50%, -50%) rotate(45deg); }
+.map-marker-icon::after { transform: translate(-50%, -50%) rotate(-45deg); }
+.map-marker.home .map-marker-icon::before,
+.map-marker.home .map-marker-icon::after { background: rgba(90, 40, 20, 0.9); }
+.map-marker.locked .map-marker-icon::before,
+.map-marker.locked .map-marker-icon::after { background: rgba(74, 50, 24, 0.35); }
+.map-marker.current .map-marker-icon {
+  border-radius: 50%;
+  animation: map-marker-pulse 1.8s ease-in-out infinite;
+}
+.map-marker:not(.locked):hover .map-marker-icon {
+  filter: drop-shadow(0 0 5px rgba(255, 180, 84, 0.85));
+}
+@keyframes map-marker-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(255, 180, 84, 0.55); }
+  50% { box-shadow: 0 0 0 7px rgba(255, 180, 84, 0.18); }
+}
+/* A small parchment tag behind the label/stars — keeps them legible over
+   busy landmass art. Tag text sizes below all read off --map-tag-scale
+   (set per-render in mapPanel.js from the chart's actual rendered width)
+   rather than a fixed px value: the markers themselves are positioned as
+   percentages of the frame, so on a narrower window (the panel's own
+   `width: min(680px, 94vw)` shrinking below 680px) the gaps between
+   markers shrink too — without this, fixed-size tag text would stop
+   shrinking to match and neighboring tags (Tropical Island/Seaside Bay are
+   the tightest pair) would start overlapping again. Scaling tag text by
+   the same factor keeps every tag's size proportional to its available
+   room at any width, the same way the game canvas itself already scales
+   in core/canvas.js. */
+.map-marker-tag {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(1px * var(--map-tag-scale, 1));
+  padding: calc(2px * var(--map-tag-scale, 1)) calc(8px * var(--map-tag-scale, 1)) calc(3px * var(--map-tag-scale, 1));
+  border-radius: calc(8px * var(--map-tag-scale, 1));
+  background: rgba(232, 201, 119, 0.85);
+  border: 1px solid rgba(107, 74, 42, 0.35);
+  box-shadow: 0 2px 5px rgba(20, 12, 4, 0.28);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.map-marker:not(.locked):hover .map-marker-tag {
+  background: rgba(255, 226, 153, 0.95);
+  transform: translateY(-1px);
+}
+.map-marker.locked .map-marker-tag {
+  background: rgba(120, 96, 60, 0.32);
+  border-color: rgba(107, 74, 42, 0.2);
+  box-shadow: none;
+}
+.map-marker.current .map-marker-tag {
+  background: rgba(255, 214, 112, 0.95);
+  border-color: rgba(255, 180, 84, 0.8);
+}
+.map-marker-label {
+  font-family: 'Pirata One', cursive;
+  font-weight: 400;
+  font-size: calc(14px * var(--map-tag-scale, 1));
+  color: #3a2a16;
+  white-space: nowrap;
+}
+.map-marker.locked .map-marker-label { opacity: 0.6; }
+.map-marker-stars {
+  font-size: calc(10px * var(--map-tag-scale, 1));
+  font-weight: 700;
+  color: #7a2e2e;
+  white-space: nowrap;
+}
+
+/* Legend strip beneath the chart — explains the marker vocabulary and the
+   calm→deadly star-color scale at a glance, once instead of per-marker. */
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: rgba(20, 14, 8, 0.28);
+  border: 1px solid rgba(232, 201, 119, 0.18);
+}
+.map-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.map-legend-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(240, 226, 196, 0.85);
+}
+.map-legend-swatch {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: rgba(232, 201, 119, 0.85);
+  border: 1px solid rgba(107, 74, 42, 0.5);
+  display: inline-block;
+}
+.map-legend-swatch.home { background: rgba(90, 40, 20, 0.85); }
+.map-legend-swatch.current {
+  background: rgba(255, 214, 112, 0.95);
+  box-shadow: 0 0 0 3px rgba(255, 180, 84, 0.4);
+}
+.map-legend-swatch.locked { background: rgba(120, 96, 60, 0.4); border-style: dashed; }
+.map-legend-diff { margin-left: auto; }
+.map-legend-scale {
+  width: 60px; height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #4a9d5f, #c98a2e, #c9542e, #8a1f1f);
+}
+
+/* A small compass badge on whichever region Morris's Pick (data/morris.js)
+   names for today — a soft glow on the marker icon itself plus a tiny tag
+   under the star rating, so it reads at a glance without a legend lookup. */
+.map-marker.pick .map-marker-icon::before,
+.map-marker.pick .map-marker-icon::after {
+  background: rgba(255, 180, 84, 0.95);
+}
+.map-marker.pick:not(.locked) .map-marker-icon {
+  filter: drop-shadow(0 0 6px rgba(255, 180, 84, 0.7));
+}
+.map-marker-pick-badge {
+  font-size: calc(10px * var(--map-tag-scale, 1));
+  font-weight: 700;
+  color: #7a4a1a;
+  white-space: nowrap;
+}
+
+/* Selecting a region (click-to-preview, ui/mapPanel.js) highlights its tag
+   with a gold ring so it's obvious which region the preview card below is
+   actually describing. */
+.map-marker.selected .map-marker-tag {
+  background: rgba(255, 226, 153, 0.98);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(255, 180, 84, 0.5), 0 2px 5px rgba(20, 12, 4, 0.28);
+}
+
+/* Region preview / confirm-travel card (ui/mapPanel.js) — replaces the old
+   click-to-travel-instantly flow with a deliberate look-then-sail step. */
+.map-preview-wrap { margin-top: 10px; }
+.map-preview-empty {
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: rgba(20, 14, 8, 0.22);
+  border: 1px dashed rgba(232, 201, 119, 0.22);
+  color: rgba(240, 226, 196, 0.55);
+  font-size: 13px;
+  text-align: center;
+}
+.map-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: rgba(20, 14, 8, 0.3);
+  border: 1px solid rgba(232, 201, 119, 0.22);
+}
+.map-preview-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.map-preview-name {
+  font-family: 'Pirata One', cursive;
+  font-size: 19px;
+  color: var(--gold);
+}
+.map-preview-stars { font-size: 12px; font-weight: 700; color: #c9a86a; }
+.map-preview-blurb { font-size: 13px; color: rgba(240, 226, 196, 0.85); line-height: 1.4; }
+.map-preview-meta {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(240, 226, 196, 0.7);
+}
+.map-preview-pick {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffb454;
+}
+.map-preview-sail { align-self: flex-end; margin-top: 2px; }
+
+/* ---------- Travel / rowing loading screen ---------- */
+.travel-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 65;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(1, 10, 15, 0.88);
+}
+.travel-wrap.hidden { display: none; }
+
+.travel-box {
+  width: min(500px, 92vw);
+  text-align: center;
+}
+
+.travel-title {
+  font-family: 'Pirata One', 'Baloo 2', cursive;
+  font-size: 26px;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+
+.travel-canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 2px solid var(--panel-border);
+}
+
+.travel-label {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #f0e2c4;
+}
+
+.travel-bar {
+  margin-top: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.1);
+  overflow: hidden;
+}
+.travel-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+  transition: width 0.1s linear;
+}
+
+@media (prefers-color-scheme: light) {
+  html, body { background: #010e15; }
+}
+
+/* ---------- Boot screens: save-slot picker + avatar customizer ---------- */
+.boot-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at 50% 20%, #0b2733 0%, #010e15 75%);
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.boot-box {
+  position: relative;
+  width: min(720px, 96vw);
+  max-height: 92vh;
+  overflow-y: auto;
+  background: var(--panel-bg);
+  background-color: #2c1e10;
+  border: 3px solid var(--panel-border);
+  border-radius: 14px;
+  padding: 24px 28px 28px;
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 6px rgba(20, 12, 6, 0.55),
+    inset 0 0 0 9px var(--panel-border),
+    inset 0 0 0 11px rgba(20, 12, 6, 0.4);
+  text-align: center;
+}
+
+/* The boot screen's title card (render/drawTitleCard.js, ui/saveSlotScreen.js)
+   — a ship's-wheel-and-crossed-rods emblem with a carved gold wordmark,
+   replacing what used to be a single line of plain gold text. `height: auto`
+   (not a fixed px height) so the canvas keeps its own aspect ratio as the
+   boot-box's own width shrinks on a narrow screen, same fix the dialogue
+   portrait and shop banners already needed for the same reason. */
+.boot-title-card {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5));
+}
+
+.boot-subtitle {
+  margin-top: 2px;
+  text-align: center;
+  color: #cfc2a4;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.slot-grid {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+}
+
+.slot-card {
+  background: rgba(0, 0, 0, 0.22);
+  border: 2px solid var(--panel-border);
+  border-radius: 10px;
+  padding: 14px 12px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.slot-preview {
+  display: block;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+
+.slot-empty-icon {
+  width: 170px;
+  height: 190px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 56px;
+  color: rgba(255, 180, 84, 0.4);
+  border: 2px dashed rgba(255, 180, 84, 0.3);
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+
+.slot-label {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #cfc2a4;
+  opacity: 0.65;
+}
+
+.slot-name {
+  font-family: 'Pirata One', 'Baloo 2', cursive;
+  font-weight: 400;
+  color: var(--gold);
+  font-size: 20px;
+  line-height: 1.15;
+}
+
+.slot-meta { font-size: 12px; color: #cfc2a4; }
+.slot-meta-dim { opacity: 0.6; }
+
+.slot-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+.slot-actions .btn { flex: 1; font-size: 12px; padding: 8px 6px; }
+.slot-delete { background: linear-gradient(165deg, #5a2020, #2c1010); border-color: #7a3030; }
+
+/* ---------- Avatar customizer ---------- */
+.avatar-box { width: min(640px, 96vw); }
+
+.avatar-name-row {
+  margin-top: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.avatar-name-row .avatar-row-label { margin-bottom: 0; }
+
+.avatar-name-input {
+  width: min(240px, 60vw);
+  background: rgba(0, 0, 0, 0.25);
+  border: 2px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 14px;
+  color: #f0e2c4;
+}
+.avatar-name-input:focus { outline: none; border-color: var(--gold); }
+.avatar-name-input::placeholder { color: rgba(240, 226, 196, 0.4); }
+
+.loadout-save-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.loadout-name-input {
+  flex: 1;
+  min-width: 160px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 2px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 14px;
+  color: #f0e2c4;
+}
+.loadout-name-input:focus { outline: none; border-color: var(--gold); }
+.loadout-name-input::placeholder { color: rgba(240, 226, 196, 0.4); }
+
+.avatar-layout {
+  margin-top: 18px;
+  display: flex;
+  gap: 22px;
+  align-items: flex-start;
+  text-align: left;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.avatar-preview-frame {
+  flex: 0 0 auto;
+  background: rgba(0, 0, 0, 0.25);
+  border: 2px solid var(--panel-border);
+  border-radius: 10px;
+  padding: 8px;
+}
+.avatar-preview { display: block; }
+
+.avatar-swatches {
+  flex: 1 1 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 220px;
+}
+
+.avatar-row-label {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+
+.avatar-row-swatches {
+  display: flex;
+  gap: 8px;
+}
+
+.avatar-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  padding: 0;
+}
+.avatar-swatch:hover { border-color: rgba(255, 255, 255, 0.4); }
+.avatar-swatch-selected {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(255, 180, 84, 0.4);
+}
+
+.boot-actions {
+  margin-top: 22px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.boot-actions .btn { padding: 10px 22px; font-size: 14px; }
+
+/* The Captain's Log's two-page spread (ui/almanacPanel.js) has real room to
+   lose on a phone-width screen — a strict 1fr/20px/1fr grid would squeeze
+   each page down to a sliver. Below 700px it stacks into one scrolling
+   column instead: left page (progress/filters) on top, a thin horizontal
+   spine rule, then the right page (the actual grid) below — same two pages,
+   just read top-to-bottom instead of side-by-side. Deliberately placed at
+   the very end of the file (rather than alongside the .hud-row.hud-top
+   media block near the top) so it's guaranteed to come after .book-spread's
+   own base rule in source order and actually win the cascade — same
+   specificity either way, and CSS ties go to whichever rule is declared
+   later, independent of which one's condition currently matches. */
+@media (max-width: 700px) {
+  .book-spread {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+  }
+  .book-spine {
+    min-height: 3px;
+    box-shadow: none;
+  }
+  .book-spine::after { display: none; }
+  .book-page-left::before, .book-page-right::before { display: none; }
+  .book-page-watermark { font-size: 90px; }
+}
+
+.hidden { display: none !important; }
