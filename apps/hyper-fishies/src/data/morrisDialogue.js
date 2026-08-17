@@ -5,13 +5,12 @@
 // ends the conversation.
 import { playerName } from '../core/gameState.js';
 import { rankForLevel } from '../data/ranks.js';
-import { morrisRapportTier } from './morris.js';
 
 export const MORRIS_START = 'start';
 
-// Rather than a whole extra dialogue branch, a rapport-gated story rides
-// along on the farewell line instead (see the `end` node below) — keyed by
-// talkCount parity so two visits in a row don't always land the same one.
+// Rather than a whole extra dialogue branch, a story rides along on the
+// farewell line instead (see the `end` node below) — keyed by talkCount
+// parity so two visits in a row don't always land the same one.
 const SEA_STORIES = [
   "Once rowed a fella so heavy the boat nearly went under before we cleared the pier. Charged him double after that, and he still tips better than most.",
   "Saw a fish once, out past the Abyssal rift, bigger than this whole boat. Didn't try to catch it. Didn't try to look at it twice either.",
@@ -30,15 +29,11 @@ function morrisGreeting(state) {
   }
   const rank = rankForLevel(state.level);
   const best = state.personalBests.biggestOverall;
-  const tier = morrisRapportTier(state);
   if (rank.id === 'admiral') {
     return `Admiral ${name}. Half the docks salute when you walk by these days — still can't believe I used to row you out for pocket change.`;
   }
   if (rank.id === 'captain') {
     return `Cap'n ${name}! Fancy title, that. Where's the Captain fancy going today?`;
-  }
-  if (tier.id === 'oldSalt') {
-    return `There's my favorite passenger. Boat's warmed up and waiting, ${name} — say the word.`;
   }
   if (best) {
     return `Back again, ${name}. Still thinkin' about that ${best.size.toFixed(1)}-inch ${best.name}? Where to this time?`;
@@ -92,17 +87,8 @@ export const MORRIS_DIALOGUE = {
     ],
   },
 
-  // The old flat "talk 3 times" gate is now just the Shipmate rapport tier
-  // (data/morris.js) — same threshold, but it reads Morris's actual trust
-  // level instead of a bare counter, and the line changes again once he's
-  // properly fond of you (Old Salt).
   travelAsk: {
-    text: (state) => {
-      const tier = morrisRapportTier(state);
-      if (tier.id === 'stranger') return "Ha! I don't row for strangers I've just met. Chew the fat with me a spell first, then we'll talk.";
-      if (tier.id === 'oldSalt') return "For you? Always. Let's see where the water's calling today.";
-      return "Aye, I know a few spots. Ready when you are, cap'n.";
-    },
+    text: "Aye, I know a few spots. Ready when you are, cap'n.",
     options: [
       { label: 'Show me the map.', next: 'mapGate' },
       { label: 'Tell me about yourself.', next: 'about' },
@@ -111,25 +97,21 @@ export const MORRIS_DIALOGUE = {
   },
 
   mapGate: {
-    text: (state) => (morrisRapportTier(state).id !== 'stranger'
-      ? "Here y'are — mind the stars, more of 'em means rougher water and meaner fish. Pick yer poison."
-      : "Not so fast — I don't hand out charts to just anyone. A few more words first, eh?"),
+    text: "Here y'are — mind the stars, more of 'em means rougher water and meaner fish. Pick yer poison.",
     options: [
-      { label: 'Open the map', action: 'openMap', when: (state) => morrisRapportTier(state).id !== 'stranger' },
-      { label: 'Tell me about yourself.', next: 'about', when: (state) => morrisRapportTier(state).id === 'stranger' },
+      { label: 'Open the map', action: 'openMap' },
       { label: 'Never mind.', next: 'end' },
     ],
   },
 
-  // Shipmate rapport or better rides a short sea story along on the
-  // farewell every other visit (talkCount parity), instead of a whole
-  // extra "got a story?" branch — flavor without more options to click
-  // through.
+  // A short sea story rides along on the farewell every other visit
+  // (talkCount parity), instead of a whole extra "got a story?" branch —
+  // flavor without more options to click through.
   end: {
     text: (state) => {
       const name = playerName(state);
       const talk = state.npc.morris.talkCount;
-      if (morrisRapportTier(state).id !== 'stranger' && talk % 2 === 0) {
+      if (talk > 0 && talk % 2 === 0) {
         const story = SEA_STORIES[Math.floor(talk / 2) % SEA_STORIES.length];
         return `Fair winds to ye, ${name}. Oh, and — ${story}`;
       }

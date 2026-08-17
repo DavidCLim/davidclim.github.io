@@ -2,7 +2,7 @@ import { el, clearChildren } from '../util/dom.js';
 import { REGIONS, MAINLAND_COASTLINE, ABYSSAL_COASTLINE, STRAIT_ISLET, REGION_BORDERS, regionById, isRegionLocked } from '../data/regions.js';
 import { closeOverlay } from './overlayShell.js';
 import { showToast } from './toast.js';
-import { morrisPickRegionId, morrisTravelMultiplier } from '../data/morris.js';
+import { morrisPickRegionId } from '../data/morris.js';
 import { BASE_TRAVEL_DURATION } from '../world/travel.js';
 import { RARITY } from '../data/rarity.js';
 
@@ -477,14 +477,14 @@ function buildLegend() {
 }
 
 // A region click no longer travels immediately — it selects the region and
-// shows this preview card (blurb, difficulty, focus rarity, Morris's
-// rapport-adjusted crossing time, and a Morris's Pick callout when it
-// applies), with an explicit "Set Sail" to actually confirm the trip.
+// shows this preview card (blurb, difficulty, focus rarity, crossing time,
+// and a Morris's Pick callout when it applies), with an explicit "Set
+// Sail" to actually confirm the trip.
 function buildPreviewCard(state, region, onSail) {
   const pickId = morrisPickRegionId(state);
   const isPick = region.id === pickId;
   const rarity = region.focusRarity ? RARITY[region.focusRarity] : null;
-  const duration = BASE_TRAVEL_DURATION * morrisTravelMultiplier(state);
+  const duration = BASE_TRAVEL_DURATION;
   const diffColor = !region.home ? difficultyColor(region.stars) : null;
 
   const meta = [el('span', {}, `~${duration.toFixed(1)}s crossing`)];
