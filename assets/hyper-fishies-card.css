@@ -62,8 +62,8 @@
 }
 
 .hyper-fishies-wheel {
-  font-size: 2.4rem;
-  line-height: 1;
+  width: 76px;
+  height: 76px;
   filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.6));
 }
 

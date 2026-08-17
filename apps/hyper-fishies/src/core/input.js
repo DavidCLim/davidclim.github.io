@@ -50,6 +50,20 @@ export function initInput(state, surface, root) {
   });
   window.addEventListener('mouseup', () => { input.actionDown = false; });
 
+  // Touch's answer to the desktop canvas click above — tapping the game
+  // view itself is the action button, so there's no separate on-screen
+  // button duplicating it (see buildTouchControls: only the joystick lives
+  // there now).
+  surface.canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    if (!input.actionDown) input.actionPressedEdge = true;
+    input.actionDown = true;
+  }, { passive: false });
+  surface.canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    input.actionDown = false;
+  }, { passive: false });
+
   if (isTouchDevice()) {
     buildTouchControls(input, root);
   }
@@ -104,15 +118,10 @@ function buildTouchControls(input, root) {
   joyKnob.className = 'joy-knob';
   joyBase.appendChild(joyKnob);
 
-  const actionBtn = document.createElement('div');
-  actionBtn.className = 'action-btn';
-  actionBtn.textContent = '●';
-
   wrap.appendChild(joyBase);
-  wrap.appendChild(actionBtn);
   root.appendChild(wrap);
 
-  const JOY_RADIUS = 44;
+  const JOY_RADIUS = 36;
   let joyTouchId = null;
   let baseRect = null;
 
@@ -164,17 +173,4 @@ function buildTouchControls(input, root) {
   }
   window.addEventListener('touchend', endJoy);
   window.addEventListener('touchcancel', endJoy);
-
-  actionBtn.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    if (!input.actionDown) input.actionPressedEdge = true;
-    input.actionDown = true;
-    actionBtn.classList.add('pressed');
-  }, { passive: false });
-
-  actionBtn.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    input.actionDown = false;
-    actionBtn.classList.remove('pressed');
-  }, { passive: false });
 }

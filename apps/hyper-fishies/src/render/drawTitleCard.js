@@ -39,6 +39,31 @@ export function drawTitleCard(ctx, w, h) {
   drawWordmark(ctx, cx, h * 0.78, w);
 }
 
+// Just the emblem — wheel, crossed rods, koi — with no wordmark, sized to
+// a square icon instead of the title card's wide banner proportions. For
+// anywhere the game's mark needs to stand alone next to its own text (the
+// portfolio homepage card supplies its own "Hyper Fishies" heading).
+export function drawEmblem(ctx, w, h) {
+  ctx.clearRect(0, 0, w, h);
+  const cx = w / 2;
+  const cy = h * 0.52;
+  const r = Math.min(w, h) * 0.4;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.save(); ctx.rotate(-0.6); drawRodIcon(ctx, 'brass', 0, 0, r * 2.6); ctx.restore();
+  ctx.save(); ctx.rotate(0.6); ctx.scale(-1, 1); drawRodIcon(ctx, 'brass', 0, 0, r * 2.6); ctx.restore();
+  ctx.restore();
+
+  drawShipWheel(ctx, cx, cy, r);
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(-0.32);
+  drawFishIcon(ctx, 'koi', 0, 0, r * 1.15, '#ffb454', { pattern: 'spots', patternColor: '#fff3c8' });
+  ctx.restore();
+}
+
 function drawShipWheel(ctx, cx, cy, r) {
   ctx.save();
   ctx.translate(cx, cy);

@@ -307,6 +307,28 @@ html, body {
 }
 .almanac-btn:hover::after, .almanac-btn:focus-visible::after { opacity: 1; transform: translateY(-50%) translateX(0); }
 
+/* Phones held sideways report a short, wide viewport — the desktop-sized
+   weather wheel/clock pair (137px tall) plus the full 6-button toolbar
+   (418px tall, starting below them at top:162px) together run past 580px,
+   taller than most landscape phones (~360-430px). Past the CSS `top`
+   offset itself doesn't shrink, they used to spill off the bottom of the
+   screen entirely — the "buttons trail off into nothing" bug. Scaling
+   both down and pulling the toolbar's start up keeps the whole left-side
+   instrument column on-screen without touching their desktop sizing. */
+@media (max-height: 480px) {
+  .weather-wheel, .daynight-clock {
+    transform: scale(0.65);
+    transform-origin: top left;
+  }
+  .daynight-clock { left: 92px; }
+  .hud-toolbar {
+    top: 100px;
+    gap: 6px;
+    transform: scale(0.62);
+    transform-origin: top left;
+  }
+}
+
 /* ---------- Touch controls ---------- */
 #touch-controls {
   position: absolute;
@@ -319,8 +341,8 @@ html, body {
   position: absolute;
   left: 26px;
   bottom: 26px;
-  width: 100px;
-  height: 100px;
+  width: 84px;
+  height: 84px;
   border-radius: 50%;
   background: rgba(28, 18, 8, 0.55);
   border: 2px solid rgba(255, 180, 84, 0.4);
@@ -331,35 +353,13 @@ html, body {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 46px;
-  height: 46px;
-  margin: -23px 0 0 -23px;
+  width: 38px;
+  height: 38px;
+  margin: -19px 0 0 -19px;
   border-radius: 50%;
   background: rgba(255, 180, 84, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.4);
   transition: transform 0.02s linear;
-}
-
-.action-btn {
-  position: absolute;
-  right: 30px;
-  bottom: 34px;
-  width: 78px;
-  height: 78px;
-  border-radius: 50%;
-  background: rgba(122, 46, 46, 0.55);
-  border: 2px solid rgba(255, 180, 84, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  color: #fff6ea;
-  pointer-events: auto;
-  user-select: none;
-}
-.action-btn.pressed {
-  background: rgba(122, 46, 46, 0.85);
-  transform: scale(0.94);
 }
 
 /* ---------- Overlay panels ---------- */
