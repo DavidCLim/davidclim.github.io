@@ -18,6 +18,130 @@
 
 * { box-sizing: border-box; }
 
+/* ---------- Boot loader ---------- */
+/* Pure HTML/CSS, no JS dependency, so it's visible from the very first
+   paint — before the ES module graph has even finished fetching, let alone
+   before main.js runs anything. main.js calls hideBootLoader() the moment
+   the save-slot screen is actually in the DOM, snapping the bar's own
+   CSS-driven fill (which never reaches 100% on its own) to a real "done"
+   rather than a faked number. */
+.boot-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 30%, #0f4a5c 0%, #06222e 55%, #010e15 100%);
+  transition: opacity 0.5s ease;
+}
+.boot-loader.boot-loader-hide {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.boot-loader-rays {
+  position: absolute;
+  inset: -10% -10% auto -10%;
+  height: 70%;
+  background:
+    linear-gradient(100deg, transparent 10%, rgba(255, 255, 255, 0.07) 14%, transparent 20%),
+    linear-gradient(100deg, transparent 38%, rgba(255, 255, 255, 0.05) 43%, transparent 50%),
+    linear-gradient(100deg, transparent 65%, rgba(255, 255, 255, 0.06) 70%, transparent 78%);
+  transform: skewX(-12deg);
+  pointer-events: none;
+}
+
+.boot-loader-bubbles span {
+  position: absolute;
+  bottom: -5%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(230, 250, 245, 0.35);
+  animation: boot-bubble-rise linear infinite;
+}
+.boot-loader-bubbles span:nth-child(1) { left: 8%;  width: 8px;  height: 8px;  animation-duration: 6.5s; animation-delay: 0s; }
+.boot-loader-bubbles span:nth-child(2) { left: 18%; width: 14px; height: 14px; animation-duration: 8s;   animation-delay: 1.2s; }
+.boot-loader-bubbles span:nth-child(3) { left: 30%; width: 6px;  height: 6px;  animation-duration: 5.5s; animation-delay: 2.4s; }
+.boot-loader-bubbles span:nth-child(4) { left: 46%; width: 10px; height: 10px; animation-duration: 7s;   animation-delay: 0.6s; }
+.boot-loader-bubbles span:nth-child(5) { left: 60%; width: 12px; height: 12px; animation-duration: 6s;   animation-delay: 3s; }
+.boot-loader-bubbles span:nth-child(6) { left: 72%; width: 7px;  height: 7px;  animation-duration: 8.5s; animation-delay: 1.8s; }
+.boot-loader-bubbles span:nth-child(7) { left: 84%; width: 11px; height: 11px; animation-duration: 6.8s; animation-delay: 0.3s; }
+.boot-loader-bubbles span:nth-child(8) { left: 93%; width: 9px;  height: 9px;  animation-duration: 7.6s; animation-delay: 2.1s; }
+@keyframes boot-bubble-rise {
+  from { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: 0.5; }
+  90% { opacity: 0.35; }
+  to { transform: translateY(-110vh) translateX(12px); opacity: 0; }
+}
+
+.boot-loader-fish .fish {
+  position: absolute;
+  font-size: 28px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+  animation: boot-fish-swim linear infinite;
+}
+.fish-1 { top: 18%; font-size: 30px; animation-duration: 11s; animation-delay: 0s; }
+.fish-2 { top: 32%; font-size: 22px; animation-duration: 8s;  animation-delay: 2s;  animation-name: boot-fish-swim-rev; transform: scaleX(-1); }
+.fish-3 { top: 60%; font-size: 26px; animation-duration: 13s; animation-delay: 1s; }
+.fish-4 { top: 74%; font-size: 20px; animation-duration: 9s;  animation-delay: 4s;  animation-name: boot-fish-swim-rev; transform: scaleX(-1); }
+.fish-5 { top: 46%; font-size: 24px; animation-duration: 15s; animation-delay: 3s; }
+@keyframes boot-fish-swim {
+  from { left: -10%; }
+  to { left: 110%; }
+}
+@keyframes boot-fish-swim-rev {
+  from { left: 110%; }
+  to { left: -10%; }
+}
+
+.boot-loader-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 0 24px;
+}
+.boot-loader-title {
+  font-family: 'Pirata One', cursive;
+  font-size: clamp(2rem, 7vw, 3.2rem);
+  letter-spacing: 0.03em;
+  color: transparent;
+  background: linear-gradient(180deg, #eafffa 0%, #ffb454 45%, #a86a1e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.6));
+}
+.boot-loader-bar-track {
+  width: min(320px, 70vw);
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(230, 250, 245, 0.15);
+  border: 1px solid rgba(230, 250, 245, 0.3);
+  overflow: hidden;
+}
+.boot-loader-bar-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #5fe3c0, #ffb454);
+  animation: boot-bar-fill 1.8s ease-out forwards;
+}
+@keyframes boot-bar-fill {
+  from { width: 0%; }
+  to { width: 88%; }
+}
+.boot-loader-caption {
+  font-size: 13px;
+  font-style: italic;
+  color: #cfece4;
+  letter-spacing: 0.02em;
+}
+
 html, body {
   margin: 0;
   padding: 0;

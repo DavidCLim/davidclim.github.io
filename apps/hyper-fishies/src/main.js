@@ -436,4 +436,31 @@ function showAvatarCustomizer(index) {
   });
 }
 
+// The boot loader (index.html) is pure HTML/CSS so it's on screen from
+// first paint, before the module graph even finishes fetching — its bar
+// fills toward 88% on its own via CSS. This is the actual "ready" signal:
+// freeze the bar at wherever the CSS animation left it, snap it the rest
+// of the way to 100% over a real transition, then fade the whole thing
+// out. Snapping via a frozen inline width (not just toggling a class)
+// sidesteps the CSS animation still holding `width` under fill-mode:
+// forwards, which would otherwise silently out-rank a plain class rule.
+function hideBootLoader() {
+  const loader = document.getElementById('boot-loader');
+  if (!loader) return;
+  const fill = loader.querySelector('.boot-loader-bar-fill');
+  if (fill) {
+    fill.style.width = getComputedStyle(fill).width;
+    fill.style.animation = 'none';
+    requestAnimationFrame(() => {
+      fill.style.transition = 'width 0.3s ease';
+      fill.style.width = '100%';
+    });
+  }
+  setTimeout(() => {
+    loader.classList.add('boot-loader-hide');
+    setTimeout(() => loader.remove(), 550);
+  }, 350);
+}
+
 showSlotScreen();
+hideBootLoader();

@@ -134,10 +134,6 @@ export const ACHIEVEMENTS = [
   // Smokehouse (data/smokehouse.js) — a running counter of cured fish
   // collected, same "cheap running counter" shape as everything else here.
   { id: 'smokehouse_regular', name: 'Low and Slow', desc: 'Collect 15 cured fish from the Smokehouse.', gold: 200, exp: 100, check: (s) => (s.smokedCount || 0) >= 15, progress: (s) => [s.smokedCount || 0, 15] },
-  // Morris's rapport system (data/morris.js) — Old Salt is the top tier,
-  // unlocked at 15 conversations (ui/dialogue.js increments talkCount once
-  // per exchange).
-  { id: 'morris_old_salt', name: 'Old Salt', desc: "Earn Morris's full trust.", gold: 200, exp: 120, check: (s) => (s.npc.morris.talkCount || 0) >= 15, progress: (s) => [Math.min(s.npc.morris.talkCount || 0, 15), 15] },
 
   // Today's Quarry (data/quarry.js) — a running counter of daily bonuses
   // claimed, same shape as smokehouse_regular just above.
