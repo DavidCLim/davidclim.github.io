@@ -2,7 +2,10 @@
    in-game panel's own palette and 'Pirata One' wordmark treatment instead
    of the old sunny-beach cyan card. Structurally the same shape every other
    card on this page uses (isolate + ::before/::after texture layers), just
-   themed dark and nautical like Reversi's own card goes dark-matrix. */
+   themed dark and nautical like Reversi's own card goes dark-matrix.
+   Brought up to the same "alive" level as the neon UNO/Reversi cards —
+   an ambient gold glow, a slow diagonal shimmer sweep, and a pulsing
+   lantern-glow behind the emblem — instead of sitting flat next to them. */
 .hyper-fishies-card {
   position: relative;
   isolation: isolate;
@@ -21,8 +24,24 @@
   box-shadow:
     0 14px 0 rgba(10, 6, 2, 0.4),
     0 24px 46px rgba(0, 0, 0, 0.4),
+    0 0 22px rgba(255, 180, 84, 0.28),
+    0 0 50px rgba(255, 180, 84, 0.14),
     inset 0 0 0 6px rgba(20, 12, 6, 0.4),
     inset 0 0 60px rgba(0, 0, 0, 0.35);
+  transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+}
+
+.hyper-fishies-card:hover,
+.hyper-fishies-card:focus-within {
+  border-color: rgba(255, 208, 138, 0.85);
+  box-shadow:
+    0 18px 0 rgba(10, 6, 2, 0.4),
+    0 28px 52px rgba(0, 0, 0, 0.42),
+    0 0 30px rgba(255, 180, 84, 0.42),
+    0 0 68px rgba(255, 180, 84, 0.22),
+    inset 0 0 0 6px rgba(20, 12, 6, 0.4),
+    inset 0 0 60px rgba(0, 0, 0, 0.35);
+  transform: translateY(-3px);
 }
 
 /* Faint plank-grain bands, echoing the in-game panel's own wood texture. */
@@ -61,10 +80,32 @@
   z-index: 1;
 }
 
+/* A slow diagonal gold shimmer, the same "polished surface" trick the UNO
+   card's own ::before light-sweep uses, just amber instead of cyan and
+   loafing along far slower — a card you glance back at twice. */
+.hyper-fishies-card .shimmer {
+  position: absolute;
+  inset: -40% -10%;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 42%, rgba(255, 224, 160, 0.16) 50%, transparent 58%);
+  animation: hyper-fishies-shimmer 5s ease-in-out infinite;
+}
+@keyframes hyper-fishies-shimmer {
+  0%, 100% { transform: translateX(-60%); }
+  50% { transform: translateX(60%); }
+}
+
+/* A warm lantern glow breathing behind the emblem. */
 .hyper-fishies-wheel {
   width: 76px;
   height: 76px;
-  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.6));
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 10px rgba(255, 180, 84, 0.5));
+  animation: hyper-fishies-glow 3.2s ease-in-out infinite;
+}
+@keyframes hyper-fishies-glow {
+  0%, 100% { filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 8px rgba(255, 180, 84, 0.4)); }
+  50% { filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 18px rgba(255, 180, 84, 0.75)); }
 }
 
 .hyper-fishies-card h3 {
