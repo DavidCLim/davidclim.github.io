@@ -27,7 +27,6 @@
     0 0 22px rgba(255, 180, 84, 0.28),
     0 0 50px rgba(255, 180, 84, 0.14),
     inset 0 0 0 6px rgba(20, 12, 6, 0.4),
-    inset 0 0 0 7px rgba(255, 224, 160, 0.14),
     inset 0 0 60px rgba(0, 0, 0, 0.35);
   transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
 }
@@ -41,7 +40,6 @@
     0 0 30px rgba(255, 180, 84, 0.42),
     0 0 68px rgba(255, 180, 84, 0.22),
     inset 0 0 0 6px rgba(20, 12, 6, 0.4),
-    inset 0 0 0 7px rgba(255, 224, 160, 0.22),
     inset 0 0 60px rgba(0, 0, 0, 0.35);
   transform: translateY(-3px);
 }
@@ -98,48 +96,16 @@
   50% { transform: translateX(60%); }
 }
 
-/* A warm lantern glow breathing behind the emblem, plus a slow continuous
-   turn — it's a ship's wheel, so unlike everything else on the card it
-   gets to actually move like the object it's depicting. */
+/* A warm lantern glow breathing behind the emblem. */
 .hyper-fishies-wheel {
   width: 76px;
   height: 76px;
   filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 10px rgba(255, 180, 84, 0.5));
-  animation: hyper-fishies-glow 3.2s ease-in-out infinite, hyper-fishies-turn 60s linear infinite;
+  animation: hyper-fishies-glow 3.2s ease-in-out infinite;
 }
 @keyframes hyper-fishies-glow {
   0%, 100% { filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 8px rgba(255, 180, 84, 0.4)); }
   50% { filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 18px rgba(255, 180, 84, 0.75)); }
-}
-@keyframes hyper-fishies-turn {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* A handful of warm embers drifting up from the base of the plaque, like
-   dust catching a lantern's light — the same "rising particle" trick the
-   in-game boot loader's bubbles use, restyled as sparks instead of water. */
-.hyper-fishies-card .embers span {
-  position: absolute;
-  bottom: 6%;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: #ffd68a;
-  box-shadow: 0 0 4px 1px rgba(255, 180, 84, 0.8);
-  animation: hyper-fishies-ember-rise linear infinite;
-}
-.hyper-fishies-card .embers span:nth-child(1) { left: 12%; animation-duration: 5.5s; animation-delay: 0s; }
-.hyper-fishies-card .embers span:nth-child(2) { left: 28%; width: 2px; height: 2px; animation-duration: 4.2s; animation-delay: 1.1s; }
-.hyper-fishies-card .embers span:nth-child(3) { left: 47%; animation-duration: 6s;   animation-delay: 2.3s; }
-.hyper-fishies-card .embers span:nth-child(4) { left: 64%; width: 2px; height: 2px; animation-duration: 4.8s; animation-delay: 0.6s; }
-.hyper-fishies-card .embers span:nth-child(5) { left: 80%; animation-duration: 5.2s; animation-delay: 1.8s; }
-.hyper-fishies-card .embers span:nth-child(6) { left: 91%; width: 2px; height: 2px; animation-duration: 4.5s; animation-delay: 3s; }
-@keyframes hyper-fishies-ember-rise {
-  0% { transform: translateY(0) translateX(0); opacity: 0; }
-  12% { opacity: 0.9; }
-  80% { opacity: 0.5; }
-  100% { transform: translateY(-220px) translateX(10px); opacity: 0; }
 }
 
 .hyper-fishies-card h3 {
@@ -184,7 +150,6 @@
 
 .hyper-fishies-card .app-link {
   position: relative;
-  overflow: hidden;
   align-self: center;
   min-width: min(100%, 260px);
   min-height: 54px;
@@ -204,20 +169,6 @@
   text-transform: none;
   letter-spacing: 0.02em;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
-  transition: color 180ms ease, border-color 180ms ease, background 180ms ease, transform 180ms ease;
-}
-
-/* A diagonal shine sweeping across the button on hover, the same touch
-   the UNO/kittens cards' own buttons use. */
-.hyper-fishies-card .app-link::before {
-  position: absolute;
-  inset: -80% 12%;
-  content: "";
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
-  opacity: 0;
-  transform: rotate(18deg) translateX(-60%);
-  transition: opacity 180ms ease;
-  pointer-events: none;
 }
 
 .hyper-fishies-card .app-link:hover,
@@ -225,14 +176,6 @@
   color: #fff6ea;
   border-color: #ffd08a;
   background: radial-gradient(circle at 35% 30%, #cc5a48, #8a2626 60%, #5a1414 100%);
-  transform: translateY(-1px);
-}
-
-.hyper-fishies-card .app-link:hover::before,
-.hyper-fishies-card .app-link:focus::before {
-  opacity: 1;
-  transform: rotate(18deg) translateX(60%);
-  transition: opacity 180ms ease, transform 550ms ease;
 }
 
 @media (max-width: 560px) {
