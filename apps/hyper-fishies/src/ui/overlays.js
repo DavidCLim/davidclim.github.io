@@ -10,12 +10,14 @@ import { buildNotebookPanel } from './notebookPanel.js';
 import { buildForgePanel } from './forgePanel.js';
 import { buildAchievementsPanel } from './achievementsPanel.js';
 import { buildHelpPanel } from './helpPanel.js';
+import { buildLeaderboardPanel } from './leaderboardPanel.js';
 
 // Wires the shop/almanac/satchel/profile panels to a single backdrop and to
 // state.ui.activeOverlay, so main.js just calls updateOverlays() per frame.
-// `onQuit` is only ever handed to the Profile panel — everything else only
-// needs the generic `onChange` refresh hook.
-export function buildOverlays(root, state, onChange, onQuit) {
+// `onQuit` is only ever handed to the Profile panel; `slotIndex` is only
+// ever handed to the Leaderboard panel, so it knows which row is "you"
+// versus every other save on this browser.
+export function buildOverlays(root, state, onChange, onQuit, slotIndex) {
   const backdrop = buildOverlayRoot(root);
   backdrop.addEventListener('click', (e) => {
     if (e.target === backdrop) { closeOverlay(state); onChange(); }
@@ -33,6 +35,7 @@ export function buildOverlays(root, state, onChange, onQuit) {
     forge: buildForgePanel(state, backdrop, onChange),
     achievements: buildAchievementsPanel(state, backdrop, onChange),
     help: buildHelpPanel(state, backdrop, onChange),
+    leaderboard: buildLeaderboardPanel(state, backdrop, onChange, slotIndex),
   };
   for (const key in panels) root.appendChild(panels[key].frame);
 

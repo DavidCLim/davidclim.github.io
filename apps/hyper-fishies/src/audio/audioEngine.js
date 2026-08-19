@@ -16,6 +16,38 @@ let sfxEnabled = true;
 let musicIntervalId = null;
 let musicStep = 0;
 let noiseBuffer = null;
+let reverbSend, reverbConvolver;
+let parts = null;
+
+// A short algorithmic reverb impulse (exponentially-decaying stereo noise,
+// no external audio file) — every music voice below sends a portion of its
+// signal through this on top of its dry signal, which is what actually
+// makes the difference between "oscillators beeping in a vacuum" and
+// something that sounds like it's playing in a ship's hold.
+function generateReverbImpulse(seconds = 1.8, decay = 2.6) {
+  const rate = ctx.sampleRate;
+  const length = Math.floor(rate * seconds);
+  const impulse = ctx.createBuffer(2, length, rate);
+  for (let ch = 0; ch < 2; ch++) {
+    const data = impulse.getChannelData(ch);
+    for (let i = 0; i < length; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+    }
+  }
+  return impulse;
+}
+
+// One "part" bus per instrument voice — a fixed stereo pan plus a send
+// into the shared reverb, so spreading the band out across the stereo
+// field and giving it room ambience is just "connect here" instead of
+// every note having to wire both up individually.
+function createPart(pan) {
+  const panner = ctx.createStereoPanner();
+  panner.pan.value = pan;
+  panner.connect(musicGain);
+  panner.connect(reverbSend);
+  return panner;
+}
 
 export function ensureAudioContext() {
   if (ctx) {
@@ -34,6 +66,26 @@ export function ensureAudioContext() {
   sfxGain = ctx.createGain();
   sfxGain.gain.value = sfxEnabled ? 1 : 0;
   sfxGain.connect(masterGain);
+
+  reverbSend = ctx.createGain();
+  reverbSend.gain.value = 0.55;
+  reverbConvolver = ctx.createConvolver();
+  reverbConvolver.buffer = generateReverbImpulse();
+  reverbSend.connect(reverbConvolver);
+  reverbConvolver.connect(musicGain);
+
+  parts = {
+    bass: createPart(0),
+    chordL: createPart(-0.35),
+    chordR: createPart(0.35),
+    melody: createPart(-0.08),
+    fife: createPart(0.3),
+    perc: createPart(0),
+    padL: createPart(-0.5),
+    padR: createPart(0.5),
+    bell: createPart(0.15),
+  };
+
   return ctx;
 }
 
@@ -217,14 +269,22 @@ export function playBagFull() {
 
 // ---------- Background music ----------
 // A generative pirate sea-shanty loop, built as a 64-step (8-bar) step
-// sequencer instead of one repeating melodic cell — a walking bass on the
-// beat, staccato concertina chord stabs on the off-beat, a boot-stomp/tap
-// percussion pattern, a bright fife accent on the downbeat of every bar,
-// and a wandering fiddle-ish melody with a real verse shape: bars 1-4 (A)
+// sequencer instead of one repeating melodic cell — a real walking bass
+// (root on the downbeat, a fifth up on the backbeat) under a full kick/
+// snare/hi-hat rhythm section, staccato concertina chord stabs panned
+// wide left/right, a low sustained bass-pad drone giving the harmony body,
+// a ship's-bell toll marking the top of the loop and the lift into the B
+// section, a bright fife accent doubling the melody's strong beats, and a
+// wandering fiddle-ish melody with a real verse shape: bars 1-4 (A)
 // outline a minor descent, bars 5-8 (B) lift into the relative major
-// territory before resolving back down to the loop point. No composed
-// audio file, just oscillators/noise scheduled off a single step counter.
-const STEP_DUR = 0.24; // one eighth note at ~125bpm
+// territory before resolving back down to the loop point. Every voice
+// sends into the shared algorithmic reverb (see generateReverbImpulse)
+// and sits on its own fixed stereo pan (see createPart) instead of
+// everything piling up dead-center — that stereo width plus the reverb
+// tail is most of what separates this from the original dry, narrow mix.
+// No composed audio file, just oscillators/noise scheduled off a single
+// step counter.
+const STEP_DUR = 0.21; // one eighth note at ~143bpm — a brisker jig tempo
 const STEPS_PER_BAR = 8;
 const LOOP_STEPS = STEPS_PER_BAR * 8;
 
@@ -259,24 +319,25 @@ const MELODY = {
   56: [4, 2], 58: [3, 1], 59: [2, 1], 60: [1, 2], 62: [0, 2],
 };
 
-function playBassNote(t0, freq, dur) {
+function playBassNote(t0, freq, dur, gain = 0.14) {
   const osc = ctx.createOscillator();
   osc.type = 'sawtooth';
   osc.frequency.setValueAtTime(freq, t0);
   const g = ctx.createGain();
   g.gain.setValueAtTime(0.0001, t0);
-  g.gain.linearRampToValueAtTime(0.14, t0 + 0.02);
+  g.gain.linearRampToValueAtTime(gain, t0 + 0.02);
   g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
   osc.connect(g);
-  g.connect(musicGain);
+  g.connect(parts.bass);
   osc.start(t0);
   osc.stop(t0 + dur + 0.05);
 }
 
 // Two detuned voices (square + triangle, root + a rough fifth) for a
-// fuller "concertina" pump than one oscillator gives.
+// fuller "concertina" pump than one oscillator gives, panned apart
+// (square left, triangle right) for real stereo width on every stab.
 function playChordStab(t0, rootFreq, dur) {
-  [[1, 'square'], [1.5, 'triangle']].forEach(([mult, type]) => {
+  [[1, 'square', parts.chordL], [1.5, 'triangle', parts.chordR]].forEach(([mult, type, dest]) => {
     const osc = ctx.createOscillator();
     osc.type = type;
     osc.frequency.setValueAtTime(rootFreq * mult, t0);
@@ -285,7 +346,7 @@ function playChordStab(t0, rootFreq, dur) {
     g.gain.linearRampToValueAtTime(0.05, t0 + 0.01);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
     osc.connect(g);
-    g.connect(musicGain);
+    g.connect(dest);
     osc.start(t0);
     osc.stop(t0 + dur + 0.03);
   });
@@ -300,15 +361,13 @@ function playMelodyNote(t0, freq, dur) {
   g.gain.linearRampToValueAtTime(0.15, t0 + 0.015);
   g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
   osc.connect(g);
-  g.connect(musicGain);
+  g.connect(parts.melody);
   osc.start(t0);
   osc.stop(t0 + dur + 0.05);
 }
 
 // A bright, quiet tin-whistle accent doubling the melody an octave up,
-// only on the first note of each bar — a light garnish on top of the main
-// tune rather than a second full voice, with a fast pitch wobble
-// (vibrato) for that reedy fife character.
+// with a fast pitch wobble (vibrato) for that reedy fife character.
 function playFifeNote(t0, freq, dur) {
   const osc = ctx.createOscillator();
   osc.type = 'triangle';
@@ -324,45 +383,125 @@ function playFifeNote(t0, freq, dur) {
   g.gain.linearRampToValueAtTime(0.065, t0 + 0.02);
   g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
   osc.connect(g);
-  g.connect(musicGain);
+  g.connect(parts.fife);
   osc.start(t0);
   vibrato.start(t0);
   osc.stop(t0 + dur + 0.05);
   vibrato.stop(t0 + dur + 0.05);
 }
 
-// A low pitched thump for the "boot stomp" beat — a sine dropping in pitch,
-// not filtered noise, so it reads as a stomp/kick rather than a splash.
-function playThump(t0, freq = 110) {
+// A low pitched thump for the kick — a sine dropping in pitch, not
+// filtered noise, so it reads as a stomp/kick rather than a splash.
+function playKick(t0, freq = 110) {
   const osc = ctx.createOscillator();
   osc.type = 'sine';
   osc.frequency.setValueAtTime(freq, t0);
   osc.frequency.exponentialRampToValueAtTime(freq * 0.5, t0 + 0.12);
   const g = ctx.createGain();
-  g.gain.setValueAtTime(0.12, t0);
+  g.gain.setValueAtTime(0.13, t0);
   g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.14);
   osc.connect(g);
-  g.connect(musicGain);
+  g.connect(parts.perc);
   osc.start(t0);
   osc.stop(t0 + 0.16);
 }
 
-// A quick high-passed noise tick for the off-beat "tap" — the lighter half
-// of the stomp-tap jig rhythm.
-function playTap(t0) {
+// A real snare instead of just a light tap — a filtered noise crack plus a
+// short pitched body underneath, landing on the backbeat (2 and 4) so the
+// rhythm section reads as an actual kit instead of a single stomp.
+function playSnare(t0) {
+  const src = ctx.createBufferSource();
+  src.buffer = getNoiseBuffer();
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.value = 1800;
+  filter.Q.value = 0.9;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.17, t0);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.12);
+  src.connect(filter);
+  filter.connect(g);
+  g.connect(parts.perc);
+  src.start(t0);
+  src.stop(t0 + 0.13);
+
+  const osc = ctx.createOscillator();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(190, t0);
+  osc.frequency.exponentialRampToValueAtTime(110, t0 + 0.08);
+  const g2 = ctx.createGain();
+  g2.gain.setValueAtTime(0.1, t0);
+  g2.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.09);
+  osc.connect(g2);
+  g2.connect(parts.perc);
+  osc.start(t0);
+  osc.stop(t0 + 0.1);
+}
+
+// A quick high-passed noise tick, on every eighth note — a continuous
+// hi-hat-like pulse under the kick/snare instead of the old sparse
+// "off-stomp tap," so the groove never has a dead beat.
+function playHihat(t0, open = false) {
   const src = ctx.createBufferSource();
   src.buffer = getNoiseBuffer();
   const filter = ctx.createBiquadFilter();
   filter.type = 'highpass';
-  filter.frequency.value = 3500;
+  filter.frequency.value = 6000;
+  const dur = open ? 0.13 : 0.045;
   const g = ctx.createGain();
-  g.gain.setValueAtTime(0.06, t0);
-  g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.05);
+  g.gain.setValueAtTime(open ? 0.05 : 0.032, t0);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
   src.connect(filter);
   filter.connect(g);
-  g.connect(musicGain);
+  g.connect(parts.perc);
   src.start(t0);
-  src.stop(t0 + 0.06);
+  src.stop(t0 + dur + 0.02);
+}
+
+// A ship's-bell toll — three inharmonic sine partials with a long, slowly
+// decaying tail (leans hard on the shared reverb) — marking the very top
+// of the loop and the lift into the B section, so the 8-bar structure
+// actually has a landmark instead of just looping invisibly.
+function playBell(t0) {
+  [1, 2.4, 3.8].forEach((mult, i) => {
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(660 * mult, t0);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(0.12 / (i + 1), t0 + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.1);
+    osc.connect(g);
+    g.connect(parts.bell);
+    osc.start(t0);
+    osc.stop(t0 + 1.15);
+  });
+}
+
+// A low sustained drone under the harmony — two detuned sawtooths through
+// a lowpass filter, one per bar, panned hard left/right for a wide chorus-
+// like body. This is what gives the loop actual bass weight instead of
+// just the short plucked bass note decaying away between hits.
+function playPadNote(t0, freq, dur) {
+  [[-4, parts.padL], [4, parts.padR]].forEach(([detune, dest]) => {
+    const osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(freq, t0);
+    osc.detune.setValueAtTime(detune, t0);
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 480;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(0.045, t0 + dur * 0.3);
+    g.gain.setValueAtTime(0.045, t0 + dur * 0.7);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(filter);
+    filter.connect(g);
+    g.connect(dest);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.05);
+  });
 }
 
 function playMusicStep() {
@@ -374,15 +513,23 @@ function playMusicStep() {
   const t0 = ctx.currentTime;
   const bassFreq = CHORD_BASS[bar];
 
-  // Bass + stomp land together on beats 1 and 3 of the bar.
-  if (beat === 0 || beat === 4) {
+  // A real walking bass: root on the downbeat, up a fifth on the backbeat,
+  // instead of the same note repeated — actual motion under the harmony.
+  if (beat === 0) {
     playBassNote(t0, bassFreq, STEP_DUR * 1.7);
-    playThump(t0, 110);
+    playKick(t0);
+    playPadNote(t0, bassFreq / 2, STEP_DUR * STEPS_PER_BAR * 0.98);
+    // The bell tolls the top of the loop and the lift into the B section.
+    if (bar === 0 || bar === 4) playBell(t0);
   }
-  // A lighter tap on the off-stomp (beats 2 and 4).
+  if (beat === 4) {
+    playBassNote(t0, bassFreq * 1.5, STEP_DUR * 1.4, 0.11);
+    playKick(t0);
+  }
   if (beat === 2 || beat === 6) {
-    playTap(t0);
+    playSnare(t0);
   }
+  playHihat(t0, beat === 0);
   // Concertina stabs pump on every off-eighth for that bouncy jig feel.
   if (beat % 2 === 1) {
     playChordStab(t0, bassFreq * 2, STEP_DUR * 0.9);
@@ -393,8 +540,8 @@ function playMusicStep() {
     const [degree, lengthSteps] = note;
     const freq = SCALE[degree];
     playMelodyNote(t0, freq, STEP_DUR * lengthSteps * 0.95);
-    // The fife doubles only the very first note of each bar, an octave up.
-    if (beat === 0) playFifeNote(t0, freq * 2, STEP_DUR * lengthSteps * 0.85);
+    // The fife doubles the strong beats of each bar, an octave up.
+    if (beat === 0 || beat === 4) playFifeNote(t0, freq * 2, STEP_DUR * lengthSteps * 0.85);
   }
 }
 

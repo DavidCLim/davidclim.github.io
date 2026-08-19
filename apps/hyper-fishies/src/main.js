@@ -38,6 +38,7 @@ import { buildProfileButton } from './ui/profileButton.js';
 import { buildNotebookButton } from './ui/notebookButton.js';
 import { buildAchievementsButton } from './ui/achievementsButton.js';
 import { buildHelpButton } from './ui/helpButton.js';
+import { buildLeaderboardButton } from './ui/leaderboardButton.js';
 import { buildSaveSlotScreen } from './ui/saveSlotScreen.js';
 import { buildAvatarCustomizer } from './ui/avatarCustomizer.js';
 import { NPCS, STALLS } from './world/worldObjects.js';
@@ -87,7 +88,7 @@ function startGame(state, slotIndex) {
     saveToSlot(slotIndex, state);
     location.reload();
   }
-  const overlaysUI = buildOverlays(root, state, () => { queueSave(); }, quitToMenu);
+  const overlaysUI = buildOverlays(root, state, () => { queueSave(); }, quitToMenu, slotIndex);
   const dialogueRefs = buildDialoguePanel(root);
   // A real matter.js spring (util/matterWorld.js), kicked every time the
   // dialogue node changes and then left to settle back to rest — the
@@ -124,6 +125,7 @@ function startGame(state, slotIndex) {
   buildAlmanacButton(toolbar, () => openPanelButton('almanac'));
   toolbar.appendChild(el('div', { class: 'hud-toolbar-divider' }));
   buildAchievementsButton(toolbar, () => openPanelButton('achievements'));
+  buildLeaderboardButton(toolbar, () => openPanelButton('leaderboard'));
   buildHelpButton(toolbar, () => openPanelButton('help'));
 
   const NPC_DIALOGUES = {

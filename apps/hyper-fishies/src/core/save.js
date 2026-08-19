@@ -94,13 +94,22 @@ export function listSaveSlots() {
       slots.push(null);
       continue;
     }
+    const bestOverall = isPlainObject(blob.personalBests) && isPlainObject(blob.personalBests.biggestOverall)
+      ? blob.personalBests.biggestOverall : null;
     slots.push({
       avatar: isPlainObject(blob.avatar) ? blob.avatar : null,
       name: typeof blob.name === 'string' && blob.name ? blob.name : 'Angler',
       coins: typeof blob.coins === 'number' ? blob.coins : 0,
       level: typeof blob.level === 'number' && blob.level >= 1 ? Math.round(blob.level) : 1,
+      prestigeLevel: typeof blob.prestigeLevel === 'number' && blob.prestigeLevel >= 0 ? Math.round(blob.prestigeLevel) : 0,
       currentRegion: typeof blob.currentRegion === 'string' ? blob.currentRegion : 'dock',
       updatedAt: typeof blob.updatedAt === 'number' ? blob.updatedAt : null,
+      // Leaderboard fields (ui/leaderboardPanel.js) — cheap to read off the
+      // same already-parsed blob, so no reason to keep the summary from
+      // covering them just because the slot-picker screen never needed to.
+      biggestOverall: bestOverall,
+      achievementCount: isPlainObject(blob.achievements)
+        ? Object.values(blob.achievements).filter(Boolean).length : 0,
     });
   }
   return slots;
