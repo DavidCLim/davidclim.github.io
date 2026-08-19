@@ -39,6 +39,7 @@ import { buildNotebookButton } from './ui/notebookButton.js';
 import { buildAchievementsButton } from './ui/achievementsButton.js';
 import { buildHelpButton } from './ui/helpButton.js';
 import { buildLeaderboardButton } from './ui/leaderboardButton.js';
+import { buildCodesButton } from './ui/codesButton.js';
 import { buildSaveSlotScreen } from './ui/saveSlotScreen.js';
 import { buildAvatarCustomizer } from './ui/avatarCustomizer.js';
 import { NPCS, STALLS } from './world/worldObjects.js';
@@ -126,6 +127,7 @@ function startGame(state, slotIndex) {
   toolbar.appendChild(el('div', { class: 'hud-toolbar-divider' }));
   buildAchievementsButton(toolbar, () => openPanelButton('achievements'));
   buildLeaderboardButton(toolbar, () => openPanelButton('leaderboard'));
+  buildCodesButton(toolbar, () => openPanelButton('codes'));
   buildHelpButton(toolbar, () => openPanelButton('help'));
 
   const NPC_DIALOGUES = {

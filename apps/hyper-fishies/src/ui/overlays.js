@@ -11,6 +11,7 @@ import { buildForgePanel } from './forgePanel.js';
 import { buildAchievementsPanel } from './achievementsPanel.js';
 import { buildHelpPanel } from './helpPanel.js';
 import { buildLeaderboardPanel } from './leaderboardPanel.js';
+import { buildCodesPanel } from './codesPanel.js';
 
 // Wires the shop/almanac/satchel/profile panels to a single backdrop and to
 // state.ui.activeOverlay, so main.js just calls updateOverlays() per frame.
@@ -36,6 +37,7 @@ export function buildOverlays(root, state, onChange, onQuit, slotIndex) {
     achievements: buildAchievementsPanel(state, backdrop, onChange),
     help: buildHelpPanel(state, backdrop, onChange),
     leaderboard: buildLeaderboardPanel(state, backdrop, onChange, slotIndex),
+    codes: buildCodesPanel(state, backdrop, onChange),
   };
   for (const key in panels) root.appendChild(panels[key].frame);
 

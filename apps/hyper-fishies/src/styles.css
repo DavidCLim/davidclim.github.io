@@ -461,14 +461,14 @@ html, body {
   }
   .daynight-clock { left: 92px; }
   .hud-toolbar {
-    top: 95px;
+    top: 90px;
     gap: 6px;
-    /* Scaled down further now that the toolbar holds 7 buttons instead of
-       6 (the Leaderboard button, see main.js) — without this, the last
+    /* Scaled down further with each button main.js has added since this
+       fix landed (Leaderboard, then Codes) — without this, the last
        button on the shortest landscape phones would run past the bottom
        of the viewport again (see the earlier "buttons too far down" fix
        this media query exists for at all). */
-    transform: scale(0.56);
+    transform: scale(0.48);
     transform-origin: top left;
   }
 }
@@ -2767,6 +2767,9 @@ html, body {
 }
 .loadout-name-input:focus { outline: none; border-color: var(--gold); }
 .loadout-name-input::placeholder { color: rgba(240, 226, 196, 0.4); }
+
+.codes-feedback-ok { color: #8fe9d9; font-weight: 700; }
+.codes-feedback-bad { color: #ff9d85; }
 
 .avatar-layout {
   margin-top: 18px;

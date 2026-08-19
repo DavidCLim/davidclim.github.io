@@ -284,7 +284,7 @@ export function playBagFull() {
 // tail is most of what separates this from the original dry, narrow mix.
 // No composed audio file, just oscillators/noise scheduled off a single
 // step counter.
-const STEP_DUR = 0.21; // one eighth note at ~143bpm — a brisker jig tempo
+const STEP_DUR = 0.185; // one eighth note at ~162bpm — hard-driving, not just brisk
 const STEPS_PER_BAR = 8;
 const LOOP_STEPS = STEPS_PER_BAR * 8;
 

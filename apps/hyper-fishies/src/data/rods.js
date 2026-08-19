@@ -57,6 +57,14 @@ export const RODS = [
   // Devil's Rod above. Sits just under the Leviathan's Cutlass Rod that
   // unlocks the quest in the first place — a real step up, not a novelty.
   { id: 'finnOldFaithful', name: "Finn's Old Faithful", material: 'iron', cost: 22000, luck: 0.94, control: 0.94, biteSpeed: 0.60, craftedOnly: true },
+
+  // Only ever granted by the '54NTHONY_ADMIN_CODE' cheat code (data/codes.js)
+  // — not for sale, not craftable, `craftedOnly: true` so it's excluded
+  // from Finn's rack the same way Devil's Rod/Finn's Old Faithful are.
+  // Stats sit just above Devil's Rod, the previous ceiling; `cost` is way
+  // past the top TIER_BREAK so it reads Admiral's tier with the max 4 rune
+  // slots, same as every other top-end rod.
+  { id: 'adminRod', name: "Admin's Rod", material: 'starlight', cost: 999999, luck: 1, control: 1, biteSpeed: 0.85, craftedOnly: true },
 ];
 
 export function rodById(id) {
