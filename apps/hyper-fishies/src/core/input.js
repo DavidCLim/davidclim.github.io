@@ -13,7 +13,15 @@ export function isTouchDevice() {
 function isTypingInField() {
   const el = document.activeElement;
   if (!el) return false;
-  return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable;
+  if (!(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return false;
+  // Overlay panels (ui/overlayShell.js) are hidden via `display:none`, not
+  // removed from the DOM — closing one should blur its input, but focus
+  // can linger on it regardless (an iPad-with-hardware-keyboard case
+  // reported this locking WASD out permanently, well after the field was
+  // ever visible again). `offsetParent` is null for anything not actually
+  // rendered, so a stale reference to a hidden field stops counting as
+  // "typing" instead of blocking movement forever.
+  return el.offsetParent !== null;
 }
 
 export function initInput(state, surface, root) {
