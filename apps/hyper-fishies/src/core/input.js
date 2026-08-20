@@ -6,10 +6,21 @@ export function isTouchDevice() {
   return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 }
 
+// True while a text field (Codes, avatar name, a loadout name, ...) has
+// focus — WASD/Space are also the movement/action keys, so without this a
+// player typing "sad" into any of those fields also walks their character
+// left and casts a line.
+function isTypingInField() {
+  const el = document.activeElement;
+  if (!el) return false;
+  return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable;
+}
+
 export function initInput(state, surface, root) {
   const input = state.input;
 
   window.addEventListener('keydown', (e) => {
+    if (isTypingInField()) return;
     const k = e.key.toLowerCase();
     if (k === ' ' || e.code === 'Space') {
       if (!input.actionDown) input.actionPressedEdge = true;
