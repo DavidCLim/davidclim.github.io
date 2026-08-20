@@ -4,9 +4,12 @@ import { drawMap, drawTowerSlots } from './render/drawMap.js';
 import { drawTeacher, drawTeacherGhost } from './render/drawTeacher.js';
 import { drawEnemy } from './render/drawEnemy.js';
 import { drawEffect, drawProjectile } from './render/drawEffects.js';
-import { TEACHER_LIST, TEACHERS, teacherLevelStats } from './data/teachers.js';
+import { renderLobbyView } from './render/raycast.js';
+import { TEACHER_LIST, TEACHERS } from './data/teachers.js';
 import { TOTAL_WAVES } from './data/waves.js';
 import { TOWER_SLOTS } from './data/path.js';
+import { TRIGGERS } from './data/lobbyMap.js';
+import { createLobbyState, updateLobby, FOV, MOUSE_SENSITIVITY } from './game/lobby.js';
 import {
   createGameState, update, startNextWave, placeTower, upgradeTower, sellTower,
   occupiedSlotIds, canAfford, slotAt,
@@ -19,13 +22,20 @@ document.addEventListener('click', () => {
   audio.ensureAudioContext();
 }, { capture: true, once: false });
 
+// `screen` is the single source of truth for which mode is active
+// ('title' | 'lobby' | 'playing' | 'gameover' | 'victory') — deliberately
+// its own variable rather than living on the tower-defense `state` object,
+// since the lobby is a wholly separate system with its own state and
+// shouldn't need engine.js's createGameState() just to exist.
+let screen = 'title';
 let state = createGameState();
+let lobby = createLobbyState();
 
 const surface = createCanvasSurface(root);
 const { canvas, ctx } = surface;
 canvas.classList.add('ttd-canvas');
 
-// ---------- HUD ----------
+// ---------- HUD (tower-defense battle) ----------
 const goldValue = el('span', { class: 'ttd-stat-value' }, String(state.gold));
 const waveValue = el('span', { class: 'ttd-stat-value' }, `0 / ${TOTAL_WAVES}`);
 const heartsWrap = el('div', { class: 'ttd-hearts' });
@@ -157,7 +167,7 @@ function refreshAll() {
   refreshPopup();
 }
 
-// ---------- Canvas interaction ----------
+// ---------- Canvas interaction (tower-defense battle) ----------
 function slotUnderPoint(px, py) {
   for (const slot of TOWER_SLOTS) {
     if (Math.hypot(slot.x - px, slot.y - py) <= 26) return slot;
@@ -172,15 +182,40 @@ function towerUnderPoint(px, py) {
 }
 
 canvas.addEventListener('mousemove', (e) => {
-  if (state.screen !== 'playing') return;
-  const { x, y } = surface.clientToLogical(e.clientX, e.clientY);
-  const slot = slotUnderPoint(x, y);
-  state.hoverSlot = slot ? slot.id : null;
+  if (screen === 'playing') {
+    const { x, y } = surface.clientToLogical(e.clientX, e.clientY);
+    const slot = slotUnderPoint(x, y);
+    state.hoverSlot = slot ? slot.id : null;
+    return;
+  }
+  if (screen === 'lobby' && lobby.pointerLocked) {
+    lobby.angle += e.movementX * MOUSE_SENSITIVITY;
+  }
 });
 canvas.addEventListener('mouseleave', () => { state.hoverSlot = null; });
 
+// Pointer Lock can fail for reasons that have nothing to do with this
+// game (an embedding iframe without the `pointer-lock` permission, a
+// browser setting, etc.) — if it does, fall back to keyboard-only turning
+// (arrow keys, see LOBBY_KEY_MAP) rather than leaving the "click to look
+// around" overlay stuck on screen forever with no way to dismiss it.
+function requestLobbyPointerLock() {
+  const result = canvas.requestPointerLock();
+  if (result && result.catch) {
+    result.catch(() => { lobby.pointerLockUnavailable = true; refreshLobbyUi(); });
+  }
+}
+document.addEventListener('pointerlockerror', () => {
+  lobby.pointerLockUnavailable = true;
+  refreshLobbyUi();
+});
+
 canvas.addEventListener('click', (e) => {
-  if (state.screen !== 'playing') return;
+  if (screen === 'lobby') {
+    if (!lobby.pointerLocked) requestLobbyPointerLock();
+    return;
+  }
+  if (screen !== 'playing') return;
   const { x, y } = surface.clientToLogical(e.clientX, e.clientY);
 
   if (state.selectedShopType) {
@@ -202,17 +237,102 @@ canvas.addEventListener('click', (e) => {
   refreshPopup();
 });
 
+document.addEventListener('pointerlockchange', () => {
+  lobby.pointerLocked = document.pointerLockElement === canvas;
+  refreshLobbyUi();
+});
+
+// ---------- Lobby keyboard controls ----------
+const LOBBY_KEY_MAP = {
+  w: 'forward', arrowup: 'forward',
+  s: 'back', arrowdown: 'back',
+  a: 'left', d: 'right',
+  q: 'turnLeft', e: null, // 'e' reserved for interact, handled separately
+  arrowleft: 'turnLeft', arrowright: 'turnRight',
+};
+window.addEventListener('keydown', (evt) => {
+  if (screen !== 'lobby') return;
+  const k = evt.key.toLowerCase();
+  if (k === 'e') {
+    if (lobby.nearTrigger) openBuildingModal(lobby.nearTrigger);
+    return;
+  }
+  const action = LOBBY_KEY_MAP[k];
+  if (action) { lobby.keys[action] = true; evt.preventDefault(); }
+});
+window.addEventListener('keyup', (evt) => {
+  const k = evt.key.toLowerCase();
+  const action = LOBBY_KEY_MAP[k];
+  if (action) lobby.keys[action] = false;
+});
+
+// ---------- Lobby UI (crosshair, prompt, click-to-look, modal) ----------
+const lobbyUi = el('div', { class: 'ttd-lobby-ui hidden' });
+const crosshair = el('div', { class: 'ttd-crosshair' });
+const interactPrompt = el('div', { class: 'ttd-interact-prompt hidden' });
+const clickFallbackHint = el('div', { class: 'ttd-click-fallback hidden' }, 'Mouse-look isn\'t available here — click again to continue with ← / → to turn instead.');
+const clickToLookOverlay = el('div', {
+  class: 'ttd-click-overlay',
+  onClick: () => {
+    if (lobby.pointerLockUnavailable) { lobby.overlayDismissed = true; refreshLobbyUi(); }
+    else requestLobbyPointerLock();
+  },
+}, [
+  el('div', { class: 'ttd-click-card' }, [
+    el('div', { class: 'ttd-click-title' }, '🖱️ Click anywhere to look around'),
+    el('div', { class: 'ttd-click-sub' }, 'WASD to walk · Mouse to look · E to interact · Esc to release cursor'),
+    clickFallbackHint,
+  ]),
+]);
+lobbyUi.appendChild(crosshair);
+lobbyUi.appendChild(interactPrompt);
+lobbyUi.appendChild(clickToLookOverlay);
+root.appendChild(lobbyUi);
+
+function refreshLobbyUi() {
+  const overlayDone = lobby.pointerLocked || lobby.overlayDismissed;
+  clickToLookOverlay.classList.toggle('hidden', overlayDone);
+  clickFallbackHint.classList.toggle('hidden', !lobby.pointerLockUnavailable);
+  if (lobby.nearTrigger && overlayDone) {
+    interactPrompt.textContent = `${lobby.nearTrigger.icon} Press E to enter ${lobby.nearTrigger.label}`;
+    interactPrompt.classList.remove('hidden');
+  } else {
+    interactPrompt.classList.add('hidden');
+  }
+}
+
+const buildingModal = el('div', { class: 'ttd-building-modal hidden' });
+root.appendChild(buildingModal);
+
+function openBuildingModal(trigger) {
+  clearChildren(buildingModal);
+  const copy = trigger.id === 'gacha'
+    ? "Spin for new students to add to your roster. Nothing to summon just yet — check back once the unit roster is in."
+    : "Pick a dungeon and take your equipped 5 students in to fight off the teachers. Maps are still being drawn up.";
+  buildingModal.appendChild(el('div', { class: 'ttd-building-card' }, [
+    el('div', { class: 'ttd-building-emblem' }, trigger.icon),
+    el('h2', { class: 'ttd-building-title' }, trigger.label),
+    el('p', { class: 'ttd-building-desc' }, copy),
+    el('button', { class: 'btn btn-primary', text: 'Back to the courtyard', onClick: closeBuildingModal }),
+  ]));
+  buildingModal.classList.remove('hidden');
+  if (document.pointerLockElement) document.exitPointerLock();
+}
+function closeBuildingModal() {
+  buildingModal.classList.add('hidden');
+}
+
 // ---------- Title / Game Over / Victory screens ----------
 const titleScreen = el('div', { class: 'ttd-title-screen' }, [
   el('div', { class: 'ttd-title-card' }, [
     el('div', { class: 'ttd-title-emblem' }, '🎓'),
     el('h1', { class: 'ttd-title' }, 'TEACHER TOWER DEFENCE'),
-    el('p', { class: 'ttd-subtitle' }, 'Cursed homework is pouring out of the portal. Deploy your faculty, defend the Faculty Lounge, survive 15 waves.'),
-    el('button', { class: 'btn btn-primary ttd-start-btn', text: '▶ Start Campaign', onClick: startGame }),
+    el('p', { class: 'ttd-subtitle' }, 'Cursed teachers are pouring out of the portal. Recruit students, hold the courtyard, and don\'t let anything reach your desk.'),
+    el('button', { class: 'btn btn-primary ttd-start-btn', text: '▶ Enter the Academy', onClick: enterLobby }),
     el('div', { class: 'ttd-howto' }, [
-      el('div', {}, '🎓 Pick a teacher from the roster, tap a glowing circle to deploy.'),
-      el('div', {}, '⭐ Earn Gold Stars for every cursed paper you clear.'),
-      el('div', {}, '❤️ Don\'t let anything reach the Faculty Lounge.'),
+      el('div', {}, '🚶 Walk the courtyard in first person — WASD + mouse.'),
+      el('div', {}, '🎰 Visit the Gacha Hall to recruit new students.'),
+      el('div', {}, '🗺️ Visit the Dungeon Gate to pick a battlefield.'),
     ]),
   ]),
 ]);
@@ -221,17 +341,36 @@ root.appendChild(titleScreen);
 const endScreen = el('div', { class: 'ttd-end-screen hidden' });
 root.appendChild(endScreen);
 
+function hideAllScreens() {
+  titleScreen.classList.add('hidden');
+  endScreen.classList.add('hidden');
+  hud.classList.add('hidden');
+  shop.classList.add('hidden');
+  popup.classList.add('hidden');
+  lobbyUi.classList.add('hidden');
+  buildingModal.classList.add('hidden');
+}
+
+function enterLobby() {
+  screen = 'lobby';
+  lobby = createLobbyState();
+  hideAllScreens();
+  lobbyUi.classList.remove('hidden');
+  refreshLobbyUi();
+}
+
 function startGame() {
+  screen = 'playing';
   state = createGameState();
   state.screen = 'playing';
   audio.ensureAudioContext();
   audio.startMusic();
-  titleScreen.classList.add('hidden');
-  endScreen.classList.add('hidden');
+  hideAllScreens();
   hud.classList.remove('hidden');
   shop.classList.remove('hidden');
   refreshAll();
 }
+void startGame; // kept for when the Dungeon Gate leads into a real battle
 
 function showEndScreen() {
   const win = state.screen === 'victory';
@@ -243,12 +382,11 @@ function showEndScreen() {
     el('p', { class: 'ttd-end-sub' }, win
       ? `You held the line through all ${TOTAL_WAVES} waves. The homework has been graded.`
       : `You made it to Wave ${state.wave}. Detention for everyone — try again?`),
-    el('button', { class: 'btn btn-primary', text: 'Play Again', onClick: startGame }),
+    el('button', { class: 'btn btn-primary', text: 'Back to the Academy', onClick: enterLobby }),
   ]));
   endScreen.classList.remove('hidden');
   hud.classList.add('hidden');
   shop.classList.add('hidden');
-  popup.classList.add('hidden');
 }
 
 // ---------- Render loop ----------
@@ -261,39 +399,49 @@ function frame(now) {
   lastTime = now;
   renderT += dt;
 
-  update(state, dt);
+  if (screen === 'lobby') {
+    updateLobby(lobby, dt);
+    refreshLobbyUi();
+  } else if (screen === 'playing') {
+    update(state, dt);
+    screen = state.screen === 'playing' ? 'playing' : state.screen;
+  }
 
-  if (state.screen !== lastScreen) {
-    if (state.screen === 'gameover' || state.screen === 'victory') {
+  if (screen !== lastScreen) {
+    if (screen === 'gameover' || screen === 'victory') {
       audio.stopMusic();
       showEndScreen();
     }
-    lastScreen = state.screen;
+    lastScreen = screen;
   }
-  if (state.screen === 'playing') refreshAll();
+  if (screen === 'playing') refreshAll();
 
   ctx.clearRect(0, 0, 960, 600);
-  drawMap(ctx, renderT);
 
-  if (state.screen === 'playing' || state.screen === 'gameover' || state.screen === 'victory') {
-    const canPlaceSelected = state.selectedShopType
-      ? canAfford(state, TEACHERS[state.selectedShopType].cost)
-        && !(TEACHERS[state.selectedShopType].maxCount && state.towers.filter(t => t.typeId === state.selectedShopType).length >= TEACHERS[state.selectedShopType].maxCount)
-      : true;
-    if (state.selectedShopType) {
-      drawTowerSlots(ctx, occupiedSlotIds(state), state.hoverSlot, canPlaceSelected, renderT);
+  if (screen === 'lobby') {
+    renderLobbyView(ctx, 960, 600, lobby, FOV, TRIGGERS);
+  } else {
+    drawMap(ctx, renderT);
+    if (screen === 'playing' || screen === 'gameover' || screen === 'victory') {
+      const canPlaceSelected = state.selectedShopType
+        ? canAfford(state, TEACHERS[state.selectedShopType].cost)
+          && !(TEACHERS[state.selectedShopType].maxCount && state.towers.filter(t => t.typeId === state.selectedShopType).length >= TEACHERS[state.selectedShopType].maxCount)
+        : true;
+      if (state.selectedShopType) {
+        drawTowerSlots(ctx, occupiedSlotIds(state), state.hoverSlot, canPlaceSelected, renderT);
+      }
+      for (const tower of state.towers) {
+        tower.selected = tower.uid === state.selectedTowerSlot;
+        drawTeacher(ctx, tower, state.t);
+      }
+      if (state.selectedShopType && state.hoverSlot && !occupiedSlotIds(state).has(state.hoverSlot)) {
+        const slot = slotAt(state.hoverSlot);
+        drawTeacherGhost(ctx, slot.x, slot.y, state.selectedShopType, TEACHERS[state.selectedShopType].color);
+      }
+      for (const enemy of state.enemies) drawEnemy(ctx, enemy, state.t);
+      for (const p of state.projectiles) drawProjectile(ctx, p);
+      for (const eff of state.effects) drawEffect(ctx, eff, state.t);
     }
-    for (const tower of state.towers) {
-      tower.selected = tower.uid === state.selectedTowerSlot;
-      drawTeacher(ctx, tower, state.t);
-    }
-    if (state.selectedShopType && state.hoverSlot && !occupiedSlotIds(state).has(state.hoverSlot)) {
-      const slot = slotAt(state.hoverSlot);
-      drawTeacherGhost(ctx, slot.x, slot.y, state.selectedShopType, TEACHERS[state.selectedShopType].color);
-    }
-    for (const enemy of state.enemies) drawEnemy(ctx, enemy, state.t);
-    for (const p of state.projectiles) drawProjectile(ctx, p);
-    for (const eff of state.effects) drawEffect(ctx, eff, state.t);
   }
 
   requestAnimationFrame(frame);
