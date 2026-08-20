@@ -1,8 +1,7 @@
-/* Teacher Tower Defence card — a cursed-energy portal plaque matching the
-   game's own dark purple/gold palette, same structural shape every other
-   card on this page uses (isolate + ::before/::after layers, a shimmer
-   sweep, a glowing emblem) just themed for this game instead of reusing
-   Hyper Fishies' wood-and-gold language. */
+/* Teacher Tower Defence card — same wood-and-gold plaque language as the
+   Hyper Fishies card (isolate + ::before/::after layers, a shimmer sweep,
+   a glowing emblem, brass rivets), since the game itself now matches that
+   house style rather than its earlier cursed-purple look. */
 .ttd-card {
   position: relative;
   isolation: isolate;
@@ -15,46 +14,47 @@
   gap: 10px;
   min-height: 300px;
   padding: 34px 28px;
-  border: 3px solid rgba(160, 130, 255, 0.55);
+  border: 3px solid rgba(255, 180, 84, 0.55);
   border-radius: 16px;
-  background: linear-gradient(165deg, #241c46 0%, #0e0a1e 100%);
+  background: linear-gradient(165deg, #4a3320 0%, #1c1006 100%);
   box-shadow:
-    0 14px 0 rgba(6, 4, 14, 0.5),
-    0 24px 46px rgba(0, 0, 0, 0.45),
-    0 0 24px rgba(150, 100, 255, 0.28),
-    0 0 55px rgba(150, 100, 255, 0.14),
-    inset 0 0 0 6px rgba(10, 6, 20, 0.4),
+    0 14px 0 rgba(10, 6, 2, 0.4),
+    0 24px 46px rgba(0, 0, 0, 0.4),
+    0 0 22px rgba(255, 180, 84, 0.24),
+    0 0 50px rgba(255, 180, 84, 0.12),
+    inset 0 0 0 6px rgba(20, 12, 6, 0.4),
     inset 0 0 60px rgba(0, 0, 0, 0.35);
   transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
 }
 
 .ttd-card:hover,
 .ttd-card:focus-within {
-  border-color: rgba(200, 170, 255, 0.85);
+  border-color: rgba(255, 208, 138, 0.85);
   box-shadow:
-    0 18px 0 rgba(6, 4, 14, 0.5),
-    0 28px 52px rgba(0, 0, 0, 0.48),
-    0 0 32px rgba(150, 100, 255, 0.42),
-    0 0 72px rgba(150, 100, 255, 0.22),
-    inset 0 0 0 6px rgba(10, 6, 20, 0.4),
+    0 18px 0 rgba(10, 6, 2, 0.4),
+    0 28px 52px rgba(0, 0, 0, 0.42),
+    0 0 30px rgba(255, 180, 84, 0.38),
+    0 0 68px rgba(255, 180, 84, 0.2),
+    inset 0 0 0 6px rgba(20, 12, 6, 0.4),
     inset 0 0 60px rgba(0, 0, 0, 0.35);
   transform: translateY(-3px);
 }
 
-/* Faint circuitry grid, echoing the in-game map's ground grid. */
+/* Faint plank-grain bands, echoing the in-game hallway floor's tile grid. */
 .ttd-card::before {
   position: absolute;
   inset: 0;
   content: "";
   pointer-events: none;
   z-index: 0;
-  background-image:
-    linear-gradient(rgba(160, 130, 255, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(160, 130, 255, 0.07) 1px, transparent 1px);
-  background-size: 24px 24px;
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.16) 0px, rgba(0, 0, 0, 0.16) 2px,
+    transparent 2px, transparent 26px
+  );
 }
 
-/* Four violet rivets, the cursed-energy answer to Hyper Fishies' brass ones. */
+/* Four brass corner rivets, matching every other card's. */
 .ttd-card::after {
   position: absolute;
   inset: 0;
@@ -62,10 +62,10 @@
   pointer-events: none;
   z-index: 0;
   background-image:
-    radial-gradient(circle at 16px 16px, #e8d6ff 0%, #a874ff 35%, #4a2a8a 75%, transparent 78%),
-    radial-gradient(circle at calc(100% - 16px) 16px, #e8d6ff 0%, #a874ff 35%, #4a2a8a 75%, transparent 78%),
-    radial-gradient(circle at 16px calc(100% - 16px), #e8d6ff 0%, #a874ff 35%, #4a2a8a 75%, transparent 78%),
-    radial-gradient(circle at calc(100% - 16px) calc(100% - 16px), #e8d6ff 0%, #a874ff 35%, #4a2a8a 75%, transparent 78%);
+    radial-gradient(circle at 16px 16px, #ffe0a0 0%, #ffb454 35%, #7a4a1a 75%, transparent 78%),
+    radial-gradient(circle at calc(100% - 16px) 16px, #ffe0a0 0%, #ffb454 35%, #7a4a1a 75%, transparent 78%),
+    radial-gradient(circle at 16px calc(100% - 16px), #ffe0a0 0%, #ffb454 35%, #7a4a1a 75%, transparent 78%),
+    radial-gradient(circle at calc(100% - 16px) calc(100% - 16px), #ffe0a0 0%, #ffb454 35%, #7a4a1a 75%, transparent 78%);
   background-repeat: no-repeat;
   background-size: 8px 8px;
   opacity: 0.9;
@@ -78,7 +78,7 @@
   inset: -40% -10%;
   z-index: 0;
   pointer-events: none;
-  background: linear-gradient(100deg, transparent 42%, rgba(200, 170, 255, 0.18) 50%, transparent 58%);
+  background: linear-gradient(100deg, transparent 42%, rgba(255, 224, 160, 0.16) 50%, transparent 58%);
   animation: ttd-card-shimmer 5s ease-in-out infinite;
 }
 @keyframes ttd-card-shimmer {
@@ -89,12 +89,12 @@
 .ttd-emblem {
   font-size: 2.6rem;
   line-height: 1;
-  filter: drop-shadow(0 0 10px rgba(200, 150, 255, 0.6));
+  filter: drop-shadow(0 0 10px rgba(255, 180, 84, 0.5));
   animation: ttd-card-glow 3.2s ease-in-out infinite;
 }
 @keyframes ttd-card-glow {
-  0%, 100% { filter: drop-shadow(0 0 8px rgba(200, 150, 255, 0.4)); }
-  50% { filter: drop-shadow(0 0 18px rgba(200, 150, 255, 0.85)); }
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(255, 180, 84, 0.4)); }
+  50% { filter: drop-shadow(0 0 18px rgba(255, 180, 84, 0.75)); }
 }
 
 .ttd-card h3 {
@@ -103,17 +103,17 @@
   font-size: clamp(1.5rem, 5.2vw, 2rem);
   line-height: 1.1;
   letter-spacing: 0.01em;
-  background: linear-gradient(180deg, #fff3c8 0%, #c896ff 55%, #6a3ec9 100%);
+  background: linear-gradient(180deg, #fff3c8 0%, #ffb454 45%, #a86a1e 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  text-shadow: 0 4px 18px rgba(140, 90, 255, 0.35);
+  text-shadow: 0 4px 18px rgba(255, 180, 84, 0.3);
 }
 
 .ttd-card .tagline {
   margin: 0;
   max-width: 30ch;
-  color: #c9c2e6;
+  color: #cfc2a4;
   font-size: 0.95rem;
   font-style: italic;
 }
@@ -126,10 +126,10 @@
   min-height: 54px;
   margin-top: 8px;
   padding: 0 32px;
-  border: 2px solid rgba(160, 130, 255, 0.7);
+  border: 2px solid rgba(95, 227, 192, 0.7);
   border-radius: 999px;
-  color: #f0e8ff;
-  background: radial-gradient(circle at 35% 30%, #6a3ec9, #34206a 60%, #1a1040 100%);
+  color: #eafff9;
+  background: radial-gradient(circle at 35% 30%, #2f9c82, #17513f 60%, #0c2c22 100%);
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.5),
     inset 0 1px 0 rgba(255, 255, 255, 0.2),
@@ -156,8 +156,8 @@
 .ttd-card .app-link:hover,
 .ttd-card .app-link:focus {
   color: #ffffff;
-  border-color: #d8c2ff;
-  background: radial-gradient(circle at 35% 30%, #8a5cff, #4a2a8a 60%, #241458 100%);
+  border-color: #b6ffe9;
+  background: radial-gradient(circle at 35% 30%, #45c2a4, #1f6b55 60%, #0f3a2d 100%);
   transform: translateY(-1px);
 }
 

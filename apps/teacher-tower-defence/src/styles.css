@@ -1,12 +1,21 @@
+/* Same warm wood/gold/parchment palette Hyper Fishies uses throughout —
+   "the same style as hyper fishies" means the same house palette, not
+   just the same construction technique for characters. */
 :root {
-  --ink: #eef0ff;
-  --muted: #b7b3d9;
-  --gold: #ffd670;
+  --ink: #eaf6f1;
+  --muted: #cfc2a4;
+  --gold: #ffb454;
   --gold-dim: #d69a4a;
-  --purple: #8a5cff;
-  --purple-glow: #c896ff;
-  --panel-bg: linear-gradient(165deg, #201a3a 0%, #100c22 100%);
-  --panel-border: rgba(160, 130, 255, 0.45);
+  --mint: #5fe3c0;
+  --mint-light: #8fe9d9;
+  --coral: #ff6f59;
+  --blood: #7a2e2e;
+  --wood-dark: #241708;
+  --wood-mid: #3c2a1a;
+  --parchment: #ead9ae;
+  --parchment-ink: #3a2a16;
+  --panel-bg: linear-gradient(165deg, #4a3320 0%, #2c1e10 100%);
+  --panel-border: rgba(255, 180, 84, 0.55);
 }
 
 * { box-sizing: border-box; }
@@ -16,7 +25,7 @@ html, body {
   padding: 0;
   width: 100%;
   height: 100%;
-  background: #05040c;
+  background: #100a04;
   overflow: hidden;
   font-family: 'Baloo 2', sans-serif;
   color: var(--ink);
@@ -32,14 +41,14 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(ellipse at 50% 20%, #150f2c 0%, #05040c 75%);
+  background: radial-gradient(ellipse at 50% 20%, #241708 0%, #100a04 75%);
   overflow: hidden;
 }
 
 .ttd-canvas {
   display: block;
   border-radius: 8px;
-  box-shadow: 0 0 60px rgba(120, 70, 255, 0.25), 0 0 0 1px rgba(160, 130, 255, 0.2);
+  box-shadow: 0 0 60px rgba(255, 180, 84, 0.2), 0 0 0 1px rgba(255, 180, 84, 0.2);
   touch-action: none;
 }
 
@@ -60,7 +69,7 @@ html, body {
   cursor: pointer;
   transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
 }
-.btn:hover:not(:disabled) { border-color: var(--purple-glow); transform: translateY(-1px); }
+.btn:hover:not(:disabled) { border-color: var(--mint); transform: translateY(-1px); }
 .btn:disabled { opacity: 0.4; cursor: default; }
 .btn-primary {
   background: linear-gradient(165deg, #ffe0a0, #c9922a);
@@ -83,7 +92,7 @@ html, body {
   gap: 10px 16px;
   padding: 8px 14px;
   border-radius: 12px;
-  background: rgba(16, 12, 34, 0.75);
+  background: rgba(28, 18, 8, 0.8);
   border: 1px solid var(--panel-border);
   backdrop-filter: blur(3px);
   pointer-events: none;
@@ -94,7 +103,7 @@ html, body {
 .ttd-stat-icon { font-size: 15px; line-height: 1; }
 .ttd-stat-value { font-family: 'Russo One', sans-serif; letter-spacing: 0.02em; }
 .ttd-stat-gold .ttd-stat-value { color: var(--gold); }
-.ttd-stat-wave .ttd-stat-value { color: var(--purple-glow); }
+.ttd-stat-wave .ttd-stat-value { color: var(--mint); }
 
 .ttd-hearts { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 14px; }
 .ttd-hearts .ttd-stat-value { color: #8fe98f; }
@@ -104,7 +113,7 @@ html, body {
 
 .ttd-hud-controls { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .ttd-wave-btn { min-width: 150px; }
-.ttd-auto-btn.active { border-color: var(--purple-glow); background: linear-gradient(165deg, #3a2c66, #201840); }
+.ttd-auto-btn.active { border-color: var(--mint); background: linear-gradient(165deg, #1f5646, #10281f); }
 .ttd-speed-btn, .ttd-mute-btn { padding: 9px 12px; }
 
 /* ---------- Shop ---------- */
@@ -120,7 +129,7 @@ html, body {
   justify-content: center;
   padding: 8px;
   border-radius: 12px;
-  background: rgba(16, 12, 34, 0.75);
+  background: rgba(28, 18, 8, 0.8);
   border: 1px solid var(--panel-border);
   backdrop-filter: blur(3px);
 }
@@ -131,13 +140,13 @@ html, body {
   gap: 8px;
   padding: 7px 12px 7px 8px;
   border-radius: 10px;
-  border: 2px solid rgba(160, 130, 255, 0.25);
-  background: rgba(40, 30, 70, 0.55);
+  border: 2px solid rgba(255, 180, 84, 0.25);
+  background: rgba(74, 51, 32, 0.55);
   color: var(--ink);
   cursor: pointer;
   transition: border-color 0.12s ease, transform 0.12s ease, background 0.12s ease;
 }
-.ttd-shop-item:hover:not(.disabled) { border-color: var(--purple-glow); transform: translateY(-2px); }
+.ttd-shop-item:hover:not(.disabled) { border-color: var(--mint); transform: translateY(-2px); }
 .ttd-shop-item.selected { border-color: var(--gold); background: rgba(120, 90, 30, 0.35); box-shadow: 0 0 14px rgba(255, 214, 112, 0.35); }
 .ttd-shop-item.disabled { opacity: 0.4; cursor: default; }
 .ttd-shop-dot { width: 22px; height: 22px; border-radius: 50%; flex: 0 0 auto; box-shadow: 0 0 8px currentColor; }
@@ -174,7 +183,7 @@ html, body {
   width: 26px; height: 26px;
   border-radius: 50%;
   border: 2px solid var(--panel-border);
-  background: #1c1638;
+  background: #2c1e10;
   color: var(--ink);
   cursor: pointer;
   font-size: 12px;
@@ -189,7 +198,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(5, 4, 12, 0.55);
+  background: rgba(16, 10, 4, 0.55);
   padding: 16px;
 }
 .ttd-title-card {
@@ -203,19 +212,19 @@ html, body {
   border-radius: 18px;
   background: var(--panel-bg);
   border: 3px solid var(--panel-border);
-  box-shadow: 0 0 60px rgba(140, 90, 255, 0.3), 0 20px 50px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 60px rgba(255, 180, 84, 0.25), 0 20px 50px rgba(0, 0, 0, 0.5);
 }
-.ttd-title-emblem { font-size: 46px; filter: drop-shadow(0 0 14px rgba(200, 150, 255, 0.6)); }
+.ttd-title-emblem { font-size: 46px; filter: drop-shadow(0 0 14px rgba(255, 214, 112, 0.6)); }
 .ttd-title {
   margin: 0;
   font-family: 'Russo One', sans-serif;
   font-size: clamp(1.6rem, 6vw, 2.4rem);
   letter-spacing: 0.02em;
-  background: linear-gradient(180deg, #fff3c8 0%, #c896ff 55%, #6a3ec9 100%);
+  background: linear-gradient(180deg, #fff3c8 0%, #ffb454 55%, #a86a1e 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  text-shadow: 0 4px 18px rgba(140, 90, 255, 0.4);
+  text-shadow: 0 4px 18px rgba(255, 180, 84, 0.35);
 }
 .ttd-subtitle { margin: 0; color: var(--muted); font-size: 14px; max-width: 42ch; line-height: 1.5; }
 .ttd-start-btn { margin-top: 6px; padding: 12px 28px; font-size: 15px; }
@@ -231,8 +240,8 @@ html, body {
   justify-content: center;
   padding: 16px;
 }
-.ttd-end-screen.ttd-victory { background: radial-gradient(ellipse at 50% 40%, rgba(255, 214, 112, 0.25), rgba(5, 4, 12, 0.75)); }
-.ttd-end-screen.ttd-defeat { background: radial-gradient(ellipse at 50% 40%, rgba(255, 80, 80, 0.18), rgba(5, 4, 12, 0.85)); }
+.ttd-end-screen.ttd-victory { background: radial-gradient(ellipse at 50% 40%, rgba(255, 214, 112, 0.25), rgba(16, 10, 4, 0.75)); }
+.ttd-end-screen.ttd-defeat { background: radial-gradient(ellipse at 50% 40%, rgba(255, 80, 80, 0.18), rgba(16, 10, 4, 0.85)); }
 .ttd-end-card {
   width: min(480px, 100%);
   display: flex;
@@ -256,62 +265,55 @@ html, body {
   .ttd-wave-btn { min-width: 0; flex: 1 1 auto; }
 }
 
-/* ---------- Lobby (first-person hub) ---------- */
+/* ---------- Campus (top-down hub) ---------- */
 .ttd-lobby-ui { position: absolute; inset: 0; z-index: 20; pointer-events: none; }
-
-.ttd-crosshair {
-  position: absolute;
-  top: 50%; left: 50%;
-  width: 6px; height: 6px;
-  margin: -3px 0 0 -3px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.75);
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
-}
 
 .ttd-interact-prompt {
   position: absolute;
-  bottom: 14%;
+  bottom: 8%;
   left: 50%;
   transform: translateX(-50%);
   padding: 9px 18px;
   border-radius: 999px;
-  background: rgba(16, 12, 34, 0.85);
+  background: rgba(28, 18, 8, 0.85);
   border: 2px solid var(--gold);
   color: var(--gold);
   font-family: 'Baloo 2', sans-serif;
   font-weight: 800;
   font-size: 14px;
   white-space: nowrap;
-  box-shadow: 0 0 18px rgba(255, 214, 112, 0.35);
+  box-shadow: 0 0 18px rgba(255, 180, 84, 0.35);
+  cursor: pointer;
+  pointer-events: auto;
   animation: ttd-prompt-bob 1.6s ease-in-out infinite;
 }
 @keyframes ttd-prompt-bob { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-4px); } }
 
-.ttd-click-overlay {
+/* Same on-screen joystick Hyper Fishies uses for touch movement. */
+.ttd-touch-controls { position: absolute; inset: 0; z-index: 21; pointer-events: none; }
+.joy-base {
   position: absolute;
-  inset: 0;
-  z-index: 21;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(5, 4, 12, 0.45);
+  left: 26px;
+  bottom: 26px;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: rgba(28, 18, 8, 0.55);
+  border: 2px solid rgba(255, 180, 84, 0.4);
   pointer-events: auto;
-  cursor: pointer;
 }
-.ttd-click-card {
-  padding: 18px 26px;
-  border-radius: 14px;
-  background: var(--panel-bg);
-  border: 2px solid var(--panel-border);
-  text-align: center;
-  font-family: 'Baloo 2', sans-serif;
-  font-weight: 800;
-  font-size: 16px;
-  color: var(--ink);
+.joy-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 38px;
+  height: 38px;
+  margin: -19px 0 0 -19px;
+  border-radius: 50%;
+  background: rgba(255, 180, 84, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  transition: transform 0.02s linear;
 }
-.ttd-click-sub { margin-top: 6px; font-size: 12px; font-weight: 600; color: var(--muted); }
-.ttd-click-fallback { margin-top: 8px; font-size: 12px; font-weight: 700; color: var(--gold); }
 
 .ttd-building-modal {
   position: absolute;
@@ -320,7 +322,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(5, 4, 12, 0.65);
+  background: rgba(16, 10, 4, 0.65);
   padding: 16px;
 }
 .ttd-building-card {
@@ -334,7 +336,7 @@ html, body {
   border-radius: 16px;
   background: var(--panel-bg);
   border: 3px solid var(--panel-border);
-  box-shadow: 0 0 50px rgba(140, 90, 255, 0.3), 0 20px 46px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 50px rgba(255, 180, 84, 0.25), 0 20px 46px rgba(0, 0, 0, 0.5);
 }
 .ttd-building-emblem { font-size: 40px; }
 .ttd-building-title { margin: 0; font-family: 'Russo One', sans-serif; font-size: 1.3rem; color: var(--gold); }

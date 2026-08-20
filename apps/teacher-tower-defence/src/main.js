@@ -4,12 +4,14 @@ import { drawMap, drawTowerSlots } from './render/drawMap.js';
 import { drawTeacher, drawTeacherGhost } from './render/drawTeacher.js';
 import { drawEnemy } from './render/drawEnemy.js';
 import { drawEffect, drawProjectile } from './render/drawEffects.js';
-import { renderLobbyView } from './render/raycast.js';
+import { drawHallway } from './render/drawHallway.js';
+import { drawBuilding } from './render/drawBuilding.js';
+import { drawStudent } from './render/drawStudent.js';
 import { TEACHER_LIST, TEACHERS } from './data/teachers.js';
 import { TOTAL_WAVES } from './data/waves.js';
 import { TOWER_SLOTS } from './data/path.js';
-import { TRIGGERS } from './data/lobbyMap.js';
-import { createLobbyState, updateLobby, FOV, MOUSE_SENSITIVITY } from './game/lobby.js';
+import { GACHA_BUILDING, DUNGEON_BUILDING } from './data/campusMap.js';
+import { createCampusState, updateCampus } from './game/campus.js';
 import {
   createGameState, update, startNextWave, placeTower, upgradeTower, sellTower,
   occupiedSlotIds, canAfford, slotAt,
@@ -17,6 +19,9 @@ import {
 import * as audio from './audio/audioEngine.js';
 
 const root = document.getElementById('game-root');
+
+const GACHA_STYLE = { wallColor: '#5a3f28', roofColor: '#7a2e2e', doorColor: '#3c2a1a', accent: '#ffb454', glow: '#ffd670', label: 'GACHA HALL', icon: '🎰' };
+const DUNGEON_STYLE = { wallColor: '#3c2a1a', roofColor: '#2c1e10', doorColor: '#241708', accent: '#5fe3c0', glow: '#8fe9d9', label: 'DUNGEON GATE', icon: '🗺️' };
 
 document.addEventListener('click', () => {
   audio.ensureAudioContext();
@@ -29,7 +34,8 @@ document.addEventListener('click', () => {
 // shouldn't need engine.js's createGameState() just to exist.
 let screen = 'title';
 let state = createGameState();
-let lobby = createLobbyState();
+let lobby = createCampusState();
+const titleLobby = createCampusState(); // static backdrop behind the title card
 
 const surface = createCanvasSurface(root);
 const { canvas, ctx } = surface;
@@ -182,37 +188,16 @@ function towerUnderPoint(px, py) {
 }
 
 canvas.addEventListener('mousemove', (e) => {
-  if (screen === 'playing') {
-    const { x, y } = surface.clientToLogical(e.clientX, e.clientY);
-    const slot = slotUnderPoint(x, y);
-    state.hoverSlot = slot ? slot.id : null;
-    return;
-  }
-  if (screen === 'lobby' && lobby.pointerLocked) {
-    lobby.angle += e.movementX * MOUSE_SENSITIVITY;
-  }
+  if (screen !== 'playing') return;
+  const { x, y } = surface.clientToLogical(e.clientX, e.clientY);
+  const slot = slotUnderPoint(x, y);
+  state.hoverSlot = slot ? slot.id : null;
 });
 canvas.addEventListener('mouseleave', () => { state.hoverSlot = null; });
 
-// Pointer Lock can fail for reasons that have nothing to do with this
-// game (an embedding iframe without the `pointer-lock` permission, a
-// browser setting, etc.) — if it does, fall back to keyboard-only turning
-// (arrow keys, see LOBBY_KEY_MAP) rather than leaving the "click to look
-// around" overlay stuck on screen forever with no way to dismiss it.
-function requestLobbyPointerLock() {
-  const result = canvas.requestPointerLock();
-  if (result && result.catch) {
-    result.catch(() => { lobby.pointerLockUnavailable = true; refreshLobbyUi(); });
-  }
-}
-document.addEventListener('pointerlockerror', () => {
-  lobby.pointerLockUnavailable = true;
-  refreshLobbyUi();
-});
-
 canvas.addEventListener('click', (e) => {
   if (screen === 'lobby') {
-    if (!lobby.pointerLocked) requestLobbyPointerLock();
+    if (lobby.nearTrigger) openBuildingModal(lobby.nearTrigger);
     return;
   }
   if (screen !== 'playing') return;
@@ -237,18 +222,12 @@ canvas.addEventListener('click', (e) => {
   refreshPopup();
 });
 
-document.addEventListener('pointerlockchange', () => {
-  lobby.pointerLocked = document.pointerLockElement === canvas;
-  refreshLobbyUi();
-});
-
-// ---------- Lobby keyboard controls ----------
-const LOBBY_KEY_MAP = {
-  w: 'forward', arrowup: 'forward',
-  s: 'back', arrowdown: 'back',
-  a: 'left', d: 'right',
-  q: 'turnLeft', e: null, // 'e' reserved for interact, handled separately
-  arrowleft: 'turnLeft', arrowright: 'turnRight',
+// ---------- Campus keyboard controls ----------
+const CAMPUS_KEY_MAP = {
+  w: 'up', arrowup: 'up',
+  s: 'down', arrowdown: 'down',
+  a: 'left', arrowleft: 'left',
+  d: 'right', arrowright: 'right',
 };
 window.addEventListener('keydown', (evt) => {
   if (screen !== 'lobby') return;
@@ -257,44 +236,80 @@ window.addEventListener('keydown', (evt) => {
     if (lobby.nearTrigger) openBuildingModal(lobby.nearTrigger);
     return;
   }
-  const action = LOBBY_KEY_MAP[k];
+  const action = CAMPUS_KEY_MAP[k];
   if (action) { lobby.keys[action] = true; evt.preventDefault(); }
 });
 window.addEventListener('keyup', (evt) => {
   const k = evt.key.toLowerCase();
-  const action = LOBBY_KEY_MAP[k];
+  const action = CAMPUS_KEY_MAP[k];
   if (action) lobby.keys[action] = false;
 });
 
-// ---------- Lobby UI (crosshair, prompt, click-to-look, modal) ----------
+// ---------- Campus touch joystick ----------
+// The exact same on-screen joystick Hyper Fishies uses for touch
+// movement (see that project's core/input.js) — a base circle you drag a
+// knob within, normalized to a unit vector.
+const joyWrap = el('div', { class: 'ttd-touch-controls hidden' });
+const joyBase = el('div', { class: 'joy-base' });
+const joyKnob = el('div', { class: 'joy-knob' });
+joyBase.appendChild(joyKnob);
+joyWrap.appendChild(joyBase);
+root.appendChild(joyWrap);
+
+const JOY_RADIUS = 36;
+let joyTouchId = null;
+let joyBaseRect = null;
+function setKnob(dx, dy) { joyKnob.style.transform = `translate(${dx * JOY_RADIUS}px, ${dy * JOY_RADIUS}px)`; }
+function updateJoy(clientX, clientY) {
+  if (!joyBaseRect) return;
+  const cx = joyBaseRect.left + joyBaseRect.width / 2;
+  const cy = joyBaseRect.top + joyBaseRect.height / 2;
+  let dx = (clientX - cx) / JOY_RADIUS;
+  let dy = (clientY - cy) / JOY_RADIUS;
+  const len = Math.hypot(dx, dy);
+  if (len > 1) { dx /= len; dy /= len; }
+  lobby.joystick.dx = dx;
+  lobby.joystick.dy = dy;
+  setKnob(dx, dy);
+}
+joyBase.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  const t = e.changedTouches[0];
+  joyTouchId = t.identifier;
+  joyBaseRect = joyBase.getBoundingClientRect();
+  lobby.joystick.active = true;
+  updateJoy(t.clientX, t.clientY);
+}, { passive: false });
+window.addEventListener('touchmove', (e) => {
+  for (const t of e.changedTouches) {
+    if (t.identifier === joyTouchId) { e.preventDefault(); updateJoy(t.clientX, t.clientY); }
+  }
+}, { passive: false });
+function endJoy(e) {
+  for (const t of e.changedTouches) {
+    if (t.identifier === joyTouchId) {
+      joyTouchId = null;
+      lobby.joystick.active = false;
+      lobby.joystick.dx = 0; lobby.joystick.dy = 0;
+      setKnob(0, 0);
+    }
+  }
+}
+window.addEventListener('touchend', endJoy);
+window.addEventListener('touchcancel', endJoy);
+
+// ---------- Campus UI (interact prompt, modal) ----------
 const lobbyUi = el('div', { class: 'ttd-lobby-ui hidden' });
-const crosshair = el('div', { class: 'ttd-crosshair' });
-const interactPrompt = el('div', { class: 'ttd-interact-prompt hidden' });
-const clickFallbackHint = el('div', { class: 'ttd-click-fallback hidden' }, 'Mouse-look isn\'t available here — click again to continue with ← / → to turn instead.');
-const clickToLookOverlay = el('div', {
-  class: 'ttd-click-overlay',
-  onClick: () => {
-    if (lobby.pointerLockUnavailable) { lobby.overlayDismissed = true; refreshLobbyUi(); }
-    else requestLobbyPointerLock();
-  },
-}, [
-  el('div', { class: 'ttd-click-card' }, [
-    el('div', { class: 'ttd-click-title' }, '🖱️ Click anywhere to look around'),
-    el('div', { class: 'ttd-click-sub' }, 'WASD to walk · Mouse to look · E to interact · Esc to release cursor'),
-    clickFallbackHint,
-  ]),
-]);
-lobbyUi.appendChild(crosshair);
+const interactPrompt = el('button', {
+  class: 'ttd-interact-prompt hidden',
+  onClick: () => { if (lobby.nearTrigger) openBuildingModal(lobby.nearTrigger); },
+});
 lobbyUi.appendChild(interactPrompt);
-lobbyUi.appendChild(clickToLookOverlay);
 root.appendChild(lobbyUi);
 
 function refreshLobbyUi() {
-  const overlayDone = lobby.pointerLocked || lobby.overlayDismissed;
-  clickToLookOverlay.classList.toggle('hidden', overlayDone);
-  clickFallbackHint.classList.toggle('hidden', !lobby.pointerLockUnavailable);
-  if (lobby.nearTrigger && overlayDone) {
-    interactPrompt.textContent = `${lobby.nearTrigger.icon} Press E to enter ${lobby.nearTrigger.label}`;
+  if (lobby.nearTrigger) {
+    interactPrompt.textContent = `${lobby.nearTrigger.icon} Enter ${lobby.nearTrigger.label}`;
     interactPrompt.classList.remove('hidden');
   } else {
     interactPrompt.classList.add('hidden');
@@ -316,7 +331,6 @@ function openBuildingModal(trigger) {
     el('button', { class: 'btn btn-primary', text: 'Back to the courtyard', onClick: closeBuildingModal }),
   ]));
   buildingModal.classList.remove('hidden');
-  if (document.pointerLockElement) document.exitPointerLock();
 }
 function closeBuildingModal() {
   buildingModal.classList.add('hidden');
@@ -330,7 +344,7 @@ const titleScreen = el('div', { class: 'ttd-title-screen' }, [
     el('p', { class: 'ttd-subtitle' }, 'Cursed teachers are pouring out of the portal. Recruit students, hold the courtyard, and don\'t let anything reach your desk.'),
     el('button', { class: 'btn btn-primary ttd-start-btn', text: '▶ Enter the Academy', onClick: enterLobby }),
     el('div', { class: 'ttd-howto' }, [
-      el('div', {}, '🚶 Walk the courtyard in first person — WASD + mouse.'),
+      el('div', {}, '🚶 Walk the halls — WASD or the joystick.'),
       el('div', {}, '🎰 Visit the Gacha Hall to recruit new students.'),
       el('div', {}, '🗺️ Visit the Dungeon Gate to pick a battlefield.'),
     ]),
@@ -348,14 +362,18 @@ function hideAllScreens() {
   shop.classList.add('hidden');
   popup.classList.add('hidden');
   lobbyUi.classList.add('hidden');
+  joyWrap.classList.add('hidden');
   buildingModal.classList.add('hidden');
 }
 
+const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
 function enterLobby() {
   screen = 'lobby';
-  lobby = createLobbyState();
+  lobby = createCampusState();
   hideAllScreens();
   lobbyUi.classList.remove('hidden');
+  if (isTouchDevice) joyWrap.classList.remove('hidden');
   refreshLobbyUi();
 }
 
@@ -400,7 +418,7 @@ function frame(now) {
   renderT += dt;
 
   if (screen === 'lobby') {
-    updateLobby(lobby, dt);
+    updateCampus(lobby, dt);
     refreshLobbyUi();
   } else if (screen === 'playing') {
     update(state, dt);
@@ -418,8 +436,16 @@ function frame(now) {
 
   ctx.clearRect(0, 0, 960, 600);
 
-  if (screen === 'lobby') {
-    renderLobbyView(ctx, 960, 600, lobby, FOV, TRIGGERS);
+  if (screen === 'lobby' || screen === 'title') {
+    // The title card floats over the same campus hallway rather than the
+    // tower-defense battle map — that map belongs to a screen this title
+    // button doesn't even lead to yet, and would look like a mismatched
+    // backdrop behind a now gold/wood-themed title card.
+    if (screen === 'title') titleLobby.animTime = renderT * 0.4;
+    drawHallway(ctx);
+    drawBuilding(ctx, GACHA_BUILDING, GACHA_STYLE);
+    drawBuilding(ctx, DUNGEON_BUILDING, DUNGEON_STYLE);
+    drawStudent(ctx, screen === 'title' ? titleLobby : lobby);
   } else {
     drawMap(ctx, renderT);
     if (screen === 'playing' || screen === 'gameover' || screen === 'victory') {
