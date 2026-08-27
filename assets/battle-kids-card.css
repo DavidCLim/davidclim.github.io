@@ -1,0 +1,142 @@
+/* Battle Kids card — same wood-and-gold plaque construction as every other
+   card on this page (isolate + ::before/::after texture layers, a shimmer
+   sweep, brass rivets), with the game's own bold outlined title-card
+   treatment instead of a plain wordmark. No link yet — the game itself
+   isn't pushed, so this is a "coming soon" plaque, not a launch button. */
+.battle-kids-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 10px;
+  min-height: 300px;
+  padding: 34px 28px;
+  border: 3px solid rgba(255, 180, 84, 0.55);
+  border-radius: 16px;
+  background: linear-gradient(165deg, #4a3320 0%, #1c1006 100%);
+  box-shadow:
+    0 14px 0 rgba(10, 6, 2, 0.4),
+    0 24px 46px rgba(0, 0, 0, 0.4),
+    0 0 22px rgba(255, 180, 84, 0.24),
+    0 0 50px rgba(255, 180, 84, 0.12),
+    inset 0 0 0 6px rgba(20, 12, 6, 0.4),
+    inset 0 0 60px rgba(0, 0, 0, 0.35);
+  transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+}
+
+.battle-kids-card:hover,
+.battle-kids-card:focus-within {
+  border-color: rgba(255, 208, 138, 0.85);
+  box-shadow:
+    0 18px 0 rgba(10, 6, 2, 0.4),
+    0 28px 52px rgba(0, 0, 0, 0.42),
+    0 0 30px rgba(255, 180, 84, 0.38),
+    0 0 68px rgba(255, 180, 84, 0.2),
+    inset 0 0 0 6px rgba(20, 12, 6, 0.4),
+    inset 0 0 60px rgba(0, 0, 0, 0.35);
+  transform: translateY(-3px);
+}
+
+.battle-kids-card::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  z-index: 0;
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.16) 0px, rgba(0, 0, 0, 0.16) 2px,
+    transparent 2px, transparent 26px
+  );
+}
+
+.battle-kids-card::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(circle at 16px 16px, #ffe0a0 0%, #ffb454 35%, #7a4a1a 75%, transparent 78%),
+    radial-gradient(circle at calc(100% - 16px) 16px, #ffe0a0 0%, #ffb454 35%, #7a4a1a 75%, transparent 78%),
+    radial-gradient(circle at 16px calc(100% - 16px), #ffe0a0 0%, #ffb454 35%, #7a4a1a 75%, transparent 78%),
+    radial-gradient(circle at calc(100% - 16px) calc(100% - 16px), #ffe0a0 0%, #ffb454 35%, #7a4a1a 75%, transparent 78%);
+  background-repeat: no-repeat;
+  background-size: 8px 8px;
+  opacity: 0.9;
+}
+
+.battle-kids-card > * { position: relative; z-index: 1; }
+
+.battle-kids-card .shimmer {
+  position: absolute;
+  inset: -40% -10%;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 42%, rgba(255, 224, 160, 0.16) 50%, transparent 58%);
+  animation: battle-kids-shimmer 5s ease-in-out infinite;
+}
+@keyframes battle-kids-shimmer {
+  0%, 100% { transform: translateX(-60%); }
+  50% { transform: translateX(60%); }
+}
+
+.battle-kids-emblem {
+  font-size: 2.8rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 10px rgba(255, 180, 84, 0.5));
+  animation: battle-kids-glow 3.2s ease-in-out infinite;
+}
+@keyframes battle-kids-glow {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(255, 180, 84, 0.4)); }
+  50% { filter: drop-shadow(0 0 18px rgba(255, 180, 84, 0.75)); }
+}
+
+.battle-kids-card h3 {
+  margin: 0;
+  font-family: 'Russo One', sans-serif;
+  font-size: clamp(2.1rem, 8vw, 2.8rem);
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  background: linear-gradient(180deg, #fff3c8 0%, #ffd670 35%, #ffb454 65%, #d6822a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-stroke: 6px #2c1206;
+  paint-order: stroke fill;
+  text-shadow: 0 5px 0 #7a2e2e, 0 8px 16px rgba(0, 0, 0, 0.5);
+}
+
+.battle-kids-card .tagline {
+  margin: 0;
+  max-width: 30ch;
+  color: #cfc2a4;
+  font-size: 0.95rem;
+  font-style: italic;
+}
+
+.battle-kids-card .coming-soon {
+  align-self: center;
+  min-width: min(100%, 220px);
+  min-height: 46px;
+  margin-top: 8px;
+  padding: 0 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed rgba(255, 180, 84, 0.5);
+  border-radius: 999px;
+  color: var(--muted, #cfc2a4);
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+@media (max-width: 560px) {
+  .battle-kids-card { min-height: 260px; padding: 26px 20px; }
+}
