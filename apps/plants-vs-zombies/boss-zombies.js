@@ -23,7 +23,10 @@
     { kind: "toxic", min: 12, weight: 9, hp: 178, speed: 0.00021, damage: 15, toxic: true, poisonAura: true },
     { kind: "brute", min: 15, weight: 7, hp: 345, speed: 0.00015, damage: 32, armor: 0.26, smash: true },
     { kind: "giant", min: 999, weight: 0, hp: 900, speed: 0.000082, damage: 58, armor: 0.22, shield: 240, boss: true },
+    { kind: "junxi", min: 999, weight: 0, hp: 430, speed: 0.00024, damage: 40, armor: 0.16 },
   ];
+
+  const junxiChance = 0.05;
 
   function bandForWave(wave = state.wave) {
     return waveBands.reduce((best, band) => wave >= band.min ? band : best, waveBands[0]);
@@ -159,9 +162,27 @@
     setMessage("COLOSSAL ZOMBIE!", "It stomps plants, roars to delay cooldowns, and carries huge armor. Bring heavy damage.");
   }
 
+  function spawnJunxiZombie() {
+    const base = enemyRoster.find((type) => type.kind === "junxi");
+    const band = bandForWave();
+    const hp = Math.round(base.hp * band.hp);
+    const type = {
+      ...base,
+      hp,
+      maxHp: hp,
+      speed: base.speed * (band.speed + 0.05),
+      damage: Math.round(base.damage * band.damage),
+    };
+    state.zombies.push(makeZombie(type, Math.floor(Math.random() * rows), cols + 0.5));
+    state.spawned += 1;
+    state.spawnTimer = Math.max(700, 1700 - state.wave * 40);
+    setMessage("JUNXI!", "A rare, unusually strong zombie has appeared. Focus it down fast.");
+  }
+
   spawnZombie = function upgradedSpawnZombie() {
     const bossMoment = bossWave() && !state.bossSpawnedForWave && state.spawned >= Math.max(5, Math.floor(state.target * 0.36));
     if (bossMoment) return spawnGiantZombie();
+    if (Math.random() < junxiChance) return spawnJunxiZombie();
     const type = weightedZombieType();
     state.zombies.push(makeZombie(type, Math.floor(Math.random() * rows), cols + 0.35));
     state.spawned += 1;
@@ -279,6 +300,6 @@
     const status = `${zombie.slow > 0 ? " slow" : ""}${zombie.poison > 0 ? " poison" : ""}${zombie.shield > 0 ? " shielded" : ""}${zombie.boss ? " boss" : ""}${zombie.healFlash > 0 ? " healing" : ""}${zombie.dashFlash > 0 ? " dashing" : ""}${zombie.leapFlash > 0 ? " leaping" : ""}${zombie.stompFlash > 0 ? " stomping" : ""}${zombie.roarFlash > 0 ? " roaring" : ""}${zombie.poisonFlash > 0 ? " toxic-pulse" : ""}${zombie.smash ? " smasher" : ""}`;
     const label = zombie.boss ? "COLOSSAL" : zombie.kind.toUpperCase();
     const hpPct = Math.max(0, Math.round((zombie.hp / zombie.maxHp) * 100));
-    return `<div class="zombie ${zombie.kind}${status}" style="${position(zombie.row, zombie.x)}--limp:${limp.toFixed(2)}deg;--hurt:${hurt.toFixed(2)};--hp:${hpPct}%;"><span class="ability-tag">${label}</span><span class="helmet"></span><span class="cone"></span><span class="flag"></span><span class="shield-plate"></span><span class="eye"></span><span class="arm"></span><span class="ability-aura"></span><span class="boss-bar"></span></div>`;
+    return `<div class="zombie ${zombie.kind}${status}" style="${position(zombie.row, zombie.x)}--limp:${limp.toFixed(2)}deg;--hurt:${hurt.toFixed(2)};--hp:${hpPct}%;">${zombieBodyHTML(label)}</div>`;
   };
 })();

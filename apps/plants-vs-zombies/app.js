@@ -6,18 +6,43 @@ const activeAccountKey = "david-pvz-active-account";
 const legacyStorageKey = "david-pvz-save-v2";
 
 const plantCatalog = [
-  { id: "pea", name: "Peashooter", price: 0, cost: 50, role: "Balanced pea shots", hp: 90, fireRate: 1250, damage: 20, shot: "pea" },
-  { id: "ice", name: "Ice Bloom", price: 0, cost: 75, role: "Slows zombies", hp: 90, fireRate: 1500, damage: 14, shot: "ice", slow: 1700 },
-  { id: "fire", name: "Fire Bloom", price: 0, cost: 100, role: "Splash fireballs", hp: 85, fireRate: 1750, damage: 30, shot: "fire", splash: 0.72 },
-  { id: "spike", name: "Walnut", price: 0, cost: 75, role: "Tough blocker with no damage", hp: 420, blocker: true },
-  { id: "sunflower", name: "Sunflower", price: 0, cost: 50, role: "Produces extra sun", hp: 80, sunRate: 6200, sunAmount: 50 },
-  { id: "chomper", name: "Chomper", price: 360, cost: 150, role: "Huge bite", hp: 170, fireRate: 2500, damage: 145, melee: true },
-  { id: "volt", name: "Volt Sprout", price: 180, cost: 125, role: "Chains lightning", hp: 80, fireRate: 1900, damage: 24, shot: "volt", chain: 2 },
-  { id: "angry", name: "Angry Pea", price: 230, cost: 125, role: "Fast heavy shots", hp: 95, fireRate: 930, damage: 18, shot: "angry" },
-  { id: "vine", name: "Vine Snare", price: 300, cost: 100, role: "Grabs and weakens", hp: 120, fireRate: 720, damage: 8, trap: true, slowAura: 900 },
-  { id: "toxic", name: "Toxic Pea", price: 380, cost: 125, role: "Poison shots", hp: 90, fireRate: 1450, damage: 15, shot: "toxic", poison: 2500 },
-  { id: "triple", name: "Triple Pea", price: 520, cost: 175, role: "Three-lane shots", hp: 100, fireRate: 1500, damage: 17, shot: "triple", multiRows: [-1, 0, 1] },
-  { id: "cannon", name: "Pea Cannon", price: 700, cost: 200, role: "Heavy pod blasts", hp: 135, fireRate: 2350, damage: 62, shot: "cannon", splash: 0.95 },
+  { id: "pea", name: "Peashooter", price: 0, cost: 50, role: "Balanced pea shots", hp: 90, fireRate: 1250, damage: 20, shot: "pea", family: "shooter", element: "plain" },
+  { id: "ice", name: "Ice Bloom", price: 0, cost: 75, role: "Slows zombies", hp: 90, fireRate: 1500, damage: 14, shot: "ice", slow: 1700, family: "shooter", element: "ice" },
+  { id: "fire", name: "Fire Bloom", price: 0, cost: 100, role: "Splash fireballs", hp: 85, fireRate: 1750, damage: 30, shot: "fire", splash: 0.72, family: "shooter", element: "fire" },
+  { id: "spike", name: "Walnut", price: 0, cost: 75, role: "Tough blocker with no damage", hp: 420, blocker: true, family: "wall", element: "plain" },
+  { id: "sunflower", name: "Sunflower", price: 0, cost: 50, role: "Produces extra sun", hp: 80, sunRate: 6200, sunAmount: 50, family: "sun", element: "sun" },
+  { id: "chomper", name: "Chomper", price: 360, cost: 150, role: "Huge bite", hp: 170, fireRate: 2500, damage: 145, melee: true, family: "chomper", element: "plain" },
+  { id: "volt", name: "Volt Sprout", price: 180, cost: 125, role: "Chains lightning", hp: 80, fireRate: 1900, damage: 24, shot: "volt", chain: 2, family: "shooter", element: "volt" },
+  { id: "angry", name: "Angry Pea", price: 230, cost: 125, role: "Fast heavy shots", hp: 95, fireRate: 930, damage: 18, shot: "angry", family: "shooter", element: "fire" },
+  { id: "vine", name: "Vine Snare", price: 300, cost: 100, role: "Grabs and weakens", hp: 120, fireRate: 720, damage: 8, trap: true, slowAura: 900, family: "vine", element: "thorn" },
+  { id: "toxic", name: "Toxic Pea", price: 380, cost: 125, role: "Poison shots", hp: 90, fireRate: 1450, damage: 15, shot: "toxic", poison: 2500, family: "shooter", element: "toxic" },
+  { id: "triple", name: "Triple Pea", price: 520, cost: 175, role: "Three-lane shots", hp: 100, fireRate: 1500, damage: 17, shot: "triple", multiRows: [-1, 0, 1], family: "shooter", element: "plain" },
+  { id: "cannon", name: "Pea Cannon", price: 700, cost: 200, role: "Heavy pod blasts", hp: 135, fireRate: 2350, damage: 62, shot: "cannon", splash: 0.95, family: "cannon", element: "plain" },
+  { id: "ironNut", name: "Iron Nut", price: 260, cost: 125, role: "Even tougher blocker", hp: 680, blocker: true, family: "wall", element: "plain" },
+  { id: "melonSmasher", name: "Melon Smasher", price: 600, cost: 250, role: "Massive splash blasts", hp: 150, fireRate: 2700, damage: 78, shot: "cannon", splash: 1.15, family: "cannon", element: "plain" },
+  { id: "starburst", name: "Starburst", price: 650, cost: 250, role: "Five-lane pea bursts", hp: 105, fireRate: 1700, damage: 15, shot: "pea", multiRows: [-2, -1, 0, 1, 2], family: "shooter", element: "plain" },
+  { id: "snapTrap", name: "Snap Trap", price: 300, cost: 150, role: "Thorny one-bite killer", hp: 140, fireRate: 2600, damage: 210, melee: true, family: "chomper", element: "thorn" },
+  { id: "frostSpike", name: "Frost Spike", price: 220, cost: 110, role: "Blocker that chills attackers", hp: 480, blocker: true, onHitSlow: 1400, family: "wall", element: "ice" },
+  { id: "emberVine", name: "Ember Vine", price: 260, cost: 130, role: "Burning snare trap", hp: 115, fireRate: 700, damage: 12, trap: true, splash: 0.5, family: "vine", element: "fire" },
+  { id: "galePea", name: "Gale Pea", price: 240, cost: 130, role: "Very rapid light shots", hp: 85, fireRate: 620, damage: 9, shot: "pea", family: "shooter", element: "plain" },
+  { id: "bloomGuard", name: "Bloom Guard", price: 280, cost: 130, role: "Sunflower with extra hp", hp: 160, sunRate: 5800, sunAmount: 55, family: "sun", element: "sun" },
+  { id: "frostFern", name: "Frost Fern", price: 320, cost: 100, role: "Rapid icy shots", hp: 85, fireRate: 1050, damage: 12, shot: "ice", slow: 1400, family: "shooter", element: "ice" },
+  { id: "blazeBud", name: "Blaze Bud", price: 340, cost: 140, role: "Single heavy fireball", hp: 90, fireRate: 2100, damage: 42, shot: "fire", family: "shooter", element: "fire" },
+  { id: "thunderReed", name: "Thunder Reed", price: 360, cost: 145, role: "Long chain lightning", hp: 85, fireRate: 2000, damage: 22, shot: "volt", chain: 4, family: "shooter", element: "volt" },
+  { id: "bogSprout", name: "Bog Sprout", price: 380, cost: 140, role: "Stacking poison shots", hp: 90, fireRate: 1300, damage: 10, shot: "toxic", poison: 3400, family: "shooter", element: "toxic" },
+  { id: "boulderRoot", name: "Boulder Root", price: 300, cost: 140, role: "Massive tough blocker", hp: 900, blocker: true, family: "wall", element: "plain" },
+  { id: "crystalWard", name: "Crystal Ward", price: 340, cost: 150, role: "Blocker that slows attackers", hp: 620, blocker: true, onHitSlow: 2200, family: "wall", element: "crystal" },
+  { id: "shadowRoot", name: "Shadow Root", price: 360, cost: 160, role: "Wall that scratches nearby zombies", hp: 700, blocker: true, auraDamage: 0.011, family: "wall", element: "shadow" },
+  { id: "gatorJaw", name: "Gator Jaw", price: 380, cost: 155, role: "Heavy single bite", hp: 175, fireRate: 2300, damage: 165, melee: true, family: "chomper", element: "plain" },
+  { id: "frostFang", name: "Frost Fang", price: 400, cost: 165, role: "Fast freezing bite", hp: 180, fireRate: 2100, damage: 120, melee: true, slowBite: 2600, family: "chomper", element: "ice" },
+  { id: "thornWhip", name: "Thorn Whip", price: 320, cost: 110, role: "Sharp snaring trap", hp: 125, fireRate: 640, damage: 10, trap: true, slowAura: 1100, family: "vine", element: "thorn" },
+  { id: "mistVine", name: "Mist Vine", price: 340, cost: 135, role: "Scalding, slowing trap", hp: 130, fireRate: 700, damage: 13, trap: true, slowAura: 1000, splash: 0.4, family: "vine", element: "steam" },
+  { id: "cometCannon", name: "Comet Cannon", price: 620, cost: 240, role: "Fiery long-range blast", hp: 140, fireRate: 2450, damage: 66, shot: "fire", splash: 1.0, family: "cannon", element: "fire" },
+  { id: "ionCannon", name: "Ion Cannon", price: 640, cost: 245, role: "Chaining cannon blast", hp: 140, fireRate: 2400, damage: 50, shot: "volt", chain: 3, splash: 0.6, family: "cannon", element: "volt" },
+  { id: "radiantBloom", name: "Radiant Bloom", price: 300, cost: 135, role: "Big bursts of sun", hp: 100, sunRate: 5200, sunAmount: 70, family: "sun", element: "sun" },
+  { id: "eclipseBloom", name: "Eclipse Bloom", price: 420, cost: 160, role: "Makes sun and saps nearby zombies", hp: 130, sunRate: 5000, sunAmount: 55, auraDamage: 0.005, family: "sun", element: "shadow" },
+  { id: "starlightPea", name: "Starlight Pea", price: 440, cost: 165, role: "Slowing crystal shots", hp: 95, fireRate: 1350, damage: 19, shot: "ice", slow: 2000, family: "shooter", element: "crystal" },
+  { id: "voidChomper", name: "Void Chomper", price: 460, cost: 190, role: "Shadowy bite that weakens", hp: 200, fireRate: 2450, damage: 155, melee: true, slowBite: 1800, family: "chomper", element: "shadow" },
 ];
 
 const plantStats = Object.fromEntries(plantCatalog.map((plant) => [plant.id, plant]));
@@ -459,7 +484,7 @@ function renderSeedBank() {
   const html = state.equipped.map((id) => {
     const plant = plantStats[id];
     const locked = state.phase === "running" && state.sun < plant.cost;
-    return `<button class="seed-card ${id === state.selected && !state.deleteMode ? "active" : ""} ${locked ? "locked" : ""}" data-plant="${id}" type="button"><span class="mini-plant ${id}"></span><strong>${plant.name}</strong><small>${plant.cost} sun</small></button>`;
+    return `<button class="seed-card ${id === state.selected && !state.deleteMode ? "active" : ""} ${locked ? "locked" : ""}" data-plant="${id}" type="button"><span class="mini-plant ${id} ${plantVisualClasses(plant)}"></span><strong>${plant.name}</strong><small>${plant.cost} sun</small></button>`;
   }).join("");
   if (html !== lastSeedHtml) {
     els.seedBank.innerHTML = html;
@@ -476,7 +501,7 @@ function renderShop() {
     const equipped = state.equipped.includes(plant.id);
     const affordable = state.coins >= plant.price;
     const label = unlocked ? (equipped ? "Equipped" : "Equip") : `${plant.price} coins`;
-    return `<button class="shop-card ${equipped ? "equipped" : ""} ${unlocked ? "unlocked" : "locked-shop"} ${!affordable && !unlocked ? "too-expensive" : ""}" data-shop-plant="${plant.id}" type="button" ${lockedDuringRound ? "disabled" : ""}><span class="mini-plant ${plant.id}"></span><span class="shop-copy"><strong>${plant.name}</strong><small>${plant.role}</small><em>${label}</em></span></button>`;
+    return `<button class="shop-card ${equipped ? "equipped" : ""} ${unlocked ? "unlocked" : "locked-shop"} ${!affordable && !unlocked ? "too-expensive" : ""}" data-shop-plant="${plant.id}" type="button" ${lockedDuringRound ? "disabled" : ""}><span class="mini-plant ${plant.id} ${plantVisualClasses(plant)}"></span><span class="shop-copy"><strong>${plant.name}</strong><small>${plant.role}</small><em>${label}</em></span></button>`;
   }).join("");
   if (html !== lastShopHtml) {
     els.plantShop.innerHTML = html;
@@ -488,19 +513,44 @@ function position(row, x) {
   return `left:${(x + 0.5) * (100 / cols)}%;top:${(row + 0.56) * (100 / rows)}%;`;
 }
 
+function plantVisualClasses(stats) {
+  const family = stats.family || "shooter";
+  const element = stats.element || "plain";
+  const multi = stats.multiRows && stats.multiRows.length > 1 ? " multi" : "";
+  const rapid = stats.repeat >= 4 ? " rapid" : "";
+  const wide = (stats.coverCols || 1) > 1 ? " wide" : (stats.coverRows || 1) > 1 ? " tall" : "";
+  return `fam-${family} elem-${element}${multi}${rapid}${wide}`;
+}
+
+// Shared plant body markup — a fresh, faceless-free design (see sprites.css).
+// Deliberately uses new pv-* class names so none of the legacy patch
+// stylesheets (which fight over .plant-head/.mouth/.stem/.leaves) can touch it.
+function plantBodyHTML() {
+  return '<span class="pv-leaves"></span><span class="pv-stem"></span><span class="pv-head"><span class="pv-mouth"></span></span>';
+}
+
 function renderPlant(plant) {
+  const stats = plantStats[plant.type];
   const bob = Math.sin((state.clock + plant.id * 113) / 360) * 3;
   const tilt = Math.sin((state.clock + plant.id * 71) / 520) * 4;
   const action = plant.action > 0 ? " action" : "";
   const style = `${position(plant.row, plant.col)}--bob:${bob.toFixed(2)}px;--tilt:${tilt.toFixed(2)}deg;--pulse:${plant.action > 0 ? 1.08 : 1};`;
-  return `<div class="plant ${plant.type}${action}" style="${style}"><div class="plant-head"><span class="crown"></span><span class="mouth"></span></div><span class="stem"></span><span class="leaves"></span></div>`;
+  return `<div class="plant ${plant.type} ${plantVisualClasses(stats)}${action}" style="${style}">${plantBodyHTML()}</div>`;
+}
+
+// Shared zombie body markup — new z-* elements for the actual body (head,
+// torso, eyes, legs) layered underneath the legacy accessory slots
+// (helmet/cone/flag/shield-plate/arm) that boss-zombies.css already knows
+// how to dress for special kinds.
+function zombieBodyHTML(label) {
+  return `<span class="ability-tag">${label || ""}</span><span class="z-leg z-leg-back"></span><span class="z-leg z-leg-front"></span><span class="helmet"></span><span class="cone"></span><span class="flag"></span><span class="z-torso"><span class="z-tear z-tear-l"></span><span class="z-tear z-tear-r"></span></span><span class="shield-plate"></span><span class="z-head"><span class="z-eye"></span><span class="z-mouth"></span></span><span class="arm"></span><span class="ability-aura"></span><span class="boss-bar"></span>`;
 }
 
 function renderZombie(zombie) {
   const limp = Math.sin((state.clock + zombie.id * 37) / 170) * 3;
   const hurt = Math.max(0, 1 - zombie.hp / zombie.maxHp);
   const status = `${zombie.slow > 0 ? " slow" : ""}${zombie.poison > 0 ? " poison" : ""}${zombie.shield > 0 ? " shielded" : ""}`;
-  return `<div class="zombie ${zombie.kind}${status}" style="${position(zombie.row, zombie.x)}--limp:${limp.toFixed(2)}deg;--hurt:${hurt.toFixed(2)};"><span class="helmet"></span><span class="cone"></span><span class="flag"></span><span class="shield-plate"></span><span class="eye"></span><span class="arm"></span></div>`;
+  return `<div class="zombie ${zombie.kind}${status}" style="${position(zombie.row, zombie.x)}--limp:${limp.toFixed(2)}deg;--hurt:${hurt.toFixed(2)};">${zombieBodyHTML(zombie.kind.toUpperCase())}</div>`;
 }
 
 function renderShot(shot) {
