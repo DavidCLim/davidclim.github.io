@@ -1,0 +1,771 @@
+/* Same warm wood/gold/parchment palette Hyper Fishies uses throughout —
+   "the same style as hyper fishies" means the same house palette, not
+   just the same construction technique for characters. */
+:root {
+  --ink: #eaf6f1;
+  --muted: #cfc2a4;
+  --gold: #ffb454;
+  --gold-dim: #d69a4a;
+  --mint: #5fe3c0;
+  --mint-light: #8fe9d9;
+  --coral: #ff6f59;
+  --blood: #7a2e2e;
+  --wood-dark: #241708;
+  --wood-mid: #3c2a1a;
+  --parchment: #ead9ae;
+  --parchment-ink: #3a2a16;
+  --panel-bg: linear-gradient(165deg, #4a3320 0%, #2c1e10 100%);
+  --panel-border: rgba(255, 180, 84, 0.55);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: #100a04;
+  overflow: hidden;
+  font-family: 'Baloo 2', sans-serif;
+  color: var(--ink);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
+
+#app { width: 100vw; height: 100dvh; position: relative; }
+
+#game-root {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at 50% 20%, #241708 0%, #100a04 75%);
+  overflow: hidden;
+}
+
+.ttd-canvas {
+  display: block;
+  border-radius: 8px;
+  box-shadow: 0 0 60px rgba(255, 180, 84, 0.2), 0 0 0 1px rgba(255, 180, 84, 0.2);
+  touch-action: none;
+}
+
+.hidden { display: none !important; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 2px solid var(--panel-border);
+  background: linear-gradient(165deg, #2c2350, #17112c);
+  color: var(--ink);
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+}
+.btn:hover:not(:disabled) { border-color: var(--mint); transform: translateY(-1px); }
+.btn:disabled { opacity: 0.4; cursor: default; }
+.btn-primary {
+  background: linear-gradient(165deg, #ffe0a0, #c9922a);
+  border-color: rgba(255, 214, 112, 0.8);
+  color: #2c1e10;
+  box-shadow: 0 3px 10px rgba(255, 180, 84, 0.3);
+}
+.btn-primary:hover:not(:disabled) { box-shadow: 0 4px 16px rgba(255, 180, 84, 0.5); }
+
+/* ---------- HUD ---------- */
+.ttd-hud {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(28, 18, 8, 0.8);
+  border: 1px solid var(--panel-border);
+  backdrop-filter: blur(3px);
+  pointer-events: none;
+}
+.ttd-hud > * { pointer-events: auto; }
+
+.ttd-stat { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 14px; }
+.ttd-stat-icon { font-size: 15px; line-height: 1; }
+.ttd-stat-value { font-family: 'Russo One', sans-serif; letter-spacing: 0.02em; }
+.ttd-stat-gold .ttd-stat-value { color: var(--gold); }
+.ttd-stat-wave .ttd-stat-value { color: var(--mint); }
+
+.ttd-hearts { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 14px; }
+.ttd-hearts .ttd-stat-value { color: #8fe98f; }
+.ttd-hearts.ttd-hearts-warn .ttd-stat-value { color: var(--gold); }
+.ttd-hearts.ttd-hearts-crit .ttd-stat-value { color: #ff6f6f; animation: ttd-pulse 0.8s ease-in-out infinite; }
+@keyframes ttd-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+
+.ttd-hud-controls { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.ttd-wave-btn { min-width: 150px; }
+.ttd-auto-btn.active { border-color: var(--mint); background: linear-gradient(165deg, #1f5646, #10281f); }
+.ttd-speed-btn, .ttd-mute-btn { padding: 9px 12px; }
+
+/* ---------- Shop ---------- */
+.ttd-shop {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 12px;
+  background: rgba(28, 18, 8, 0.8);
+  border: 1px solid var(--panel-border);
+  backdrop-filter: blur(3px);
+}
+
+.ttd-shop-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px 7px 8px;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 180, 84, 0.25);
+  background: rgba(74, 51, 32, 0.55);
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.12s ease, transform 0.12s ease, background 0.12s ease;
+}
+.ttd-shop-item:hover:not(.disabled) { border-color: var(--mint); transform: translateY(-2px); }
+.ttd-shop-item.selected { border-color: var(--gold); background: rgba(120, 90, 30, 0.35); box-shadow: 0 0 14px rgba(255, 214, 112, 0.35); }
+.ttd-shop-item.disabled { opacity: 0.4; cursor: default; }
+.ttd-shop-item-empty { cursor: default; opacity: 0.5; border-style: dashed; }
+.ttd-shop-item-empty:hover { transform: none; border-color: rgba(255, 180, 84, 0.25); }
+.ttd-shop-slot-num {
+  position: absolute;
+  transform: translate(-6px, -14px);
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--muted);
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 999px;
+  width: 15px; height: 15px;
+  display: flex; align-items: center; justify-content: center;
+}
+.ttd-shop-item { position: relative; }
+.ttd-shop-dot {
+  width: 24px; height: 24px; border-radius: 50%; flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; line-height: 1;
+  box-shadow: 0 0 8px currentColor;
+}
+.ttd-shop-info { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25; }
+.ttd-shop-name { font-weight: 800; font-size: 12.5px; white-space: nowrap; }
+.ttd-shop-cost { font-size: 11.5px; color: var(--gold); font-weight: 700; }
+
+/* ---------- Tower popup ---------- */
+.ttd-popup {
+  position: absolute;
+  left: var(--ttd-popup-x, 50%);
+  top: var(--ttd-popup-y, 50%);
+  transform: translate(-50%, -130%);
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  min-width: 220px;
+  border-radius: 12px;
+  background: var(--panel-bg);
+  border: 2px solid var(--panel-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+.ttd-popup-title { font-family: 'Russo One', sans-serif; font-size: 14px; color: var(--gold); }
+.ttd-popup-stats { font-size: 12px; color: var(--muted); }
+.ttd-popup-row { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+.ttd-popup-max { font-size: 12px; color: var(--muted); font-style: italic; align-self: center; }
+.ttd-sell-btn { border-color: rgba(255, 111, 111, 0.5); }
+.ttd-sell-btn:hover:not(:disabled) { border-color: #ff6f6f; }
+.ttd-popup-close {
+  position: absolute;
+  top: -10px; right: -10px;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--panel-border);
+  background: #2c1e10;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+}
+
+/* ---------- Title screen ---------- */
+.ttd-title-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(16, 10, 4, 0.55);
+  padding: 16px;
+}
+.ttd-title-card {
+  width: min(560px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 34px 30px;
+  border-radius: 18px;
+  background: var(--panel-bg);
+  border: 3px solid var(--panel-border);
+  box-shadow: 0 0 60px rgba(255, 180, 84, 0.25), 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+.ttd-title-emblem { font-size: 46px; filter: drop-shadow(0 0 14px rgba(255, 214, 112, 0.6)); }
+/* A bold, chunky "game logo" treatment — thick dark outline (stacked via
+   multiple text-shadow offsets, since -webkit-text-stroke sits behind the
+   fill and looks thin), a warm gradient fill, and a punchy drop shadow. */
+.ttd-title {
+  margin: 0;
+  font-family: 'Russo One', sans-serif;
+  font-size: clamp(2.1rem, 9vw, 3.4rem);
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+  background: linear-gradient(180deg, #fff3c8 0%, #ffd670 35%, #ffb454 65%, #d6822a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-stroke: 8px #2c1206;
+  paint-order: stroke fill;
+  text-shadow:
+    0 6px 0 #7a2e2e,
+    0 10px 18px rgba(0, 0, 0, 0.5);
+}
+.ttd-subtitle { margin: 0; color: var(--muted); font-size: 14px; max-width: 42ch; line-height: 1.5; }
+.ttd-title-actions { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 4px; }
+.ttd-start-btn { padding: 12px 44px; font-size: 15px; }
+.ttd-start-btn-disabled { opacity: 0.45; filter: grayscale(0.6); cursor: not-allowed; pointer-events: none; }
+.ttd-credits-btn { padding: 10px 36px; font-size: 14px; background: linear-gradient(165deg, #3a2c14, #241708); }
+.ttd-howto { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; color: var(--muted); }
+
+/* ---------- Credits screen — a movie-style upward scroll ---------- */
+.ttd-credits-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  overflow: hidden;
+  background: rgba(8, 5, 2, 0.82);
+}
+.ttd-credits-back {
+  position: absolute;
+  top: 16px; left: 16px;
+  z-index: 2;
+}
+.ttd-credits-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  mask-image: linear-gradient(180deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+}
+.ttd-credits-scroll {
+  position: absolute;
+  left: 50%;
+  width: min(560px, 92%);
+  transform: translate(-50%, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: ttd-credits-roll 42s linear infinite;
+}
+.ttd-credits-title {
+  font-family: 'Russo One', sans-serif;
+  font-size: clamp(1.6rem, 6vw, 2.2rem);
+  color: var(--gold);
+  letter-spacing: 0.04em;
+  margin-bottom: 18px;
+}
+.ttd-credits-heading {
+  font-family: 'Russo One', sans-serif;
+  font-size: clamp(1.1rem, 4vw, 1.4rem);
+  color: var(--mint-light);
+  letter-spacing: 0.06em;
+  margin: 4px 0 10px;
+}
+.ttd-credits-line {
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.7;
+  max-width: 48ch;
+}
+.ttd-credits-name {
+  font-family: 'Russo One', sans-serif;
+  font-size: clamp(1.3rem, 5vw, 1.7rem);
+  color: var(--gold);
+  letter-spacing: 0.03em;
+}
+.ttd-credits-gap { height: 34px; }
+.ttd-credits-gap-sm { height: 12px; }
+
+@keyframes ttd-credits-roll {
+  from { transform: translate(-50%, 100%); }
+  to { transform: translate(-50%, -100%); }
+}
+
+/* ---------- End screens ---------- */
+.ttd-end-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.ttd-end-screen.ttd-victory { background: radial-gradient(ellipse at 50% 40%, rgba(255, 214, 112, 0.25), rgba(16, 10, 4, 0.75)); }
+.ttd-end-screen.ttd-defeat { background: radial-gradient(ellipse at 50% 40%, rgba(255, 80, 80, 0.18), rgba(16, 10, 4, 0.85)); }
+.ttd-end-card {
+  width: min(480px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 32px 28px;
+  border-radius: 18px;
+  background: var(--panel-bg);
+  border: 3px solid var(--panel-border);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+}
+.ttd-end-emblem { font-size: 44px; }
+.ttd-end-title { margin: 0; font-family: 'Russo One', sans-serif; font-size: clamp(1.3rem, 5vw, 1.8rem); color: var(--gold); }
+.ttd-end-sub { margin: 0; color: var(--muted); font-size: 14px; max-width: 40ch; }
+
+@media (max-width: 700px) {
+  .ttd-hud { justify-content: center; }
+  .ttd-hud-controls { margin-left: 0; width: 100%; justify-content: center; }
+  .ttd-wave-btn { min-width: 0; flex: 1 1 auto; }
+}
+
+/* Same on-screen joystick Hyper Fishies uses for touch movement. */
+.ttd-touch-controls { position: absolute; inset: 0; z-index: 21; pointer-events: none; }
+.joy-base {
+  position: absolute;
+  left: 26px;
+  bottom: 26px;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: rgba(28, 18, 8, 0.55);
+  border: 2px solid rgba(255, 180, 84, 0.4);
+  pointer-events: auto;
+}
+.joy-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 38px;
+  height: 38px;
+  margin: -19px 0 0 -19px;
+  border-radius: 50%;
+  background: rgba(255, 180, 84, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  transition: transform 0.02s linear;
+}
+
+.ttd-building-desc { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+
+/* ---------- Rarity accents, shared by shop dots, cards & list rows ---------- */
+.rarity-common { --rarity: #9aa0a6; --rarity-glow: #e3e6ea; }
+.rarity-rare { --rarity: #5fd0ff; --rarity-glow: #bdf1ff; }
+.rarity-epic { --rarity: #c896ff; --rarity-glow: #ecd6ff; }
+.rarity-legend { --rarity: #ffb454; --rarity-glow: #ffe6b0; }
+.rarity-mythic { --rarity: #ff6f59; --rarity-glow: #ffc4b8; }
+
+.ttd-retreat-btn { border-color: rgba(255, 111, 111, 0.4); }
+.ttd-retreat-btn:hover:not(:disabled) { border-color: #ff6f6f; }
+
+.ttd-squad-item { cursor: default; }
+.ttd-squad-item:hover { transform: none; border-color: rgba(255, 180, 84, 0.25); }
+
+/* ---------- Touch attack button (battle) ---------- */
+.ttd-attack-btn {
+  position: absolute;
+  right: 26px;
+  bottom: 26px;
+  z-index: 21;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 111, 111, 0.6);
+  background: rgba(122, 46, 46, 0.55);
+  font-size: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  user-select: none;
+}
+
+/* ---------- Menu currency HUD (top-right, opposite the title badge) ---------- */
+.ttd-lobby-hud {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(28, 18, 8, 0.8);
+  border: 1px solid var(--panel-border);
+  backdrop-filter: blur(3px);
+}
+
+/* ---------- Main menu screen — a full academy hub, not a small card:
+   a title badge top-left, a vertical stack of action buttons down the
+   left side (Battle biggest, since that's why you're here), and the
+   loadout tray anchored at the bottom. ---------- */
+.ttd-menu-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+}
+
+.ttd-menu-titlebar {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 8px 8px;
+  border-radius: 12px;
+  background: rgba(28, 18, 8, 0.8);
+  border: 1px solid var(--panel-border);
+  backdrop-filter: blur(3px);
+}
+.ttd-menu-titlebar-emblem { font-size: 26px; line-height: 1; }
+.ttd-menu-titlebar-text { display: flex; flex-direction: column; line-height: 1.15; text-align: left; }
+.ttd-menu-titlebar-eyebrow { font-size: 9px; font-weight: 800; letter-spacing: 0.08em; color: var(--gold-dim); }
+.ttd-menu-titlebar-title { margin: 0; font-family: 'Russo One', sans-serif; font-size: 16px; color: var(--ink); }
+
+.ttd-menu-actions {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  transform: translateY(-50%);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(190px, 42vw);
+}
+.ttd-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 2px solid var(--panel-border);
+  background: linear-gradient(165deg, #3a2c14, #241708);
+  color: var(--ink);
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35), 0 8px 16px rgba(0, 0, 0, 0.3);
+  transition: transform 110ms ease, box-shadow 110ms ease, filter 110ms ease;
+}
+.ttd-action-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+.ttd-action-btn:active { transform: translateY(1px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35); }
+.ttd-action-icon { font-size: 22px; }
+.ttd-action-primary {
+  padding: 16px 18px;
+  background: linear-gradient(165deg, #ffe98a, #ffd75c 45%, #f0a52c);
+  color: #2a1a04;
+  border-color: rgba(255, 215, 92, 0.7);
+  box-shadow: 0 4px 0 #8a5c14, 0 10px 20px rgba(255, 215, 92, 0.25);
+}
+.ttd-action-primary .ttd-action-icon { font-size: 26px; }
+.ttd-action-primary .ttd-action-label { font-size: 17px; }
+
+.ttd-action-subrow { display: flex; gap: 8px; }
+.ttd-action-icon-btn {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 4px;
+  border-radius: 10px;
+  border: 2px solid var(--panel-border);
+  background: rgba(28, 18, 8, 0.75);
+  color: var(--muted);
+  cursor: pointer;
+  transition: transform 110ms ease, border-color 110ms ease, color 110ms ease;
+}
+.ttd-action-icon-btn:hover { transform: translateY(-2px); border-color: var(--mint); color: var(--ink); }
+.ttd-action-icon-btn .ttd-action-icon { font-size: 18px; }
+.ttd-action-sublabel { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 10px; }
+
+.ttd-menu-tray {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.ttd-menu-tray-label { font-size: 10px; font-weight: 800; letter-spacing: 0.08em; color: var(--muted); }
+.ttd-equip-row.ttd-menu-equip-row { position: static; transform: none; }
+
+/* ---------- Bottom equip row (5 loadout slots) ---------- */
+.ttd-equip-row {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 999px;
+  background: rgba(28, 18, 8, 0.8);
+  border: 1px solid var(--panel-border);
+  backdrop-filter: blur(3px);
+}
+.ttd-equip-slot {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  border: 2px solid var(--rarity, rgba(255, 180, 84, 0.3));
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--muted);
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--rarity-glow, transparent);
+}
+
+/* ---------- Modal shell shared by Gacha Hall / Dungeon Gate / Teleport ---------- */
+.ttd-gacha-modal, .ttd-dungeon-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(16, 10, 4, 0.65);
+  padding: 16px;
+}
+.ttd-gacha-card, .ttd-dungeon-card {
+  position: relative;
+  width: min(520px, 100%);
+  max-height: 88%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 26px 24px;
+  border-radius: 16px;
+  background: var(--panel-bg);
+  border: 3px solid var(--panel-border);
+  box-shadow: 0 0 50px rgba(255, 180, 84, 0.25), 0 20px 46px rgba(0, 0, 0, 0.5);
+}
+.ttd-modal-close {
+  position: absolute;
+  top: 10px; right: 10px;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--panel-border);
+  background: #2c1e10;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+}
+.ttd-gacha-header { display: flex; align-items: center; justify-content: space-between; padding-right: 30px; }
+.ttd-gacha-title { font-family: 'Russo One', sans-serif; font-size: 1.2rem; color: var(--gold); }
+.ttd-gacha-gold { font-family: 'Russo One', sans-serif; font-size: 1rem; color: var(--gold); }
+
+.ttd-gacha-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.ttd-gacha-tab {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 180, 84, 0.25);
+  background: rgba(74, 51, 32, 0.4);
+  color: var(--muted);
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.ttd-gacha-tab.active { border-color: var(--gold); color: var(--gold); background: rgba(120, 90, 30, 0.35); }
+
+.ttd-gacha-body { display: flex; flex-direction: column; gap: 12px; }
+
+/* ---------- Summon tab — a banner tab strip, then a panel showing the
+   selected banner's real pull odds (instead of promo character art),
+   then two big "Try Once! / Try 10 Times!" pull buttons. ---------- */
+.ttd-banner-tabs { display: flex; gap: 6px; }
+.ttd-banner-tab {
+  flex: 1 1 0;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 180, 84, 0.25);
+  background: rgba(74, 51, 32, 0.4);
+  color: var(--ink);
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.ttd-banner-tab.active { border-color: var(--mint); background: rgba(20, 90, 70, 0.35); color: var(--mint-light); }
+
+.ttd-odds-panel {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 180, 84, 0.3);
+  background: linear-gradient(165deg, rgba(74, 51, 32, 0.5), rgba(28, 18, 8, 0.6));
+}
+.ttd-odds-panel-title { font-family: 'Russo One', sans-serif; font-size: 15px; color: var(--gold); }
+.ttd-odds-panel-desc { font-size: 12px; color: var(--muted); margin: 3px 0 12px; }
+.ttd-odds-list { display: flex; flex-direction: column; gap: 7px; }
+.ttd-odds-row { display: grid; grid-template-columns: 56px 1fr 40px; align-items: center; gap: 8px; }
+.ttd-odds-label { font-size: 11.5px; font-weight: 800; }
+.ttd-odds-bar-track { height: 8px; border-radius: 999px; background: rgba(0, 0, 0, 0.4); overflow: hidden; }
+.ttd-odds-bar-fill { height: 100%; border-radius: 999px; }
+.ttd-odds-pct { font-size: 11.5px; font-weight: 800; color: var(--ink); text-align: right; }
+
+.ttd-pull-row { display: flex; gap: 10px; }
+.ttd-pull-btn {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 10px;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 215, 92, 0.7);
+  background: linear-gradient(165deg, #ffe98a, #ffd75c 45%, #f0a52c);
+  color: #2a1a04;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #8a5c14, 0 8px 16px rgba(255, 215, 92, 0.22);
+  transition: transform 110ms ease, filter 110ms ease;
+}
+.ttd-pull-btn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.06); }
+.ttd-pull-btn:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 1px 0 #8a5c14; }
+.ttd-pull-btn:disabled { filter: grayscale(0.6) brightness(0.7); cursor: not-allowed; }
+.ttd-pull-btn-label { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 14px; }
+.ttd-pull-btn-cost { font-size: 12px; font-weight: 700; opacity: 0.8; }
+.ttd-pull-btn-x10 { border-color: rgba(255, 90, 70, 0.6); }
+
+.ttd-pull-reveal {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  gap: 8px;
+}
+.ttd-pull-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 4px;
+  border-radius: 10px;
+  border: 2px solid var(--rarity, var(--panel-border));
+  background: rgba(0, 0, 0, 0.25);
+  box-shadow: 0 0 12px var(--rarity-glow, transparent);
+}
+.ttd-pull-icon { font-size: 22px; }
+.ttd-pull-name { font-size: 10px; font-weight: 700; text-align: center; line-height: 1.2; }
+.ttd-pull-rarity { font-size: 9px; color: var(--rarity, var(--muted)); font-weight: 800; text-transform: uppercase; }
+
+/* ---------- Inventory tab ---------- */
+.ttd-equip-status { font-size: 12.5px; color: var(--muted); font-weight: 700; }
+.ttd-inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 8px;
+}
+.ttd-unit-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 4px 8px;
+  border-radius: 10px;
+  border: 2px solid var(--rarity, rgba(255, 180, 84, 0.25));
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--ink);
+  cursor: pointer;
+  font-family: 'Baloo 2', sans-serif;
+}
+.ttd-unit-card.equipped { box-shadow: 0 0 14px var(--rarity-glow, rgba(255, 214, 112, 0.5)); background: rgba(255, 180, 84, 0.12); }
+.ttd-unit-icon { font-size: 22px; }
+.ttd-unit-name { font-size: 10px; font-weight: 700; text-align: center; line-height: 1.2; }
+.ttd-unit-meta { font-size: 9.5px; color: var(--rarity, var(--muted)); font-weight: 700; }
+.ttd-unit-equipped-badge {
+  position: absolute;
+  top: -6px; right: -6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--mint);
+  color: #0c2c22;
+  font-size: 8px;
+  font-weight: 800;
+}
+.ttd-empty-note { color: var(--muted); font-size: 13px; font-style: italic; padding: 10px 2px; }
+
+/* ---------- Awaken tab ---------- */
+.ttd-list { display: flex; flex-direction: column; gap: 8px; }
+.ttd-list-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 2px solid var(--rarity, rgba(255, 180, 84, 0.2));
+  background: rgba(0, 0, 0, 0.2);
+}
+.ttd-list-row .ttd-unit-icon { font-size: 20px; }
+.ttd-list-info { flex: 1; display: flex; flex-direction: column; gap: 1px; }
+.ttd-list-sub { font-size: 11px; color: var(--muted); }
+
+/* ---------- Dungeon Gate map picker ---------- */
+.ttd-map-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+.ttd-map-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 10px;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 180, 84, 0.3);
+  background: rgba(74, 51, 32, 0.4);
+  color: var(--ink);
+  cursor: pointer;
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+}
+.ttd-map-card:hover { border-color: var(--mint); transform: translateY(-2px); }
+.ttd-map-icon { font-size: 30px; }

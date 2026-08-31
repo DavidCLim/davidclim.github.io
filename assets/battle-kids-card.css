@@ -1,8 +1,7 @@
 /* Battle Kids card — same wood-and-gold plaque construction as every other
    card on this page (isolate + ::before/::after texture layers, a shimmer
    sweep, brass rivets), with the game's own bold outlined title-card
-   treatment instead of a plain wordmark. No link yet — the game itself
-   isn't pushed, so this is a "coming soon" plaque, not a launch button. */
+   treatment instead of a plain wordmark. */
 .battle-kids-card {
   position: relative;
   isolation: isolate;
@@ -119,7 +118,7 @@
   font-style: italic;
 }
 
-.battle-kids-card .coming-soon {
+.battle-kids-card .app-link {
   align-self: center;
   min-width: min(100%, 220px);
   min-height: 46px;
@@ -128,13 +127,22 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 2px dashed rgba(255, 180, 84, 0.5);
+  border: 2px solid rgba(255, 208, 138, 0.85);
   border-radius: 999px;
-  color: var(--muted, #cfc2a4);
+  background: linear-gradient(165deg, #ffd670, #d6822a);
+  color: #2c1206;
   font-family: 'Baloo 2', sans-serif;
   font-size: 0.95rem;
   font-weight: 800;
   letter-spacing: 0.03em;
+  text-decoration: none;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.battle-kids-card .app-link:hover,
+.battle-kids-card .app-link:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 0 22px rgba(255, 180, 84, 0.5);
 }
 
 @media (max-width: 560px) {
