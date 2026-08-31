@@ -260,25 +260,91 @@ html, body {
 .ttd-credits-btn { padding: 10px 36px; font-size: 14px; background: linear-gradient(165deg, #3a2c14, #241708); }
 .ttd-howto { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; color: var(--muted); }
 
-/* ---------- Credits screen — a movie-style upward scroll ---------- */
+/* ---------- Credits screen — a cinematic Star-Wars-style crawl ---------- */
 .ttd-credits-screen {
   position: absolute;
   inset: 0;
   z-index: 40;
   overflow: hidden;
-  background: rgba(8, 5, 2, 0.82);
+  background: radial-gradient(ellipse at 50% 30%, #1c1006 0%, #0a0602 70%, #050301 100%);
 }
+
+/* Atmosphere: two drifting starfield layers at different speeds/sizes
+   for a bit of parallax, a vignette to keep the edges dark, and rising
+   embers in the house gold color instead of a generic space theme. */
+.ttd-credits-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.ttd-credits-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 40%, transparent 0%, transparent 35%, rgba(5, 3, 1, 0.8) 100%);
+}
+.ttd-credits-stars {
+  position: absolute;
+  inset: -20% -10%;
+  background-image:
+    radial-gradient(1.5px 1.5px at 20px 30px, rgba(255, 255, 255, 0.65), transparent),
+    radial-gradient(1px 1px at 90px 120px, rgba(255, 224, 160, 0.45), transparent),
+    radial-gradient(1.8px 1.8px at 160px 60px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 210px 180px, rgba(255, 255, 255, 0.35), transparent),
+    radial-gradient(1.3px 1.3px at 260px 20px, rgba(255, 224, 160, 0.5), transparent),
+    radial-gradient(1px 1px at 40px 200px, rgba(255, 255, 255, 0.4), transparent);
+  background-repeat: repeat;
+  background-size: 280px 220px;
+  opacity: 0.6;
+  animation: ttd-stars-drift 100s linear infinite;
+}
+.ttd-credits-stars-2 {
+  background-size: 360px 300px;
+  opacity: 0.32;
+  animation-duration: 160s;
+  animation-direction: reverse;
+}
+@keyframes ttd-stars-drift {
+  from { background-position: 0 0; }
+  to { background-position: -280px 420px; }
+}
+.ttd-credits-embers { position: absolute; inset: 0; }
+.ttd-ember {
+  position: absolute;
+  bottom: -4%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff3c8 0%, #ffb454 55%, transparent 75%);
+  opacity: 0;
+  animation-name: ttd-ember-rise;
+  animation-timing-function: ease-in;
+  animation-iteration-count: infinite;
+}
+@keyframes ttd-ember-rise {
+  0% { transform: translate(0, 0); opacity: 0; }
+  12% { opacity: 0.9; }
+  88% { opacity: 0.4; }
+  100% { transform: translate(18px, -115%); opacity: 0; }
+}
+
 .ttd-credits-back {
   position: absolute;
   top: 16px; left: 16px;
   z-index: 2;
+  background: rgba(20, 12, 6, 0.6);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 180, 84, 0.4);
 }
+.ttd-credits-back:hover { border-color: var(--gold); box-shadow: 0 0 16px rgba(255, 180, 84, 0.35); }
+
 .ttd-credits-viewport {
   position: absolute;
   inset: 0;
+  z-index: 1;
   overflow: hidden;
-  mask-image: linear-gradient(180deg, transparent 0, #000 8%, #000 92%, transparent 100%);
-  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 10%, #000 88%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 10%, #000 88%, transparent 100%);
 }
 .ttd-credits-scroll {
   position: absolute;
@@ -291,31 +357,66 @@ html, body {
   text-align: center;
   animation: ttd-credits-roll 42s linear infinite;
 }
+.ttd-credits-eyebrow {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: clamp(0.75rem, 2.6vw, 0.9rem);
+  letter-spacing: 0.22em;
+  color: var(--mint-light);
+  text-shadow: 0 0 12px rgba(95, 227, 192, 0.6);
+  margin-bottom: 10px;
+}
 .ttd-credits-title {
   font-family: 'Russo One', sans-serif;
-  font-size: clamp(1.6rem, 6vw, 2.2rem);
+  font-size: clamp(1.7rem, 6.5vw, 2.4rem);
+  letter-spacing: 0.05em;
+  line-height: 1.05;
+  margin-bottom: 26px;
   color: var(--gold);
-  letter-spacing: 0.04em;
-  margin-bottom: 18px;
+  text-shadow: 0 3px 8px rgba(0, 0, 0, 0.6);
+  animation: ttd-credits-title-glow 3.4s ease-in-out infinite;
+}
+@keyframes ttd-credits-title-glow {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(255, 180, 84, 0.3)); }
+  50% { filter: drop-shadow(0 0 20px rgba(255, 180, 84, 0.65)); }
 }
 .ttd-credits-heading {
+  position: relative;
   font-family: 'Russo One', sans-serif;
-  font-size: clamp(1.1rem, 4vw, 1.4rem);
+  font-size: clamp(1.15rem, 4.2vw, 1.5rem);
   color: var(--mint-light);
-  letter-spacing: 0.06em;
-  margin: 4px 0 10px;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 14px rgba(95, 227, 192, 0.45);
+  margin: 10px 0 12px;
+  padding-top: 16px;
+}
+.ttd-credits-heading::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 8px; height: 8px;
+  background: var(--gold);
+  box-shadow: 0 0 10px rgba(255, 180, 84, 0.8);
 }
 .ttd-credits-line {
   color: var(--ink);
   font-size: 14px;
-  line-height: 1.7;
+  line-height: 1.8;
   max-width: 48ch;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 }
 .ttd-credits-name {
   font-family: 'Russo One', sans-serif;
-  font-size: clamp(1.3rem, 5vw, 1.7rem);
-  color: var(--gold);
+  font-size: clamp(1.4rem, 5.5vw, 1.9rem);
   letter-spacing: 0.03em;
+  color: var(--gold);
+  text-shadow: 0 3px 8px rgba(0, 0, 0, 0.6);
+  animation: ttd-credits-name-pulse 2.2s ease-in-out infinite;
+}
+@keyframes ttd-credits-name-pulse {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(255, 180, 84, 0.35)); }
+  50% { filter: drop-shadow(0 0 18px rgba(255, 180, 84, 0.75)); }
 }
 .ttd-credits-gap { height: 34px; }
 .ttd-credits-gap-sm { height: 12px; }

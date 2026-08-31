@@ -18,6 +18,11 @@ import * as audio from './audio/audioEngine.js';
 
 const root = document.getElementById('game-root');
 
+// Real gameplay isn't ready for visitors yet, but David should still be
+// able to play it on his own machine — gate PLAY on the hostname instead
+// of hand-disabling it per deploy, so the same source works everywhere.
+const PLAY_ENABLED = ['localhost', '127.0.0.1'].includes(location.hostname) || location.protocol === 'file:';
+
 document.addEventListener('click', () => {
   audio.ensureAudioContext();
 }, { capture: true, once: false });
@@ -405,7 +410,12 @@ const titleScreen = el('div', { class: 'ttd-title-screen' }, [
     el('div', { class: 'ttd-title-emblem' }, '🎓'),
     el('h1', { class: 'ttd-title' }, 'BATTLE KIDS'),
     el('div', { class: 'ttd-title-actions' }, [
-      el('button', { class: 'btn btn-primary ttd-start-btn ttd-start-btn-disabled', text: 'PLAY', disabled: true }),
+      el('button', {
+        class: `btn btn-primary ttd-start-btn${PLAY_ENABLED ? '' : ' ttd-start-btn-disabled'}`,
+        text: 'PLAY',
+        disabled: PLAY_ENABLED ? undefined : true,
+        onClick: PLAY_ENABLED ? enterMenu : undefined,
+      }),
       el('button', { class: 'btn ttd-credits-btn', text: 'CREDITS', onClick: showCredits }),
     ]),
     el('p', { class: 'ttd-subtitle' }, 'Cursed teachers are pouring out of the portal. Recruit students, hold the courtyard, and don\'t let anything reach your desk.'),
@@ -422,6 +432,7 @@ root.appendChild(titleScreen);
 // sketch: Owner/Developer/Coding/Innovation/VFX/Music/Graphics up top,
 // the full student roster, special thanks, and a closing signature.
 const CREDITS_LINES = [
+  { type: 'eyebrow', text: '🎓 BATTLE KIDS PRESENTS 🎓' },
   { type: 'title', text: 'CREDITS' },
   { type: 'line', text: 'Owner: David C. Lim' },
   { type: 'line', text: 'Developer: David C. Lim' },
@@ -434,13 +445,13 @@ const CREDITS_LINES = [
   { type: 'line', text: 'Music & Sound: David C. Lim' },
   { type: 'line', text: 'Graphics: David C. Lim' },
   { type: 'gap' },
-  { type: 'heading', text: 'STUDENTS' },
+  { type: 'heading', text: '🎓 STUDENTS' },
   { type: 'line', text: 'Valerius Koh, Lucas Tang, Ng Jun Zhe, Ng Jun Kai,' },
   { type: 'line', text: 'Samuel Lam, Ashton Ch*a, Edmund Ling, Alexander Lai, Shane Chong, Jasper Lim,' },
   { type: 'line', text: 'Jadon Teoh, Kyler Chew, Emmanuel Yap, Jude Mak, Hunter Tang, Timothy Chew,' },
   { type: 'line', text: 'Peter Tang, Auster Nieh, Elijah Seah, Isaac Ong.' },
   { type: 'gap' },
-  { type: 'heading', text: '~ SPECIAL THANKS ~' },
+  { type: 'heading', text: '✨ SPECIAL THANKS ✨' },
   { type: 'line', text: '- Students of 5 Anthony -' },
   { type: 'line', text: '- Lucas Tan Ze Yu -' },
   { type: 'line', text: '- Valerius Koh Jin Kai -' },
@@ -459,6 +470,7 @@ function buildCreditsScroll() {
   for (const item of CREDITS_LINES) {
     if (item.type === 'gap') scroll.appendChild(el('div', { class: 'ttd-credits-gap' }));
     else if (item.type === 'gap-sm') scroll.appendChild(el('div', { class: 'ttd-credits-gap-sm' }));
+    else if (item.type === 'eyebrow') scroll.appendChild(el('div', { class: 'ttd-credits-eyebrow' }, item.text));
     else if (item.type === 'title') scroll.appendChild(el('div', { class: 'ttd-credits-title' }, item.text));
     else if (item.type === 'heading') scroll.appendChild(el('div', { class: 'ttd-credits-heading' }, item.text));
     else if (item.type === 'name') scroll.appendChild(el('div', { class: 'ttd-credits-name' }, item.text));
@@ -467,7 +479,30 @@ function buildCreditsScroll() {
   return scroll;
 }
 
+// Drifting embers behind the scroll — same deterministic pseudo-random
+// spread technique as the menu background's MOTES, just rising instead
+// of falling, to match the gold/wood theme instead of a generic starfield.
+function buildEmbers(n = 14) {
+  const wrap = el('div', { class: 'ttd-credits-embers' });
+  for (let i = 0; i < n; i++) {
+    const dot = el('div', { class: 'ttd-ember' });
+    const size = 2 + (i * 37) % 4;
+    dot.style.left = `${(i * 53.7) % 100}%`;
+    dot.style.width = `${size}px`;
+    dot.style.height = `${size}px`;
+    dot.style.animationDelay = `${(i * 1.7) % 12}s`;
+    dot.style.animationDuration = `${9 + (i * 2.3) % 7}s`;
+    wrap.appendChild(dot);
+  }
+  return wrap;
+}
+
 const creditsScreen = el('div', { class: 'ttd-credits-screen hidden' }, [
+  el('div', { class: 'ttd-credits-bg' }, [
+    el('div', { class: 'ttd-credits-stars' }),
+    el('div', { class: 'ttd-credits-stars ttd-credits-stars-2' }),
+    buildEmbers(),
+  ]),
   el('button', { class: 'btn ttd-credits-back', text: '← Back', onClick: hideCredits }),
   el('div', { class: 'ttd-credits-viewport' }, [buildCreditsScroll()]),
 ]);
