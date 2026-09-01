@@ -226,7 +226,7 @@ function killEnemy(state, enemy) {
   state.enemies.splice(idx, 1);
   state.gold += enemy.reward;
   pushEffect(state, { kind: 'death', x: enemy.x, y: enemy.y, color: enemy.color, start: state.t, duration: 0.35 });
-  pushEffect(state, { kind: 'text', text: `+${enemy.reward}⭐`, x: enemy.x, y: enemy.y - 14, color: '#ffd670', start: state.t, duration: 0.7 });
+  pushEffect(state, { kind: 'text', text: `+${enemy.reward}📄`, x: enemy.x, y: enemy.y - 14, color: '#ffd670', start: state.t, duration: 0.7 });
   audio.playEnemyDeath();
 }
 

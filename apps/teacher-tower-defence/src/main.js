@@ -18,10 +18,12 @@ import * as audio from './audio/audioEngine.js';
 
 const root = document.getElementById('game-root');
 
-// Real gameplay isn't ready for visitors yet, but David should still be
-// able to play it on his own machine — gate PLAY on the hostname instead
-// of hand-disabling it per deploy, so the same source works everywhere.
-const PLAY_ENABLED = ['localhost', '127.0.0.1'].includes(location.hostname) || location.protocol === 'file:';
+// Real combat isn't ready for visitors yet, but the menu/Gacha/Inventory
+// hub is worth showing off, so PLAY itself is always enabled — only the
+// Battle button (which starts an actual fight) is gated to David's own
+// machine, via hostname instead of hand-disabling it per deploy so the
+// same source works everywhere.
+const BATTLE_ENABLED = ['localhost', '127.0.0.1'].includes(location.hostname) || location.protocol === 'file:';
 
 document.addEventListener('click', () => {
   audio.ensureAudioContext();
@@ -67,7 +69,7 @@ const retreatBtn = el('button', { class: 'btn ttd-retreat-btn', text: '🏃 Retr
 let soundOn = true;
 
 const hud = el('div', { class: 'ttd-hud hidden' }, [
-  el('div', { class: 'ttd-stat ttd-stat-gold' }, [el('span', { class: 'ttd-stat-icon' }, '⭐'), goldValue]),
+  el('div', { class: 'ttd-stat ttd-stat-gold' }, [el('span', { class: 'ttd-stat-icon' }, '📄'), goldValue]),
   el('div', { class: 'ttd-stat ttd-stat-wave' }, [el('span', { class: 'ttd-stat-icon' }, '📖'), waveValue]),
   heartsWrap,
   el('div', { class: 'ttd-hud-controls' }, [waveBtn, speedBtn, autoBtn, muteBtn, retreatBtn]),
@@ -122,7 +124,7 @@ function buildDeployRoster() {
       el('span', { class: 'ttd-shop-dot', style: `background:${def.color}` }, def.icon),
       el('div', { class: 'ttd-shop-info' }, [
         el('div', { class: 'ttd-shop-name' }, def.name),
-        el('div', { class: 'ttd-shop-cost' }, `${def.cost}⭐`),
+        el('div', { class: 'ttd-shop-cost' }, `${def.cost}📄`),
       ]),
     ]);
     deployButtons[unitId] = btn;
@@ -146,7 +148,7 @@ function refreshDeployRoster() {
 // point, matching a menu-driven flow instead of an explorable hub) ----------
 const menuGoldValue = el('span', { class: 'ttd-stat-value' }, '0');
 const menuHud = el('div', { class: 'ttd-lobby-hud hidden' }, [
-  el('div', { class: 'ttd-stat ttd-stat-gold' }, [el('span', { class: 'ttd-stat-icon' }, '⭐'), menuGoldValue]),
+  el('div', { class: 'ttd-stat ttd-stat-gold' }, [el('span', { class: 'ttd-stat-icon' }, '📄'), menuGoldValue]),
 ]);
 root.appendChild(menuHud);
 function refreshMenuHud() { menuGoldValue.textContent = collection.gold.toLocaleString(); }
@@ -167,7 +169,11 @@ function renderMenuScreen() {
     ]),
   ]));
   menuScreen.appendChild(el('div', { class: 'ttd-menu-actions' }, [
-    el('button', { class: 'ttd-action-btn ttd-action-primary', onClick: openDungeonModal }, [el('span', { class: 'ttd-action-icon' }, '⚔️'), el('span', { class: 'ttd-action-label' }, 'Battle')]),
+    el('button', {
+      class: `ttd-action-btn ttd-action-primary${BATTLE_ENABLED ? '' : ' ttd-action-primary-disabled'}`,
+      disabled: BATTLE_ENABLED ? undefined : true,
+      onClick: BATTLE_ENABLED ? openDungeonModal : undefined,
+    }, [el('span', { class: 'ttd-action-icon' }, '⚔️'), el('span', { class: 'ttd-action-label' }, 'Battle')]),
     el('div', { class: 'ttd-action-subrow' }, [
       el('button', { class: 'ttd-action-icon-btn', onClick: openGachaModal }, [el('span', { class: 'ttd-action-icon' }, '🎰'), el('span', { class: 'ttd-action-sublabel' }, 'Gacha')]),
       el('button', { class: 'ttd-action-icon-btn', onClick: openAwakenModal }, [el('span', { class: 'ttd-action-icon' }, '✨'), el('span', { class: 'ttd-action-sublabel' }, 'Awaken')]),
@@ -216,7 +222,7 @@ function renderGachaModal() {
   card.appendChild(el('button', { class: 'ttd-modal-close', text: '✕', onClick: closeGachaModal }));
   card.appendChild(el('div', { class: 'ttd-gacha-header' }, [
     el('div', { class: 'ttd-gacha-title' }, '🎰 Gacha'),
-    el('div', { class: 'ttd-gacha-gold' }, `${collection.gold.toLocaleString()} ⭐`),
+    el('div', { class: 'ttd-gacha-gold' }, `${collection.gold.toLocaleString()} 📄`),
   ]));
   const body = el('div', { class: 'ttd-gacha-body' });
   renderSummonTab(body);
@@ -250,7 +256,7 @@ function renderAwakenModal() {
   const card = el('div', { class: 'ttd-gacha-card' });
   card.appendChild(el('button', { class: 'ttd-modal-close', text: '✕', onClick: closeAwakenModal }));
   card.appendChild(el('div', { class: 'ttd-gacha-title' }, '✨ Awaken'));
-  card.appendChild(el('p', { class: 'ttd-building-desc' }, 'Spend duplicates and gold for a permanent stat boost.'));
+  card.appendChild(el('p', { class: 'ttd-building-desc' }, 'Spend duplicates and homework pages for a permanent stat boost.'));
   const body = el('div', { class: 'ttd-gacha-body' });
   renderAwakenTab(body);
   card.appendChild(body);
@@ -298,12 +304,12 @@ function renderSummonTab(body) {
     class: 'ttd-pull-btn',
     disabled: collection.gold < pullCost(1) ? 'disabled' : undefined,
     onClick: () => doPull(1),
-  }, [el('span', { class: 'ttd-pull-btn-label' }, 'Try Once!'), el('span', { class: 'ttd-pull-btn-cost' }, `${pullCost(1)} ⭐`)]));
+  }, [el('span', { class: 'ttd-pull-btn-label' }, 'Try Once!'), el('span', { class: 'ttd-pull-btn-cost' }, `${pullCost(1)} 📄`)]));
   pullRow.appendChild(el('button', {
     class: 'ttd-pull-btn ttd-pull-btn-x10',
     disabled: collection.gold < pullCost(10) ? 'disabled' : undefined,
     onClick: () => doPull(10),
-  }, [el('span', { class: 'ttd-pull-btn-label' }, 'Try 10 Times!'), el('span', { class: 'ttd-pull-btn-cost' }, `${pullCost(10)} ⭐`)]));
+  }, [el('span', { class: 'ttd-pull-btn-label' }, 'Try 10 Times!'), el('span', { class: 'ttd-pull-btn-cost' }, `${pullCost(10)} 📄`)]));
   body.appendChild(pullRow);
 
   if (lastPullResults) {
@@ -369,7 +375,7 @@ function renderAwakenTab(body) {
       el('div', { class: 'ttd-unit-icon' }, def.icon),
       el('div', { class: 'ttd-list-info' }, [
         el('div', { class: 'ttd-unit-name' }, `${def.name} ${'★'.repeat(info.star)}${'☆'.repeat(MAX_STARS - info.star)}`),
-        el('div', { class: 'ttd-list-sub' }, `Needs ${info.dupesNeeded} dupes + ${info.gold}⭐`),
+        el('div', { class: 'ttd-list-sub' }, `Needs ${info.dupesNeeded} dupes + ${info.gold}📄`),
       ]),
       el('button', { class: 'btn' + (ok ? ' btn-primary' : ''), text: 'Awaken', disabled: ok ? undefined : 'disabled', onClick: () => { awakenUnit(collection, id); renderAwakenModal(); } }),
     ]));
@@ -410,12 +416,7 @@ const titleScreen = el('div', { class: 'ttd-title-screen' }, [
     el('div', { class: 'ttd-title-emblem' }, '🎓'),
     el('h1', { class: 'ttd-title' }, 'BATTLE KIDS'),
     el('div', { class: 'ttd-title-actions' }, [
-      el('button', {
-        class: `btn btn-primary ttd-start-btn${PLAY_ENABLED ? '' : ' ttd-start-btn-disabled'}`,
-        text: 'PLAY',
-        disabled: PLAY_ENABLED ? undefined : true,
-        onClick: PLAY_ENABLED ? enterMenu : undefined,
-      }),
+      el('button', { class: 'btn btn-primary ttd-start-btn', text: 'PLAY', onClick: enterMenu }),
       el('button', { class: 'btn ttd-credits-btn', text: 'CREDITS', onClick: showCredits }),
     ]),
     el('p', { class: 'ttd-subtitle' }, 'Cursed teachers are pouring out of the portal. Recruit students, hold the courtyard, and don\'t let anything reach your desk.'),
@@ -570,8 +571,8 @@ function showEndScreen() {
     el('div', { class: 'ttd-end-emblem' }, win ? '🏆' : '💀'),
     el('h2', { class: 'ttd-end-title' }, win ? 'Campus Saved!' : 'The Faculty Lounge Has Fallen'),
     el('p', { class: 'ttd-end-sub' }, win
-      ? `You held ${state.map.name} through all ${TOTAL_WAVES} waves. +${earned}⭐ banked.`
-      : `You made it to Wave ${state.wave} on ${state.map.name}. +${earned}⭐ banked anyway — try again?`),
+      ? `You held ${state.map.name} through all ${TOTAL_WAVES} waves. +${earned}📄 banked.`
+      : `You made it to Wave ${state.wave} on ${state.map.name}. +${earned}📄 banked anyway — try again?`),
     el('button', { class: 'btn btn-primary', text: 'Back to the Academy', onClick: enterMenu }),
   ]));
   endScreen.classList.remove('hidden');

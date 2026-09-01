@@ -303,7 +303,6 @@ html, body {
   0%, 100% { box-shadow: 0 4px 0 #8a5c14, 0 8px 18px rgba(255, 180, 84, 0.25); }
   50% { box-shadow: 0 4px 0 #8a5c14, 0 8px 26px rgba(255, 180, 84, 0.55); }
 }
-.ttd-start-btn-disabled { opacity: 0.45; filter: grayscale(0.6); cursor: not-allowed; pointer-events: none; animation: none; }
 .ttd-credits-btn { padding: 10px 36px; font-size: 14px; background: linear-gradient(165deg, #3a2c14, #241708); }
 .ttd-howto {
   margin-top: 10px;
@@ -708,6 +707,7 @@ html, body {
   border-color: rgba(255, 215, 92, 0.7);
   box-shadow: 0 4px 0 #8a5c14, 0 10px 20px rgba(255, 215, 92, 0.25);
 }
+.ttd-action-primary-disabled { opacity: 0.45; filter: grayscale(0.6); cursor: not-allowed; pointer-events: none; }
 .ttd-action-primary .ttd-action-icon {
   font-size: 26px;
   width: auto;
