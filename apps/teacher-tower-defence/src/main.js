@@ -446,10 +446,10 @@ const CREDITS_LINES = [
   { type: 'line', text: 'Graphics: David C. Lim' },
   { type: 'gap' },
   { type: 'heading', text: '🎓 STUDENTS' },
-  { type: 'line', text: 'Valerius Koh, Lucas Tang, Ng Jun Zhe, Ng Jun Kai,' },
-  { type: 'line', text: 'Samuel Lam, Ashton Ch*a, Edmund Ling, Alexander Lai, Shane Chong, Jasper Lim,' },
-  { type: 'line', text: 'Jadon Teoh, Kyler Chew, Emmanuel Yap, Jude Mak, Hunter Tang, Timothy Chew,' },
-  { type: 'line', text: 'Peter Tang, Auster Nieh, Elijah Seah, Isaac Ong.' },
+  { type: 'line', text: 'Valerius Koh, Lucas Tan, Edmund Liu, Ng Jun Zhe, Ng Jun Kai,' },
+  { type: 'line', text: 'Auster Nieh, Hunter Tan, Elijah Seah, Evan Cheung, Shane Chong,' },
+  { type: 'line', text: 'Timothy Chew, Christopher Kok, Jadon Teoh, Jude Mak,' },
+  { type: 'line', text: 'Isaac Ong, Ashton Ch*a, Alexander Lai.' },
   { type: 'gap' },
   { type: 'heading', text: '✨ SPECIAL THANKS ✨' },
   { type: 'line', text: '- Students of 5 Anthony -' },
@@ -485,7 +485,7 @@ function buildCreditsScroll() {
 function buildEmbers(n = 14) {
   const wrap = el('div', { class: 'ttd-credits-embers' });
   for (let i = 0; i < n; i++) {
-    const dot = el('div', { class: 'ttd-ember' });
+    const dot = el('div', { class: 'ttd-ember' + (i % 4 === 0 ? ' ttd-ember-mint' : '') });
     const size = 2 + (i * 37) % 4;
     dot.style.left = `${(i * 53.7) % 100}%`;
     dot.style.width = `${size}px`;

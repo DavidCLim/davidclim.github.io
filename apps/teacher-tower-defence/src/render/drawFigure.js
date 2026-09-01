@@ -124,6 +124,150 @@ export function drawHumanBody(ctx, scale = 1, accent, phase = 0) {
   ctx.fillStyle = skin;
 }
 
+// A dedicated figure for the Starter Student only, matching the player's
+// own reference: a narrow torso with a collar and buttons, ONE bent arm
+// (the player corrected an earlier two-arm version — a real side view
+// only shows the near arm), and two legs in a clear front/back stride.
+// Every limb is drawn as a SINGLE continuous outlined tube (pivot ->
+// joint -> tip, one moveTo/lineTo path, one fill+stroke) with a small
+// filled circle over the joint to round it off — not two separately
+// stroked segments, which left a visible seam/border at the knee or
+// elbow. The bend itself is still a genuine two-segment joint (the joint
+// angle is independent of the pivot angle), just rendered seamlessly.
+// drawHumanBody (used by teachers) is untouched.
+function limbTube(ctx, pivotX, pivotY, angle1, len1, width1, bendAngle2, len2, width2, skin, outline, outlineWidth) {
+  const a2 = angle1 + bendAngle2;
+  const jointX = pivotX + Math.sin(angle1) * len1;
+  const jointY = pivotY + Math.cos(angle1) * len1;
+  const tipX = jointX + Math.sin(a2) * len2;
+  const tipY = jointY + Math.cos(a2) * len2;
+  const p1x = Math.cos(angle1) * width1, p1y = -Math.sin(angle1) * width1;
+  const p2x = Math.cos(a2) * width2, p2y = -Math.sin(a2) * width2;
+  ctx.fillStyle = skin;
+  ctx.strokeStyle = outline;
+  ctx.lineWidth = outlineWidth;
+  ctx.beginPath();
+  ctx.moveTo(pivotX + p1x, pivotY + p1y);
+  ctx.lineTo(jointX + p1x, jointY + p1y);
+  ctx.lineTo(jointX + p2x, jointY + p2y);
+  ctx.lineTo(tipX + p2x, tipY + p2y);
+  ctx.lineTo(tipX - p2x, tipY - p2y);
+  ctx.lineTo(jointX - p2x, jointY - p2y);
+  ctx.lineTo(jointX - p1x, jointY - p1y);
+  ctx.lineTo(pivotX - p1x, pivotY - p1y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  // round off the joint so the bend reads as one smooth limb, not two
+  // stroked pieces butted together
+  ctx.beginPath();
+  ctx.arc(jointX, jointY, Math.max(width1, width2), 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  return { jointX, jointY, tipX, tipY };
+}
+
+export function drawStudentBody(ctx, scale = 1, accent, phase = 0) {
+  const s = scale;
+  const skin = ctx.fillStyle;
+  const outline = ctx.strokeStyle;
+  const outlineWidth = ctx.lineWidth;
+  const trim = accent || skin;
+  const stride = Math.sin(phase);
+
+  function drawLeg(pivotX, pivotY, angle1, bendAngle2, foot) {
+    const tip = limbTube(ctx, pivotX, pivotY, angle1, 7 * s, 2.1 * s, bendAngle2, 6 * s, 1.6 * s, skin, outline, outlineWidth);
+    ctx.fillStyle = '#fbfff2';
+    ctx.strokeStyle = outline;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(tip.tipX, tip.tipY + 0.5 * s, 3 * s, 1.7 * s, foot, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  // back leg — trails behind at a clear angle, drawn first so the front
+  // leg overlaps it. The stagger between front/back legs is what reads
+  // as "walking sideways" instead of "standing facing the viewer". A
+  // bigger swing amplitude gives an energetic running kick instead of a
+  // subtle idle shuffle, matching the player's own FlipaClip reference.
+  drawLeg(-2.2 * s, 6 * s, -0.35 - stride * 0.35, -0.1 - stride * 0.2, -0.15);
+
+  // torso — narrow, with a V-neck collar instead of a diagonal sash
+  ctx.fillStyle = skin;
+  ctx.strokeStyle = outline;
+  ctx.lineWidth = outlineWidth;
+  ctx.beginPath();
+  ctx.moveTo(-6 * s, -11 * s);
+  ctx.lineTo(-6.5 * s, 6 * s);
+  ctx.quadraticCurveTo(-6.5 * s, 8 * s, -4 * s, 8 * s);
+  ctx.lineTo(4 * s, 8 * s);
+  ctx.quadraticCurveTo(6.5 * s, 8 * s, 6.5 * s, 6 * s);
+  ctx.lineTo(6 * s, -11 * s);
+  ctx.quadraticCurveTo(0, -9 * s, -6 * s, -11 * s);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // V-neck collar line
+  ctx.strokeStyle = outline;
+  ctx.lineWidth = 1.3 * s;
+  ctx.beginPath();
+  ctx.moveTo(-3.5 * s, -10.5 * s);
+  ctx.lineTo(0, -5.5 * s);
+  ctx.lineTo(3.5 * s, -10.5 * s);
+  ctx.stroke();
+
+  // buttons down the front, below the collar
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath(); ctx.arc(0, -2 * s, 1.1 * s, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(0, 2.5 * s, 1.1 * s, 0, Math.PI * 2); ctx.fill();
+
+  // shorts — a band across the waist, just above the legs
+  ctx.fillStyle = trim;
+  ctx.beginPath();
+  ctx.moveTo(-6.3 * s, 3 * s);
+  ctx.lineTo(6.3 * s, 3 * s);
+  ctx.lineTo(6 * s, 8 * s);
+  ctx.lineTo(-6 * s, 8 * s);
+  ctx.closePath();
+  ctx.fill();
+
+  // front leg, bent forward at the knee, clearly ahead of the back leg —
+  // drawn after the torso so it overlaps it
+  drawLeg(2.2 * s, 6 * s, 0.4 + stride * 0.35, 0.3 + stride * 0.2, 0.15);
+
+  // ONE arm only, same side as the front leg — a real side view hides the
+  // far arm behind the torso instead of showing a second, smaller one.
+  const armAngle1 = 0.3 + stride * 0.32;
+  const armBend2 = -0.65 - stride * 0.15;
+  const hand = limbTube(ctx, 6 * s, -10 * s, armAngle1, 5.5 * s, 1.7 * s, armBend2, 5 * s, 1.3 * s, skin, outline, outlineWidth);
+  ctx.fillStyle = skin;
+  ctx.strokeStyle = outline;
+  ctx.lineWidth = outlineWidth;
+  ctx.beginPath();
+  ctx.arc(hand.tipX, hand.tipY, 1.6 * s, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  if (accent) {
+    const a2 = armAngle1 + armBend2;
+    const cuffX = hand.jointX + Math.sin(a2) * 3 * s;
+    const cuffY = hand.jointY + Math.cos(a2) * 3 * s;
+    const px = Math.cos(a2), py = -Math.sin(a2);
+    ctx.strokeStyle = trim;
+    ctx.lineWidth = 1.8 * s;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cuffX - px * 1.6 * s, cuffY - py * 1.6 * s);
+    ctx.lineTo(cuffX + px * 1.6 * s, cuffY + py * 1.6 * s);
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = skin;
+  ctx.strokeStyle = outline;
+  ctx.lineWidth = outlineWidth;
+}
+
 // Two small buttons down the chest, like the blazer in the sketch.
 export function drawButtons(ctx, scale = 1) {
   const s = scale;

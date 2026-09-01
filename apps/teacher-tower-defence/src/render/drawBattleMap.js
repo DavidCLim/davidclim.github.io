@@ -4,8 +4,10 @@ import { LOGICAL_W, LOGICAL_H } from '../data/maps.js';
 // reference: a blue sky with a soft cloud band, a strip of grass, and a
 // dirt layer below it with a jagged torn-earth edge — instead of the
 // plain indoor paper/floor look this replaces. The hatched locker-like
-// Teacher Portal and horned pedestal-mounted Student Portal (with their
-// hand-labeled arrows) are unchanged.
+// Teacher Portal and horned pedestal-mounted Student Portal are unchanged
+// — the "Teacher Portal"/"Student Portal" label arrows were only ever
+// annotations on the player's own sketch to identify which building was
+// which, not a UI element meant to ship in the game, so they're gone.
 const SKY_TOP = '#6ec3f4';
 const SKY_HORIZON = '#bfe6fb';
 const CLOUD = 'rgba(255, 255, 255, 0.85)';
@@ -77,30 +79,6 @@ function drawLane(ctx) {
   ctx.fill();
 }
 
-// A hand-labeled arrow pointing straight down at a portal, exactly like
-// the "Teacher Portal" / "Student Portal" call-outs in the sketch.
-function drawLabelArrow(ctx, x, labelY, tipY, text, align) {
-  ctx.save();
-  ctx.fillStyle = '#241708';
-  ctx.font = '700 13px "Baloo 2", sans-serif';
-  ctx.textAlign = align;
-  ctx.fillText(text, x, labelY);
-
-  ctx.strokeStyle = '#241708';
-  ctx.lineWidth = 2;
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(x, labelY + 8);
-  ctx.lineTo(x, tipY);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(x - 5, tipY - 7);
-  ctx.lineTo(x, tipY);
-  ctx.lineTo(x + 5, tipY - 7);
-  ctx.stroke();
-  ctx.restore();
-}
-
 // The Teacher Portal — a tall hatched locker teachers step out of,
 // matching the player's own sketch (a dark, heavily-hatched slab with
 // "TEACHER" written on the front and a labeled arrow pointing at it).
@@ -131,13 +109,11 @@ function drawTeacherPortal(ctx, p, theme) {
   ctx.textAlign = 'center';
   ctx.fillText('TEACHER', 0, -72);
   ctx.restore();
-
-  drawLabelArrow(ctx, p.x - 6, p.y - 122, p.y - 94, 'Teacher Portal', 'left');
 }
 
 // The Student Portal — your base. Light and mostly blank like the sketch
 // (not a dark slab), sitting on a small pedestal, with two curved horns
-// on a flat lid and its own labeled arrow.
+// on a flat lid.
 function drawStudentPortal(ctx, p, hp, maxHp) {
   ctx.save();
   ctx.translate(p.x, p.y);
@@ -180,8 +156,6 @@ function drawStudentPortal(ctx, p, hp, maxHp) {
   ctx.textBaseline = 'middle';
   ctx.fillText('🎓', 0, -30);
   ctx.restore();
-
-  drawLabelArrow(ctx, p.x + 6, p.y - 132, p.y - 92, 'Student Portal', 'right');
 
   const w = 50;
   const pct = Math.max(0, hp / maxHp);

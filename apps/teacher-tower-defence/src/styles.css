@@ -221,6 +221,7 @@ html, body {
   padding: 16px;
 }
 .ttd-title-card {
+  position: relative;
   width: min(560px, 100%);
   display: flex;
   flex-direction: column;
@@ -232,8 +233,29 @@ html, body {
   background: var(--panel-bg);
   border: 3px solid var(--panel-border);
   box-shadow: 0 0 60px rgba(255, 180, 84, 0.25), 0 20px 50px rgba(0, 0, 0, 0.5);
+  animation: ttd-title-card-glow 5s ease-in-out infinite;
 }
-.ttd-title-emblem { font-size: 46px; filter: drop-shadow(0 0 14px rgba(255, 214, 112, 0.6)); }
+@keyframes ttd-title-card-glow {
+  0%, 100% { box-shadow: 0 0 50px rgba(255, 180, 84, 0.2), 0 20px 50px rgba(0, 0, 0, 0.5); }
+  50% { box-shadow: 0 0 80px rgba(255, 180, 84, 0.4), 0 20px 50px rgba(0, 0, 0, 0.5); }
+}
+.ttd-title-card::before, .ttd-title-card::after {
+  content: '';
+  position: absolute;
+  top: 14px;
+  width: 8px;
+  height: 8px;
+  background: var(--gold);
+  transform: rotate(45deg);
+  box-shadow: 0 0 10px rgba(255, 180, 84, 0.8);
+}
+.ttd-title-card::before { left: 14px; }
+.ttd-title-card::after { right: 14px; }
+.ttd-title-emblem {
+  font-size: 46px;
+  filter: drop-shadow(0 0 14px rgba(255, 214, 112, 0.6));
+  animation: ttd-emblem-glow 3.6s ease-in-out infinite;
+}
 /* A bold, chunky "game logo" treatment — thick dark outline (stacked via
    multiple text-shadow offsets, since -webkit-text-stroke sits behind the
    fill and looks thin), a warm gradient fill, and a punchy drop shadow. */
@@ -253,12 +275,50 @@ html, body {
     0 6px 0 #7a2e2e,
     0 10px 18px rgba(0, 0, 0, 0.5);
 }
-.ttd-subtitle { margin: 0; color: var(--muted); font-size: 14px; max-width: 42ch; line-height: 1.5; }
+.ttd-subtitle {
+  position: relative;
+  margin: 0;
+  padding-top: 14px;
+  color: var(--muted);
+  font-size: 14px;
+  max-width: 42ch;
+  line-height: 1.5;
+}
+.ttd-subtitle::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 7px; height: 7px;
+  background: var(--gold);
+  box-shadow: 0 0 8px rgba(255, 180, 84, 0.7);
+}
 .ttd-title-actions { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 4px; }
-.ttd-start-btn { padding: 12px 44px; font-size: 15px; }
-.ttd-start-btn-disabled { opacity: 0.45; filter: grayscale(0.6); cursor: not-allowed; pointer-events: none; }
+.ttd-start-btn {
+  padding: 12px 44px;
+  font-size: 15px;
+  animation: ttd-start-btn-glow 3.2s ease-in-out infinite;
+}
+@keyframes ttd-start-btn-glow {
+  0%, 100% { box-shadow: 0 4px 0 #8a5c14, 0 8px 18px rgba(255, 180, 84, 0.25); }
+  50% { box-shadow: 0 4px 0 #8a5c14, 0 8px 26px rgba(255, 180, 84, 0.55); }
+}
+.ttd-start-btn-disabled { opacity: 0.45; filter: grayscale(0.6); cursor: not-allowed; pointer-events: none; animation: none; }
 .ttd-credits-btn { padding: 10px 36px; font-size: 14px; background: linear-gradient(165deg, #3a2c14, #241708); }
-.ttd-howto { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; color: var(--muted); }
+.ttd-howto {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.ttd-howto > div {
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: rgba(255, 180, 84, 0.06);
+  border: 1px solid rgba(255, 180, 84, 0.12);
+}
 
 /* ---------- Credits screen — a cinematic Star-Wars-style crawl ---------- */
 .ttd-credits-screen {
@@ -268,10 +328,25 @@ html, body {
   overflow: hidden;
   background: radial-gradient(ellipse at 50% 30%, #1c1006 0%, #0a0602 70%, #050301 100%);
 }
+/* a huge, mostly-hidden watermark emblem for depth, same trick as the
+   menu background's own faint 🎓 */
+.ttd-credits-screen::before {
+  content: '🎓';
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+  font-size: min(70vw, 70vh);
+  opacity: 0.05;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 0;
+}
 
 /* Atmosphere: two drifting starfield layers at different speeds/sizes
-   for a bit of parallax, a vignette to keep the edges dark, and rising
-   embers in the house gold color instead of a generic space theme. */
+   for a bit of parallax, a warm spotlight glow behind the text column
+   fading into a dark vignette at the edges, and rising embers in the
+   house gold color instead of a generic space theme. */
 .ttd-credits-bg {
   position: absolute;
   inset: 0;
@@ -283,7 +358,12 @@ html, body {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 50% 40%, transparent 0%, transparent 35%, rgba(5, 3, 1, 0.8) 100%);
+  background: radial-gradient(ellipse at 50% 40%, rgba(255, 180, 84, 0.1) 0%, transparent 32%, transparent 38%, rgba(5, 3, 1, 0.82) 100%);
+  animation: ttd-credits-spotlight-pulse 6s ease-in-out infinite;
+}
+@keyframes ttd-credits-spotlight-pulse {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; }
 }
 .ttd-credits-stars {
   position: absolute;
@@ -321,6 +401,7 @@ html, body {
   animation-timing-function: ease-in;
   animation-iteration-count: infinite;
 }
+.ttd-ember-mint { background: radial-gradient(circle, #d4fff2 0%, #5fe3c0 55%, transparent 75%); }
 @keyframes ttd-ember-rise {
   0% { transform: translate(0, 0); opacity: 0; }
   12% { opacity: 0.9; }
@@ -555,15 +636,25 @@ html, body {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 16px 8px 8px;
-  border-radius: 12px;
-  background: rgba(28, 18, 8, 0.8);
+  padding: 8px 18px 8px 8px;
+  border-radius: 14px;
+  background: linear-gradient(165deg, rgba(58, 42, 20, 0.9), rgba(20, 13, 6, 0.9));
   border: 1px solid var(--panel-border);
+  box-shadow: 0 0 0 1px rgba(255, 180, 84, 0.08), 0 6px 18px rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(3px);
 }
-.ttd-menu-titlebar-emblem { font-size: 26px; line-height: 1; }
+.ttd-menu-titlebar-emblem {
+  font-size: 26px;
+  line-height: 1;
+  filter: drop-shadow(0 0 8px rgba(255, 214, 130, 0.5));
+  animation: ttd-emblem-glow 3.6s ease-in-out infinite;
+}
+@keyframes ttd-emblem-glow {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(255, 214, 130, 0.35)); }
+  50% { filter: drop-shadow(0 0 14px rgba(255, 214, 130, 0.65)); }
+}
 .ttd-menu-titlebar-text { display: flex; flex-direction: column; line-height: 1.15; text-align: left; }
-.ttd-menu-titlebar-eyebrow { font-size: 9px; font-weight: 800; letter-spacing: 0.08em; color: var(--gold-dim); }
+.ttd-menu-titlebar-eyebrow { font-size: 9px; font-weight: 800; letter-spacing: 0.1em; color: var(--gold-dim); }
 .ttd-menu-titlebar-title { margin: 0; font-family: 'Russo One', sans-serif; font-size: 16px; color: var(--ink); }
 
 .ttd-menu-actions {
@@ -575,14 +666,16 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  width: min(190px, 42vw);
+  width: min(200px, 44vw);
 }
 .ttd-action-btn {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   padding: 12px 16px;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 2px solid var(--panel-border);
   background: linear-gradient(165deg, #3a2c14, #241708);
   color: var(--ink);
@@ -596,7 +689,18 @@ html, body {
 }
 .ttd-action-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
 .ttd-action-btn:active { transform: translateY(1px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35); }
-.ttd-action-icon { font-size: 22px; }
+.ttd-action-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 180, 84, 0.25);
+  flex-shrink: 0;
+}
 .ttd-action-primary {
   padding: 16px 18px;
   background: linear-gradient(165deg, #ffe98a, #ffd75c 45%, #f0a52c);
@@ -604,7 +708,13 @@ html, body {
   border-color: rgba(255, 215, 92, 0.7);
   box-shadow: 0 4px 0 #8a5c14, 0 10px 20px rgba(255, 215, 92, 0.25);
 }
-.ttd-action-primary .ttd-action-icon { font-size: 26px; }
+.ttd-action-primary .ttd-action-icon {
+  font-size: 26px;
+  width: auto;
+  height: auto;
+  background: none;
+  border: none;
+}
 .ttd-action-primary .ttd-action-label { font-size: 17px; }
 
 .ttd-action-subrow { display: flex; gap: 8px; }
@@ -613,18 +723,18 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   padding: 10px 4px;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 2px solid var(--panel-border);
-  background: rgba(28, 18, 8, 0.75);
+  background: linear-gradient(165deg, rgba(58, 42, 20, 0.75), rgba(20, 13, 6, 0.75));
   color: var(--muted);
   cursor: pointer;
-  transition: transform 110ms ease, border-color 110ms ease, color 110ms ease;
+  transition: transform 110ms ease, border-color 110ms ease, color 110ms ease, box-shadow 110ms ease;
 }
-.ttd-action-icon-btn:hover { transform: translateY(-2px); border-color: var(--mint); color: var(--ink); }
-.ttd-action-icon-btn .ttd-action-icon { font-size: 18px; }
-.ttd-action-sublabel { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 10px; }
+.ttd-action-icon-btn:hover { transform: translateY(-2px); border-color: var(--mint); color: var(--ink); box-shadow: 0 0 14px rgba(95, 227, 192, 0.25); }
+.ttd-action-icon-btn .ttd-action-icon { width: 30px; height: 30px; font-size: 16px; }
+.ttd-action-sublabel { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 10px; letter-spacing: 0.02em; }
 
 .ttd-menu-tray {
   position: absolute;
@@ -635,9 +745,24 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
-.ttd-menu-tray-label { font-size: 10px; font-weight: 800; letter-spacing: 0.08em; color: var(--muted); }
+.ttd-menu-tray-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--gold-dim);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ttd-menu-tray-label::before, .ttd-menu-tray-label::after {
+  content: '';
+  width: 22px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 180, 84, 0.5));
+}
+.ttd-menu-tray-label::after { transform: scaleX(-1); }
 .ttd-equip-row.ttd-menu-equip-row { position: static; transform: none; }
 
 /* ---------- Bottom equip row (5 loadout slots) ---------- */
