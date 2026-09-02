@@ -184,7 +184,14 @@ function updateUnits(state, dt) {
 }
 
 function updateEnemies(state, dt) {
-  const base = state.map.base;
+  // basePos is the map's fixed {x,y} marker (shared, position-only,
+  // reused every game on this map); base is this game's own HP tracker.
+  // They used to be conflated here, which meant a teacher reaching the
+  // base was decrementing hp on the wrong (position-only, no-hp) object
+  // — the real base.hp never moved, so the player could never actually
+  // lose to teachers reaching it.
+  const basePos = state.map.base;
+  const base = state.base;
   for (const e of state.enemies) {
     const speedMul = e.slowUntil > state.t ? (e.slowMul || 0.5) : 1;
     const target = nearestInRange(state.units, e.x, CONTACT_RANGE * 1.5);
@@ -199,15 +206,17 @@ function updateEnemies(state, dt) {
       }
       continue;
     }
-    const towardBase = base.x < e.x ? -1 : 1;
+    const towardBase = basePos.x < e.x ? -1 : 1;
     e.dir = towardBase;
-    if (Math.abs(e.x - base.x) > CONTACT_RANGE) {
+    if (Math.abs(e.x - basePos.x) > CONTACT_RANGE) {
       e.x += towardBase * e.speed * speedMul * dt;
     } else if (e.attackCooldown <= 0) {
       e.attackCooldown = 0.7;
       base.hp = Math.max(0, base.hp - e.damage);
+      base.shakeUntil = state.t + 0.22;
+      base.flashUntil = state.t + 0.1;
       audio.playBaseHit();
-      pushEffect(state, { kind: 'text', text: `-${e.damage}`, x: base.x, y: e.y - 18, color: '#ff6f6f', start: state.t, duration: 0.5, big: true });
+      pushEffect(state, { kind: 'text', text: `-${e.damage}`, x: basePos.x, y: e.y - 18, color: '#ff6f6f', start: state.t, duration: 0.5, big: true });
     }
   }
 }
@@ -275,9 +284,14 @@ function fireAtEnemyBase(state, u) {
   u.attackFlashUntil = state.t + 0.12;
   const amount = u.damage;
   state.enemyBase.hp = Math.max(0, state.enemyBase.hp - amount);
-  pushEffect(state, { kind: 'punch', x: u.x + u.dir * 18, y: u.y - 8, color: '#fff6ea', start: state.t, duration: 0.2 });
+  // The base itself reacts to the hit — a brief shake + white flash,
+  // read by drawTeacherBase — instead of just quietly losing HP while
+  // sitting there like nothing landed.
+  state.enemyBase.shakeUntil = state.t + 0.22;
+  state.enemyBase.flashUntil = state.t + 0.1;
+  pushEffect(state, { kind: 'punch', x: u.x + u.dir * 20, y: u.y - 10, color: '#fff6ea', start: state.t, duration: 0.25, big: true });
   pushEffect(state, { kind: 'text', text: `${Math.round(amount)}`, x: state.map.spawn.x, y: u.y - 30, color: '#fff6ea', start: state.t, duration: 0.5 });
-  audio.playFireShot(0.7);
+  audio.playFireShot(0.9);
 }
 
 function fireProjectile(state, u, target) {

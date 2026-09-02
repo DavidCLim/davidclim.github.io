@@ -673,7 +673,7 @@ function frame(now) {
   if (screen === 'menu' || screen === 'title' || screen === 'credits') {
     drawMenuBackground(ctx, renderT);
   } else if (state) {
-    drawMap(ctx, state.map, renderT, state.base, state.enemyBase);
+    drawMap(ctx, state.map, state.t, state.base, state.enemyBase);
     if (screen === 'playing' || screen === 'gameover' || screen === 'victory') {
       for (const u of state.units) drawUnit(ctx, u, state.t);
       for (const enemy of state.enemies) drawEnemy(ctx, enemy, state.t);
