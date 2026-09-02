@@ -166,7 +166,7 @@ function drawJointedLimb(ctx, x0, y0, x1, y1, x2, y2, thickness, color, outline,
   ctx.stroke();
 }
 
-export function drawStudentBody(ctx, scale = 1, accent, phase = 0) {
+export function drawStudentBody(ctx, scale = 1, accent, phase = 0, lean = 0.12) {
   const s = scale;
   const skin = ctx.fillStyle;
   const outline = ctx.strokeStyle;
@@ -180,9 +180,10 @@ export function drawStudentBody(ctx, scale = 1, accent, phase = 0) {
   // face to turn toward the target the way Hyper Fishies' beard/eyes do,
   // this lean is what makes the shirt/whole body read as oriented toward
   // wherever the unit is actually facing, instead of standing bolt
-  // upright no matter which way it's walking.
+  // upright no matter which way it's walking. Callers that want the
+  // figure dead-center instead (a portrait) pass lean=0.
   ctx.save();
-  ctx.rotate(0.12 + stride * 0.05);
+  ctx.rotate(lean + stride * 0.05);
 
   function drawLeg(hipX, hipY, swing) {
     const kneeX = hipX + Math.sin(swing) * 6 * s;

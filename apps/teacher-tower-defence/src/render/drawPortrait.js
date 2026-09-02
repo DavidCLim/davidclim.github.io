@@ -22,7 +22,10 @@ export function renderUnitPortrait(unit, sizePx = 120) {
   ctx.fillStyle = unit.color;
   ctx.strokeStyle = '#241708';
   ctx.lineWidth = 1.6 * (bodyScale / 1.8);
-  drawStudentBody(ctx, bodyScale, unit.accent, 0);
+  // phase 0 (standing still) and lean 0 (no forward tilt) — the in-battle
+  // lean only makes sense walking toward a target, not centered in a
+  // portrait frame.
+  drawStudentBody(ctx, bodyScale, unit.accent, 0, 0);
   drawHead(ctx, 9 * bodyScale, -20 * bodyScale);
   ctx.restore();
 

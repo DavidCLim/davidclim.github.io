@@ -32,8 +32,8 @@ function unit(def) {
 export const UNITS = {
   starter_student: unit({
     id: 'starter_student', name: 'Starter Student', rarity: 'common', icon: '🎒',
-    desc: 'Everyone starts somewhere — a plain, reliable worksheet toss.',
-    color: '#f5f1e4', glow: '#ffffff', accent: '#1b6b3a', cost: 20, damage: 5, range: 130, fireRate: 1.2, projectileSpeed: 480,
+    desc: 'Everyone starts somewhere — a plain, reliable punch to the face.',
+    color: '#f5f1e4', glow: '#ffffff', accent: '#1b6b3a', cost: 20, damage: 5, range: 28, fireRate: 1.2, melee: true,
   }),
 };
 
