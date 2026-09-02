@@ -5,6 +5,7 @@ import { drawUnit } from './render/drawUnit.js';
 import { drawEnemy } from './render/drawEnemy.js';
 import { drawEffect, drawProjectile } from './render/drawEffects.js';
 import { drawMenuBackground } from './render/drawMenuBackground.js';
+import { renderUnitPortrait } from './render/drawPortrait.js';
 import { UNITS, RARITY, RARITY_ORDER } from './data/units.js';
 import { MAP_LIST } from './data/maps.js';
 import { TOTAL_WAVES } from './data/waves.js';
@@ -315,8 +316,10 @@ function renderSummonTab(body) {
   if (lastPullResults) {
     const reveal = el('div', { class: 'ttd-pull-reveal' });
     for (const u of lastPullResults) {
+      const iconBox = el('div', { class: 'ttd-pull-icon' });
+      iconBox.appendChild(renderUnitPortrait(u, 46));
       reveal.appendChild(el('div', { class: `ttd-pull-card rarity-${u.rarity}` }, [
-        el('div', { class: 'ttd-pull-icon' }, u.icon),
+        iconBox,
         el('div', { class: 'ttd-pull-name' }, u.name),
         el('div', { class: 'ttd-pull-rarity' }, RARITY[u.rarity].label),
       ]));
@@ -366,13 +369,15 @@ function renderPullReveal() {
   clearChildren(revealOverlay);
   const u = revealQueue[revealIndex];
   const r = RARITY[u.rarity];
+  const portrait = el('div', { class: 'ttd-reveal-portrait' });
+  portrait.appendChild(renderUnitPortrait(u, 120));
   const card = el('div', { class: `ttd-reveal-card rarity-${u.rarity}`, onClick: (e) => e.stopPropagation() }, [
     el('div', { class: 'ttd-reveal-label' }, 'YOU GOT!'),
     el('div', { class: 'ttd-reveal-stage' }, [
       el('div', { class: 'ttd-reveal-curtain ttd-reveal-curtain-left' }),
       el('div', { class: 'ttd-reveal-curtain ttd-reveal-curtain-right' }),
       el('div', { class: 'ttd-reveal-rod' }),
-      el('div', { class: 'ttd-reveal-portrait' }, [el('span', { class: 'ttd-reveal-icon' }, u.icon)]),
+      portrait,
     ]),
     el('div', { class: 'ttd-reveal-name' }, u.name),
     el('div', { class: 'ttd-reveal-rarity' }, r.label),
