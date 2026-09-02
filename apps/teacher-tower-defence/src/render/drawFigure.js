@@ -213,16 +213,15 @@ export function drawStudentBody(ctx, scale = 1, accent, phase = 0, lean = 0.12) 
   ctx.fill();
   ctx.stroke();
 
-  // V-neck collar line — shifted toward local +x (the same "forward"
-  // direction the lean above leans into), so the collar itself reads as
-  // turned toward wherever the unit is facing instead of sitting
-  // dead-center like a straight-on view.
+  // V-neck collar line — centered, matching the now-upright (lean=0)
+  // body; direction is carried entirely by the outer L/R flip in
+  // drawUnit.js, not by skewing the collar off-center.
   ctx.strokeStyle = outline;
   ctx.lineWidth = 1.3 * s;
   ctx.beginPath();
-  ctx.moveTo(-2 * s, -10.5 * s);
-  ctx.lineTo(1.5 * s, -5.5 * s);
-  ctx.lineTo(5 * s, -10.5 * s);
+  ctx.moveTo(-3.5 * s, -10.5 * s);
+  ctx.lineTo(0, -5.5 * s);
+  ctx.lineTo(3.5 * s, -10.5 * s);
   ctx.stroke();
 
   // buttons down the front, below the collar
@@ -289,24 +288,28 @@ export function drawHead(ctx, r = 9, cy = -20) {
 // A reaching arm that overrides the front resting arm from drawHumanBody
 // with a raised/extended pose for units that hold a combat prop. Starts
 // from the same shoulder point the front resting arm attaches to, so it
-// reads as the same limb, just repositioned.
-export function drawArm(ctx, toX, toY, color, accent) {
+// reads as the same limb, just repositioned. `scale` matches whatever the
+// caller drew the body at (drawUnit.js's SCALE) — every coordinate here
+// was originally tuned for the old scale-1 body and needs to grow with it
+// or it ends up disconnected from the shoulder.
+export function drawArm(ctx, toX, toY, color, accent, scale = 1) {
+  const s = scale;
   ctx.save();
   ctx.strokeStyle = color || 'rgba(0,0,0,0.55)';
   ctx.lineCap = 'round';
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 3 * s;
   ctx.beginPath();
-  ctx.moveTo(4.5, -9);
-  ctx.lineTo(toX, toY);
+  ctx.moveTo(4.5 * s, -9 * s);
+  ctx.lineTo(toX * s, toY * s);
   ctx.stroke();
   if (accent) {
-    const cuffX = 4.5 + (toX - 4.5) * 0.7;
-    const cuffY = -9 + (toY + 9) * 0.7;
+    const cuffX = 4.5 * s + (toX * s - 4.5 * s) * 0.7;
+    const cuffY = -9 * s + (toY * s + 9 * s) * 0.7;
     ctx.strokeStyle = accent;
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 4 * s;
     ctx.beginPath();
-    ctx.moveTo(cuffX - 1.4, cuffY - 1.4);
-    ctx.lineTo(cuffX + 1.4, cuffY + 1.4);
+    ctx.moveTo(cuffX - 1.4 * s, cuffY - 1.4 * s);
+    ctx.lineTo(cuffX + 1.4 * s, cuffY + 1.4 * s);
     ctx.stroke();
   }
   ctx.restore();
@@ -315,37 +318,46 @@ export function drawArm(ctx, toX, toY, color, accent) {
 // A held prop appropriate to the unit's combat archetype — a wand for
 // pierce, a club for melee, a lobbed ball for splash, a glowing ring for
 // domain units, nothing for plain ranged ones (matches "Starter Student"
-// being drawn empty-handed in the sketch).
-export function drawProp(ctx, kind, bodyColor, accent) {
+// being drawn empty-handed in the sketch). `punching` extends the melee
+// fist further out during the attack flash window (drawUnit.js), pulled
+// back into a guard the rest of the time, so the hit reads as an actual
+// thrown punch instead of a static held prop.
+export function drawProp(ctx, kind, bodyColor, accent, scale = 1, punching = false) {
+  const s = scale;
   ctx.save();
   ctx.lineCap = 'round';
   switch (kind) {
     case 'pierce':
-      drawArm(ctx, 19, -11, bodyColor, accent);
+      drawArm(ctx, 19, -11, bodyColor, accent, s);
       ctx.strokeStyle = '#fff6ea';
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(15, -8); ctx.lineTo(23, -14); ctx.stroke();
+      ctx.lineWidth = 2 * s;
+      ctx.beginPath(); ctx.moveTo(15 * s, -8 * s); ctx.lineTo(23 * s, -14 * s); ctx.stroke();
       break;
-    case 'melee':
-      drawArm(ctx, 17, 4, bodyColor, accent);
+    case 'melee': {
+      const reachX = punching ? 25 : 15;
+      const reachY = punching ? -1 : 5;
+      drawArm(ctx, reachX, reachY, bodyColor, accent, s);
       ctx.fillStyle = 'rgba(0,0,0,0.55)';
-      ctx.beginPath(); ctx.ellipse(19, 7, 4.4, 3, 0.6, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse((reachX + 2) * s, (reachY + 2) * s, 4.4 * s, 3 * s, 0.6, 0, Math.PI * 2);
+      ctx.fill();
       break;
+    }
     case 'splash':
-      drawArm(ctx, 16, -9, bodyColor, accent);
+      drawArm(ctx, 16, -9, bodyColor, accent, s);
       ctx.fillStyle = '#fff6ea';
       ctx.strokeStyle = 'rgba(0,0,0,0.4)';
-      ctx.lineWidth = 1.2;
-      ctx.beginPath(); ctx.arc(18, -12, 4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.lineWidth = 1.2 * s;
+      ctx.beginPath(); ctx.arc(18 * s, -12 * s, 4 * s, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
       break;
     case 'domain':
       ctx.strokeStyle = 'rgba(255,255,255,0.55)';
-      ctx.lineWidth = 1.4;
-      ctx.beginPath(); ctx.arc(0, -8, 16, 0, Math.PI * 2); ctx.stroke();
+      ctx.lineWidth = 1.4 * s;
+      ctx.beginPath(); ctx.arc(0, -8 * s, 16 * s, 0, Math.PI * 2); ctx.stroke();
       break;
     default:
-      // Plain ranged units (like the Starter Student) stay empty-handed —
-      // the two resting arms drawHumanBody already drew are enough.
+      // Plain ranged units stay empty-handed — the two resting arms
+      // drawStudentBody already drew are enough.
       break;
   }
   ctx.restore();

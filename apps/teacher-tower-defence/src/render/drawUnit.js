@@ -38,9 +38,12 @@ export function drawUnit(ctx, tower, t) {
   ctx.fillStyle = flashing ? '#fff6ea' : color;
   ctx.strokeStyle = '#241708';
   ctx.lineWidth = 1.6;
-  drawStudentBody(ctx, SCALE, accent, phase);
+  // lean=0 keeps the figure centered/upright in the lane (only the small
+  // per-step stride wobble remains) instead of holding the old constant
+  // forward tilt.
+  drawStudentBody(ctx, SCALE, accent, phase, 0);
   drawHead(ctx, 9 * SCALE, -20 * SCALE);
-  drawProp(ctx, archetypeOf(tower), color, accent);
+  drawProp(ctx, archetypeOf(tower), color, accent, SCALE, flashing);
   ctx.restore();
 
   const lvl = level || 0;

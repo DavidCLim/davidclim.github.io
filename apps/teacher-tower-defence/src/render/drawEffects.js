@@ -43,6 +43,37 @@ function drawImpact(ctx, e, t) {
   ctx.restore();
 }
 
+// A quick comic-book "POW" — a bright flash core with a few short spikes
+// radiating out, at the point of contact — for melee hits, which read
+// poorly as the plain expanding ring drawImpact makes for splash/AoE.
+function drawPunch(ctx, e, t) {
+  const p = progress(e, t);
+  ctx.save();
+  ctx.translate(e.x, e.y);
+  ctx.globalAlpha = 1 - p;
+  const color = e.color || '#fff6ea';
+  const r = 3 + p * 9;
+
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.2;
+  const spikes = 6;
+  for (let i = 0; i < spikes; i++) {
+    const a = (i / spikes) * Math.PI * 2 + p * 0.6;
+    const inner = r * 0.55;
+    const outer = inner + 9 * (1 - p * 0.5);
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * inner, Math.sin(a) * inner);
+    ctx.lineTo(Math.cos(a) * outer, Math.sin(a) * outer);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function drawDeathBurst(ctx, e, t) {
   const p = progress(e, t);
   ctx.save();
@@ -131,6 +162,7 @@ export function drawEffect(ctx, e, t) {
   switch (e.kind) {
     case 'projectile': return drawProjectile(ctx, e);
     case 'impact': return drawImpact(ctx, e, t);
+    case 'punch': return drawPunch(ctx, e, t);
     case 'death': return drawDeathBurst(ctx, e, t);
     case 'text': return drawFloatingText(ctx, e, t);
     case 'domain': return drawDomainBurst(ctx, e, t);

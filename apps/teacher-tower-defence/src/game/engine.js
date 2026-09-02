@@ -247,7 +247,10 @@ function fireDomain(state, u, enemyList) {
 
 function fireMelee(state, u, enemyList) {
   const splash = u.splash || CONTACT_RANGE;
-  pushEffect(state, { kind: 'impact', x: u.x, y: u.y, radius: splash, color: u.glow, start: state.t, duration: 0.3 });
+  // A punch spark at the point of contact (in front of the unit, toward
+  // whichever way it's facing) instead of a plain ring centered on the
+  // attacker — reads as an actual thrown hit rather than a generic AoE.
+  pushEffect(state, { kind: 'punch', x: u.x + u.dir * 18, y: u.y - 8, color: '#fff6ea', start: state.t, duration: 0.2 });
   audio.playFireShot(0.7);
   for (const e of [...enemyList]) {
     if (Math.abs(e.x - u.x) <= splash) applyDamage(state, e, u.damage);
