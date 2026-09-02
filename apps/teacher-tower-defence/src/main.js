@@ -331,6 +331,60 @@ function doPull(count) {
   lastPullResults = results;
   audio.playUpgrade();
   renderGachaModal();
+  showPullReveal(results);
+}
+
+// ---------- Pull reveal — a "YOU GOT!" curtain card shown for each unit
+// just pulled, on top of the Gacha modal. Tap to advance through a x10
+// pull one unit at a time; the results grid underneath is already in
+// place by the time the last card is dismissed. ----------
+// Appended to root (not gachaModal) since renderGachaModal() clears all
+// of gachaModal's children on every render — a child of it would get
+// wiped out the moment a pull re-renders the modal behind it.
+const revealOverlay = el('div', { class: 'ttd-reveal-overlay hidden' });
+root.appendChild(revealOverlay);
+let revealQueue = [];
+let revealIndex = 0;
+
+function showPullReveal(results) {
+  revealQueue = results;
+  revealIndex = 0;
+  renderPullReveal();
+  revealOverlay.classList.remove('hidden');
+}
+
+function advancePullReveal() {
+  revealIndex += 1;
+  if (revealIndex >= revealQueue.length) {
+    revealOverlay.classList.add('hidden');
+    return;
+  }
+  renderPullReveal();
+}
+
+function renderPullReveal() {
+  clearChildren(revealOverlay);
+  const u = revealQueue[revealIndex];
+  const r = RARITY[u.rarity];
+  const card = el('div', { class: `ttd-reveal-card rarity-${u.rarity}`, onClick: (e) => e.stopPropagation() }, [
+    el('div', { class: 'ttd-reveal-label' }, 'YOU GOT!'),
+    el('div', { class: 'ttd-reveal-stage' }, [
+      el('div', { class: 'ttd-reveal-curtain ttd-reveal-curtain-left' }),
+      el('div', { class: 'ttd-reveal-curtain ttd-reveal-curtain-right' }),
+      el('div', { class: 'ttd-reveal-rod' }),
+      el('div', { class: 'ttd-reveal-portrait' }, [el('span', { class: 'ttd-reveal-icon' }, u.icon)]),
+    ]),
+    el('div', { class: 'ttd-reveal-name' }, u.name),
+    el('div', { class: 'ttd-reveal-rarity' }, r.label),
+    el('div', { class: 'ttd-reveal-desc' }, u.desc),
+    el('div', { class: 'ttd-reveal-stats' }, [
+      el('div', { class: 'ttd-reveal-stat' }, [el('div', { class: 'ttd-reveal-stat-val' }, `${u.damage}`), el('div', { class: 'ttd-reveal-stat-label' }, 'DMG')]),
+      el('div', { class: 'ttd-reveal-stat' }, [el('div', { class: 'ttd-reveal-stat-val' }, `${u.range}`), el('div', { class: 'ttd-reveal-stat-label' }, 'Range')]),
+    ]),
+    el('div', { class: 'ttd-reveal-next' }, revealIndex < revealQueue.length - 1 ? `Tap to continue (${revealIndex + 1}/${revealQueue.length})` : 'Tap to continue'),
+  ]);
+  revealOverlay.appendChild(card);
+  revealOverlay.onclick = advancePullReveal;
 }
 
 function renderInventoryTab(body) {

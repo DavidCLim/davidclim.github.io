@@ -124,47 +124,46 @@ export function drawHumanBody(ctx, scale = 1, accent, phase = 0) {
   ctx.fillStyle = skin;
 }
 
-// A dedicated figure for the Starter Student only, matching the player's
-// own reference: a narrow torso with a collar and buttons, ONE bent arm
-// (the player corrected an earlier two-arm version — a real side view
-// only shows the near arm), and two legs in a clear front/back stride.
-// Every limb is drawn as a SINGLE continuous outlined tube (pivot ->
-// joint -> tip, one moveTo/lineTo path, one fill+stroke) with a small
-// filled circle over the joint to round it off — not two separately
-// stroked segments, which left a visible seam/border at the knee or
-// elbow. The bend itself is still a genuine two-segment joint (the joint
-// angle is independent of the pivot angle), just rendered seamlessly.
+// A dedicated figure for the Starter Student only. Rebuilt around the
+// same technique Hyper Fishies' own player character uses (see
+// hyper-fishies/src/render/limbs.js drawJointedLimb + drawPlayer.js):
+// a symmetric body — both arms, both legs, both drawn the same as their
+// mirror — animated with a walking bob (legs swing opposite each other,
+// arms swing opposite the legs), plus a subtle whole-body lean synced to
+// the stride, instead of a one-sided "true profile" pose built from
+// staggered front/back limbs. Each limb is one thick rounded stroke
+// through pivot -> joint -> tip (lineCap/lineJoin: round handles the
+// elbow/knee bend natively, no separate seam) with a small end-cap
+// circle for the hand/foot, exactly like drawJointedLimb. Direction is
+// carried entirely by the outer ctx.scale(dir<0?-1:1,1) flip in
+// drawUnit.js plus this lean, not by an asymmetric silhouette.
 // drawHumanBody (used by teachers) is untouched.
-function limbTube(ctx, pivotX, pivotY, angle1, len1, width1, bendAngle2, len2, width2, skin, outline, outlineWidth) {
-  const a2 = angle1 + bendAngle2;
-  const jointX = pivotX + Math.sin(angle1) * len1;
-  const jointY = pivotY + Math.cos(angle1) * len1;
-  const tipX = jointX + Math.sin(a2) * len2;
-  const tipY = jointY + Math.cos(a2) * len2;
-  const p1x = Math.cos(angle1) * width1, p1y = -Math.sin(angle1) * width1;
-  const p2x = Math.cos(a2) * width2, p2y = -Math.sin(a2) * width2;
-  ctx.fillStyle = skin;
+function drawJointedLimb(ctx, x0, y0, x1, y1, x2, y2, thickness, color, outline, outlineWidth) {
+  ctx.strokeStyle = outline;
+  ctx.lineWidth = thickness + outlineWidth * 2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  ctx.lineTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth = thickness;
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  ctx.lineTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+
+  ctx.fillStyle = color;
   ctx.strokeStyle = outline;
   ctx.lineWidth = outlineWidth;
   ctx.beginPath();
-  ctx.moveTo(pivotX + p1x, pivotY + p1y);
-  ctx.lineTo(jointX + p1x, jointY + p1y);
-  ctx.lineTo(jointX + p2x, jointY + p2y);
-  ctx.lineTo(tipX + p2x, tipY + p2y);
-  ctx.lineTo(tipX - p2x, tipY - p2y);
-  ctx.lineTo(jointX - p2x, jointY - p2y);
-  ctx.lineTo(jointX - p1x, jointY - p1y);
-  ctx.lineTo(pivotX - p1x, pivotY - p1y);
-  ctx.closePath();
+  ctx.arc(x2, y2, thickness * 0.42, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
-  // round off the joint so the bend reads as one smooth limb, not two
-  // stroked pieces butted together
-  ctx.beginPath();
-  ctx.arc(jointX, jointY, Math.max(width1, width2), 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-  return { jointX, jointY, tipX, tipY };
 }
 
 export function drawStudentBody(ctx, scale = 1, accent, phase = 0) {
@@ -175,25 +174,29 @@ export function drawStudentBody(ctx, scale = 1, accent, phase = 0) {
   const trim = accent || skin;
   const stride = Math.sin(phase);
 
-  function drawLeg(pivotX, pivotY, angle1, bendAngle2, foot) {
-    const tip = limbTube(ctx, pivotX, pivotY, angle1, 7 * s, 2.1 * s, bendAngle2, 6 * s, 1.6 * s, skin, outline, outlineWidth);
-    ctx.fillStyle = '#fbfff2';
-    ctx.strokeStyle = outline;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.ellipse(tip.tipX, tip.tipY + 0.5 * s, 3 * s, 1.7 * s, foot, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
+  // A constant forward lean toward local +x (the direction the outer
+  // ctx.scale(dir<0?-1:1,1) flip in drawUnit.js treats as "forward"), on
+  // top of Hyper Fishies' own stride wobble (ctx.rotate(lean)). With no
+  // face to turn toward the target the way Hyper Fishies' beard/eyes do,
+  // this lean is what makes the shirt/whole body read as oriented toward
+  // wherever the unit is actually facing, instead of standing bolt
+  // upright no matter which way it's walking.
+  ctx.save();
+  ctx.rotate(0.12 + stride * 0.05);
+
+  function drawLeg(hipX, hipY, swing) {
+    const kneeX = hipX + Math.sin(swing) * 6 * s;
+    const kneeY = hipY + Math.cos(swing) * 6 * s;
+    const footX = kneeX + Math.sin(swing * 1.3) * 6 * s;
+    const footY = kneeY + Math.cos(swing * 1.3) * 6 * s;
+    drawJointedLimb(ctx, hipX, hipY, kneeX, kneeY, footX, footY, 3.6 * s, skin, outline, outlineWidth);
   }
 
-  // back leg — trails behind at a clear angle, drawn first so the front
-  // leg overlaps it. The stagger between front/back legs is what reads
-  // as "walking sideways" instead of "standing facing the viewer". A
-  // bigger swing amplitude gives an energetic running kick instead of a
-  // subtle idle shuffle, matching the player's own FlipaClip reference.
-  drawLeg(-2.2 * s, 6 * s, -0.35 - stride * 0.35, -0.1 - stride * 0.2, -0.15);
+  const legSwing = stride * 0.5;
+  drawLeg(-3 * s, 6 * s, -legSwing);
+  drawLeg(3 * s, 6 * s, legSwing);
 
-  // torso — narrow, with a V-neck collar instead of a diagonal sash
+  // torso — narrow, with a V-neck collar
   ctx.fillStyle = skin;
   ctx.strokeStyle = outline;
   ctx.lineWidth = outlineWidth;
@@ -209,13 +212,16 @@ export function drawStudentBody(ctx, scale = 1, accent, phase = 0) {
   ctx.fill();
   ctx.stroke();
 
-  // V-neck collar line
+  // V-neck collar line — shifted toward local +x (the same "forward"
+  // direction the lean above leans into), so the collar itself reads as
+  // turned toward wherever the unit is facing instead of sitting
+  // dead-center like a straight-on view.
   ctx.strokeStyle = outline;
   ctx.lineWidth = 1.3 * s;
   ctx.beginPath();
-  ctx.moveTo(-3.5 * s, -10.5 * s);
-  ctx.lineTo(0, -5.5 * s);
-  ctx.lineTo(3.5 * s, -10.5 * s);
+  ctx.moveTo(-2 * s, -10.5 * s);
+  ctx.lineTo(1.5 * s, -5.5 * s);
+  ctx.lineTo(5 * s, -10.5 * s);
   ctx.stroke();
 
   // buttons down the front, below the collar
@@ -233,39 +239,25 @@ export function drawStudentBody(ctx, scale = 1, accent, phase = 0) {
   ctx.closePath();
   ctx.fill();
 
-  // front leg, bent forward at the knee, clearly ahead of the back leg —
-  // drawn after the torso so it overlaps it
-  drawLeg(2.2 * s, 6 * s, 0.4 + stride * 0.35, 0.3 + stride * 0.2, 0.15);
-
-  // ONE arm only, same side as the front leg — a real side view hides the
-  // far arm behind the torso instead of showing a second, smaller one.
-  const armAngle1 = 0.3 + stride * 0.32;
-  const armBend2 = -0.65 - stride * 0.15;
-  const hand = limbTube(ctx, 6 * s, -10 * s, armAngle1, 5.5 * s, 1.7 * s, armBend2, 5 * s, 1.3 * s, skin, outline, outlineWidth);
-  ctx.fillStyle = skin;
-  ctx.strokeStyle = outline;
-  ctx.lineWidth = outlineWidth;
-  ctx.beginPath();
-  ctx.arc(hand.tipX, hand.tipY, 1.6 * s, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-  if (accent) {
-    const a2 = armAngle1 + armBend2;
-    const cuffX = hand.jointX + Math.sin(a2) * 3 * s;
-    const cuffY = hand.jointY + Math.cos(a2) * 3 * s;
-    const px = Math.cos(a2), py = -Math.sin(a2);
-    ctx.strokeStyle = trim;
-    ctx.lineWidth = 1.8 * s;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(cuffX - px * 1.6 * s, cuffY - py * 1.6 * s);
-    ctx.lineTo(cuffX + px * 1.6 * s, cuffY + py * 1.6 * s);
-    ctx.stroke();
+  // arms swing opposite the legs, same as Hyper Fishies' player — a
+  // straight shoulder-to-hand stroke (the 3-point helper collapses to a
+  // straight line when the midpoint sits exactly on it), not a bent elbow.
+  function drawArm(shoulderX, swing) {
+    const shoulderY = -9 * s;
+    const handX = shoulderX + Math.sin(swing) * 9 * s;
+    const handY = shoulderY + Math.cos(swing) * 9 * s;
+    const midX = shoulderX + (handX - shoulderX) * 0.5;
+    const midY = shoulderY + (handY - shoulderY) * 0.5;
+    drawJointedLimb(ctx, shoulderX, shoulderY, midX, midY, handX, handY, 3 * s, skin, outline, outlineWidth);
   }
+  const armSwing = -legSwing;
+  drawArm(-6 * s, -armSwing);
+  drawArm(6 * s, armSwing);
 
   ctx.fillStyle = skin;
   ctx.strokeStyle = outline;
   ctx.lineWidth = outlineWidth;
+  ctx.restore();
 }
 
 // Two small buttons down the chest, like the blazer in the sketch.

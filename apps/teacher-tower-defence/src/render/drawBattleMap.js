@@ -2,17 +2,16 @@ import { LOGICAL_W, LOGICAL_H } from '../data/maps.js';
 
 // A single-lane side-view battlefield, matching the player's own outdoor
 // reference: a blue sky with a soft cloud band, a strip of grass, and a
-// dirt layer below it with a jagged torn-earth edge — instead of the
-// plain indoor paper/floor look this replaces. The hatched locker-like
+// flat dirt layer below it — instead of the plain indoor paper/floor
+// look this replaces. The hatched locker-like
 // Teacher Portal and horned pedestal-mounted Student Portal are unchanged
 // — the "Teacher Portal"/"Student Portal" label arrows were only ever
 // annotations on the player's own sketch to identify which building was
 // which, not a UI element meant to ship in the game, so they're gone.
-const SKY_TOP = '#6ec3f4';
-const SKY_HORIZON = '#bfe6fb';
-const CLOUD = 'rgba(255, 255, 255, 0.85)';
-const GRASS_TOP = '#8fd35c';
-const GRASS_BOTTOM = '#63b23a';
+const SKY_TOP = '#5fbdf7';
+const SKY_HORIZON = '#e3f4fc';
+const GRASS_TOP = '#a9e065';
+const GRASS_BOTTOM = '#7cc244';
 const GRASS_LINE = '#4a8c2a';
 const DIRT_TOP = '#8a5a34';
 const DIRT_BOTTOM = '#5c3a20';
@@ -26,13 +25,35 @@ const THEMES = {
 const GRASS_Y = 350;
 const DIRT_Y = 396;
 
-function drawCloudPuff(ctx, x, y, r) {
+// A soft, hazy cloud band (blurred radial-gradient blobs melting into
+// each other) instead of distinct cartoon puffs — matches the player's
+// stage-backdrop reference (sky + soft cloud haze + grass, minus the
+// curtains framing it).
+function drawCloudBlob(ctx, x, y, rx, ry, alpha) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(1, ry / rx);
+  // gradient defined in local (post-transform) space, centered on the
+  // shape it's filling — defining it in the pre-transform space instead
+  // double-applies the translate/scale and pushes it off the shape
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
+  g.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
+  g.addColorStop(0.7, `rgba(255, 255, 255, ${alpha * 0.6})`);
+  g.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  ctx.fillStyle = g;
   ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
-  ctx.arc(x + r * 0.9, y + r * 0.25, r * 0.75, 0, Math.PI * 2);
-  ctx.arc(x - r * 0.9, y + r * 0.25, r * 0.75, 0, Math.PI * 2);
-  ctx.arc(x, y + r * 0.4, r * 0.9, 0, Math.PI * 2);
+  ctx.arc(0, 0, rx, 0, Math.PI * 2);
   ctx.fill();
+  ctx.restore();
+}
+
+function drawCloudBand(ctx) {
+  const bandY = GRASS_Y - 60;
+  drawCloudBlob(ctx, LOGICAL_W * 0.15, bandY + 25, 150, 70, 0.9);
+  drawCloudBlob(ctx, LOGICAL_W * 0.45, bandY, 190, 90, 0.95);
+  drawCloudBlob(ctx, LOGICAL_W * 0.78, bandY + 20, 160, 75, 0.85);
+  drawCloudBlob(ctx, LOGICAL_W * 0.95, bandY + 40, 120, 60, 0.7);
+  drawCloudBlob(ctx, LOGICAL_W * -0.05, bandY + 35, 120, 60, 0.7);
 }
 
 function drawLane(ctx) {
@@ -42,15 +63,7 @@ function drawLane(ctx) {
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, LOGICAL_W, GRASS_Y);
 
-  ctx.fillStyle = CLOUD;
-  for (let cx = -40; cx < LOGICAL_W + 40; cx += 220) {
-    drawCloudPuff(ctx, cx, GRASS_Y - 55, 40);
-  }
-  ctx.globalAlpha = 0.55;
-  for (let cx = 70; cx < LOGICAL_W + 40; cx += 240) {
-    drawCloudPuff(ctx, cx, GRASS_Y - 20, 30);
-  }
-  ctx.globalAlpha = 1;
+  drawCloudBand(ctx);
 
   const grass = ctx.createLinearGradient(0, GRASS_Y, 0, DIRT_Y);
   grass.addColorStop(0, GRASS_TOP);
@@ -65,16 +78,7 @@ function drawLane(ctx) {
   dirt.addColorStop(0, DIRT_TOP);
   dirt.addColorStop(1, DIRT_BOTTOM);
   ctx.fillStyle = dirt;
-  ctx.beginPath();
-  ctx.moveTo(0, DIRT_Y);
-  const teeth = 16;
-  const toothW = LOGICAL_W / teeth;
-  for (let i = 0; i <= teeth; i++) {
-    const x = i * toothW;
-    ctx.lineTo(x, DIRT_Y + (i % 2 === 0 ? 0 : 16));
-  }
-  ctx.lineTo(LOGICAL_W, LOGICAL_H);
-  ctx.lineTo(0, LOGICAL_H);
+  ctx.fillRect(0, DIRT_Y, LOGICAL_W, LOGICAL_H - DIRT_Y);
   ctx.closePath();
   ctx.fill();
 }
