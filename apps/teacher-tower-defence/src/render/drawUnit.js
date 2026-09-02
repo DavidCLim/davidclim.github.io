@@ -40,10 +40,11 @@ export function drawUnit(ctx, tower, t) {
   ctx.lineWidth = 1.6;
   // lean=0 keeps the figure centered/upright in the lane (only the small
   // per-step stride wobble remains) instead of holding the old constant
-  // forward tilt.
-  drawStudentBody(ctx, SCALE, accent, phase, 0);
+  // forward tilt. `flashing` snaps the front arm into a punch during the
+  // attack window instead of a separate held-weapon limb.
+  drawStudentBody(ctx, SCALE, accent, phase, 0, flashing);
   drawHead(ctx, 9 * SCALE, -20 * SCALE);
-  drawProp(ctx, archetypeOf(tower), color, accent, SCALE, flashing);
+  drawProp(ctx, archetypeOf(tower), color, accent, SCALE);
   ctx.restore();
 
   const lvl = level || 0;

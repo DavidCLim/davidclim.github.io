@@ -166,7 +166,7 @@ function drawJointedLimb(ctx, x0, y0, x1, y1, x2, y2, thickness, color, outline,
   ctx.stroke();
 }
 
-export function drawStudentBody(ctx, scale = 1, accent, phase = 0, lean = 0.12) {
+export function drawStudentBody(ctx, scale = 1, accent, phase = 0, lean = 0.12, punching = false) {
   const s = scale;
   const skin = ctx.fillStyle;
   const outline = ctx.strokeStyle;
@@ -242,17 +242,21 @@ export function drawStudentBody(ctx, scale = 1, accent, phase = 0, lean = 0.12) 
   // arms swing opposite the legs, same as Hyper Fishies' player — a
   // straight shoulder-to-hand stroke (the 3-point helper collapses to a
   // straight line when the midpoint sits exactly on it), not a bent elbow.
-  function drawArm(shoulderX, swing) {
+  // No separate prop/weapon limb — punching is just the front (local +x,
+  // the side that ends up leading after drawUnit.js's L/R flip) arm of
+  // this same pair snapping out to swing=PI/2 (straight forward) with a
+  // longer reach during the attack flash, instead of a third arm.
+  function drawArm(shoulderX, swing, reach) {
     const shoulderY = -9 * s;
-    const handX = shoulderX + Math.sin(swing) * 9 * s;
-    const handY = shoulderY + Math.cos(swing) * 9 * s;
+    const handX = shoulderX + Math.sin(swing) * reach * s;
+    const handY = shoulderY + Math.cos(swing) * reach * s;
     const midX = shoulderX + (handX - shoulderX) * 0.5;
     const midY = shoulderY + (handY - shoulderY) * 0.5;
     drawJointedLimb(ctx, shoulderX, shoulderY, midX, midY, handX, handY, 3 * s, skin, outline, outlineWidth);
   }
   const armSwing = -legSwing;
-  drawArm(-6 * s, -armSwing);
-  drawArm(6 * s, armSwing);
+  drawArm(-6 * s, -armSwing, 9);
+  drawArm(6 * s, punching ? Math.PI / 2 : armSwing, punching ? 14 : 9);
 
   ctx.fillStyle = skin;
   ctx.strokeStyle = outline;
@@ -316,13 +320,11 @@ export function drawArm(ctx, toX, toY, color, accent, scale = 1) {
 }
 
 // A held prop appropriate to the unit's combat archetype — a wand for
-// pierce, a club for melee, a lobbed ball for splash, a glowing ring for
-// domain units, nothing for plain ranged ones (matches "Starter Student"
-// being drawn empty-handed in the sketch). `punching` extends the melee
-// fist further out during the attack flash window (drawUnit.js), pulled
-// back into a guard the rest of the time, so the hit reads as an actual
-// thrown punch instead of a static held prop.
-export function drawProp(ctx, kind, bodyColor, accent, scale = 1, punching = false) {
+// pierce, a lobbed ball for splash, a glowing ring for domain units,
+// nothing for plain ranged units or melee ones (the Starter Student
+// punches with its own arm — see drawStudentBody's `punching` — not a
+// third held-weapon limb).
+export function drawProp(ctx, kind, bodyColor, accent, scale = 1) {
   const s = scale;
   ctx.save();
   ctx.lineCap = 'round';
@@ -333,16 +335,6 @@ export function drawProp(ctx, kind, bodyColor, accent, scale = 1, punching = fal
       ctx.lineWidth = 2 * s;
       ctx.beginPath(); ctx.moveTo(15 * s, -8 * s); ctx.lineTo(23 * s, -14 * s); ctx.stroke();
       break;
-    case 'melee': {
-      const reachX = punching ? 25 : 15;
-      const reachY = punching ? -1 : 5;
-      drawArm(ctx, reachX, reachY, bodyColor, accent, s);
-      ctx.fillStyle = 'rgba(0,0,0,0.55)';
-      ctx.beginPath();
-      ctx.ellipse((reachX + 2) * s, (reachY + 2) * s, 4.4 * s, 3 * s, 0.6, 0, Math.PI * 2);
-      ctx.fill();
-      break;
-    }
     case 'splash':
       drawArm(ctx, 16, -9, bodyColor, accent, s);
       ctx.fillStyle = '#fff6ea';

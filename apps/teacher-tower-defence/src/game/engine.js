@@ -15,6 +15,7 @@ export const STARTING_BASE_HP = 75;
 
 const DEPLOY_COOLDOWN = { common: 2, rare: 3, epic: 4.5, legend: 6, mythic: 9 };
 const CONTACT_RANGE = 26;
+const PASSIVE_GOLD_PER_SEC = 10;
 
 function unitHpFor(def) {
   return Math.round(40 + def.cost * 0.6);
@@ -318,6 +319,10 @@ export function update(state, dtRaw) {
   if (state.screen !== 'playing') return;
   const dt = dtRaw * state.speed;
   state.t += dt;
+
+  // A steady trickle of homework pages while a battle is on, on top of
+  // kill rewards, so you're never just waiting on gold to deploy.
+  state.gold += PASSIVE_GOLD_PER_SEC * dt;
 
   updateDeployCooldowns(state, dt);
   updateSpawns(state, dt);
