@@ -1,6 +1,6 @@
 // The three battlefields — a single horizontal lane, matching the
-// player's own sketch: the Teacher Portal sits on the left (where
-// teachers spawn and march right), and the Student Portal sits on the
+// player's own sketch: the Teacher's Base sits on the left (where
+// teachers spawn and march right), and the Student Base sits on the
 // right — that's your base, where deployed students spawn and march
 // left to intercept them.
 export const LOGICAL_W = 960;

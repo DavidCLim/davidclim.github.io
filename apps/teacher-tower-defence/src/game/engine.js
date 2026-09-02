@@ -12,6 +12,7 @@ import * as audio from '../audio/audioEngine.js';
 // toward your base.
 export const STARTING_GOLD = 60;
 export const STARTING_BASE_HP = 75;
+export const ENEMY_BASE_HP = 75;
 
 const DEPLOY_COOLDOWN = { common: 2, rare: 3, epic: 4.5, legend: 6, mythic: 9 };
 const CONTACT_RANGE = 26;
@@ -29,6 +30,7 @@ export function createGameState(mapId, equipped, stars) {
     equipped,
     stars,
     base: { hp: STARTING_BASE_HP, maxHp: STARTING_BASE_HP },
+    enemyBase: { hp: ENEMY_BASE_HP, maxHp: ENEMY_BASE_HP },
     gold: STARTING_GOLD,
     units: [],
     enemies: [],
@@ -168,7 +170,15 @@ function updateUnits(state, dt) {
       const towardSpawn = state.map.spawn.x < state.map.base.x ? -1 : 1;
       u.dir = towardSpawn;
       const limit = state.map.spawn.x - towardSpawn * 10;
-      u.x = towardSpawn < 0 ? Math.max(limit, u.x + towardSpawn * u.speed * dt) : Math.min(limit, u.x + towardSpawn * u.speed * dt);
+      if (Math.abs(u.x - state.map.spawn.x) > CONTACT_RANGE) {
+        u.x = towardSpawn < 0 ? Math.max(limit, u.x + towardSpawn * u.speed * dt) : Math.min(limit, u.x + towardSpawn * u.speed * dt);
+      } else if (u.cooldown <= 0 && state.enemyBase.hp > 0) {
+        // No teacher around — with no enemy left to fight, the unit
+        // attacks the Teacher's Base itself instead of just idling next
+        // to it, mirroring how a teacher attacks the player's base.
+        fireAtEnemyBase(state, u);
+        u.cooldown = 1 / u.fireRate;
+      }
     }
   }
 }
@@ -258,6 +268,18 @@ function fireMelee(state, u, enemyList) {
   }
 }
 
+// A direct hit on the Teacher's Base itself, for a unit that has no
+// living teacher left to fight — deals the unit's own damage straight to
+// the base's HP, same punch effect as hitting a teacher.
+function fireAtEnemyBase(state, u) {
+  u.attackFlashUntil = state.t + 0.12;
+  const amount = u.damage;
+  state.enemyBase.hp = Math.max(0, state.enemyBase.hp - amount);
+  pushEffect(state, { kind: 'punch', x: u.x + u.dir * 18, y: u.y - 8, color: '#fff6ea', start: state.t, duration: 0.2 });
+  pushEffect(state, { kind: 'text', text: `${Math.round(amount)}`, x: state.map.spawn.x, y: u.y - 30, color: '#fff6ea', start: state.t, duration: 0.5 });
+  audio.playFireShot(0.7);
+}
+
 function fireProjectile(state, u, target) {
   audio.playFireShot(u.pierce > 1 ? 1.3 : 1);
   const angle = Math.atan2(target.y - u.y, target.x - u.x);
@@ -334,6 +356,15 @@ export function update(state, dtRaw) {
   if (state.base.hp <= 0) {
     state.screen = 'gameover';
     audio.playDefeat();
+    return;
+  }
+
+  // Destroying the Teacher's Base is an instant win, on top of the usual
+  // "survive all the waves" victory below — an alternate, faster way to
+  // clear a level by pushing into their base instead of just holding out.
+  if (state.enemyBase.hp <= 0) {
+    state.screen = 'victory';
+    audio.playVictory();
     return;
   }
 

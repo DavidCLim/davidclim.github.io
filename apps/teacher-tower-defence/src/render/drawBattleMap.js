@@ -3,11 +3,11 @@ import { LOGICAL_W, LOGICAL_H } from '../data/maps.js';
 // A single-lane side-view battlefield, matching the player's own outdoor
 // reference: a blue sky with a soft cloud band, a strip of grass, and a
 // flat dirt layer below it — instead of the plain indoor paper/floor
-// look this replaces. The hatched locker-like
-// Teacher Portal and horned pedestal-mounted Student Portal are unchanged
-// — the "Teacher Portal"/"Student Portal" label arrows were only ever
-// annotations on the player's own sketch to identify which building was
-// which, not a UI element meant to ship in the game, so they're gone.
+// look this replaces. The hatched locker-like Teacher's Base and horned
+// pedestal-mounted Student Base are unchanged — the "Teacher Portal"/
+// "Student Portal" label arrows were only ever annotations on the
+// player's own sketch to identify which building was which, not a UI
+// element meant to ship in the game, so they're gone.
 const SKY_TOP = '#5fbdf7';
 const SKY_HORIZON = '#e3f4fc';
 const GRASS_TOP = '#a9e065';
@@ -83,10 +83,10 @@ function drawLane(ctx) {
   ctx.fill();
 }
 
-// The Teacher Portal — a tall hatched locker teachers step out of,
+// The Teacher's Base — a tall hatched locker teachers step out of,
 // matching the player's own sketch (a dark, heavily-hatched slab with
 // "TEACHER" written on the front and a labeled arrow pointing at it).
-function drawTeacherPortal(ctx, p, theme) {
+function drawTeacherBase(ctx, p, theme, hp, maxHp) {
   ctx.save();
   ctx.translate(p.x, p.y);
 
@@ -113,12 +113,27 @@ function drawTeacherPortal(ctx, p, theme) {
   ctx.textAlign = 'center';
   ctx.fillText('TEACHER', 0, -72);
   ctx.restore();
+
+  // HP bar — same treatment as the Student Base's, so it's clear this
+  // structure can actually be worn down, not just a spawn marker.
+  const w = 50;
+  const pct = Math.max(0, hp / maxHp);
+  ctx.save();
+  ctx.translate(p.x - w / 2, p.y - 100);
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.fillRect(0, 0, w, 6);
+  ctx.fillStyle = pct > 0.5 ? '#8fe98f' : pct > 0.25 ? '#ffd670' : '#ff6f6f';
+  ctx.fillRect(0, 0, w * pct, 6);
+  ctx.strokeStyle = '#2c1e10';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(0, 0, w, 6);
+  ctx.restore();
 }
 
-// The Student Portal — your base. Light and mostly blank like the sketch
+// The Student Base — your base. Light and mostly blank like the sketch
 // (not a dark slab), sitting on a small pedestal, with two curved horns
 // on a flat lid.
-function drawStudentPortal(ctx, p, hp, maxHp) {
+function drawStudentBase(ctx, p, hp, maxHp) {
   ctx.save();
   ctx.translate(p.x, p.y);
 
@@ -175,10 +190,10 @@ function drawStudentPortal(ctx, p, hp, maxHp) {
   ctx.restore();
 }
 
-export function drawMap(ctx, map, t, base) {
+export function drawMap(ctx, map, t, base, enemyBase) {
   void t;
   const theme = THEMES[map.theme] || THEMES.classroom;
   drawLane(ctx);
-  drawTeacherPortal(ctx, map.spawn, theme);
-  drawStudentPortal(ctx, map.base, base.hp, base.maxHp);
+  drawTeacherBase(ctx, map.spawn, theme, enemyBase.hp, enemyBase.maxHp);
+  drawStudentBase(ctx, map.base, base.hp, base.maxHp);
 }

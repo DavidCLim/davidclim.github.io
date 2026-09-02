@@ -478,7 +478,7 @@ const titleScreen = el('div', { class: 'ttd-title-screen' }, [
       el('button', { class: 'btn btn-primary ttd-start-btn', text: 'PLAY', onClick: enterMenu }),
       el('button', { class: 'btn ttd-credits-btn', text: 'CREDITS', onClick: showCredits }),
     ]),
-    el('p', { class: 'ttd-subtitle' }, 'Cursed teachers are pouring out of the portal. Recruit students, hold the courtyard, and don\'t let anything reach your desk.'),
+    el('p', { class: 'ttd-subtitle' }, 'Cursed teachers are pouring out of their base. Recruit students, hold the courtyard, and don\'t let anything reach your desk.'),
     el('div', { class: 'ttd-howto' }, [
       el('div', {}, '🎰 Visit the Gacha to recruit new students.'),
       el('div', {}, '📦 Equip up to 5 students from your Inventory.'),
@@ -620,6 +620,7 @@ function startGame(mapId) {
 
 function showEndScreen() {
   const win = state.screen === 'victory';
+  const baseDestroyed = win && state.enemyBase.hp <= 0;
   const earned = state.wave * 15 + (win ? 100 : 0);
   collection.gold += earned;
   saveCollection(collection);
@@ -630,7 +631,9 @@ function showEndScreen() {
     el('div', { class: 'ttd-end-emblem' }, win ? '🏆' : '💀'),
     el('h2', { class: 'ttd-end-title' }, win ? 'Campus Saved!' : 'The Faculty Lounge Has Fallen'),
     el('p', { class: 'ttd-end-sub' }, win
-      ? `You held ${state.map.name} through all ${TOTAL_WAVES} waves. +${earned}📄 banked.`
+      ? (baseDestroyed
+        ? `Your students stormed the Teacher's Base on ${state.map.name} and tore it down on Wave ${state.wave}. +${earned}📄 banked.`
+        : `You held ${state.map.name} through all ${TOTAL_WAVES} waves. +${earned}📄 banked.`)
       : `You made it to Wave ${state.wave} on ${state.map.name}. +${earned}📄 banked anyway — try again?`),
     el('button', { class: 'btn btn-primary', text: 'Back to the Academy', onClick: enterMenu }),
   ]));
@@ -670,7 +673,7 @@ function frame(now) {
   if (screen === 'menu' || screen === 'title' || screen === 'credits') {
     drawMenuBackground(ctx, renderT);
   } else if (state) {
-    drawMap(ctx, state.map, renderT, state.base);
+    drawMap(ctx, state.map, renderT, state.base, state.enemyBase);
     if (screen === 'playing' || screen === 'gameover' || screen === 'victory') {
       for (const u of state.units) drawUnit(ctx, u, state.t);
       for (const enemy of state.enemies) drawEnemy(ctx, enemy, state.t);
