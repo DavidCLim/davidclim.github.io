@@ -166,7 +166,7 @@ function drawJointedLimb(ctx, x0, y0, x1, y1, x2, y2, thickness, color, outline,
   ctx.stroke();
 }
 
-export function drawStudentBody(ctx, scale = 1, accent, phase = 0, lean = 0.12, punching = false) {
+export function drawStudentBody(ctx, scale = 1, accent, phase = 0, lean = 0.12, punching = false, windup = 0) {
   const s = scale;
   const skin = ctx.fillStyle;
   const outline = ctx.strokeStyle;
@@ -242,10 +242,6 @@ export function drawStudentBody(ctx, scale = 1, accent, phase = 0, lean = 0.12, 
   // arms swing opposite the legs, same as Hyper Fishies' player — a
   // straight shoulder-to-hand stroke (the 3-point helper collapses to a
   // straight line when the midpoint sits exactly on it), not a bent elbow.
-  // No separate prop/weapon limb — punching is just the front (local +x,
-  // the side that ends up leading after drawUnit.js's L/R flip) arm of
-  // this same pair snapping out to swing=PI/2 (straight forward) with a
-  // longer reach during the attack flash, instead of a third arm.
   function drawArm(shoulderX, swing, reach) {
     const shoulderY = -9 * s;
     const handX = shoulderX + Math.sin(swing) * reach * s;
@@ -256,7 +252,44 @@ export function drawStudentBody(ctx, scale = 1, accent, phase = 0, lean = 0.12, 
   }
   const armSwing = -legSwing;
   drawArm(-6 * s, -armSwing, 9);
-  drawArm(6 * s, punching ? Math.PI / 2 : armSwing, punching ? 14 : 9);
+
+  // The front (local +x) arm — the one that ends up leading after
+  // drawUnit.js's L/R flip — throws an actual boxer's jab instead of just
+  // swinging to a wide angle: elbow tucks in and the fist chambers back
+  // near the ribs as `windup` ramps toward 1, then the elbow straightens
+  // and the fist drives straight forward past the shoulder for the brief
+  // `punching` flash. A real elbow joint (not a straight shoulder-to-fist
+  // line) is what sells "wind up, then strike" instead of a limb just
+  // rotating to a strange angle.
+  {
+    const shoulderX = 6 * s;
+    const shoulderY = -9 * s;
+    const neutralHandX = shoulderX + Math.sin(armSwing) * 9 * s;
+    const neutralHandY = shoulderY + Math.cos(armSwing) * 9 * s;
+    const neutralElbowX = shoulderX + (neutralHandX - shoulderX) * 0.5;
+    const neutralElbowY = shoulderY + (neutralHandY - shoulderY) * 0.5;
+
+    let handX, handY, elbowX, elbowY;
+    if (punching) {
+      // Full extension, fist leading, elbow only slightly bent forward.
+      handX = shoulderX + 15 * s;
+      handY = shoulderY - 1 * s;
+      elbowX = shoulderX + 8 * s;
+      elbowY = shoulderY - 2.5 * s;
+    } else {
+      // Chambered: fist pulled back near the ribs, elbow flared out
+      // behind — interpolated in from the neutral walk-swing pose.
+      const cockedHandX = shoulderX - 3.5 * s;
+      const cockedHandY = shoulderY + 6 * s;
+      const cockedElbowX = shoulderX - 7 * s;
+      const cockedElbowY = shoulderY + 1.5 * s;
+      handX = neutralHandX + (cockedHandX - neutralHandX) * windup;
+      handY = neutralHandY + (cockedHandY - neutralHandY) * windup;
+      elbowX = neutralElbowX + (cockedElbowX - neutralElbowX) * windup;
+      elbowY = neutralElbowY + (cockedElbowY - neutralElbowY) * windup;
+    }
+    drawJointedLimb(ctx, shoulderX, shoulderY, elbowX, elbowY, handX, handY, 3 * s, skin, outline, outlineWidth);
+  }
 
   ctx.fillStyle = skin;
   ctx.strokeStyle = outline;

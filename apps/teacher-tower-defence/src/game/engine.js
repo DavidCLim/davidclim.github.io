@@ -17,6 +17,16 @@ export const ENEMY_BASE_HP = 75;
 const DEPLOY_COOLDOWN = { common: 2, rare: 3, epic: 4.5, legend: 6, mythic: 9 };
 const CONTACT_RANGE = 26;
 const PASSIVE_GOLD_PER_SEC = 10;
+const WINDUP_TIME = 0.18;
+
+// 0 while there's plenty of cooldown left, ramping up to 1 right as the
+// next attack is about to fire — drawUnit.js uses this to pull a
+// student's arm back into an anticipation pose before it snaps forward,
+// instead of the punch just appearing out of nowhere.
+function windupFraction(cooldown) {
+  if (cooldown <= 0) return 0;
+  return Math.max(0, Math.min(1, 1 - cooldown / WINDUP_TIME));
+}
 
 function unitHpFor(def) {
   return Math.round(40 + def.cost * 0.6);
@@ -87,6 +97,8 @@ export function deployUnit(state, unitId) {
     speed: 62,
     cooldown: 0,
     attackFlashUntil: 0,
+    attackWindup: 0,
+    hitFlashUntil: 0,
   });
   audio.playPlaceTower();
   return true;
@@ -162,9 +174,13 @@ function updateUnits(state, dt) {
       const engageRange = u.melee || u.domain ? CONTACT_RANGE : u.range;
       if (Math.abs(target.x - u.x) > engageRange) {
         u.x += u.dir * u.speed * dt;
-      } else if (u.cooldown <= 0) {
-        fireAttacker(state, u, target, state.enemies);
-        u.cooldown = 1 / u.fireRate;
+        u.attackWindup = 0;
+      } else {
+        u.attackWindup = windupFraction(u.cooldown);
+        if (u.cooldown <= 0) {
+          fireAttacker(state, u, target, state.enemies);
+          u.cooldown = 1 / u.fireRate;
+        }
       }
     } else {
       const towardSpawn = state.map.spawn.x < state.map.base.x ? -1 : 1;
@@ -172,12 +188,16 @@ function updateUnits(state, dt) {
       const limit = state.map.spawn.x - towardSpawn * 10;
       if (Math.abs(u.x - state.map.spawn.x) > CONTACT_RANGE) {
         u.x = towardSpawn < 0 ? Math.max(limit, u.x + towardSpawn * u.speed * dt) : Math.min(limit, u.x + towardSpawn * u.speed * dt);
-      } else if (u.cooldown <= 0 && state.enemyBase.hp > 0) {
+        u.attackWindup = 0;
+      } else {
+        u.attackWindup = windupFraction(u.cooldown);
         // No teacher around — with no enemy left to fight, the unit
         // attacks the Teacher's Base itself instead of just idling next
         // to it, mirroring how a teacher attacks the player's base.
-        fireAtEnemyBase(state, u);
-        u.cooldown = 1 / u.fireRate;
+        if (u.cooldown <= 0 && state.enemyBase.hp > 0) {
+          fireAtEnemyBase(state, u);
+          u.cooldown = 1 / u.fireRate;
+        }
       }
     }
   }
@@ -223,6 +243,12 @@ function updateEnemies(state, dt) {
 
 function applyDamageToUnit(state, unit, amount) {
   unit.hp -= amount;
+  // A hit reaction on the student itself (a red flash, read by
+  // drawUnit.js) plus an impact spark at the point of contact — a
+  // teacher's attack landing should read the same as a student's punch
+  // landing, not just a silently shrinking HP bar.
+  unit.hitFlashUntil = state.t + 0.15;
+  pushEffect(state, { kind: 'punch', x: unit.x - unit.dir * 14, y: unit.y - 12, color: '#ff6f6f', start: state.t, duration: 0.2 });
   pushEffect(state, { kind: 'text', text: `${Math.round(amount)}`, x: unit.x, y: unit.y - 20, color: '#ffb0b0', start: state.t, duration: 0.4 });
   if (unit.hp <= 0) {
     const idx = state.units.indexOf(unit);

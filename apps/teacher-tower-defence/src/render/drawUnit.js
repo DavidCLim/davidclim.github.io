@@ -20,11 +20,20 @@ function archetypeOf(u) {
 const SCALE = 1.8;
 
 export function drawUnit(ctx, tower, t) {
-  const { x, y, color, accent, attackFlashUntil, level, star, dir, hp, maxHp } = tower;
+  const { x, y, color, accent, attackFlashUntil, attackWindup, hitFlashUntil, level, star, dir, hp, maxHp } = tower;
   ctx.save();
-  ctx.translate(x, y);
 
   const flashing = attackFlashUntil && attackFlashUntil > t;
+  const hitFlashing = hitFlashUntil && hitFlashUntil > t;
+  // A brief knockback flinch away from whatever just hit it (opposite the
+  // way it's facing), decaying to 0 over the hit-flash window, plus a red
+  // tint — so getting hit by a teacher reads the same as a punch landing,
+  // not just a silently shrinking HP bar.
+  const hitProgress = hitFlashing ? Math.max(0, (hitFlashUntil - t) / 0.15) : 0;
+  const flinchX = -dir * 4 * hitProgress;
+
+  ctx.translate(x + flinchX, y);
+
   // Idle marching-in-place stride, desynced a little per unit by x so a
   // row of them doesn't all step in lockstep.
   const phase = t * 11 + x * 0.08;
@@ -35,14 +44,16 @@ export function drawUnit(ctx, tower, t) {
   // enough now that only the Starter Student is on the roster.
   ctx.save();
   ctx.scale(dir < 0 ? -1 : 1, 1);
-  ctx.fillStyle = flashing ? '#fff6ea' : color;
+  ctx.fillStyle = hitFlashing ? '#ff8a8a' : flashing ? '#fff6ea' : color;
   ctx.strokeStyle = '#241708';
   ctx.lineWidth = 1.6;
   // lean=0 keeps the figure centered/upright in the lane (only the small
   // per-step stride wobble remains) instead of holding the old constant
   // forward tilt. `flashing` snaps the front arm into a punch during the
-  // attack window instead of a separate held-weapon limb.
-  drawStudentBody(ctx, SCALE, accent, phase, 0, flashing);
+  // attack window; `attackWindup` pulls it back into an anticipation pose
+  // in the moments just before that, instead of the punch appearing out
+  // of nowhere.
+  drawStudentBody(ctx, SCALE, accent, phase, 0, flashing, attackWindup || 0);
   drawHead(ctx, 9 * SCALE, -20 * SCALE);
   drawProp(ctx, archetypeOf(tower), color, accent, SCALE);
   ctx.restore();
