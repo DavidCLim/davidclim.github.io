@@ -266,6 +266,34 @@ function drawTeacherBase(ctx, p, theme, baseState, t) {
     ctx.fill(); ctx.stroke();
   }
 
+  // Two jagged corner spikes flanking the battlements, plus a floating,
+  // pulsing crystal orb impaled on a spire above them — the roofline
+  // silhouette that actually reads as "menacing", not just "boxy".
+  ctx.fillStyle = '#241708';
+  ctx.strokeStyle = theme.line;
+  ctx.lineWidth = 2;
+  for (const sx of [-22, 22]) {
+    ctx.beginPath();
+    ctx.moveTo(sx - 5, -95);
+    ctx.lineTo(sx, -112);
+    ctx.lineTo(sx + 5, -95);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+  }
+  ctx.strokeStyle = theme.line;
+  ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(0, -95); ctx.lineTo(0, -116); ctx.stroke();
+  const orbPulse = 0.75 + Math.sin(t * 3) * 0.25;
+  const orbGlow = ctx.createRadialGradient(0, -122, 0, 0, -122, 14 * orbPulse);
+  orbGlow.addColorStop(0, 'rgba(200, 140, 255, 0.9)');
+  orbGlow.addColorStop(1, 'rgba(200, 140, 255, 0)');
+  ctx.fillStyle = orbGlow;
+  ctx.beginPath(); ctx.arc(0, -122, 14 * orbPulse, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#c88cff';
+  ctx.strokeStyle = theme.line;
+  ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.arc(0, -122, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
   // Arched glowing doorway near the base, with two blinking eye-lights
   // watching from inside it.
   ctx.fillStyle = '#0d0803';
@@ -394,10 +422,44 @@ function drawStudentBase(ctx, p, baseState, t) {
   ctx.closePath();
   ctx.fill(); ctx.stroke();
 
+  // A slow-turning golden sunburst behind the cap — the emblem reading as
+  // a proper crest instead of just an emoji stuck on a wall.
+  ctx.save();
+  ctx.translate(0, -74);
+  ctx.rotate(t * 0.3);
+  ctx.strokeStyle = 'rgba(255, 214, 112, 0.8)';
+  ctx.lineWidth = 1.6;
+  for (let i = 0; i < 8; i++) {
+    const ang = (i / 8) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(ang) * 7, Math.sin(ang) * 7);
+    ctx.lineTo(Math.cos(ang) * 15, Math.sin(ang) * 15);
+    ctx.stroke();
+  }
+  ctx.restore();
+
   ctx.font = '20px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('🎓', 0, -72);
+
+  // Twin pennants on the corners of the architrave beam, fluttering in
+  // sync with the roof flag.
+  for (const px3 of [-27, 27]) {
+    const pf = Math.sin(t * 3 + px3) * 2.5;
+    ctx.strokeStyle = '#241708';
+    ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.moveTo(px3, -60); ctx.lineTo(px3, -70); ctx.stroke();
+    ctx.fillStyle = '#7cc4ff';
+    ctx.strokeStyle = '#241708';
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.moveTo(px3, -70);
+    ctx.lineTo(px3 + (px3 < 0 ? -9 : 9) + pf, -66);
+    ctx.lineTo(px3, -62);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+  }
 
   // A small flag fluttering from the peak of the roof.
   ctx.strokeStyle = '#241708';

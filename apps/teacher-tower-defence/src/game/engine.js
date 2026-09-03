@@ -11,8 +11,8 @@ import * as audio from '../audio/audioEngine.js';
 // fighting whatever teacher they run into, while teachers do the same
 // toward your base.
 export const STARTING_GOLD = 60;
-export const STARTING_BASE_HP = 75;
-export const ENEMY_BASE_HP = 75;
+export const STARTING_BASE_HP = 400;
+export const ENEMY_BASE_HP = 400;
 
 const DEPLOY_COOLDOWN = { common: 2, rare: 3, epic: 4.5, legend: 6, mythic: 9 };
 const CONTACT_RANGE = 26;
