@@ -1,12 +1,11 @@
 import { drawStudentBody, drawHead } from './drawFigure.js';
 import { drawEnemy } from './drawEnemy.js';
 
-// A static action-pose portrait of a student — the same figure drawn in
-// battle (drawUnit.js), caught mid-attack (the same "punching"/"raise"
-// pose the unit throws in the lane, per its own gesture) instead of just
-// standing there, with a soft glow behind it — for Gacha/Units/Index
-// spots that need a real, cool-looking likeness instead of a flat emoji.
-// One-time canvas draw, no animation loop.
+// A plain, neutral standing portrait of a student — matching the
+// player's own trading-card sketch exactly (a calm, centered figure, no
+// glow, no action pose) — the same figure drawn in battle (drawUnit.js),
+// just framed as a bust instead of a full standing body. One-time canvas
+// draw, no animation loop.
 export function renderUnitPortrait(unit, sizePx = 120) {
   const canvas = document.createElement('canvas');
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -19,24 +18,15 @@ export function renderUnitPortrait(unit, sizePx = 120) {
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
 
-  const glowColor = unit.glow || unit.color || '#ffb454';
-  const g = ctx.createRadialGradient(sizePx / 2, sizePx * 0.5, 0, sizePx / 2, sizePx * 0.5, sizePx * 0.62);
-  g.addColorStop(0, hexToRgba(glowColor, 0.35));
-  g.addColorStop(1, hexToRgba(glowColor, 0));
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, sizePx, sizePx);
-
   const bodyScale = sizePx / 34;
   ctx.save();
   ctx.translate(sizePx / 2, sizePx * 0.86);
   ctx.fillStyle = unit.color;
   ctx.strokeStyle = '#241708';
   ctx.lineWidth = 1.6 * (bodyScale / 1.8);
-  // phase 0 + lean 0 (centered, no walk tilt) but punching=true — the
-  // portrait catches the unit mid-attack (its own gesture: a boxer's
-  // jab, or both arms raised for a "raise" unit) instead of standing
-  // neutrally, which is what actually reads as "a cool pose".
-  drawStudentBody(ctx, bodyScale, unit.accent, 0, 0, true, 0, unit.gesture || 'punch');
+  // phase 0 + lean 0 (centered, no walk tilt) and punching=false — a
+  // plain neutral stand, same as the sketch.
+  drawStudentBody(ctx, bodyScale, unit.accent, 0, 0);
   drawHead(ctx, 9 * bodyScale, -20 * bodyScale);
   ctx.restore();
 
@@ -90,13 +80,6 @@ export function renderEnemyPortrait(def, sizePx = 120) {
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
 
-  const glowColor = def.glow || def.color || '#ff6f59';
-  const g = ctx.createRadialGradient(sizePx / 2, sizePx * 0.5, 0, sizePx / 2, sizePx * 0.5, sizePx * 0.62);
-  g.addColorStop(0, hexToRgba(glowColor, 0.3));
-  g.addColorStop(1, hexToRgba(glowColor, 0));
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, sizePx, sizePx);
-
   const bodyScale = sizePx / 46;
   const fakeEnemy = {
     x: sizePx / 2, y: sizePx * 0.8,
@@ -106,11 +89,4 @@ export function renderEnemyPortrait(def, sizePx = 120) {
   drawEnemy(ctx, fakeEnemy, 0);
 
   return canvas;
-}
-
-function hexToRgba(hex, alpha) {
-  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!m) return `rgba(255, 180, 84, ${alpha})`;
-  const r = parseInt(m[1], 16), g = parseInt(m[2], 16), b = parseInt(m[3], 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
