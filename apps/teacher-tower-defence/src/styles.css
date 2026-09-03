@@ -838,40 +838,57 @@ html, body {
 
 .ttd-gacha-body { display: flex; flex-direction: column; gap: 12px; }
 
-/* ---------- Summon tab — a banner tab strip, then a panel showing the
-   selected banner's real pull odds (instead of promo character art),
-   then two big "Try Once! / Try 10 Times!" pull buttons. ---------- */
-.ttd-banner-tabs { display: flex; gap: 6px; }
-.ttd-banner-tab {
-  flex: 1 1 0;
-  padding: 8px 10px;
+/* ---------- Summon tab — a Normal/Seasonal radio toggle, a pie-chart
+   "wheel" of rarity odds on a small pedestal (matching the player's own
+   gacha sketch) instead of a bar-per-rarity list, then x1/x5/x10 pull
+   buttons. ---------- */
+.ttd-gacha-mode-toggle {
+  display: flex;
+  align-self: center;
   border-radius: 999px;
-  border: 2px solid rgba(255, 180, 84, 0.25);
+  border: 2px solid var(--panel-border);
+  overflow: hidden;
+}
+.ttd-gacha-mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
   background: rgba(74, 51, 32, 0.4);
-  color: var(--ink);
+  color: var(--muted);
   font-family: 'Baloo 2', sans-serif;
   font-weight: 800;
   font-size: 12.5px;
+  letter-spacing: 0.03em;
   cursor: pointer;
 }
-.ttd-banner-tab.active { border-color: var(--mint); background: rgba(20, 90, 70, 0.35); color: var(--mint-light); }
+.ttd-gacha-mode-btn.active { background: rgba(255, 180, 84, 0.22); color: var(--ink); }
+.ttd-gacha-mode-radio { font-size: 11px; }
 
-.ttd-odds-panel {
-  padding: 14px 16px;
-  border-radius: 12px;
-  border: 2px solid rgba(255, 180, 84, 0.3);
-  background: linear-gradient(165deg, rgba(74, 51, 32, 0.5), rgba(28, 18, 8, 0.6));
+.ttd-gacha-wheel-wrap { display: flex; flex-direction: column; align-items: center; }
+.ttd-gacha-wheel { filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.4)); }
+.ttd-gacha-stand {
+  width: 100px;
+  height: 34px;
+  margin-top: -4px;
+  background: linear-gradient(165deg, #4a3320, #1c1006);
+  clip-path: polygon(22% 0, 78% 0, 100% 100%, 0% 100%);
+  border-bottom: 2px solid var(--panel-border);
 }
-.ttd-odds-panel-title { font-family: 'Russo One', sans-serif; font-size: 15px; color: var(--gold); }
-.ttd-odds-panel-desc { font-size: 12px; color: var(--muted); margin: 3px 0 12px; }
-.ttd-odds-list { display: flex; flex-direction: column; gap: 7px; }
-.ttd-odds-row { display: grid; grid-template-columns: 56px 1fr 40px; align-items: center; gap: 8px; }
-.ttd-odds-label { font-size: 11.5px; font-weight: 800; }
-.ttd-odds-bar-track { height: 8px; border-radius: 999px; background: rgba(0, 0, 0, 0.4); overflow: hidden; }
-.ttd-odds-bar-fill { height: 100%; border-radius: 999px; }
-.ttd-odds-pct { font-size: 11.5px; font-weight: 800; color: var(--ink); text-align: right; }
+.ttd-gacha-coming-soon {
+  align-self: center;
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 2px dashed rgba(255, 180, 84, 0.4);
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 700;
+}
 
 .ttd-pull-row { display: flex; gap: 10px; }
+.ttd-pull-row-3 .ttd-pull-btn { padding: 10px 6px; }
+.ttd-pull-row-3 .ttd-pull-btn-label { font-size: 12.5px; }
 .ttd-pull-btn {
   flex: 1 1 0;
   display: flex;
@@ -892,7 +909,6 @@ html, body {
 .ttd-pull-btn:disabled { filter: grayscale(0.6) brightness(0.7); cursor: not-allowed; }
 .ttd-pull-btn-label { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 14px; }
 .ttd-pull-btn-cost { font-size: 12px; font-weight: 700; opacity: 0.8; }
-.ttd-pull-btn-x10 { border-color: rgba(255, 90, 70, 0.6); }
 
 .ttd-pull-reveal {
   display: grid;

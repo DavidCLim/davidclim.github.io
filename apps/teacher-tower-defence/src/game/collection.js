@@ -28,10 +28,10 @@ export function saveCollection(c) {
 }
 
 // ---------- Gacha ----------
-const RATE_STANDARD = { common: 0.55, rare: 0.27, epic: 0.12, legend: 0.05, mythic: 0.01 };
+const RATE_STANDARD = { common: 0.55, rare: 0.30, epic: 0.10, legend: 0.01, mythic: 0.001 };
 
 export const BANNERS = {
-  standard: { id: 'standard', name: 'Standard', desc: 'The full roster — every rarity is in the pool.', rates: RATE_STANDARD },
+  standard: { id: 'standard', name: 'Normal', desc: 'The full roster — every rarity is in the pool.', rates: RATE_STANDARD },
 };
 export const BANNER_LIST = Object.values(BANNERS);
 
@@ -50,8 +50,9 @@ function rollRarity(rates) {
   return Object.keys(rates)[0];
 }
 
+const PULL_COSTS = { 1: 100, 5: 400, 10: 800 };
 export function pullCost(count) {
-  return count === 10 ? 500 : 50;
+  return PULL_COSTS[count] ?? count * 100;
 }
 
 export function pullGacha(collection, bannerId, count) {

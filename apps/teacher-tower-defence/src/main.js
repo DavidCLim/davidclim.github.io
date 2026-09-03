@@ -11,7 +11,7 @@ import { MAP_LIST } from './data/maps.js';
 import { TOTAL_WAVES } from './data/waves.js';
 import { createGameState, update, startNextWave, deployUnit, canDeploy } from './game/engine.js';
 import {
-  loadCollection, saveCollection, BANNERS, BANNER_LIST, pullCost, pullGacha,
+  loadCollection, saveCollection, pullCost, pullGacha,
   canAwaken, awakenCostFor, awakenUnit,
   toggleEquip, MAX_EQUIPPED, MAX_STARS,
 } from './game/collection.js';
@@ -267,56 +267,104 @@ function renderAwakenModal() {
   awakenModal.appendChild(card);
 }
 
-function renderSummonTab(body) {
-  if (BANNER_LIST.length > 1) {
-    const tabs = el('div', { class: 'ttd-banner-tabs' });
-    for (const b of BANNER_LIST) {
-      tabs.appendChild(el('button', {
-        class: 'ttd-banner-tab' + (gachaBanner === b.id ? ' active' : ''),
-        onClick: () => { gachaBanner = b.id; lastPullResults = null; renderGachaModal(); },
-        text: b.name,
-      }));
-    }
-    body.appendChild(tabs);
-  }
+// A circular pie-chart "wheel" matching the player's own gacha sketch —
+// colored wedges divided EQUALLY (not to true probability scale, same as
+// the sketch itself — a 0.1%-true-scale Mythical sliver would be
+// invisible) with the rarity name + its real percentage labeled inside
+// each wedge, sitting on a small pedestal stand.
+function buildOddsWheel(slices, size = 190) {
+  const cx = size / 2, cy = size / 2, r = size / 2 - 4;
+  const toXY = (angleDeg, radius) => {
+    const rad = (angleDeg - 90) * Math.PI / 180;
+    return { x: cx + radius * Math.cos(rad), y: cy + radius * Math.sin(rad) };
+  };
+  const step = 360 / slices.length;
+  const parts = [];
+  slices.forEach((s, i) => {
+    const startAngle = i * step;
+    const endAngle = startAngle + step;
+    const start = toXY(startAngle, r);
+    const end = toXY(endAngle, r);
+    const largeArc = step > 180 ? 1 : 0;
+    parts.push(`<path d="M ${cx} ${cy} L ${start.x.toFixed(2)} ${start.y.toFixed(2)} A ${r} ${r} 0 ${largeArc} 1 ${end.x.toFixed(2)} ${end.y.toFixed(2)} Z" fill="${s.color}" stroke="#241708" stroke-width="1.6"/>`);
+    const mid = startAngle + step / 2;
+    const labelPos = toXY(mid, r * 0.62);
+    // Two-word labels ("SEASON CHAMPION") wrap onto their own line instead
+    // of running wide enough to crowd into the neighboring wedge's text.
+    const words = s.label.split(' ');
+    const nameLines = words.length > 1 ? [words.slice(0, -1).join(' '), words[words.length - 1]] : [s.label];
+    const nameStartY = labelPos.y - 5 - (nameLines.length - 1) * 8;
+    nameLines.forEach((line, li) => {
+      parts.push(`<text x="${labelPos.x.toFixed(2)}" y="${(nameStartY + li * 8).toFixed(2)}" text-anchor="middle" font-size="7.5" font-weight="800" fill="#241708" font-family="'Baloo 2', sans-serif">${line}</text>`);
+    });
+    parts.push(`<text x="${labelPos.x.toFixed(2)}" y="${(labelPos.y + 8 + (nameLines.length - 1) * 4).toFixed(2)}" text-anchor="middle" font-size="8" font-weight="700" fill="#241708" font-family="'Baloo 2', sans-serif">${s.pctLabel}</text>`);
+  });
+  return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" style="display:block">
+    <circle cx="${cx}" cy="${cy}" r="${r + 3}" fill="#2c1e10"/>
+    ${parts.join('')}
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#241708" stroke-width="3"/>
+  </svg>`;
+}
 
-  // The banner "art" is real odds instead of promo character art — the
-  // actual chance of each rarity for the banner you have selected.
-  const banner = BANNERS[gachaBanner];
-  const panel = el('div', { class: 'ttd-odds-panel' });
-  panel.appendChild(el('div', { class: 'ttd-odds-panel-title' }, `${banner.name} Banner`));
-  panel.appendChild(el('div', { class: 'ttd-odds-panel-desc' }, banner.desc));
-  const oddsList = el('div', { class: 'ttd-odds-list' });
-  for (const rarityId of RARITY_ORDER) {
-    const chance = banner.rates[rarityId];
-    if (!chance) continue;
-    const r = RARITY[rarityId];
-    const pct = Math.round(chance * 100);
-    oddsList.appendChild(el('div', { class: 'ttd-odds-row' }, [
-      el('span', { class: 'ttd-odds-label', style: `color:${r.color}` }, r.label),
-      el('div', { class: 'ttd-odds-bar-track' }, [
-        el('div', { class: 'ttd-odds-bar-fill', style: `width:${pct}%; background:${r.color}; box-shadow: 0 0 8px ${r.glow}` }),
-      ]),
-      el('span', { class: 'ttd-odds-pct' }, `${pct}%`),
+const SEASON_CHAMPION_COLOR = '#ff5fc4';
+const NORMAL_WHEEL_SLICES = [
+  { label: 'COMMON', pctLabel: '55%', color: RARITY.common.color },
+  { label: 'RARE', pctLabel: '30%', color: RARITY.rare.color },
+  { label: 'EPIC', pctLabel: '10%', color: RARITY.epic.color },
+  { label: 'LEGEND', pctLabel: '1%', color: RARITY.legend.color },
+  { label: 'MYTHICAL', pctLabel: '0.1%', color: RARITY.mythic.color },
+];
+const SEASONAL_WHEEL_SLICES = [
+  { label: 'COMMON', pctLabel: '60%', color: RARITY.common.color },
+  { label: 'RARE', pctLabel: '30%', color: RARITY.rare.color },
+  { label: 'EPIC', pctLabel: '5%', color: RARITY.epic.color },
+  { label: 'LEGEND', pctLabel: '1%', color: RARITY.legend.color },
+  { label: 'MYTHICAL', pctLabel: '0.5%', color: RARITY.mythic.color },
+  { label: 'SEASON CHAMPION', pctLabel: '0.1%', color: SEASON_CHAMPION_COLOR },
+];
+
+function renderSummonTab(body) {
+  // Normal / Seasonal mode toggle — a two-segment radio pill, matching
+  // the player's sketch, instead of a generic banner-tab strip.
+  const toggle = el('div', { class: 'ttd-gacha-mode-toggle' });
+  for (const mode of ['standard', 'seasonal']) {
+    toggle.appendChild(el('button', {
+      class: 'ttd-gacha-mode-btn' + (gachaBanner === mode ? ' active' : ''),
+      onClick: () => { gachaBanner = mode; lastPullResults = null; renderGachaModal(); },
+    }, [
+      el('span', { class: 'ttd-gacha-mode-radio' }, gachaBanner === mode ? '●' : '○'),
+      mode === 'standard' ? 'NORMAL' : 'SEASONAL',
     ]));
   }
-  panel.appendChild(oddsList);
-  body.appendChild(panel);
+  body.appendChild(toggle);
 
-  const pullRow = el('div', { class: 'ttd-pull-row' });
-  pullRow.appendChild(el('button', {
-    class: 'ttd-pull-btn',
-    disabled: collection.gold < pullCost(1) ? 'disabled' : undefined,
-    onClick: () => doPull(1),
-  }, [el('span', { class: 'ttd-pull-btn-label' }, 'Try Once!'), el('span', { class: 'ttd-pull-btn-cost' }, `${pullCost(1)} 📄`)]));
-  pullRow.appendChild(el('button', {
-    class: 'ttd-pull-btn ttd-pull-btn-x10',
-    disabled: collection.gold < pullCost(10) ? 'disabled' : undefined,
-    onClick: () => doPull(10),
-  }, [el('span', { class: 'ttd-pull-btn-label' }, 'Try 10 Times!'), el('span', { class: 'ttd-pull-btn-cost' }, `${pullCost(10)} 📄`)]));
+  const isSeasonal = gachaBanner === 'seasonal';
+  const wheelSVG = buildOddsWheel(isSeasonal ? SEASONAL_WHEEL_SLICES : NORMAL_WHEEL_SLICES);
+  const wheelWrap = el('div', { class: 'ttd-gacha-wheel-wrap' });
+  const wheelEl = el('div', { class: 'ttd-gacha-wheel' });
+  wheelEl.innerHTML = wheelSVG;
+  wheelWrap.appendChild(wheelEl);
+  wheelWrap.appendChild(el('div', { class: 'ttd-gacha-stand' }));
+  body.appendChild(wheelWrap);
+
+  if (isSeasonal) {
+    body.appendChild(el('div', { class: 'ttd-gacha-coming-soon' }, '🌱 Seasonal banner coming soon'));
+  }
+
+  const currencyIcon = isSeasonal ? '🪙' : '📄';
+  const seasonalCosts = { 1: 10, 5: 45, 10: 90 };
+  const pullRow = el('div', { class: 'ttd-pull-row ttd-pull-row-3' });
+  for (const count of [1, 5, 10]) {
+    const cost = isSeasonal ? seasonalCosts[count] : pullCost(count);
+    pullRow.appendChild(el('button', {
+      class: 'ttd-pull-btn',
+      disabled: (isSeasonal || collection.gold < cost) ? 'disabled' : undefined,
+      onClick: isSeasonal ? undefined : () => doPull(count),
+    }, [el('span', { class: 'ttd-pull-btn-label' }, `x${count} SPIN`), el('span', { class: 'ttd-pull-btn-cost' }, `${cost} ${currencyIcon}`)]));
+  }
   body.appendChild(pullRow);
 
-  if (lastPullResults) {
+  if (!isSeasonal && lastPullResults) {
     const reveal = el('div', { class: 'ttd-pull-reveal' });
     for (const u of lastPullResults) {
       const iconBox = el('div', { class: 'ttd-pull-icon' });
