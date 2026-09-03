@@ -5,7 +5,7 @@ import { drawUnit } from './render/drawUnit.js';
 import { drawEnemy } from './render/drawEnemy.js';
 import { drawEffect, drawProjectile } from './render/drawEffects.js';
 import { drawMenuBackground } from './render/drawMenuBackground.js';
-import { renderUnitPortrait, renderEnemyPortrait } from './render/drawPortrait.js';
+import { renderUnitPortrait, renderUnitFace, renderEnemyPortrait } from './render/drawPortrait.js';
 import { UNITS, UNIT_LIST, RARITY, RARITY_ORDER } from './data/units.js';
 import { TEACHER_LIST } from './data/teachers.js';
 import { MAP_LIST } from './data/maps.js';
@@ -20,12 +20,10 @@ import * as audio from './audio/audioEngine.js';
 
 const root = document.getElementById('game-root');
 
-// Real combat isn't ready for visitors yet, but the menu/Gacha/Inventory
-// hub is worth showing off, so PLAY itself is always enabled — only the
-// Battle button (which starts an actual fight) is gated to David's own
-// machine, via hostname instead of hand-disabling it per deploy so the
-// same source works everywhere.
-const BATTLE_ENABLED = ['localhost', '127.0.0.1'].includes(location.hostname) || location.protocol === 'file:';
+// Battle used to be gated to localhost while combat was still being
+// built out; the roster/menu/gacha are far enough along now that it's
+// open to everyone.
+const BATTLE_ENABLED = true;
 
 document.addEventListener('click', () => {
   audio.ensureAudioContext();
@@ -118,12 +116,14 @@ function buildDeployRoster() {
       continue;
     }
     const def = UNITS[unitId];
+    const dot = el('span', { class: 'ttd-shop-dot' });
+    dot.appendChild(renderUnitFace(def, 30));
     const btn = el('button', {
       class: 'ttd-shop-item',
       onClick: () => { if (deployUnit(state, unitId)) refreshHud(); },
     }, [
       slotNum,
-      el('span', { class: 'ttd-shop-dot', style: `background:${def.color}` }, def.icon),
+      dot,
       el('div', { class: 'ttd-shop-info' }, [
         el('div', { class: 'ttd-shop-name' }, def.name),
         el('div', { class: 'ttd-shop-cost' }, `${def.cost}📄`),
@@ -198,10 +198,12 @@ function refreshEquipRow() {
   for (let i = 0; i < MAX_EQUIPPED; i++) {
     const unitId = collection.equipped[i];
     const def = unitId ? UNITS[unitId] : null;
-    equipRow.appendChild(el('button', {
+    const slot = el('button', {
       class: 'ttd-equip-slot' + (def ? ` rarity-${def.rarity}` : ''),
       onClick: openInventoryModal,
-    }, [def ? def.icon : String(i + 1)]));
+    }, def ? [] : String(i + 1));
+    if (def) slot.appendChild(renderUnitFace(def, 40));
+    equipRow.appendChild(slot);
   }
 }
 
@@ -209,7 +211,6 @@ function refreshEquipRow() {
 // their own menu buttons/modals) ----------
 const gachaModal = el('div', { class: 'ttd-gacha-modal hidden' });
 root.appendChild(gachaModal);
-let gachaBanner = 'standard';
 let lastPullResults = null;
 
 function openGachaModal() {
@@ -221,7 +222,7 @@ function closeGachaModal() { gachaModal.classList.add('hidden'); }
 
 function renderGachaModal() {
   clearChildren(gachaModal);
-  const card = el('div', { class: 'ttd-gacha-card' });
+  const card = el('div', { class: 'ttd-gacha-card ttd-gacha-card-wide' });
   card.appendChild(el('button', { class: 'ttd-modal-close', text: '✕', onClick: closeGachaModal }));
   card.appendChild(el('div', { class: 'ttd-gacha-header' }, [
     el('div', { class: 'ttd-gacha-title' }, '🎰 Gacha'),
@@ -382,51 +383,16 @@ const SEASONAL_WHEEL_SLICES = [
   { label: 'SEASON CHAMPION', pctLabel: '0.1%', color: SEASON_CHAMPION_COLOR },
 ];
 
+// Both banners sit side by side, full-width — matching the player's own
+// sketch exactly — instead of a Normal/Seasonal tab toggle that only
+// ever shows one wheel at a time.
 function renderSummonTab(body) {
-  // Normal / Seasonal mode toggle — a two-segment radio pill, matching
-  // the player's sketch, instead of a generic banner-tab strip.
-  const toggle = el('div', { class: 'ttd-gacha-mode-toggle' });
-  for (const mode of ['standard', 'seasonal']) {
-    toggle.appendChild(el('button', {
-      class: 'ttd-gacha-mode-btn' + (gachaBanner === mode ? ' active' : ''),
-      onClick: () => { gachaBanner = mode; lastPullResults = null; renderGachaModal(); },
-    }, [
-      el('span', { class: 'ttd-gacha-mode-radio' }, gachaBanner === mode ? '●' : '○'),
-      mode === 'standard' ? 'NORMAL' : 'SEASONAL',
-    ]));
-  }
-  body.appendChild(toggle);
+  const row = el('div', { class: 'ttd-gacha-wheels-row' });
+  row.appendChild(buildWheelColumn(false));
+  row.appendChild(buildWheelColumn(true));
+  body.appendChild(row);
 
-  const isSeasonal = gachaBanner === 'seasonal';
-  // Same explicit size for both banners' wheels, so Normal and Seasonal
-  // never look like they're drawn at different scales.
-  const wheelSVG = buildOddsWheel(isSeasonal ? SEASONAL_WHEEL_SLICES : NORMAL_WHEEL_SLICES, WHEEL_SIZE);
-  const wheelWrap = el('div', { class: 'ttd-gacha-wheel-wrap' });
-  wheelWrap.appendChild(el('div', { class: 'ttd-gacha-wheel-pointer' }));
-  const wheelEl = el('div', { class: 'ttd-gacha-wheel' });
-  wheelEl.innerHTML = wheelSVG;
-  wheelWrap.appendChild(wheelEl);
-  wheelWrap.appendChild(el('div', { class: 'ttd-gacha-stand' }));
-  body.appendChild(wheelWrap);
-
-  if (isSeasonal) {
-    body.appendChild(el('div', { class: 'ttd-gacha-coming-soon' }, '🌱 Seasonal banner coming soon'));
-  }
-
-  const currencyIcon = isSeasonal ? '🪙' : '📄';
-  const seasonalCosts = { 1: 10, 5: 45, 10: 90 };
-  const pullRow = el('div', { class: 'ttd-pull-row ttd-pull-row-3' });
-  for (const count of [1, 5, 10]) {
-    const cost = isSeasonal ? seasonalCosts[count] : pullCost(count);
-    pullRow.appendChild(el('button', {
-      class: 'ttd-pull-btn',
-      disabled: (isSeasonal || gachaSpinning || collection.gold < cost) ? 'disabled' : undefined,
-      onClick: isSeasonal ? undefined : () => doPull(count),
-    }, [el('span', { class: 'ttd-pull-btn-label' }, `x${count} SPIN`), el('span', { class: 'ttd-pull-btn-cost' }, `${cost} ${currencyIcon}`)]));
-  }
-  body.appendChild(pullRow);
-
-  if (!isSeasonal && lastPullResults) {
+  if (lastPullResults) {
     const reveal = el('div', { class: 'ttd-pull-reveal' });
     for (const u of lastPullResults) {
       const iconBox = el('div', { class: 'ttd-pull-icon' });
@@ -441,35 +407,76 @@ function renderSummonTab(body) {
   }
 }
 
-// The wheel actually spins before revealing what you got — several full
-// turns, easing to a stop with the rolled rarity's wedge under the
-// pointer at the top — instead of the odds display just sitting still
-// while cards appear. For a x5/x10 pull it spins once, landing on the
-// first result, then the existing reveal-card sequence covers the rest.
+function buildWheelColumn(isSeasonal) {
+  const col = el('div', { class: 'ttd-gacha-wheel-col' });
+  col.appendChild(el('div', { class: 'ttd-gacha-wheel-col-title' }, isSeasonal ? 'SEASONAL' : 'NORMAL'));
+
+  const wheelSVG = buildOddsWheel(isSeasonal ? SEASONAL_WHEEL_SLICES : NORMAL_WHEEL_SLICES, WHEEL_SIZE);
+  const wheelWrap = el('div', { class: 'ttd-gacha-wheel-wrap' });
+  wheelWrap.appendChild(el('div', { class: 'ttd-gacha-wheel-pointer' }));
+  const wheelEl = el('div', { class: 'ttd-gacha-wheel' + (isSeasonal ? '' : ' ttd-gacha-wheel-normal') });
+  wheelEl.innerHTML = wheelSVG;
+  wheelWrap.appendChild(wheelEl);
+  wheelWrap.appendChild(el('div', { class: 'ttd-gacha-stand' }));
+  col.appendChild(wheelWrap);
+
+  if (isSeasonal) {
+    col.appendChild(el('div', { class: 'ttd-gacha-coming-soon' }, '🌱 Coming soon'));
+  }
+
+  const currencyIcon = isSeasonal ? '🪙' : '📄';
+  const seasonalCosts = { 1: 10, 5: 45, 10: 90 };
+  const pullRow = el('div', { class: 'ttd-pull-row ttd-pull-row-3' });
+  for (const count of [1, 5, 10]) {
+    const cost = isSeasonal ? seasonalCosts[count] : pullCost(count);
+    pullRow.appendChild(el('button', {
+      class: 'ttd-pull-btn',
+      disabled: (isSeasonal || gachaSpinning || collection.gold < cost) ? 'disabled' : undefined,
+      onClick: isSeasonal ? undefined : () => doPull(count),
+    }, [el('span', { class: 'ttd-pull-btn-label' }, `x${count} SPIN`), el('span', { class: 'ttd-pull-btn-cost' }, `${cost} ${currencyIcon}`)]));
+  }
+  col.appendChild(pullRow);
+  return col;
+}
+
+// The wheel actually spins before revealing what you got — a long,
+// heavily-decelerating turn (fast start, real crawl at the very end,
+// same feel as a real prize wheel) that lands the rolled rarity's wedge
+// under the pointer, then flashes on landing — instead of the odds
+// display just sitting still while cards appear. For a x5/x10 pull it
+// spins once, landing on the first result, then the existing
+// reveal-card sequence covers the rest.
 let gachaSpinning = false;
-const SPIN_DURATION_MS = 2600;
+const SPIN_DURATION_MS = 4200;
 
 function spinWheelToRarity(rarity, onDone) {
-  const wheelEl = gachaModal.querySelector('.ttd-gacha-wheel');
+  const wheelEl = gachaModal.querySelector('.ttd-gacha-wheel-normal');
   const idx = NORMAL_WHEEL_SLICES.findIndex(s => s.rarityId === rarity);
   if (!wheelEl || idx === -1) { onDone(); return; }
   const step = 360 / NORMAL_WHEEL_SLICES.length;
   const wedgeMid = idx * step + step / 2;
   const landingMod = (360 - wedgeMid + 360) % 360;
-  const extraSpins = 5;
+  const extraSpins = 8;
   wheelEl.style.transition = 'none';
   wheelEl.style.transform = 'rotate(0deg)';
+  wheelEl.classList.remove('ttd-gacha-wheel-landed');
   void wheelEl.offsetWidth; // force reflow so the reset applies before the transition starts
-  wheelEl.style.transition = `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.12, 0.68, 0.1, 1)`;
+  // A strong ease-out (quart-ish) — most of the visual travel happens in
+  // the first half, and the tail crawls to a real stop instead of just
+  // cutting off, which is what "should slow down at the end" needs.
+  wheelEl.style.transition = `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.08, 0.82, 0.13, 1)`;
   requestAnimationFrame(() => {
     wheelEl.style.transform = `rotate(${extraSpins * 360 + landingMod}deg)`;
   });
-  setTimeout(onDone, SPIN_DURATION_MS + 80);
+  setTimeout(() => {
+    wheelEl.classList.add('ttd-gacha-wheel-landed');
+    onDone();
+  }, SPIN_DURATION_MS + 80);
 }
 
 function doPull(count) {
   if (gachaSpinning) return;
-  const results = pullGacha(collection, gachaBanner, count);
+  const results = pullGacha(collection, 'standard', count);
   if (!results) return;
   gachaSpinning = true;
   gachaModal.querySelectorAll('.ttd-pull-btn').forEach(b => { b.disabled = true; });
@@ -559,8 +566,7 @@ function renderInventoryTab(body) {
     const star = collection.stars[def.id] || 0;
     const equipped = collection.equipped.includes(def.id);
     const portraitBox = el('div', { class: 'ttd-slot-portrait' });
-    if (owned) portraitBox.appendChild(renderUnitPortrait(def, 60));
-    else portraitBox.textContent = def.icon;
+    portraitBox.appendChild(renderUnitFace(def, 60));
     const slot = el('button', {
       class: `ttd-slot ttd-slot-filled rarity-${def.rarity}` + (owned ? ' owned' : ' locked') + (equipped ? ' equipped' : ''),
       onClick: owned ? () => { toggleEquip(collection, def.id); renderInventoryModal(); refreshEquipRow(); } : undefined,
@@ -588,8 +594,10 @@ function renderAwakenTab(body) {
     if (!info) continue;
     any = true;
     const ok = canAwaken(collection, id);
+    const faceBox = el('div', { class: 'ttd-unit-icon' });
+    faceBox.appendChild(renderUnitFace(def, 30));
     list.appendChild(el('div', { class: `ttd-list-row rarity-${def.rarity}` }, [
-      el('div', { class: 'ttd-unit-icon' }, def.icon),
+      faceBox,
       el('div', { class: 'ttd-list-info' }, [
         el('div', { class: 'ttd-unit-name' }, `${def.name} ${'★'.repeat(info.star)}${'☆'.repeat(MAX_STARS - info.star)}`),
         el('div', { class: 'ttd-list-sub' }, `Needs ${info.dupesNeeded} dupes + ${info.gold}📄`),

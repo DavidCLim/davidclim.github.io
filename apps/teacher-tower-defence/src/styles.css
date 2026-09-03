@@ -164,10 +164,11 @@ html, body {
 }
 .ttd-shop-item { position: relative; }
 .ttd-shop-dot {
-  width: 24px; height: 24px; border-radius: 50%; flex: 0 0 auto;
+  width: 30px; height: 30px; border-radius: 50%; flex: 0 0 auto;
   display: flex; align-items: center; justify-content: center;
-  font-size: 13px; line-height: 1;
-  box-shadow: 0 0 8px currentColor;
+  overflow: hidden;
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 0 8px rgba(255, 180, 84, 0.3);
 }
 .ttd-shop-info { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25; }
 .ttd-shop-name { font-weight: 800; font-size: 12.5px; white-space: nowrap; }
@@ -758,6 +759,8 @@ html, body {
   background: rgba(0, 0, 0, 0.3);
   color: var(--muted);
   font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
   cursor: pointer;
   box-shadow: 0 0 10px var(--rarity-glow, transparent);
 }
@@ -840,34 +843,34 @@ html, body {
 .ttd-index-arrow:hover { transform: translateY(-1px); border-color: var(--gold); }
 .ttd-index-count { font-size: 11.5px; font-weight: 700; color: var(--muted); min-width: 12ch; text-align: center; }
 
-/* ---------- Summon tab — a Normal/Seasonal radio toggle, a pie-chart
-   "wheel" of rarity odds on a small pedestal (matching the player's own
-   gacha sketch) instead of a bar-per-rarity list, then x1/x5/x10 pull
-   buttons. ---------- */
-.ttd-gacha-mode-toggle {
-  display: flex;
-  align-self: center;
-  border-radius: 999px;
-  border: 2px solid var(--panel-border);
-  overflow: hidden;
+/* ---------- Summon tab — Normal and Seasonal side by side, full width,
+   matching the player's own sketch exactly (not a tab toggle showing one
+   wheel at a time). Each column is its own pie-chart "wheel" of rarity
+   odds on a small pedestal, then x1/x5/x10 pull buttons. ---------- */
+.ttd-gacha-card-wide {
+  width: min(1100px, 96vw);
+  max-height: 94vh;
 }
-.ttd-gacha-mode-btn {
+.ttd-gacha-wheels-row {
   display: flex;
+  justify-content: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.ttd-gacha-wheel-col {
+  flex: 1 1 260px;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border: none;
-  background: rgba(74, 51, 32, 0.4);
-  color: var(--muted);
-  font-family: 'Baloo 2', sans-serif;
-  font-weight: 800;
-  font-size: 12.5px;
-  letter-spacing: 0.03em;
-  cursor: pointer;
+  gap: 10px;
 }
-.ttd-gacha-mode-btn.active { background: rgba(255, 180, 84, 0.22); color: var(--ink); }
-.ttd-gacha-mode-radio { font-size: 11px; }
-
+.ttd-gacha-wheel-col-title {
+  font-family: 'Russo One', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+  color: var(--gold);
+}
 .ttd-gacha-wheel-wrap { display: flex; flex-direction: column; align-items: center; }
 .ttd-gacha-wheel-pointer {
   width: 0;
@@ -883,6 +886,12 @@ html, body {
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.4));
   transform-origin: 50% 50%;
   will-change: transform;
+}
+.ttd-gacha-wheel-landed { animation: ttd-wheel-land-flash 480ms ease-out; }
+@keyframes ttd-wheel-land-flash {
+  0% { filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 0 rgba(255, 214, 130, 0)); }
+  30% { filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 26px rgba(255, 214, 130, 0.9)); }
+  100% { filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 0 rgba(255, 214, 130, 0)); }
 }
 .ttd-gacha-stand {
   width: 116px;
@@ -1110,7 +1119,14 @@ html, body {
   border: 2px solid var(--rarity, rgba(255, 180, 84, 0.2));
   background: rgba(0, 0, 0, 0.2);
 }
-.ttd-list-row .ttd-unit-icon { font-size: 20px; }
+.ttd-list-row .ttd-unit-icon {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--panel-border);
+}
 .ttd-list-info { flex: 1; display: flex; flex-direction: column; gap: 1px; }
 .ttd-list-sub { font-size: 11px; color: var(--muted); }
 
