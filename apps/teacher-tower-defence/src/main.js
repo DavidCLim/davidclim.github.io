@@ -209,7 +209,7 @@ function refreshEquipRow() {
 
 // ---------- Gacha modal (Summon only — Inventory/Awaken are their own
 // their own menu buttons/modals) ----------
-const gachaModal = el('div', { class: 'ttd-gacha-modal hidden' });
+const gachaModal = el('div', { class: 'ttd-gacha-modal ttd-gacha-fullscreen hidden' });
 root.appendChild(gachaModal);
 let lastPullResults = null;
 
