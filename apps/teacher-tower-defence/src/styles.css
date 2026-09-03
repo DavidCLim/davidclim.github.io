@@ -713,33 +713,27 @@ html, body {
 }
 .ttd-action-primary-disabled { opacity: 0.45; filter: grayscale(0.6); cursor: not-allowed; pointer-events: none; }
 
-.ttd-menu-tray {
+/* Awakenings shares the bottom row with the loadout tray — matching the
+   player's own sketch — instead of a standalone "LOADOUT" label sitting
+   above a centered tray. */
+.ttd-menu-bottom-row {
   position: absolute;
   bottom: 14px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 16px;
+  right: 16px;
   z-index: 20;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
-.ttd-menu-tray-label {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  color: var(--gold-dim);
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.ttd-menu-awakenings-btn {
+  flex: 0 0 auto;
+  width: auto;
+  padding: 10px 16px;
+  font-size: 12.5px;
 }
-.ttd-menu-tray-label::before, .ttd-menu-tray-label::after {
-  content: '';
-  width: 22px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 180, 84, 0.5));
-}
-.ttd-menu-tray-label::after { transform: scaleX(-1); }
 .ttd-equip-row.ttd-menu-equip-row { position: static; transform: none; }
 
 /* ---------- Bottom equip row (5 loadout slots) ---------- */
@@ -824,6 +818,27 @@ html, body {
 .ttd-gacha-tab.active { border-color: var(--gold); color: var(--gold); background: rgba(120, 90, 30, 0.35); }
 
 .ttd-gacha-body { display: flex; flex-direction: column; gap: 12px; }
+
+/* ---------- Index modal — a swipeable Teacher/Student reference,
+   matching the player's own trading-card sketch: name, an unframed
+   portrait, a description, a stat row, then prev/next arrows. ---------- */
+.ttd-index-body { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.ttd-index-name { font-family: 'Russo One', sans-serif; font-size: 1.2rem; color: var(--gold); text-align: center; }
+.ttd-index-portrait { display: flex; align-items: center; justify-content: center; }
+.ttd-index-desc { font-size: 12.5px; color: var(--muted); text-align: center; max-width: 34ch; }
+.ttd-index-nav { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 4px; }
+.ttd-index-arrow {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--panel-border);
+  background: rgba(74, 51, 32, 0.5);
+  color: var(--ink);
+  font-size: 15px;
+  cursor: pointer;
+  transition: transform 110ms ease, border-color 110ms ease;
+}
+.ttd-index-arrow:hover { transform: translateY(-1px); border-color: var(--gold); }
+.ttd-index-count { font-size: 11.5px; font-weight: 700; color: var(--muted); min-width: 12ch; text-align: center; }
 
 /* ---------- Summon tab — a Normal/Seasonal radio toggle, a pie-chart
    "wheel" of rarity odds on a small pedestal (matching the player's own

@@ -5,8 +5,9 @@ import { drawUnit } from './render/drawUnit.js';
 import { drawEnemy } from './render/drawEnemy.js';
 import { drawEffect, drawProjectile } from './render/drawEffects.js';
 import { drawMenuBackground } from './render/drawMenuBackground.js';
-import { renderUnitPortrait } from './render/drawPortrait.js';
+import { renderUnitPortrait, renderEnemyPortrait } from './render/drawPortrait.js';
 import { UNITS, UNIT_LIST, RARITY, RARITY_ORDER } from './data/units.js';
+import { TEACHER_LIST } from './data/teachers.js';
 import { MAP_LIST } from './data/maps.js';
 import { TOTAL_WAVES } from './data/waves.js';
 import { createGameState, update, startNextWave, deployUnit, canDeploy } from './game/engine.js';
@@ -162,11 +163,12 @@ root.appendChild(menuScreen);
 // and the 5-slot loadout tray anchored at the bottom.
 function renderMenuScreen() {
   clearChildren(menuScreen);
-  // A compact logo card (title + crossed-swords icon) instead of the old
-  // pill titlebar, and four equal stacked nav buttons — Index (the
-  // dungeon/map select, what "Battle" used to open directly), Gacha,
-  // Units (the renamed Inventory), and Awaken — instead of one big
-  // primary button plus a row of small icon buttons.
+  // A compact logo card (title + crossed-swords icon), then Battle as
+  // its own primary button — actually starting a fight, restored after
+  // Index took over that slot — with Index (now a swipeable
+  // Teacher/Student reference, not a battle-starter), Gacha, and Units
+  // stacked below it. Awakenings shares the bottom row with the loadout
+  // tray instead of stacking as a 5th full-width button.
   menuScreen.appendChild(el('div', { class: 'ttd-menu-logo' }, [
     el('div', { class: 'ttd-menu-logo-title' }, 'BATTLE KIDS'),
     el('div', { class: 'ttd-menu-logo-icon' }, '⚔️'),
@@ -176,13 +178,13 @@ function renderMenuScreen() {
       class: `ttd-menu-nav-btn ttd-menu-nav-primary${BATTLE_ENABLED ? '' : ' ttd-action-primary-disabled'}`,
       disabled: BATTLE_ENABLED ? undefined : true,
       onClick: BATTLE_ENABLED ? openDungeonModal : undefined,
-    }, 'INDEX'),
+    }, 'BATTLE'),
+    el('button', { class: 'ttd-menu-nav-btn', onClick: openIndexModal }, 'INDEX'),
     el('button', { class: 'ttd-menu-nav-btn', onClick: openGachaModal }, 'GACHA'),
     el('button', { class: 'ttd-menu-nav-btn', onClick: openInventoryModal }, 'UNITS'),
-    el('button', { class: 'ttd-menu-nav-btn', onClick: openAwakenModal }, 'AWAKEN'),
   ]));
-  menuScreen.appendChild(el('div', { class: 'ttd-menu-tray' }, [
-    el('div', { class: 'ttd-menu-tray-label' }, 'LOADOUT'),
+  menuScreen.appendChild(el('div', { class: 'ttd-menu-bottom-row' }, [
+    el('button', { class: 'ttd-menu-nav-btn ttd-menu-awakenings-btn', onClick: openAwakenModal }, 'AWAKENINGS'),
     el('div', { class: 'ttd-equip-row ttd-menu-equip-row', id: 'ttd-menu-equip-row' }),
   ]));
   refreshEquipRow();
@@ -262,6 +264,55 @@ function renderAwakenModal() {
   renderAwakenTab(body);
   card.appendChild(body);
   awakenModal.appendChild(card);
+}
+
+// ---------- Index modal — a swipeable Teacher/Student reference,
+// matching the player's own "TEACHER NAME HERE" trading-card sketch:
+// name, a real portrait (no frame), a flavor description, then a
+// Health/Damage/Range stat row, with arrows to page through every
+// teacher and student in the game. ----------
+const indexModal = el('div', { class: 'ttd-gacha-modal hidden' });
+root.appendChild(indexModal);
+const INDEX_ENTRIES = [
+  ...TEACHER_LIST.map(def => ({ kind: 'teacher', def })),
+  ...UNIT_LIST.map(def => ({ kind: 'student', def })),
+];
+let indexPos = 0;
+function openIndexModal() { indexPos = 0; renderIndexModal(); indexModal.classList.remove('hidden'); }
+function closeIndexModal() { indexModal.classList.add('hidden'); }
+function stepIndex(delta) {
+  indexPos = (indexPos + delta + INDEX_ENTRIES.length) % INDEX_ENTRIES.length;
+  renderIndexModal();
+}
+function renderIndexModal() {
+  clearChildren(indexModal);
+  const card = el('div', { class: 'ttd-gacha-card' });
+  card.appendChild(el('button', { class: 'ttd-modal-close', text: '✕', onClick: closeIndexModal }));
+  card.appendChild(el('div', { class: 'ttd-gacha-title' }, '📖 Index'));
+
+  const { kind, def } = INDEX_ENTRIES[indexPos];
+  const hp = kind === 'teacher' ? def.hp : (def.hp ?? Math.round(40 + def.cost * 0.6));
+  const portrait = kind === 'teacher' ? renderEnemyPortrait(def, 150) : renderUnitPortrait(def, 150);
+  const portraitWrap = el('div', { class: 'ttd-index-portrait' });
+  portraitWrap.appendChild(portrait);
+
+  const body = el('div', { class: 'ttd-index-body' }, [
+    el('div', { class: 'ttd-index-name' }, def.name),
+    portraitWrap,
+    el('div', { class: 'ttd-index-desc' }, def.desc || 'No records on file yet.'),
+    el('div', { class: 'ttd-reveal-stats' }, [
+      el('div', { class: 'ttd-reveal-stat' }, [el('div', { class: 'ttd-reveal-stat-val' }, `${hp}❤️`), el('div', { class: 'ttd-reveal-stat-label' }, 'Health')]),
+      el('div', { class: 'ttd-reveal-stat' }, [el('div', { class: 'ttd-reveal-stat-val' }, `${def.damage}⚔️`), el('div', { class: 'ttd-reveal-stat-label' }, 'Damage')]),
+      el('div', { class: 'ttd-reveal-stat' }, [el('div', { class: 'ttd-reveal-stat-val' }, `${def.range ?? 10}🎯`), el('div', { class: 'ttd-reveal-stat-label' }, 'Range')]),
+    ]),
+    el('div', { class: 'ttd-index-nav' }, [
+      el('button', { class: 'ttd-index-arrow', onClick: () => stepIndex(-1) }, '◁'),
+      el('div', { class: 'ttd-index-count' }, `${kind === 'teacher' ? 'Teacher' : 'Student'} · ${indexPos + 1} / ${INDEX_ENTRIES.length}`),
+      el('button', { class: 'ttd-index-arrow', onClick: () => stepIndex(1) }, '▷'),
+    ]),
+  ]);
+  card.appendChild(body);
+  indexModal.appendChild(card);
 }
 
 // A circular pie-chart "wheel" matching the player's own gacha sketch —
