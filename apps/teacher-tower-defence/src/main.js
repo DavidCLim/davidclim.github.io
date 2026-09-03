@@ -162,24 +162,24 @@ root.appendChild(menuScreen);
 // and the 5-slot loadout tray anchored at the bottom.
 function renderMenuScreen() {
   clearChildren(menuScreen);
-  menuScreen.appendChild(el('div', { class: 'ttd-menu-titlebar' }, [
-    el('div', { class: 'ttd-menu-titlebar-emblem' }, '🎓'),
-    el('div', { class: 'ttd-menu-titlebar-text' }, [
-      el('div', { class: 'ttd-menu-titlebar-eyebrow' }, 'BATTLE KIDS'),
-      el('h2', { class: 'ttd-menu-titlebar-title' }, 'The Academy'),
-    ]),
+  // A compact logo card (title + crossed-swords icon) instead of the old
+  // pill titlebar, and three equal stacked nav buttons — Index (the
+  // dungeon/map select, what "Battle" used to open directly), Gacha, and
+  // Units (the renamed Inventory) — instead of one big primary button
+  // plus a row of small icon buttons. Awaken moved inside the Units
+  // screen since it's a per-unit action, not top-level navigation.
+  menuScreen.appendChild(el('div', { class: 'ttd-menu-logo' }, [
+    el('div', { class: 'ttd-menu-logo-title' }, 'BATTLE KIDS'),
+    el('div', { class: 'ttd-menu-logo-icon' }, '⚔️'),
   ]));
-  menuScreen.appendChild(el('div', { class: 'ttd-menu-actions' }, [
+  menuScreen.appendChild(el('div', { class: 'ttd-menu-nav' }, [
     el('button', {
-      class: `ttd-action-btn ttd-action-primary${BATTLE_ENABLED ? '' : ' ttd-action-primary-disabled'}`,
+      class: `ttd-menu-nav-btn ttd-menu-nav-primary${BATTLE_ENABLED ? '' : ' ttd-action-primary-disabled'}`,
       disabled: BATTLE_ENABLED ? undefined : true,
       onClick: BATTLE_ENABLED ? openDungeonModal : undefined,
-    }, [el('span', { class: 'ttd-action-icon' }, '⚔️'), el('span', { class: 'ttd-action-label' }, 'Battle')]),
-    el('div', { class: 'ttd-action-subrow' }, [
-      el('button', { class: 'ttd-action-icon-btn', onClick: openGachaModal }, [el('span', { class: 'ttd-action-icon' }, '🎰'), el('span', { class: 'ttd-action-sublabel' }, 'Gacha')]),
-      el('button', { class: 'ttd-action-icon-btn', onClick: openAwakenModal }, [el('span', { class: 'ttd-action-icon' }, '✨'), el('span', { class: 'ttd-action-sublabel' }, 'Awaken')]),
-      el('button', { class: 'ttd-action-icon-btn', onClick: openInventoryModal }, [el('span', { class: 'ttd-action-icon' }, '📦'), el('span', { class: 'ttd-action-sublabel' }, 'Inventory')]),
-    ]),
+    }, 'INDEX'),
+    el('button', { class: 'ttd-menu-nav-btn', onClick: openGachaModal }, 'GACHA'),
+    el('button', { class: 'ttd-menu-nav-btn', onClick: openInventoryModal }, 'UNITS'),
   ]));
   menuScreen.appendChild(el('div', { class: 'ttd-menu-tray' }, [
     el('div', { class: 'ttd-menu-tray-label' }, 'LOADOUT'),
@@ -240,7 +240,10 @@ function renderInventoryModal() {
   clearChildren(inventoryModal);
   const card = el('div', { class: 'ttd-gacha-card' });
   card.appendChild(el('button', { class: 'ttd-modal-close', text: '✕', onClick: closeInventoryModal }));
-  card.appendChild(el('div', { class: 'ttd-gacha-title' }, '🎒 Inventory'));
+  card.appendChild(el('div', { class: 'ttd-gacha-header' }, [
+    el('div', { class: 'ttd-gacha-title' }, '🎒 Units'),
+    el('button', { class: 'ttd-units-awaken-btn', onClick: openAwakenModal }, '✨ Awaken'),
+  ]));
   const body = el('div', { class: 'ttd-gacha-body' });
   renderInventoryTab(body);
   card.appendChild(body);

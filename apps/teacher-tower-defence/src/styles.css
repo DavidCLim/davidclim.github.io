@@ -627,23 +627,46 @@ html, body {
   z-index: 25;
 }
 
-.ttd-menu-titlebar {
+/* A compact logo card — bold "BATTLE KIDS" wordmark over a crossed-swords
+   icon, with a soft divider glow beneath it — instead of the old
+   horizontal titlebar pill. */
+.ttd-menu-logo {
   position: absolute;
-  top: 10px;
-  left: 10px;
+  top: 14px;
+  left: 14px;
   z-index: 20;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 8px 18px 8px 8px;
-  border-radius: 14px;
-  background: linear-gradient(165deg, rgba(58, 42, 20, 0.9), rgba(20, 13, 6, 0.9));
-  border: 1px solid var(--panel-border);
+  gap: 8px;
+  width: min(170px, 40vw);
+  padding: 16px 12px 14px;
+  border-radius: 16px;
+  background: linear-gradient(165deg, rgba(58, 42, 20, 0.92), rgba(20, 13, 6, 0.92));
+  border: 2px solid var(--panel-border);
   box-shadow: 0 0 0 1px rgba(255, 180, 84, 0.08), 0 6px 18px rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(3px);
 }
-.ttd-menu-titlebar-emblem {
-  font-size: 26px;
+.ttd-menu-logo::after {
+  content: '';
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  bottom: -9px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(255, 180, 84, 0.6), transparent);
+}
+.ttd-menu-logo-title {
+  font-family: 'Russo One', sans-serif;
+  font-size: 19px;
+  line-height: 1.1;
+  text-align: center;
+  color: var(--ink);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+}
+.ttd-menu-logo-icon {
+  font-size: 24px;
   line-height: 1;
   filter: drop-shadow(0 0 8px rgba(255, 214, 130, 0.5));
   animation: ttd-emblem-glow 3.6s ease-in-out infinite;
@@ -652,11 +675,10 @@ html, body {
   0%, 100% { filter: drop-shadow(0 0 6px rgba(255, 214, 130, 0.35)); }
   50% { filter: drop-shadow(0 0 14px rgba(255, 214, 130, 0.65)); }
 }
-.ttd-menu-titlebar-text { display: flex; flex-direction: column; line-height: 1.15; text-align: left; }
-.ttd-menu-titlebar-eyebrow { font-size: 9px; font-weight: 800; letter-spacing: 0.1em; color: var(--gold-dim); }
-.ttd-menu-titlebar-title { margin: 0; font-family: 'Russo One', sans-serif; font-size: 16px; color: var(--ink); }
 
-.ttd-menu-actions {
+/* Three equal stacked nav buttons — Index / Gacha / Units — instead of
+   one big primary button plus a row of small icon buttons. */
+.ttd-menu-nav {
   position: absolute;
   top: 50%;
   left: 16px;
@@ -664,77 +686,32 @@ html, body {
   z-index: 20;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  width: min(200px, 44vw);
-}
-.ttd-action-btn {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
   gap: 12px;
-  padding: 12px 16px;
-  border-radius: 14px;
+  width: min(190px, 44vw);
+}
+.ttd-menu-nav-btn {
+  padding: 16px 18px;
+  border-radius: 12px;
   border: 2px solid var(--panel-border);
   background: linear-gradient(165deg, #3a2c14, #241708);
   color: var(--ink);
-  font-family: 'Baloo 2', sans-serif;
-  font-weight: 800;
-  font-size: 14px;
-  text-align: left;
+  font-family: 'Russo One', sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  text-align: center;
   cursor: pointer;
   box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35), 0 8px 16px rgba(0, 0, 0, 0.3);
   transition: transform 110ms ease, box-shadow 110ms ease, filter 110ms ease;
 }
-.ttd-action-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
-.ttd-action-btn:active { transform: translateY(1px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35); }
-.ttd-action-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 180, 84, 0.25);
-  flex-shrink: 0;
-}
-.ttd-action-primary {
-  padding: 16px 18px;
+.ttd-menu-nav-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+.ttd-menu-nav-btn:active { transform: translateY(1px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35); }
+.ttd-menu-nav-primary {
   background: linear-gradient(165deg, #ffe98a, #ffd75c 45%, #f0a52c);
   color: #2a1a04;
   border-color: rgba(255, 215, 92, 0.7);
   box-shadow: 0 4px 0 #8a5c14, 0 10px 20px rgba(255, 215, 92, 0.25);
 }
 .ttd-action-primary-disabled { opacity: 0.45; filter: grayscale(0.6); cursor: not-allowed; pointer-events: none; }
-.ttd-action-primary .ttd-action-icon {
-  font-size: 26px;
-  width: auto;
-  height: auto;
-  background: none;
-  border: none;
-}
-.ttd-action-primary .ttd-action-label { font-size: 17px; }
-
-.ttd-action-subrow { display: flex; gap: 8px; }
-.ttd-action-icon-btn {
-  flex: 1 1 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 10px 4px;
-  border-radius: 12px;
-  border: 2px solid var(--panel-border);
-  background: linear-gradient(165deg, rgba(58, 42, 20, 0.75), rgba(20, 13, 6, 0.75));
-  color: var(--muted);
-  cursor: pointer;
-  transition: transform 110ms ease, border-color 110ms ease, color 110ms ease, box-shadow 110ms ease;
-}
-.ttd-action-icon-btn:hover { transform: translateY(-2px); border-color: var(--mint); color: var(--ink); box-shadow: 0 0 14px rgba(95, 227, 192, 0.25); }
-.ttd-action-icon-btn .ttd-action-icon { width: 30px; height: 30px; font-size: 16px; }
-.ttd-action-sublabel { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 10px; letter-spacing: 0.02em; }
 
 .ttd-menu-tray {
   position: absolute;
@@ -830,6 +807,19 @@ html, body {
 }
 .ttd-gacha-header { display: flex; align-items: center; justify-content: space-between; padding-right: 30px; }
 .ttd-gacha-title { font-family: 'Russo One', sans-serif; font-size: 1.2rem; color: var(--gold); }
+.ttd-units-awaken-btn {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 180, 84, 0.5);
+  background: rgba(74, 51, 32, 0.5);
+  color: var(--ink);
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: transform 110ms ease, border-color 110ms ease;
+}
+.ttd-units-awaken-btn:hover { transform: translateY(-1px); border-color: var(--gold); }
 .ttd-gacha-gold { font-family: 'Russo One', sans-serif; font-size: 1rem; color: var(--gold); }
 
 .ttd-gacha-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
