@@ -252,19 +252,25 @@ export function drawStudentBody(ctx, scale = 1, accent, phase = 0, lean = 0.12, 
   }
   const armSwing = -legSwing;
   if (gesture === 'raise') {
-    // Both hands go up near the head instead of a punch — the "67!"
+    // Both hands go up beside the head instead of a punch — the "67!"
     // meme gesture — chambering up as `windup` ramps toward 1, fully
     // raised for the brief `punching` flash, interpolated in from each
-    // arm's own normal walk-swing pose.
+    // arm's own normal walk-swing pose. Targets an explicit point out
+    // past either side of the head (not straight up behind it) so the
+    // hands land in open air and actually stay visible instead of
+    // disappearing behind the head, which is drawn on top afterward.
     const t = punching ? 1 : windup;
-    const raiseSwing = Math.PI * 0.92;
-    const raiseReach = 8;
-    const backSwing = -armSwing + (raiseSwing - (-armSwing)) * t;
-    const backReach = 9 + (raiseReach - 9) * t;
-    const frontSwing = armSwing + (raiseSwing - armSwing) * t;
-    const frontReach = 9 + (raiseReach - 9) * t;
-    drawArm(-6 * s, backSwing, backReach);
-    drawArm(6 * s, frontSwing, frontReach);
+    const shoulderY = -9 * s;
+    const backNeutralX = -6 * s + Math.sin(-armSwing) * 9 * s;
+    const backNeutralY = shoulderY + Math.cos(-armSwing) * 9 * s;
+    const frontNeutralX = 6 * s + Math.sin(armSwing) * 9 * s;
+    const frontNeutralY = shoulderY + Math.cos(armSwing) * 9 * s;
+    const backHandX = backNeutralX + (-13 * s - backNeutralX) * t;
+    const backHandY = backNeutralY + (-25 * s - backNeutralY) * t;
+    const frontHandX = frontNeutralX + (13 * s - frontNeutralX) * t;
+    const frontHandY = frontNeutralY + (-25 * s - frontNeutralY) * t;
+    drawJointedLimb(ctx, -6 * s, shoulderY, (-6 * s + backHandX) / 2, (shoulderY + backHandY) / 2, backHandX, backHandY, 3 * s, skin, outline, outlineWidth);
+    drawJointedLimb(ctx, 6 * s, shoulderY, (6 * s + frontHandX) / 2, (shoulderY + frontHandY) / 2, frontHandX, frontHandY, 3 * s, skin, outline, outlineWidth);
   } else {
     drawArm(-6 * s, -armSwing, 9);
 

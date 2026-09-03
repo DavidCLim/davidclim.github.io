@@ -33,9 +33,10 @@ export function renderUnitPortrait(unit, sizePx = 120) {
   return canvas;
 }
 
-// A tight face-and-collar crop of the same figure — for small circular
-// slots (the loadout tray) that need to read as "a face", not a full
-// action pose shrunk down to a speck.
+// A small bust badge — a plain round head over a short collar hint, sized
+// small with empty margin around it inside its circular slot — matching
+// the player's own sketch exactly (a little face floating in the middle
+// of the slot circle, not a tight crop that fills the whole thing).
 export function renderUnitFace(unit, sizePx = 64) {
   const canvas = document.createElement('canvas');
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -48,16 +49,25 @@ export function renderUnitFace(unit, sizePx = 64) {
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
 
-  // A much larger body scale + a translate that pushes the head/collar
-  // down into frame — crops in tight enough that only the face and a
-  // sliver of the collar/neck show, like a headshot.
-  const bodyScale = sizePx / 15;
+  const bodyScale = sizePx / 60;
   ctx.save();
-  ctx.translate(sizePx / 2, sizePx * 1.34);
+  ctx.translate(sizePx / 2, sizePx * 0.62);
   ctx.fillStyle = unit.color;
   ctx.strokeStyle = '#241708';
   ctx.lineWidth = 1.6 * (bodyScale / 1.8);
-  drawStudentBody(ctx, bodyScale, unit.accent, 0, 0);
+
+  // Just the collar — the top of the torso, no legs or arms — so this
+  // reads as "shoulders", not a full body shrunk down to a speck.
+  ctx.beginPath();
+  ctx.moveTo(-6 * bodyScale, -11 * bodyScale);
+  ctx.lineTo(-6.5 * bodyScale, 2 * bodyScale);
+  ctx.lineTo(6.5 * bodyScale, 2 * bodyScale);
+  ctx.lineTo(6 * bodyScale, -11 * bodyScale);
+  ctx.quadraticCurveTo(0, -9 * bodyScale, -6 * bodyScale, -11 * bodyScale);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
   drawHead(ctx, 9 * bodyScale, -20 * bodyScale);
   ctx.restore();
 

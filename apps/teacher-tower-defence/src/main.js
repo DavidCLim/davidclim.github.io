@@ -555,7 +555,7 @@ function renderPullReveal() {
 // owned, a dimmed icon if it exists but you haven't pulled it yet); any
 // slots beyond the current roster stay plain numbered placeholders for
 // students still to come.
-const TOTAL_UNIT_SLOTS = 10;
+const TOTAL_UNIT_SLOTS = 20;
 
 function renderInventoryTab(body) {
   body.appendChild(el('div', { class: 'ttd-equip-status' }, `Equipped ${collection.equipped.length} / ${MAX_EQUIPPED}`));
