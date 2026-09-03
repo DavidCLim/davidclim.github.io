@@ -1008,42 +1008,81 @@ html, body {
   font-weight: 700;
 }
 
-/* ---------- Inventory tab ---------- */
+/* ---------- Units tab — a fixed grid of numbered slots (matching the
+   player's own sketch) instead of a card list that only shows what you
+   already own. ---------- */
 .ttd-equip-status { font-size: 12.5px; color: var(--muted); font-weight: 700; }
-.ttd-inventory-grid {
+.ttd-slot-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
 }
-.ttd-unit-card {
+.ttd-slot {
   position: relative;
+  aspect-ratio: 1;
+  border-radius: 50%;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 3px;
-  padding: 10px 4px 8px;
-  border-radius: 10px;
-  border: 2px solid var(--rarity, rgba(255, 180, 84, 0.25));
+  justify-content: center;
+  border: 2px solid rgba(255, 180, 84, 0.22);
   background: rgba(0, 0, 0, 0.25);
-  color: var(--ink);
-  cursor: pointer;
-  font-family: 'Baloo 2', sans-serif;
+  font-family: 'Russo One', sans-serif;
+  font-size: 16px;
+  color: var(--muted);
 }
-.ttd-unit-card.equipped { box-shadow: 0 0 14px var(--rarity-glow, rgba(255, 214, 112, 0.5)); background: rgba(255, 180, 84, 0.12); }
-.ttd-unit-icon { font-size: 22px; }
-.ttd-unit-name { font-size: 10px; font-weight: 700; text-align: center; line-height: 1.2; }
-.ttd-unit-meta { font-size: 9.5px; color: var(--rarity, var(--muted)); font-weight: 700; }
-.ttd-unit-equipped-badge {
+.ttd-slot-filled {
+  border: 3px solid var(--rarity, rgba(255, 180, 84, 0.5));
+  background: radial-gradient(circle, rgba(74, 51, 32, 0.6), rgba(20, 13, 6, 0.6));
+  overflow: visible;
+  padding: 0;
+}
+.ttd-slot-filled.owned { cursor: pointer; }
+.ttd-slot-filled.locked { opacity: 0.4; cursor: not-allowed; }
+.ttd-slot-filled.equipped { box-shadow: 0 0 14px var(--rarity-glow, rgba(255, 214, 112, 0.5)); }
+.ttd-slot-portrait {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+.ttd-slot-count {
   position: absolute;
-  top: -6px; right: -6px;
-  padding: 1px 6px;
+  bottom: -4px; right: -4px;
+  padding: 1px 5px;
   border-radius: 999px;
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid var(--panel-border);
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.ttd-slot-stars {
+  position: absolute;
+  bottom: -4px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 8px;
+  color: var(--gold);
+  white-space: nowrap;
+}
+.ttd-slot-equipped-badge {
+  position: absolute;
+  top: -5px; left: -5px;
+  width: 17px; height: 17px;
+  border-radius: 50%;
   background: var(--mint);
   color: #0c2c22;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.ttd-empty-note { color: var(--muted); font-size: 13px; font-style: italic; padding: 10px 2px; }
+.ttd-slot-hint { color: var(--muted); font-size: 11.5px; text-align: center; margin-top: 2px; }
 
 /* ---------- Awaken tab ---------- */
 .ttd-list { display: flex; flex-direction: column; gap: 8px; }

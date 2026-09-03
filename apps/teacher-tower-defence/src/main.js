@@ -6,7 +6,7 @@ import { drawEnemy } from './render/drawEnemy.js';
 import { drawEffect, drawProjectile } from './render/drawEffects.js';
 import { drawMenuBackground } from './render/drawMenuBackground.js';
 import { renderUnitPortrait } from './render/drawPortrait.js';
-import { UNITS, RARITY, RARITY_ORDER } from './data/units.js';
+import { UNITS, UNIT_LIST, RARITY, RARITY_ORDER } from './data/units.js';
 import { MAP_LIST } from './data/maps.js';
 import { TOTAL_WAVES } from './data/waves.js';
 import { createGameState, update, startNextWave, deployUnit, canDeploy } from './game/engine.js';
@@ -486,31 +486,44 @@ function renderPullReveal() {
   revealOverlay.onclick = advancePullReveal;
 }
 
+// A fixed grid of numbered slots — matching the player's own Units
+// sketch — instead of a card list that only shows what you already own.
+// The first slots hold the actual roster (portrait + tap-to-equip once
+// owned, a dimmed icon if it exists but you haven't pulled it yet); any
+// slots beyond the current roster stay plain numbered placeholders for
+// students still to come.
+const TOTAL_UNIT_SLOTS = 10;
+
 function renderInventoryTab(body) {
   body.appendChild(el('div', { class: 'ttd-equip-status' }, `Equipped ${collection.equipped.length} / ${MAX_EQUIPPED}`));
-  const grid = el('div', { class: 'ttd-inventory-grid' });
-  const ownedIds = Object.keys(collection.owned).filter(id => collection.owned[id] > 0);
-  ownedIds.sort((a, b) => RARITY[UNITS[b].rarity].order - RARITY[UNITS[a].rarity].order || UNITS[a].name.localeCompare(UNITS[b].name));
-  if (!ownedIds.length) {
-    grid.appendChild(el('div', { class: 'ttd-empty-note' }, 'No students recruited yet — try the Summon tab.'));
-  }
-  for (const id of ownedIds) {
-    const def = UNITS[id];
-    const count = collection.owned[id];
-    const star = collection.stars[id] || 0;
-    const equipped = collection.equipped.includes(id);
-    const card = el('button', {
-      class: `ttd-unit-card rarity-${def.rarity}` + (equipped ? ' equipped' : ''),
-      onClick: () => { toggleEquip(collection, id); renderInventoryModal(); refreshEquipRow(); },
+  const grid = el('div', { class: 'ttd-slot-grid' });
+  for (let i = 0; i < TOTAL_UNIT_SLOTS; i++) {
+    const def = UNIT_LIST[i];
+    if (!def) {
+      grid.appendChild(el('div', { class: 'ttd-slot' }, String(i + 1)));
+      continue;
+    }
+    const count = collection.owned[def.id] || 0;
+    const owned = count > 0;
+    const star = collection.stars[def.id] || 0;
+    const equipped = collection.equipped.includes(def.id);
+    const portraitBox = el('div', { class: 'ttd-slot-portrait' });
+    if (owned) portraitBox.appendChild(renderUnitPortrait(def, 60));
+    else portraitBox.textContent = def.icon;
+    const slot = el('button', {
+      class: `ttd-slot ttd-slot-filled rarity-${def.rarity}` + (owned ? ' owned' : ' locked') + (equipped ? ' equipped' : ''),
+      onClick: owned ? () => { toggleEquip(collection, def.id); renderInventoryModal(); refreshEquipRow(); } : undefined,
+      disabled: owned ? undefined : true,
     }, [
-      el('div', { class: 'ttd-unit-icon' }, def.icon),
-      el('div', { class: 'ttd-unit-name' }, def.name),
-      el('div', { class: 'ttd-unit-meta' }, `x${count}${star ? ' ' + '★'.repeat(star) : ''}`),
-      equipped ? el('div', { class: 'ttd-unit-equipped-badge' }, 'EQUIPPED') : null,
+      portraitBox,
+      owned && count > 1 ? el('div', { class: 'ttd-slot-count' }, `x${count}`) : null,
+      owned && star ? el('div', { class: 'ttd-slot-stars' }, '★'.repeat(star)) : null,
+      equipped ? el('div', { class: 'ttd-slot-equipped-badge' }, '✓') : null,
     ]);
-    grid.appendChild(card);
+    grid.appendChild(slot);
   }
   body.appendChild(grid);
+  body.appendChild(el('div', { class: 'ttd-slot-hint' }, 'Tap a recruited student to equip or unequip them.'));
 }
 
 function renderAwakenTab(body) {
