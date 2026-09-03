@@ -235,15 +235,15 @@ function renderGachaModal() {
 }
 
 // ---------- Inventory modal ----------
-const inventoryModal = el('div', { class: 'ttd-gacha-modal hidden' });
+const inventoryModal = el('div', { class: 'ttd-gacha-modal ttd-gacha-fullscreen hidden' });
 root.appendChild(inventoryModal);
 function openInventoryModal() { renderInventoryModal(); inventoryModal.classList.remove('hidden'); }
 function closeInventoryModal() { inventoryModal.classList.add('hidden'); }
 function renderInventoryModal() {
   clearChildren(inventoryModal);
-  const card = el('div', { class: 'ttd-gacha-card' });
+  const card = el('div', { class: 'ttd-gacha-card ttd-gacha-card-wide' });
   card.appendChild(el('button', { class: 'ttd-modal-close', text: '✕', onClick: closeInventoryModal }));
-  card.appendChild(el('div', { class: 'ttd-gacha-title' }, '🎒 Units'));
+  card.appendChild(el('div', { class: 'ttd-units-title' }, 'UNITS'));
   const body = el('div', { class: 'ttd-gacha-body' });
   renderInventoryTab(body);
   card.appendChild(body);
@@ -323,7 +323,7 @@ function renderIndexModal() {
 // rotated to match its wedge's own angle — like the numbers on a clock
 // face — instead of every label sitting upright regardless of position,
 // which is what made it read as "not like my drawing".
-const WHEEL_SIZE = 220;
+const WHEEL_SIZE = 320;
 function buildOddsWheel(slices, size = WHEEL_SIZE) {
   const cx = size / 2, cy = size / 2, r = size / 2 - 4;
   const toXY = (angleDeg, radius) => {
@@ -346,14 +346,14 @@ function buildOddsWheel(slices, size = WHEEL_SIZE) {
     // they don't run wide enough to crowd a neighboring wedge's text.
     const words = s.label.split(' ');
     const nameLines = words.length > 1 ? [words.slice(0, -1).join(' '), words[words.length - 1]] : [s.label];
-    const lineH = 9;
+    const lineH = 13;
     const textParts = [];
     let y = cy - labelR - (nameLines.length - 1) * lineH;
     for (const line of nameLines) {
-      textParts.push(`<text x="${cx}" y="${y.toFixed(2)}" text-anchor="middle" font-size="8.5" font-weight="800" fill="#241708" font-family="'Baloo 2', sans-serif">${line}</text>`);
+      textParts.push(`<text x="${cx}" y="${y.toFixed(2)}" text-anchor="middle" font-size="12" font-weight="800" fill="#241708" font-family="'Baloo 2', sans-serif">${line}</text>`);
       y += lineH;
     }
-    textParts.push(`<text x="${cx}" y="${(y + 4).toFixed(2)}" text-anchor="middle" font-size="8.5" font-weight="700" fill="#241708" font-family="'Baloo 2', sans-serif">${s.pctLabel}</text>`);
+    textParts.push(`<text x="${cx}" y="${(y + 5).toFixed(2)}" text-anchor="middle" font-size="12" font-weight="700" fill="#241708" font-family="'Baloo 2', sans-serif">${s.pctLabel}</text>`);
     // Draw every label at the top (12 o'clock), then rotate the whole
     // group around the wheel's center by this wedge's own angle — moves
     // it into place AND tilts it to follow the wedge, all in one step.
@@ -568,20 +568,14 @@ function renderInventoryTab(body) {
     }
     const count = collection.owned[def.id] || 0;
     const owned = count > 0;
-    const star = collection.stars[def.id] || 0;
     const equipped = collection.equipped.includes(def.id);
     const portraitBox = el('div', { class: 'ttd-slot-portrait' });
     portraitBox.appendChild(renderUnitFace(def, 60));
     const slot = el('button', {
-      class: `ttd-slot ttd-slot-filled rarity-${def.rarity}` + (owned ? ' owned' : ' locked') + (equipped ? ' equipped' : ''),
+      class: 'ttd-slot ttd-slot-filled' + (owned ? ' owned' : ' locked') + (equipped ? ' equipped' : ''),
       onClick: owned ? () => { toggleEquip(collection, def.id); renderInventoryModal(); refreshEquipRow(); } : undefined,
       disabled: owned ? undefined : true,
-    }, [
-      portraitBox,
-      owned && count > 1 ? el('div', { class: 'ttd-slot-count' }, `x${count}`) : null,
-      owned && star ? el('div', { class: 'ttd-slot-stars' }, '★'.repeat(star)) : null,
-      equipped ? el('div', { class: 'ttd-slot-equipped-badge' }, '✓') : null,
-    ]);
+    }, [portraitBox]);
     grid.appendChild(slot);
   }
   body.appendChild(grid);
