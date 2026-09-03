@@ -209,7 +209,7 @@ function refreshEquipRow() {
 
 // ---------- Gacha modal (Summon only — Inventory/Awaken are their own
 // their own menu buttons/modals) ----------
-const gachaModal = el('div', { class: 'ttd-gacha-modal ttd-gacha-fullscreen hidden' });
+const gachaModal = el('div', { class: 'ttd-gacha-modal hidden' });
 root.appendChild(gachaModal);
 let lastPullResults = null;
 
@@ -780,6 +780,10 @@ function startGame(mapId) {
   hideAllScreens();
   hud.classList.remove('hidden');
   squad.classList.remove('hidden');
+  // Wave 1 starts itself instead of waiting on a button tap — walking
+  // into a battle with an empty lane and no enemies in sight read as
+  // "nothing is happening" rather than "tap Start Wave".
+  startNextWave(state);
   refreshAll();
 }
 

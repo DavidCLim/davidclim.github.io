@@ -848,9 +848,13 @@ html, body {
    matching the player's own sketch exactly (not a tab toggle showing one
    wheel at a time). Each column is its own pie-chart "wheel" of rarity
    odds on a small pedestal, then x1/x5/x10 pull buttons. ---------- */
-/* Gacha specifically goes full-screen (no dimmed backdrop, no floating
-   card) instead of a centered popup — the player's own sketch shows the
-   wheels filling the whole page, not a card over the menu. */
+.ttd-gacha-card-wide {
+  width: min(880px, 96vw);
+  max-height: 94vh;
+}
+/* A modal that additionally carries ttd-gacha-fullscreen goes true
+   full-screen (no dimmed backdrop, no floating card) instead of a
+   centered popup. */
 .ttd-gacha-fullscreen {
   background: #100a04;
   padding: 0;
