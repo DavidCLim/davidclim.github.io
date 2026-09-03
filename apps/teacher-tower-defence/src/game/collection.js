@@ -37,7 +37,9 @@ export const BANNER_LIST = Object.values(BANNERS);
 
 function poolForBanner(banner) {
   const rarities = Object.keys(banner.rates);
-  return UNIT_LIST.filter(u => rarities.includes(u.rarity));
+  // notRollable units (the free starter) never come out of the Gacha,
+  // even if their rarity is in the pool.
+  return UNIT_LIST.filter(u => rarities.includes(u.rarity) && !u.notRollable);
 }
 
 function rollRarity(rates) {

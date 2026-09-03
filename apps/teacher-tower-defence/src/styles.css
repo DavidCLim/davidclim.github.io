@@ -686,11 +686,11 @@ html, body {
   z-index: 20;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   width: min(190px, 44vw);
 }
 .ttd-menu-nav-btn {
-  padding: 16px 18px;
+  padding: 14px 18px;
   border-radius: 12px;
   border: 2px solid var(--panel-border);
   background: linear-gradient(165deg, #3a2c14, #241708);
@@ -807,20 +807,6 @@ html, body {
 }
 .ttd-gacha-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; row-gap: 8px; padding-right: 30px; }
 .ttd-gacha-title { font-family: 'Russo One', sans-serif; font-size: 1.2rem; color: var(--gold); white-space: nowrap; }
-.ttd-gacha-header-right { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
-.ttd-units-awaken-btn {
-  padding: 7px 14px;
-  border-radius: 999px;
-  border: 2px solid rgba(255, 180, 84, 0.5);
-  background: rgba(74, 51, 32, 0.5);
-  color: var(--ink);
-  font-family: 'Baloo 2', sans-serif;
-  font-weight: 800;
-  font-size: 12.5px;
-  cursor: pointer;
-  transition: transform 110ms ease, border-color 110ms ease;
-}
-.ttd-units-awaken-btn:hover { transform: translateY(-1px); border-color: var(--gold); }
 .ttd-gacha-gold { font-family: 'Russo One', sans-serif; font-size: 1rem; color: var(--gold); }
 
 .ttd-gacha-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -988,65 +974,28 @@ html, body {
   from { transform: scale(0.7); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
+/* The rarity name as the big header, matching the player's own trading-
+   card sketch — no "YOU GOT!" banner, no curtains, just the card. */
 .ttd-reveal-label {
   font-family: 'Russo One', sans-serif;
-  font-size: 1.15rem;
-  letter-spacing: 0.05em;
-  color: var(--gold);
-  text-shadow: 0 0 14px rgba(255, 180, 84, 0.55);
-}
-.ttd-reveal-stage {
-  position: relative;
-  width: 140px;
-  height: 140px;
-  isolation: isolate;
-}
-.ttd-reveal-curtain {
-  position: absolute;
-  top: -10px;
-  width: 50%;
-  height: 66%;
-  z-index: 0;
-  background-image: repeating-linear-gradient(
-    90deg,
-    #9c2020 0px, #9c2020 7px,
-    #7a1616 7px, #7a1616 14px
-  );
-  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.45);
-}
-.ttd-reveal-curtain-left { left: -12px; border-radius: 6px 70px 6px 6px; transform: rotate(-8deg); }
-.ttd-reveal-curtain-right { right: -12px; border-radius: 70px 6px 6px 6px; transform: rotate(8deg); }
-.ttd-reveal-rod {
-  position: absolute;
-  top: -12px; left: -14px; right: -14px;
-  height: 6px;
-  border-radius: 3px;
-  background: linear-gradient(180deg, #ffe0a0, #b4780e);
-  z-index: 2;
+  font-size: 1.5rem;
+  letter-spacing: 0.06em;
+  color: var(--rarity, var(--gold));
+  text-shadow: 0 0 14px var(--rarity-glow, rgba(255, 180, 84, 0.55));
 }
 .ttd-reveal-portrait {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  border-radius: 50%;
+  width: 100%;
+  aspect-ratio: 4 / 3;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 10px;
   background: radial-gradient(circle, #4a3016 0%, #1c1006 100%);
-  border: 4px solid #2c1206;
-  box-shadow: 0 0 0 3px var(--rarity, #ffb454), 0 0 26px var(--rarity-glow, rgba(255, 180, 84, 0.4));
+  border: 3px solid var(--rarity, #ffb454);
+  box-shadow: 0 0 26px var(--rarity-glow, rgba(255, 180, 84, 0.4));
+  overflow: hidden;
 }
 .ttd-reveal-name { font-family: 'Baloo 2', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--ink); text-align: center; }
-.ttd-reveal-rarity {
-  padding: 3px 14px;
-  border-radius: 999px;
-  border: 2px solid var(--rarity, var(--panel-border));
-  color: var(--rarity, var(--ink));
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
 .ttd-reveal-desc { font-size: 12px; color: var(--muted); text-align: center; max-width: 26ch; }
 .ttd-reveal-stats { display: flex; gap: 14px; }
 .ttd-reveal-stat { display: flex; flex-direction: column; align-items: center; gap: 1px; }

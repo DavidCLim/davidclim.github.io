@@ -163,11 +163,10 @@ root.appendChild(menuScreen);
 function renderMenuScreen() {
   clearChildren(menuScreen);
   // A compact logo card (title + crossed-swords icon) instead of the old
-  // pill titlebar, and three equal stacked nav buttons — Index (the
-  // dungeon/map select, what "Battle" used to open directly), Gacha, and
-  // Units (the renamed Inventory) — instead of one big primary button
-  // plus a row of small icon buttons. Awaken moved inside the Units
-  // screen since it's a per-unit action, not top-level navigation.
+  // pill titlebar, and four equal stacked nav buttons — Index (the
+  // dungeon/map select, what "Battle" used to open directly), Gacha,
+  // Units (the renamed Inventory), and Awaken — instead of one big
+  // primary button plus a row of small icon buttons.
   menuScreen.appendChild(el('div', { class: 'ttd-menu-logo' }, [
     el('div', { class: 'ttd-menu-logo-title' }, 'BATTLE KIDS'),
     el('div', { class: 'ttd-menu-logo-icon' }, '⚔️'),
@@ -180,6 +179,7 @@ function renderMenuScreen() {
     }, 'INDEX'),
     el('button', { class: 'ttd-menu-nav-btn', onClick: openGachaModal }, 'GACHA'),
     el('button', { class: 'ttd-menu-nav-btn', onClick: openInventoryModal }, 'UNITS'),
+    el('button', { class: 'ttd-menu-nav-btn', onClick: openAwakenModal }, 'AWAKEN'),
   ]));
   menuScreen.appendChild(el('div', { class: 'ttd-menu-tray' }, [
     el('div', { class: 'ttd-menu-tray-label' }, 'LOADOUT'),
@@ -223,10 +223,7 @@ function renderGachaModal() {
   card.appendChild(el('button', { class: 'ttd-modal-close', text: '✕', onClick: closeGachaModal }));
   card.appendChild(el('div', { class: 'ttd-gacha-header' }, [
     el('div', { class: 'ttd-gacha-title' }, '🎰 Gacha'),
-    el('div', { class: 'ttd-gacha-header-right' }, [
-      el('div', { class: 'ttd-gacha-gold' }, `${collection.gold.toLocaleString()} 📄`),
-      el('button', { class: 'ttd-units-awaken-btn', onClick: openAwakenModal }, '✨ Awaken'),
-    ]),
+    el('div', { class: 'ttd-gacha-gold' }, `${collection.gold.toLocaleString()} 📄`),
   ]));
   const body = el('div', { class: 'ttd-gacha-body' });
   renderSummonTab(body);
@@ -243,10 +240,7 @@ function renderInventoryModal() {
   clearChildren(inventoryModal);
   const card = el('div', { class: 'ttd-gacha-card' });
   card.appendChild(el('button', { class: 'ttd-modal-close', text: '✕', onClick: closeInventoryModal }));
-  card.appendChild(el('div', { class: 'ttd-gacha-header' }, [
-    el('div', { class: 'ttd-gacha-title' }, '🎒 Units'),
-    el('button', { class: 'ttd-units-awaken-btn', onClick: openAwakenModal }, '✨ Awaken'),
-  ]));
+  card.appendChild(el('div', { class: 'ttd-gacha-title' }, '🎒 Units'));
   const body = el('div', { class: 'ttd-gacha-body' });
   renderInventoryTab(body);
   card.appendChild(body);
@@ -465,26 +459,26 @@ function advancePullReveal() {
   renderPullReveal();
 }
 
+// Matches the player's own trading-card sketch: rarity name as the big
+// header (no "YOU GOT!" banner), a plain rectangular portrait box (not a
+// curtained circle), name, description, then a Health/Damage/Range stat
+// row — instead of the earlier curtain-reveal design.
 function renderPullReveal() {
   clearChildren(revealOverlay);
   const u = revealQueue[revealIndex];
   const r = RARITY[u.rarity];
+  const hp = u.hp ?? Math.round(40 + u.cost * 0.6);
   const portrait = el('div', { class: 'ttd-reveal-portrait' });
-  portrait.appendChild(renderUnitPortrait(u, 120));
+  portrait.appendChild(renderUnitPortrait(u, 150));
   const card = el('div', { class: `ttd-reveal-card rarity-${u.rarity}`, onClick: (e) => e.stopPropagation() }, [
-    el('div', { class: 'ttd-reveal-label' }, 'YOU GOT!'),
-    el('div', { class: 'ttd-reveal-stage' }, [
-      el('div', { class: 'ttd-reveal-curtain ttd-reveal-curtain-left' }),
-      el('div', { class: 'ttd-reveal-curtain ttd-reveal-curtain-right' }),
-      el('div', { class: 'ttd-reveal-rod' }),
-      portrait,
-    ]),
+    el('div', { class: 'ttd-reveal-label' }, r.label.toUpperCase()),
+    portrait,
     el('div', { class: 'ttd-reveal-name' }, u.name),
-    el('div', { class: 'ttd-reveal-rarity' }, r.label),
     el('div', { class: 'ttd-reveal-desc' }, u.desc),
     el('div', { class: 'ttd-reveal-stats' }, [
-      el('div', { class: 'ttd-reveal-stat' }, [el('div', { class: 'ttd-reveal-stat-val' }, `${u.damage}`), el('div', { class: 'ttd-reveal-stat-label' }, 'DMG')]),
-      el('div', { class: 'ttd-reveal-stat' }, [el('div', { class: 'ttd-reveal-stat-val' }, `${u.range}`), el('div', { class: 'ttd-reveal-stat-label' }, 'Range')]),
+      el('div', { class: 'ttd-reveal-stat' }, [el('div', { class: 'ttd-reveal-stat-val' }, `${hp}❤️`), el('div', { class: 'ttd-reveal-stat-label' }, 'Health')]),
+      el('div', { class: 'ttd-reveal-stat' }, [el('div', { class: 'ttd-reveal-stat-val' }, `${u.damage}⚔️`), el('div', { class: 'ttd-reveal-stat-label' }, 'Damage')]),
+      el('div', { class: 'ttd-reveal-stat' }, [el('div', { class: 'ttd-reveal-stat-val' }, `${u.range}🎯`), el('div', { class: 'ttd-reveal-stat-label' }, 'Range')]),
     ]),
     el('div', { class: 'ttd-reveal-next' }, revealIndex < revealQueue.length - 1 ? `Tap to continue (${revealIndex + 1}/${revealQueue.length})` : 'Tap to continue'),
   ]);

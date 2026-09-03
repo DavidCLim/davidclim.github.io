@@ -20,7 +20,7 @@ function archetypeOf(u) {
 const SCALE = 1.8;
 
 export function drawUnit(ctx, tower, t) {
-  const { x, y, color, accent, attackFlashUntil, attackWindup, hitFlashUntil, level, star, dir, hp, maxHp } = tower;
+  const { x, y, color, accent, attackFlashUntil, attackWindup, hitFlashUntil, level, star, dir, hp, maxHp, gesture } = tower;
   ctx.save();
 
   const flashing = attackFlashUntil && attackFlashUntil > t;
@@ -53,7 +53,7 @@ export function drawUnit(ctx, tower, t) {
   // attack window; `attackWindup` pulls it back into an anticipation pose
   // in the moments just before that, instead of the punch appearing out
   // of nowhere.
-  drawStudentBody(ctx, SCALE, accent, phase, 0, flashing, attackWindup || 0);
+  drawStudentBody(ctx, SCALE, accent, phase, 0, flashing, attackWindup || 0, gesture || 'punch');
   drawHead(ctx, 9 * SCALE, -20 * SCALE);
   drawProp(ctx, archetypeOf(tower), color, accent, SCALE);
   ctx.restore();

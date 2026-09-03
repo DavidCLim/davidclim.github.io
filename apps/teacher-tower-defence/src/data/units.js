@@ -25,15 +25,26 @@ function unit(def) {
   return { ...def, levels: mkLevels(cost, damage, range, fireRate) };
 }
 
-// Scoped down to just the Starter Student for now, while its design gets
-// nailed down — the other 26 units are cut from the active roster, not
+// Scoped down to just two units for now, while the roster's design gets
+// nailed down — the other 25 units are cut from the active roster, not
 // deleted from history. To bring the full roster back later, restore
 // this file from git history before this change.
 export const UNITS = {
+  // The free unit everyone begins with — not in the Gacha pool at all
+  // (notRollable), so pulling never just hands you a duplicate of the
+  // thing you already started with.
   starter_student: unit({
     id: 'starter_student', name: 'Starter Student', rarity: 'common', icon: '🎒',
     desc: 'Everyone starts somewhere — a plain, reliable punch to the face.',
     color: '#f5f1e4', glow: '#ffffff', accent: '#1b6b3a', cost: 20, damage: 5, range: 28, fireRate: 1.2, melee: true,
+    notRollable: true,
+  }),
+  // The only unit actually in the Common pool right now.
+  sixseven_kid: unit({
+    id: 'sixseven_kid', name: 'The 6-7 Kid', rarity: 'common', icon: '6️⃣7️⃣',
+    desc: 'A kid following the "latest" trends. Seems to be "slightly" addicted to these two numbers.',
+    color: '#fff3d6', glow: '#ffe066', accent: '#e8482c', cost: 20, damage: 5, range: 10, fireRate: 1.2, melee: true,
+    hp: 90, gesture: 'raise',
   }),
 };
 

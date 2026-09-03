@@ -29,7 +29,7 @@ function windupFraction(cooldown) {
 }
 
 function unitHpFor(def) {
-  return Math.round(40 + def.cost * 0.6);
+  return def.hp ?? Math.round(40 + def.cost * 0.6);
 }
 
 export function createGameState(mapId, equipped, stars) {
@@ -291,12 +291,22 @@ function fireDomain(state, u, enemyList) {
   }
 }
 
+// Units with the "raise" gesture (The 6-7 Kid) shout their catchphrase
+// instead of a silent punch — a small flourish on top of the usual hit
+// effects, not a mechanical difference.
+function gestureFlourish(state, u) {
+  if (u.gesture === 'raise') {
+    pushEffect(state, { kind: 'text', text: '67!', x: u.x, y: u.y - 44, color: '#ffe066', start: state.t, duration: 0.5, big: true });
+  }
+}
+
 function fireMelee(state, u, enemyList) {
   const splash = u.splash || CONTACT_RANGE;
   // A punch spark at the point of contact (in front of the unit, toward
   // whichever way it's facing) instead of a plain ring centered on the
   // attacker — reads as an actual thrown hit rather than a generic AoE.
   pushEffect(state, { kind: 'punch', x: u.x + u.dir * 18, y: u.y - 8, color: '#fff6ea', start: state.t, duration: 0.2 });
+  gestureFlourish(state, u);
   audio.playFireShot(0.7);
   for (const e of [...enemyList]) {
     if (Math.abs(e.x - u.x) <= splash) applyDamage(state, e, u.damage);
@@ -317,6 +327,7 @@ function fireAtEnemyBase(state, u) {
   state.enemyBase.flashUntil = state.t + 0.1;
   pushEffect(state, { kind: 'punch', x: u.x + u.dir * 20, y: u.y - 10, color: '#fff6ea', start: state.t, duration: 0.25, big: true });
   pushEffect(state, { kind: 'text', text: `${Math.round(amount)}`, x: state.map.spawn.x, y: u.y - 30, color: '#fff6ea', start: state.t, duration: 0.5 });
+  gestureFlourish(state, u);
   audio.playFireShot(0.9);
 }
 

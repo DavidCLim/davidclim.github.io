@@ -166,7 +166,7 @@ function drawJointedLimb(ctx, x0, y0, x1, y1, x2, y2, thickness, color, outline,
   ctx.stroke();
 }
 
-export function drawStudentBody(ctx, scale = 1, accent, phase = 0, lean = 0.12, punching = false, windup = 0) {
+export function drawStudentBody(ctx, scale = 1, accent, phase = 0, lean = 0.12, punching = false, windup = 0, gesture = 'punch') {
   const s = scale;
   const skin = ctx.fillStyle;
   const outline = ctx.strokeStyle;
@@ -251,17 +251,31 @@ export function drawStudentBody(ctx, scale = 1, accent, phase = 0, lean = 0.12, 
     drawJointedLimb(ctx, shoulderX, shoulderY, midX, midY, handX, handY, 3 * s, skin, outline, outlineWidth);
   }
   const armSwing = -legSwing;
-  drawArm(-6 * s, -armSwing, 9);
+  if (gesture === 'raise') {
+    // Both hands go up near the head instead of a punch — the "67!"
+    // meme gesture — chambering up as `windup` ramps toward 1, fully
+    // raised for the brief `punching` flash, interpolated in from each
+    // arm's own normal walk-swing pose.
+    const t = punching ? 1 : windup;
+    const raiseSwing = Math.PI * 0.92;
+    const raiseReach = 8;
+    const backSwing = -armSwing + (raiseSwing - (-armSwing)) * t;
+    const backReach = 9 + (raiseReach - 9) * t;
+    const frontSwing = armSwing + (raiseSwing - armSwing) * t;
+    const frontReach = 9 + (raiseReach - 9) * t;
+    drawArm(-6 * s, backSwing, backReach);
+    drawArm(6 * s, frontSwing, frontReach);
+  } else {
+    drawArm(-6 * s, -armSwing, 9);
 
-  // The front (local +x) arm — the one that ends up leading after
-  // drawUnit.js's L/R flip — throws an actual boxer's jab instead of just
-  // swinging to a wide angle: elbow tucks in and the fist chambers back
-  // near the ribs as `windup` ramps toward 1, then the elbow straightens
-  // and the fist drives straight forward past the shoulder for the brief
-  // `punching` flash. A real elbow joint (not a straight shoulder-to-fist
-  // line) is what sells "wind up, then strike" instead of a limb just
-  // rotating to a strange angle.
-  {
+    // The front (local +x) arm — the one that ends up leading after
+    // drawUnit.js's L/R flip — throws an actual boxer's jab instead of
+    // just swinging to a wide angle: elbow tucks in and the fist
+    // chambers back near the ribs as `windup` ramps toward 1, then the
+    // elbow straightens and the fist drives straight forward past the
+    // shoulder for the brief `punching` flash. A real elbow joint (not a
+    // straight shoulder-to-fist line) is what sells "wind up, then
+    // strike" instead of a limb just rotating to a strange angle.
     const shoulderX = 6 * s;
     const shoulderY = -9 * s;
     const neutralHandX = shoulderX + Math.sin(armSwing) * 9 * s;
