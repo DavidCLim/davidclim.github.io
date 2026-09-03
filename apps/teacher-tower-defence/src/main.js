@@ -387,6 +387,12 @@ const SEASONAL_WHEEL_SLICES = [
 // sketch exactly — instead of a Normal/Seasonal tab toggle that only
 // ever shows one wheel at a time.
 function renderSummonTab(body) {
+  const modeRow = el('div', { class: 'ttd-gacha-mode-row' }, [
+    el('div', { class: 'ttd-gacha-mode-pill' }, ['NORMAL', el('span', { class: 'ttd-gacha-mode-dot' })]),
+    el('div', { class: 'ttd-gacha-mode-pill' }, [el('span', { class: 'ttd-gacha-mode-dot' }), 'SEASONAL']),
+  ]);
+  body.appendChild(modeRow);
+
   const row = el('div', { class: 'ttd-gacha-wheels-row' });
   row.appendChild(buildWheelColumn(false));
   row.appendChild(buildWheelColumn(true));
@@ -409,7 +415,6 @@ function renderSummonTab(body) {
 
 function buildWheelColumn(isSeasonal) {
   const col = el('div', { class: 'ttd-gacha-wheel-col' });
-  col.appendChild(el('div', { class: 'ttd-gacha-wheel-col-title' }, isSeasonal ? 'SEASONAL' : 'NORMAL'));
 
   const wheelSVG = buildOddsWheel(isSeasonal ? SEASONAL_WHEEL_SLICES : NORMAL_WHEEL_SLICES, WHEEL_SIZE);
   const wheelWrap = el('div', { class: 'ttd-gacha-wheel-wrap' });
