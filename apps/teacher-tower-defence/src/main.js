@@ -223,7 +223,10 @@ function renderGachaModal() {
   card.appendChild(el('button', { class: 'ttd-modal-close', text: '✕', onClick: closeGachaModal }));
   card.appendChild(el('div', { class: 'ttd-gacha-header' }, [
     el('div', { class: 'ttd-gacha-title' }, '🎰 Gacha'),
-    el('div', { class: 'ttd-gacha-gold' }, `${collection.gold.toLocaleString()} 📄`),
+    el('div', { class: 'ttd-gacha-header-right' }, [
+      el('div', { class: 'ttd-gacha-gold' }, `${collection.gold.toLocaleString()} 📄`),
+      el('button', { class: 'ttd-units-awaken-btn', onClick: openAwakenModal }, '✨ Awaken'),
+    ]),
   ]));
   const body = el('div', { class: 'ttd-gacha-body' });
   renderSummonTab(body);
@@ -270,9 +273,12 @@ function renderAwakenModal() {
 // A circular pie-chart "wheel" matching the player's own gacha sketch —
 // colored wedges divided EQUALLY (not to true probability scale, same as
 // the sketch itself — a 0.1%-true-scale Mythical sliver would be
-// invisible) with the rarity name + its real percentage labeled inside
-// each wedge, sitting on a small pedestal stand.
-function buildOddsWheel(slices, size = 190) {
+// invisible), each labeled with its rarity name + real percentage,
+// rotated to match its wedge's own angle — like the numbers on a clock
+// face — instead of every label sitting upright regardless of position,
+// which is what made it read as "not like my drawing".
+const WHEEL_SIZE = 220;
+function buildOddsWheel(slices, size = WHEEL_SIZE) {
   const cx = size / 2, cy = size / 2, r = size / 2 - 4;
   const toXY = (angleDeg, radius) => {
     const rad = (angleDeg - 90) * Math.PI / 180;
@@ -287,17 +293,25 @@ function buildOddsWheel(slices, size = 190) {
     const end = toXY(endAngle, r);
     const largeArc = step > 180 ? 1 : 0;
     parts.push(`<path d="M ${cx} ${cy} L ${start.x.toFixed(2)} ${start.y.toFixed(2)} A ${r} ${r} 0 ${largeArc} 1 ${end.x.toFixed(2)} ${end.y.toFixed(2)} Z" fill="${s.color}" stroke="#241708" stroke-width="1.6"/>`);
+
     const mid = startAngle + step / 2;
-    const labelPos = toXY(mid, r * 0.62);
-    // Two-word labels ("SEASON CHAMPION") wrap onto their own line instead
-    // of running wide enough to crowd into the neighboring wedge's text.
+    const labelR = r * 0.62;
+    // Two-word labels ("SEASON CHAMPION") wrap onto their own line so
+    // they don't run wide enough to crowd a neighboring wedge's text.
     const words = s.label.split(' ');
     const nameLines = words.length > 1 ? [words.slice(0, -1).join(' '), words[words.length - 1]] : [s.label];
-    const nameStartY = labelPos.y - 5 - (nameLines.length - 1) * 8;
-    nameLines.forEach((line, li) => {
-      parts.push(`<text x="${labelPos.x.toFixed(2)}" y="${(nameStartY + li * 8).toFixed(2)}" text-anchor="middle" font-size="7.5" font-weight="800" fill="#241708" font-family="'Baloo 2', sans-serif">${line}</text>`);
-    });
-    parts.push(`<text x="${labelPos.x.toFixed(2)}" y="${(labelPos.y + 8 + (nameLines.length - 1) * 4).toFixed(2)}" text-anchor="middle" font-size="8" font-weight="700" fill="#241708" font-family="'Baloo 2', sans-serif">${s.pctLabel}</text>`);
+    const lineH = 9;
+    const textParts = [];
+    let y = cy - labelR - (nameLines.length - 1) * lineH;
+    for (const line of nameLines) {
+      textParts.push(`<text x="${cx}" y="${y.toFixed(2)}" text-anchor="middle" font-size="8.5" font-weight="800" fill="#241708" font-family="'Baloo 2', sans-serif">${line}</text>`);
+      y += lineH;
+    }
+    textParts.push(`<text x="${cx}" y="${(y + 4).toFixed(2)}" text-anchor="middle" font-size="8.5" font-weight="700" fill="#241708" font-family="'Baloo 2', sans-serif">${s.pctLabel}</text>`);
+    // Draw every label at the top (12 o'clock), then rotate the whole
+    // group around the wheel's center by this wedge's own angle — moves
+    // it into place AND tilts it to follow the wedge, all in one step.
+    parts.push(`<g transform="rotate(${mid.toFixed(2)} ${cx} ${cy})">${textParts.join('')}</g>`);
   });
   return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" style="display:block">
     <circle cx="${cx}" cy="${cy}" r="${r + 3}" fill="#2c1e10"/>
@@ -308,11 +322,11 @@ function buildOddsWheel(slices, size = 190) {
 
 const SEASON_CHAMPION_COLOR = '#ff5fc4';
 const NORMAL_WHEEL_SLICES = [
-  { label: 'COMMON', pctLabel: '55%', color: RARITY.common.color },
-  { label: 'RARE', pctLabel: '30%', color: RARITY.rare.color },
-  { label: 'EPIC', pctLabel: '10%', color: RARITY.epic.color },
-  { label: 'LEGEND', pctLabel: '1%', color: RARITY.legend.color },
-  { label: 'MYTHICAL', pctLabel: '0.1%', color: RARITY.mythic.color },
+  { rarityId: 'common', label: 'COMMON', pctLabel: '55%', color: RARITY.common.color },
+  { rarityId: 'rare', label: 'RARE', pctLabel: '30%', color: RARITY.rare.color },
+  { rarityId: 'epic', label: 'EPIC', pctLabel: '10%', color: RARITY.epic.color },
+  { rarityId: 'legend', label: 'LEGEND', pctLabel: '1%', color: RARITY.legend.color },
+  { rarityId: 'mythic', label: 'MYTHICAL', pctLabel: '0.1%', color: RARITY.mythic.color },
 ];
 const SEASONAL_WHEEL_SLICES = [
   { label: 'COMMON', pctLabel: '60%', color: RARITY.common.color },
@@ -339,8 +353,11 @@ function renderSummonTab(body) {
   body.appendChild(toggle);
 
   const isSeasonal = gachaBanner === 'seasonal';
-  const wheelSVG = buildOddsWheel(isSeasonal ? SEASONAL_WHEEL_SLICES : NORMAL_WHEEL_SLICES);
+  // Same explicit size for both banners' wheels, so Normal and Seasonal
+  // never look like they're drawn at different scales.
+  const wheelSVG = buildOddsWheel(isSeasonal ? SEASONAL_WHEEL_SLICES : NORMAL_WHEEL_SLICES, WHEEL_SIZE);
   const wheelWrap = el('div', { class: 'ttd-gacha-wheel-wrap' });
+  wheelWrap.appendChild(el('div', { class: 'ttd-gacha-wheel-pointer' }));
   const wheelEl = el('div', { class: 'ttd-gacha-wheel' });
   wheelEl.innerHTML = wheelSVG;
   wheelWrap.appendChild(wheelEl);
@@ -358,7 +375,7 @@ function renderSummonTab(body) {
     const cost = isSeasonal ? seasonalCosts[count] : pullCost(count);
     pullRow.appendChild(el('button', {
       class: 'ttd-pull-btn',
-      disabled: (isSeasonal || collection.gold < cost) ? 'disabled' : undefined,
+      disabled: (isSeasonal || gachaSpinning || collection.gold < cost) ? 'disabled' : undefined,
       onClick: isSeasonal ? undefined : () => doPull(count),
     }, [el('span', { class: 'ttd-pull-btn-label' }, `x${count} SPIN`), el('span', { class: 'ttd-pull-btn-cost' }, `${cost} ${currencyIcon}`)]));
   }
@@ -379,13 +396,45 @@ function renderSummonTab(body) {
   }
 }
 
+// The wheel actually spins before revealing what you got — several full
+// turns, easing to a stop with the rolled rarity's wedge under the
+// pointer at the top — instead of the odds display just sitting still
+// while cards appear. For a x5/x10 pull it spins once, landing on the
+// first result, then the existing reveal-card sequence covers the rest.
+let gachaSpinning = false;
+const SPIN_DURATION_MS = 2600;
+
+function spinWheelToRarity(rarity, onDone) {
+  const wheelEl = gachaModal.querySelector('.ttd-gacha-wheel');
+  const idx = NORMAL_WHEEL_SLICES.findIndex(s => s.rarityId === rarity);
+  if (!wheelEl || idx === -1) { onDone(); return; }
+  const step = 360 / NORMAL_WHEEL_SLICES.length;
+  const wedgeMid = idx * step + step / 2;
+  const landingMod = (360 - wedgeMid + 360) % 360;
+  const extraSpins = 5;
+  wheelEl.style.transition = 'none';
+  wheelEl.style.transform = 'rotate(0deg)';
+  void wheelEl.offsetWidth; // force reflow so the reset applies before the transition starts
+  wheelEl.style.transition = `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.12, 0.68, 0.1, 1)`;
+  requestAnimationFrame(() => {
+    wheelEl.style.transform = `rotate(${extraSpins * 360 + landingMod}deg)`;
+  });
+  setTimeout(onDone, SPIN_DURATION_MS + 80);
+}
+
 function doPull(count) {
+  if (gachaSpinning) return;
   const results = pullGacha(collection, gachaBanner, count);
   if (!results) return;
-  lastPullResults = results;
+  gachaSpinning = true;
+  gachaModal.querySelectorAll('.ttd-pull-btn').forEach(b => { b.disabled = true; });
   audio.playUpgrade();
-  renderGachaModal();
-  showPullReveal(results);
+  spinWheelToRarity(results[0].rarity, () => {
+    gachaSpinning = false;
+    lastPullResults = results;
+    renderGachaModal();
+    showPullReveal(results);
+  });
 }
 
 // ---------- Pull reveal — a "YOU GOT!" curtain card shown for each unit

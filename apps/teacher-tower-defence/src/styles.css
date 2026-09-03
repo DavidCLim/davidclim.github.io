@@ -805,8 +805,9 @@ html, body {
   font-size: 12px;
   padding: 0;
 }
-.ttd-gacha-header { display: flex; align-items: center; justify-content: space-between; padding-right: 30px; }
-.ttd-gacha-title { font-family: 'Russo One', sans-serif; font-size: 1.2rem; color: var(--gold); }
+.ttd-gacha-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; row-gap: 8px; padding-right: 30px; }
+.ttd-gacha-title { font-family: 'Russo One', sans-serif; font-size: 1.2rem; color: var(--gold); white-space: nowrap; }
+.ttd-gacha-header-right { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
 .ttd-units-awaken-btn {
   padding: 7px 14px;
   border-radius: 999px;
@@ -867,10 +868,24 @@ html, body {
 .ttd-gacha-mode-radio { font-size: 11px; }
 
 .ttd-gacha-wheel-wrap { display: flex; flex-direction: column; align-items: center; }
-.ttd-gacha-wheel { filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.4)); }
+.ttd-gacha-wheel-pointer {
+  width: 0;
+  height: 0;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-top: 16px solid var(--gold);
+  margin-bottom: -8px;
+  z-index: 2;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
+}
+.ttd-gacha-wheel {
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.4));
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
 .ttd-gacha-stand {
-  width: 100px;
-  height: 34px;
+  width: 116px;
+  height: 36px;
   margin-top: -4px;
   background: linear-gradient(165deg, #4a3320, #1c1006);
   clip-path: polygon(22% 0, 78% 0, 100% 100%, 0% 100%);
