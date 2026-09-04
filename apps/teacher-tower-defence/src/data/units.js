@@ -44,7 +44,7 @@ export const UNITS = {
     id: 'sixseven_kid', name: 'The 6-7 Kid', rarity: 'common', icon: '6️⃣7️⃣',
     desc: 'A kid following the "latest" trends. Seems to be "slightly" addicted to these two numbers.',
     color: '#fff3d6', glow: '#ffe066', accent: '#e8482c', cost: 20, damage: 5, range: 10, fireRate: 1.2, melee: true,
-    hp: 90, gesture: 'raise',
+    hp: 90, gesture: 'raise', portraitFlairLeft: '6', portraitFlairRight: '7',
   }),
 };
 

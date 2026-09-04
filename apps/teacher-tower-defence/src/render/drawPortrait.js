@@ -1,12 +1,11 @@
-import { drawStudentBody, drawHead } from './drawFigure.js';
+import { drawHead } from './drawFigure.js';
 import { drawEnemy } from './drawEnemy.js';
 
-// A student portrait caught mid-gesture — the unit's own signature move
-// (a boxer's punch, or The 6-7 Kid's both-hands-up "67!") — matching the
-// player's own trading-card sketch, where the figure is mid-pose, not
-// standing neutrally. No glow, no gradient — the same flat 2D figure
-// drawn in battle (drawUnit.js), just framed as a standing portrait.
-// One-time canvas draw, no animation loop.
+// A student trading-card portrait — matching the player's own sketch
+// exactly: just the head and a sliver of neck, sitting low in the box
+// with a lot of empty space above it, not a full standing body. A unit
+// can carry portraitFlairLeft/Right (e.g. The 6-7 Kid's "6"/"7") to sit
+// beside the head, same as the sketch.
 export function renderUnitPortrait(unit, sizePx = 120) {
   const canvas = document.createElement('canvas');
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -19,24 +18,42 @@ export function renderUnitPortrait(unit, sizePx = 120) {
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
 
-  // bodyScale/translate are picked so the WHOLE figure (head down to
-  // feet, ~49 units tall in drawStudentBody's own coordinate space)
-  // fits inside the box with a little margin — the previous constants
-  // were tuned for a head+torso bust crop and cut the legs off below
-  // the canvas entirely, leaving a floating, legless torso instead of
-  // the standing figure the sketch shows.
-  const bodyScale = sizePx / 58;
-  ctx.save();
-  ctx.translate(sizePx / 2, sizePx * 0.58);
+  const headR = sizePx * 0.15;
+  const headCx = sizePx / 2;
+  const headCy = sizePx * 0.6;
+
   ctx.fillStyle = unit.color;
   ctx.strokeStyle = '#241708';
-  ctx.lineWidth = 1.6 * (bodyScale / 1.8);
-  // phase 0 + lean 0 (centered, no walk tilt), punching=true so the
-  // figure is caught mid-gesture — its own signature move — instead of
-  // idling.
-  drawStudentBody(ctx, bodyScale, unit.accent, 0, 0, true, 1, unit.gesture || 'punch');
-  drawHead(ctx, 9 * bodyScale, -20 * bodyScale);
-  ctx.restore();
+  ctx.lineWidth = Math.max(1.4, sizePx * 0.012);
+
+  // A tiny neck sliver directly below the head — drawn first so the
+  // head's own outline covers the seam between the two shapes.
+  ctx.beginPath();
+  ctx.rect(headCx - headR * 0.45, headCy + headR * 0.65, headR * 0.9, headR * 0.55);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(headCx, headCy, headR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  if (unit.portraitFlairLeft || unit.portraitFlairRight) {
+    ctx.fillStyle = '#ffd670';
+    ctx.strokeStyle = '#241708';
+    ctx.lineWidth = 1;
+    ctx.font = `800 ${Math.round(headR * 1.05)}px 'Baloo 2', sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    if (unit.portraitFlairLeft) {
+      ctx.fillText(unit.portraitFlairLeft, headCx - headR * 1.9, headCy);
+      ctx.strokeText(unit.portraitFlairLeft, headCx - headR * 1.9, headCy);
+    }
+    if (unit.portraitFlairRight) {
+      ctx.fillText(unit.portraitFlairRight, headCx + headR * 1.9, headCy);
+      ctx.strokeText(unit.portraitFlairRight, headCx + headR * 1.9, headCy);
+    }
+  }
 
   return canvas;
 }
