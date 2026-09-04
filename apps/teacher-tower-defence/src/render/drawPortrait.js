@@ -1,11 +1,12 @@
 import { drawStudentBody, drawHead } from './drawFigure.js';
 import { drawEnemy } from './drawEnemy.js';
 
-// A plain, neutral standing portrait of a student — matching the
-// player's own trading-card sketch exactly (a calm, centered figure, no
-// glow, no action pose) — the same figure drawn in battle (drawUnit.js),
-// just framed as a bust instead of a full standing body. One-time canvas
-// draw, no animation loop.
+// A student portrait caught mid-gesture — the unit's own signature move
+// (a boxer's punch, or The 6-7 Kid's both-hands-up "67!") — matching the
+// player's own trading-card sketch, where the figure is mid-pose, not
+// standing neutrally. No glow, no gradient — the same flat 2D figure
+// drawn in battle (drawUnit.js), just framed as a standing portrait.
+// One-time canvas draw, no animation loop.
 export function renderUnitPortrait(unit, sizePx = 120) {
   const canvas = document.createElement('canvas');
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -30,9 +31,10 @@ export function renderUnitPortrait(unit, sizePx = 120) {
   ctx.fillStyle = unit.color;
   ctx.strokeStyle = '#241708';
   ctx.lineWidth = 1.6 * (bodyScale / 1.8);
-  // phase 0 + lean 0 (centered, no walk tilt) and punching=false — a
-  // plain neutral stand, same as the sketch.
-  drawStudentBody(ctx, bodyScale, unit.accent, 0, 0);
+  // phase 0 + lean 0 (centered, no walk tilt), punching=true so the
+  // figure is caught mid-gesture — its own signature move — instead of
+  // idling.
+  drawStudentBody(ctx, bodyScale, unit.accent, 0, 0, true, 1, unit.gesture || 'punch');
   drawHead(ctx, 9 * bodyScale, -20 * bodyScale);
   ctx.restore();
 
