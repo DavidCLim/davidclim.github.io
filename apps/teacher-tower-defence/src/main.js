@@ -25,6 +25,13 @@ const root = document.getElementById('game-root');
 // open to everyone.
 const BATTLE_ENABLED = true;
 
+// Gacha and Index are mid-rework and still don't look right, so they're
+// pulled off the live site while that work continues, but stay fully
+// usable locally (localhost / file://) for testing.
+const IS_LOCAL = ['localhost', '127.0.0.1'].includes(location.hostname) || location.protocol === 'file:';
+const GACHA_ENABLED = IS_LOCAL;
+const INDEX_ENABLED = IS_LOCAL;
+
 document.addEventListener('click', () => {
   audio.ensureAudioContext();
 }, { capture: true, once: false });
@@ -179,8 +186,16 @@ function renderMenuScreen() {
       disabled: BATTLE_ENABLED ? undefined : true,
       onClick: BATTLE_ENABLED ? openDungeonModal : undefined,
     }, 'BATTLE'),
-    el('button', { class: 'ttd-menu-nav-btn', onClick: openIndexModal }, 'INDEX'),
-    el('button', { class: 'ttd-menu-nav-btn', onClick: openGachaModal }, 'GACHA'),
+    el('button', {
+      class: `ttd-menu-nav-btn${INDEX_ENABLED ? '' : ' ttd-action-primary-disabled'}`,
+      disabled: INDEX_ENABLED ? undefined : true,
+      onClick: INDEX_ENABLED ? openIndexModal : undefined,
+    }, 'INDEX'),
+    el('button', {
+      class: `ttd-menu-nav-btn${GACHA_ENABLED ? '' : ' ttd-action-primary-disabled'}`,
+      disabled: GACHA_ENABLED ? undefined : true,
+      onClick: GACHA_ENABLED ? openGachaModal : undefined,
+    }, 'GACHA'),
     el('button', { class: 'ttd-menu-nav-btn', onClick: openInventoryModal }, 'UNITS'),
   ]));
   menuScreen.appendChild(el('div', { class: 'ttd-menu-bottom-row' }, [
