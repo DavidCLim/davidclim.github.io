@@ -18,9 +18,15 @@ export function renderUnitPortrait(unit, sizePx = 120) {
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
 
-  const bodyScale = sizePx / 34;
+  // bodyScale/translate are picked so the WHOLE figure (head down to
+  // feet, ~49 units tall in drawStudentBody's own coordinate space)
+  // fits inside the box with a little margin — the previous constants
+  // were tuned for a head+torso bust crop and cut the legs off below
+  // the canvas entirely, leaving a floating, legless torso instead of
+  // the standing figure the sketch shows.
+  const bodyScale = sizePx / 58;
   ctx.save();
-  ctx.translate(sizePx / 2, sizePx * 0.86);
+  ctx.translate(sizePx / 2, sizePx * 0.58);
   ctx.fillStyle = unit.color;
   ctx.strokeStyle = '#241708';
   ctx.lineWidth = 1.6 * (bodyScale / 1.8);
