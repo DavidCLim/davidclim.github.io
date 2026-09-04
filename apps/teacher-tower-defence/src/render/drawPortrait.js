@@ -18,9 +18,12 @@ export function renderUnitPortrait(unit, sizePx = 120) {
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
 
+  // headCy sits low enough that the neck lands right at the bottom edge
+  // — all the empty space stacks above him, instead of him floating with
+  // a gap on both sides.
   const headR = sizePx * 0.15;
   const headCx = sizePx / 2;
-  const headCy = sizePx * 0.6;
+  const headCy = sizePx * 0.77;
 
   ctx.fillStyle = unit.color;
   ctx.strokeStyle = '#241708';
