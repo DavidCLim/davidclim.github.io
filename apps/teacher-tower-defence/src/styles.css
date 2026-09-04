@@ -714,28 +714,6 @@ html, body {
 }
 .ttd-action-primary-disabled { opacity: 0.45; filter: grayscale(0.6); cursor: not-allowed; pointer-events: none; }
 
-/* Awakenings shares the bottom row with the loadout tray — matching the
-   player's own sketch — instead of a standalone "LOADOUT" label sitting
-   above a centered tray. */
-.ttd-menu-bottom-row {
-  position: absolute;
-  bottom: 14px;
-  left: 16px;
-  right: 16px;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-.ttd-menu-awakenings-btn {
-  flex: 0 0 auto;
-  width: auto;
-  padding: 10px 16px;
-  font-size: 12.5px;
-}
-.ttd-equip-row.ttd-menu-equip-row { position: static; transform: none; }
 
 /* ---------- Bottom equip row (5 loadout slots) ---------- */
 .ttd-equip-row {

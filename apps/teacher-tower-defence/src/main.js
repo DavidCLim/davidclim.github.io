@@ -31,6 +31,7 @@ const BATTLE_ENABLED = true;
 const IS_LOCAL = ['localhost', '127.0.0.1'].includes(location.hostname) || location.protocol === 'file:';
 const GACHA_ENABLED = IS_LOCAL;
 const INDEX_ENABLED = IS_LOCAL;
+const UNITS_ENABLED = IS_LOCAL;
 
 document.addEventListener('click', () => {
   audio.ensureAudioContext();
@@ -196,12 +197,14 @@ function renderMenuScreen() {
       disabled: GACHA_ENABLED ? undefined : true,
       onClick: GACHA_ENABLED ? openGachaModal : undefined,
     }, 'GACHA'),
-    el('button', { class: 'ttd-menu-nav-btn', onClick: openInventoryModal }, 'UNITS'),
+    el('button', {
+      class: `ttd-menu-nav-btn${UNITS_ENABLED ? '' : ' ttd-action-primary-disabled'}`,
+      disabled: UNITS_ENABLED ? undefined : true,
+      onClick: UNITS_ENABLED ? openInventoryModal : undefined,
+    }, 'UNITS'),
+    el('button', { class: 'ttd-menu-nav-btn', onClick: openAwakenModal }, 'AWAKENINGS'),
   ]));
-  menuScreen.appendChild(el('div', { class: 'ttd-menu-bottom-row' }, [
-    el('button', { class: 'ttd-menu-nav-btn ttd-menu-awakenings-btn', onClick: openAwakenModal }, 'AWAKENINGS'),
-    el('div', { class: 'ttd-equip-row ttd-menu-equip-row', id: 'ttd-menu-equip-row' }),
-  ]));
+  menuScreen.appendChild(el('div', { class: 'ttd-equip-row', id: 'ttd-menu-equip-row' }));
   refreshEquipRow();
 }
 
