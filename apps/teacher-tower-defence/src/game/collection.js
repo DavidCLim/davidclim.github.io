@@ -3,6 +3,7 @@
 // Saved to localStorage since a gacha collection that resets on every
 // reload would defeat the entire point of the Gacha Hall.
 import { UNITS, UNIT_LIST } from '../data/units.js';
+import { MAP_LIST, MAPS } from '../data/maps.js';
 
 const STORAGE_KEY = 'ttd-collection-v1';
 const STARTING_GOLD = 300;
@@ -17,10 +18,12 @@ export function loadCollection() {
         owned: p.owned || {},
         stars: p.stars || {},
         equipped: Array.isArray(p.equipped) ? p.equipped : [],
+        crystals: p.crystals || {},
+        clearedChapters: Array.isArray(p.clearedChapters) ? p.clearedChapters : [],
       };
     }
   } catch { /* corrupt/absent save, fall through to a fresh one */ }
-  return { gold: STARTING_GOLD, owned: { starter_student: 1 }, stars: {}, equipped: ['starter_student'] };
+  return { gold: STARTING_GOLD, owned: { starter_student: 1 }, stars: {}, equipped: ['starter_student'], crystals: {}, clearedChapters: [] };
 }
 
 export function saveCollection(c) {
@@ -76,28 +79,61 @@ export function pullGacha(collection, bannerId, count) {
   return results;
 }
 
-// ---------- Awaken (spend dupes + gold for permanent star bonuses) ----------
+// ---------- Chapters (replayable stages, unlocked in order) ----------
+// Chapter 1 is always open; chapter N+1 unlocks once chapter N has been
+// cleared at least once — same as Empire of Cats. A cleared chapter
+// stays replayable forever after, and every clear (not just the first)
+// drops that chapter's own awaken crystal, so farming a chapter for
+// crystals is the whole point of replaying it.
+export function isChapterUnlocked(collection, mapId) {
+  const idx = MAP_LIST.findIndex(m => m.id === mapId);
+  if (idx <= 0) return true;
+  return collection.clearedChapters.includes(MAP_LIST[idx - 1].id);
+}
+
+export function clearChapter(collection, mapId) {
+  const map = MAPS[mapId];
+  if (!map) return;
+  if (!collection.clearedChapters.includes(mapId)) collection.clearedChapters.push(mapId);
+  if (map.crystal) collection.crystals[map.crystal.id] = (collection.crystals[map.crystal.id] || 0) + 1;
+  saveCollection(collection);
+}
+
+// ---------- Awaken (spend a chapter's crystal + gold for permanent star
+// bonuses) — which crystal a unit needs is set per-unit via
+// unit.awakenCrystal (a map id), matching the player's own "different
+// chapters give different crystals for different awakenings" design. ----------
 export const MAX_STARS = 3;
-const AWAKEN_DUPE_COST = [2, 3, 4];
+const AWAKEN_CRYSTAL_COST = [2, 3, 4];
 const AWAKEN_GOLD_COST = [40, 90, 180];
 
 export function awakenCostFor(unitId, collection) {
   const star = collection.stars[unitId] || 0;
   if (star >= MAX_STARS) return null;
-  return { dupesNeeded: AWAKEN_DUPE_COST[star], gold: AWAKEN_GOLD_COST[star], star };
+  const def = UNITS[unitId];
+  const map = MAPS[def.awakenCrystal];
+  return {
+    star,
+    gold: AWAKEN_GOLD_COST[star],
+    crystalsNeeded: AWAKEN_CRYSTAL_COST[star],
+    crystalId: map.crystal.id,
+    crystalName: map.crystal.name,
+    crystalIcon: map.crystal.icon,
+    chapterName: map.name,
+  };
 }
 
 export function canAwaken(collection, unitId) {
   const info = awakenCostFor(unitId, collection);
   if (!info) return false;
-  const owned = collection.owned[unitId] || 0;
-  return owned > info.dupesNeeded && collection.gold >= info.gold;
+  const have = collection.crystals[info.crystalId] || 0;
+  return have >= info.crystalsNeeded && collection.gold >= info.gold;
 }
 
 export function awakenUnit(collection, unitId) {
   if (!canAwaken(collection, unitId)) return false;
   const info = awakenCostFor(unitId, collection);
-  collection.owned[unitId] -= info.dupesNeeded;
+  collection.crystals[info.crystalId] -= info.crystalsNeeded;
   collection.gold -= info.gold;
   collection.stars[unitId] = info.star + 1;
   saveCollection(collection);

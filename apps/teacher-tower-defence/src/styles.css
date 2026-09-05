@@ -1149,3 +1149,7 @@ html, body {
 }
 .ttd-map-card:hover { border-color: var(--mint); transform: translateY(-2px); }
 .ttd-map-icon { font-size: 30px; }
+.ttd-map-card-locked { opacity: 0.5; cursor: not-allowed; }
+.ttd-map-card-locked:hover { border-color: rgba(255, 180, 84, 0.3); transform: none; }
+.ttd-map-cleared { color: var(--mint); font-size: 10.5px; font-weight: 800; }
+.ttd-map-drop { color: var(--muted); font-size: 10px; text-align: center; }

@@ -15,6 +15,7 @@ import {
   loadCollection, saveCollection, pullCost, pullGacha,
   canAwaken, awakenCostFor, awakenUnit,
   toggleEquip, MAX_EQUIPPED, MAX_STARS,
+  isChapterUnlocked, clearChapter,
 } from './game/collection.js';
 import * as audio from './audio/audioEngine.js';
 
@@ -278,7 +279,7 @@ function renderAwakenModal() {
   const card = el('div', { class: 'ttd-gacha-card' });
   card.appendChild(el('button', { class: 'ttd-modal-close', text: '✕', onClick: closeAwakenModal }));
   card.appendChild(el('div', { class: 'ttd-gacha-title' }, '✨ Awaken'));
-  card.appendChild(el('p', { class: 'ttd-building-desc' }, 'Spend duplicates and homework pages for a permanent stat boost.'));
+  card.appendChild(el('p', { class: 'ttd-building-desc' }, 'Spend a chapter\'s own crystal drop and homework pages for a permanent stat boost.'));
   const body = el('div', { class: 'ttd-gacha-body' });
   renderAwakenTab(body);
   card.appendChild(body);
@@ -645,22 +646,26 @@ function renderAwakenTab(body) {
     if (!info) continue;
     any = true;
     const ok = canAwaken(collection, id);
+    const have = collection.crystals[info.crystalId] || 0;
     const faceBox = el('div', { class: 'ttd-unit-icon' });
     faceBox.appendChild(renderUnitFace(def, 30));
     list.appendChild(el('div', { class: `ttd-list-row rarity-${def.rarity}` }, [
       faceBox,
       el('div', { class: 'ttd-list-info' }, [
         el('div', { class: 'ttd-unit-name' }, `${def.name} ${'★'.repeat(info.star)}${'☆'.repeat(MAX_STARS - info.star)}`),
-        el('div', { class: 'ttd-list-sub' }, `Needs ${info.dupesNeeded} dupes + ${info.gold}📄`),
+        el('div', { class: 'ttd-list-sub' }, `Needs ${info.crystalIcon} ${have}/${info.crystalsNeeded} ${info.crystalName} + ${info.gold}📄`),
       ]),
       el('button', { class: 'btn' + (ok ? ' btn-primary' : ''), text: 'Awaken', disabled: ok ? undefined : 'disabled', onClick: () => { awakenUnit(collection, id); renderAwakenModal(); } }),
     ]));
   }
-  if (!any) list.appendChild(el('div', { class: 'ttd-empty-note' }, 'Fully-awakened students, and ones with no duplicates yet, show nothing to do here.'));
+  if (!any) list.appendChild(el('div', { class: 'ttd-empty-note' }, 'Fully-awakened students show nothing to do here.'));
   body.appendChild(list);
 }
 
-// ---------- Dungeon Gate modal ----------
+// ---------- Chapter select (the old "Dungeon Gate") ----------
+// Chapters unlock in MAP_LIST order — clear one to open the next — but
+// stay replayable forever after, since every clear (not just the
+// first) drops that chapter's own awaken crystal.
 const dungeonModal = el('div', { class: 'ttd-dungeon-modal hidden' });
 root.appendChild(dungeonModal);
 function openDungeonModal() { renderDungeonModal(); dungeonModal.classList.remove('hidden'); }
@@ -669,17 +674,25 @@ function renderDungeonModal() {
   clearChildren(dungeonModal);
   const card = el('div', { class: 'ttd-dungeon-card' });
   card.appendChild(el('button', { class: 'ttd-modal-close', text: '✕', onClick: closeDungeonModal }));
-  card.appendChild(el('div', { class: 'ttd-gacha-title' }, '🗺️ Dungeon Gate'));
+  card.appendChild(el('div', { class: 'ttd-gacha-title' }, '🗺️ Chapters'));
   if (!collection.equipped.length) {
     card.appendChild(el('p', { class: 'ttd-building-desc' }, 'Equip at least one student from the Inventory menu before heading in.'));
   } else {
     card.appendChild(el('p', { class: 'ttd-building-desc' }, `Bringing ${collection.equipped.length} student${collection.equipped.length === 1 ? '' : 's'} in.`));
     const grid = el('div', { class: 'ttd-map-grid' });
     for (const map of MAP_LIST) {
+      const unlocked = isChapterUnlocked(collection, map.id);
+      const cleared = collection.clearedChapters.includes(map.id);
       grid.appendChild(el('button', {
-        class: 'ttd-map-card',
-        onClick: () => { closeDungeonModal(); startGame(map.id); },
-      }, [el('div', { class: 'ttd-map-icon' }, map.icon), el('div', { class: 'ttd-map-name' }, map.name)]));
+        class: 'ttd-map-card' + (unlocked ? '' : ' ttd-map-card-locked'),
+        disabled: unlocked ? undefined : true,
+        onClick: unlocked ? () => { closeDungeonModal(); startGame(map.id); } : undefined,
+      }, [
+        el('div', { class: 'ttd-map-icon' }, unlocked ? map.icon : '🔒'),
+        el('div', { class: 'ttd-map-name' }, map.name),
+        cleared ? el('div', { class: 'ttd-map-cleared' }, '✓ Cleared') : null,
+        unlocked ? el('div', { class: 'ttd-map-drop' }, `Drops ${map.crystal.icon} ${map.crystal.name}`) : el('div', { class: 'ttd-map-drop' }, `Clear the previous chapter`),
+      ]));
     }
     card.appendChild(grid);
   }
@@ -844,7 +857,11 @@ function showEndScreen() {
   const baseDestroyed = win && state.enemyBase.hp <= 0;
   const earned = state.wave * 15 + (win ? 100 : 0);
   collection.gold += earned;
+  // A win clears the chapter (unlocking the next one the first time)
+  // and always drops that chapter's own awaken crystal, win after win.
+  if (win) clearChapter(collection, state.map.id);
   saveCollection(collection);
+  const crystal = state.map.crystal;
 
   clearChildren(endScreen);
   endScreen.className = 'ttd-end-screen' + (win ? ' ttd-victory' : ' ttd-defeat');
@@ -853,8 +870,8 @@ function showEndScreen() {
     el('h2', { class: 'ttd-end-title' }, win ? 'Campus Saved!' : 'The Faculty Lounge Has Fallen'),
     el('p', { class: 'ttd-end-sub' }, win
       ? (baseDestroyed
-        ? `Your students stormed the Teacher's Base on ${state.map.name} and tore it down on Wave ${state.wave}. +${earned}📄 banked.`
-        : `You held ${state.map.name} through all ${TOTAL_WAVES} waves. +${earned}📄 banked.`)
+        ? `Your students stormed the Teacher's Base on ${state.map.name} and tore it down on Wave ${state.wave}. +${earned}📄 and a ${crystal.icon} ${crystal.name} banked.`
+        : `You held ${state.map.name} through all ${TOTAL_WAVES} waves. +${earned}📄 and a ${crystal.icon} ${crystal.name} banked.`)
       : `You made it to Wave ${state.wave} on ${state.map.name}. +${earned}📄 banked anyway — try again?`),
     el('button', { class: 'btn btn-primary', text: 'Back to the Academy', onClick: enterMenu }),
   ]));
