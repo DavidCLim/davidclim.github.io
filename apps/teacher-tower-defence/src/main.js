@@ -25,11 +25,11 @@ const root = document.getElementById('game-root');
 // open to everyone.
 const BATTLE_ENABLED = true;
 
-// Gacha and Index are mid-rework and still don't look right, so they're
-// pulled off the live site while that work continues, but stay fully
-// usable locally (localhost / file://) for testing.
+// Index and Units are still mid-rework, so they stay pulled off the
+// live site for now but remain fully usable locally (localhost /
+// file://) for testing. Gacha's card redesign is done, so it's back.
 const IS_LOCAL = ['localhost', '127.0.0.1'].includes(location.hostname) || location.protocol === 'file:';
-const GACHA_ENABLED = IS_LOCAL;
+const GACHA_ENABLED = true;
 const INDEX_ENABLED = IS_LOCAL;
 const UNITS_ENABLED = IS_LOCAL;
 

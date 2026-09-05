@@ -40,10 +40,11 @@ export function renderUnitPortrait(unit, sizePx = 120) {
   ctx.strokeStyle = '#241708';
   ctx.lineWidth = Math.max(1.4, h * 0.018);
 
-  // A neck sliver directly below the head — drawn first so the head's
-  // own outline covers the seam between the two shapes.
+  // A round collar behind the head, mostly covered by it — only the
+  // bottom crescent peeks out, same rounded sliver as the reference
+  // (not a hard-cornered rectangle).
   ctx.beginPath();
-  ctx.rect(headCx - headR * 0.45, headCy + headR * 0.6, headR * 0.9, headR);
+  ctx.arc(headCx, headCy + headR * 0.8, headR * 0.75, 0, Math.PI * 2);
   ctx.fillStyle = unit.accent || unit.color;
   ctx.fill();
   ctx.stroke();
