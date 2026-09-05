@@ -46,6 +46,7 @@ export const UNITS = {
     color: '#fff3d6', glow: '#ffe066', accent: '#e8482c', cost: 20, damage: 10, range: 20, fireRate: 1.2, melee: true,
     hp: 100, gesture: 'raise', portraitFlairLeft: '6', portraitFlairRight: '7',
     cardImage: 'assets/sixseven_kid_card.png',
+    slotImage: 'assets/sixseven_kid_slot.png',
   }),
 };
 

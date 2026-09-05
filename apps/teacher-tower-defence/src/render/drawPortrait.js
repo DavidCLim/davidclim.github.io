@@ -62,8 +62,21 @@ export function renderUnitPortrait(unit, sizePx = 120) {
 // A small bust badge — a plain round head over a short collar hint, sized
 // small with empty margin around it inside its circular slot — matching
 // the player's own sketch exactly (a little face floating in the middle
-// of the slot circle, not a tight crop that fills the whole thing).
+// of the slot circle, not a tight crop that fills the whole thing). A
+// unit with its own finished slot art (slotImage) is dropped in as a
+// real image instead of being redrawn.
 export function renderUnitFace(unit, sizePx = 64) {
+  if (unit.slotImage) {
+    const img = document.createElement('img');
+    img.src = unit.slotImage;
+    img.alt = unit.name;
+    img.style.width = sizePx + 'px';
+    img.style.height = sizePx + 'px';
+    img.style.display = 'block';
+    img.style.objectFit = 'cover';
+    return img;
+  }
+
   const canvas = document.createElement('canvas');
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   canvas.width = sizePx * dpr;
