@@ -1,62 +1,58 @@
 import { drawHead } from './drawFigure.js';
 import { drawEnemy } from './drawEnemy.js';
 
-// A student trading-card portrait — matching the player's own sketch
-// exactly: just the head and a sliver of neck, sitting low in the box
-// with a lot of empty space above it, not a full standing body. A unit
-// can carry portraitFlairLeft/Right (e.g. The 6-7 Kid's "6"/"7") to sit
-// beside the head, same as the sketch.
+// A student trading-card portrait — matching the player's own reference
+// card exactly: a 4:3 box with the head sitting low (a sliver of neck
+// clipped by the bottom edge) and, for a unit carrying
+// portraitFlairLeft/Right (The 6-7 Kid's "6"/"7"), a pair of huge
+// accent-colored digits filling most of the box on either side of the
+// head — not a full standing body.
 export function renderUnitPortrait(unit, sizePx = 120) {
+  const w = sizePx;
+  const h = sizePx * 0.75;
   const canvas = document.createElement('canvas');
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  canvas.width = sizePx * dpr;
-  canvas.height = sizePx * dpr;
-  canvas.style.width = sizePx + 'px';
-  canvas.style.height = sizePx + 'px';
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
   canvas.style.display = 'block';
 
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
 
-  // headCy sits low enough that the neck lands right at the bottom edge
-  // — all the empty space stacks above him, instead of him floating with
-  // a gap on both sides.
-  const headR = sizePx * 0.15;
-  const headCx = sizePx / 2;
-  const headCy = sizePx * 0.77;
+  if (unit.portraitFlairLeft || unit.portraitFlairRight) {
+    ctx.fillStyle = unit.accent || '#e8482c';
+    ctx.font = `800 ${Math.round(h * 0.68)}px 'Baloo 2', sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    if (unit.portraitFlairLeft) ctx.fillText(unit.portraitFlairLeft, w * 0.2, h * 0.42);
+    if (unit.portraitFlairRight) ctx.fillText(unit.portraitFlairRight, w * 0.8, h * 0.42);
+  }
+
+  // headCy sits low enough that the neck sliver runs past the bottom
+  // edge and gets clipped there, same as the reference.
+  const headR = h * 0.24;
+  const headCx = w / 2;
+  const headCy = h * 0.72;
 
   ctx.fillStyle = unit.color;
   ctx.strokeStyle = '#241708';
-  ctx.lineWidth = Math.max(1.4, sizePx * 0.012);
+  ctx.lineWidth = Math.max(1.4, h * 0.018);
 
-  // A tiny neck sliver directly below the head — drawn first so the
-  // head's own outline covers the seam between the two shapes.
+  // A neck sliver directly below the head — drawn first so the head's
+  // own outline covers the seam between the two shapes.
   ctx.beginPath();
-  ctx.rect(headCx - headR * 0.45, headCy + headR * 0.65, headR * 0.9, headR * 0.55);
+  ctx.rect(headCx - headR * 0.45, headCy + headR * 0.6, headR * 0.9, headR);
+  ctx.fillStyle = unit.accent || unit.color;
   ctx.fill();
   ctx.stroke();
 
   ctx.beginPath();
   ctx.arc(headCx, headCy, headR, 0, Math.PI * 2);
+  ctx.fillStyle = unit.color;
   ctx.fill();
   ctx.stroke();
-
-  if (unit.portraitFlairLeft || unit.portraitFlairRight) {
-    ctx.fillStyle = '#ffd670';
-    ctx.strokeStyle = '#241708';
-    ctx.lineWidth = 1;
-    ctx.font = `800 ${Math.round(headR * 1.05)}px 'Baloo 2', sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    if (unit.portraitFlairLeft) {
-      ctx.fillText(unit.portraitFlairLeft, headCx - headR * 1.9, headCy);
-      ctx.strokeText(unit.portraitFlairLeft, headCx - headR * 1.9, headCy);
-    }
-    if (unit.portraitFlairRight) {
-      ctx.fillText(unit.portraitFlairRight, headCx + headR * 1.9, headCy);
-      ctx.strokeText(unit.portraitFlairRight, headCx + headR * 1.9, headCy);
-    }
-  }
 
   return canvas;
 }

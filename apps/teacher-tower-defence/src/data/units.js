@@ -41,10 +41,10 @@ export const UNITS = {
   }),
   // The only unit actually in the Common pool right now.
   sixseven_kid: unit({
-    id: 'sixseven_kid', name: 'The 6-7 Kid', rarity: 'common', icon: '6️⃣7️⃣',
-    desc: 'A kid following the "latest" trends. Seems to be "slightly" addicted to these two numbers.',
-    color: '#fff3d6', glow: '#ffe066', accent: '#e8482c', cost: 20, damage: 5, range: 10, fireRate: 1.2, melee: true,
-    hp: 90, gesture: 'raise', portraitFlairLeft: '6', portraitFlairRight: '7',
+    id: 'sixseven_kid', name: '67 Kid', rarity: 'common', icon: '6️⃣7️⃣',
+    desc: 'Obsessively hunts for the sequence "67" on clocks and receipts, chanting it upon discovery.',
+    color: '#fff3d6', glow: '#ffe066', accent: '#e8482c', cost: 20, damage: 10, range: 20, fireRate: 1.2, melee: true,
+    hp: 100, gesture: 'raise', portraitFlairLeft: '6', portraitFlairRight: '7',
   }),
 };
 

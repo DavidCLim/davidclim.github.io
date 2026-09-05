@@ -550,7 +550,7 @@ function renderPullReveal() {
   const r = RARITY[u.rarity];
   const hp = u.hp ?? Math.round(40 + u.cost * 0.6);
   const portrait = el('div', { class: 'ttd-reveal-portrait' });
-  portrait.appendChild(renderUnitPortrait(u, 150));
+  portrait.appendChild(renderUnitPortrait(u, 320));
   const card = el('div', { class: `ttd-reveal-card rarity-${u.rarity}`, onClick: (e) => e.stopPropagation() }, [
     el('div', { class: 'ttd-reveal-label' }, r.label.toUpperCase()),
     portrait,
