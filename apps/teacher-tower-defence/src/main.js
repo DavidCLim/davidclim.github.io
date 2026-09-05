@@ -334,55 +334,10 @@ function renderIndexModal() {
   indexModal.appendChild(card);
 }
 
-// A circular pie-chart "wheel" matching the player's own gacha sketch —
-// colored wedges divided EQUALLY (not to true probability scale, same as
-// the sketch itself — a 0.1%-true-scale Mythical sliver would be
-// invisible), each labeled with its rarity name + real percentage,
-// rotated to match its wedge's own angle — like the numbers on a clock
-// face — instead of every label sitting upright regardless of position,
-// which is what made it read as "not like my drawing".
+// The wheel's slice order/count still drives spinWheelToRarity's landing
+// angle math below, even though the wheel itself is now a real image
+// (see buildWheelColumn) rather than an SVG generated from this data.
 const WHEEL_SIZE = 320;
-function buildOddsWheel(slices, size = WHEEL_SIZE) {
-  const cx = size / 2, cy = size / 2, r = size / 2 - 4;
-  const toXY = (angleDeg, radius) => {
-    const rad = (angleDeg - 90) * Math.PI / 180;
-    return { x: cx + radius * Math.cos(rad), y: cy + radius * Math.sin(rad) };
-  };
-  const step = 360 / slices.length;
-  const parts = [];
-  slices.forEach((s, i) => {
-    const startAngle = i * step;
-    const endAngle = startAngle + step;
-    const start = toXY(startAngle, r);
-    const end = toXY(endAngle, r);
-    const largeArc = step > 180 ? 1 : 0;
-    parts.push(`<path d="M ${cx} ${cy} L ${start.x.toFixed(2)} ${start.y.toFixed(2)} A ${r} ${r} 0 ${largeArc} 1 ${end.x.toFixed(2)} ${end.y.toFixed(2)} Z" fill="${s.color}" stroke="#241708" stroke-width="1.6"/>`);
-
-    const mid = startAngle + step / 2;
-    const labelR = r * 0.62;
-    // Two-word labels ("SEASON CHAMPION") wrap onto their own line so
-    // they don't run wide enough to crowd a neighboring wedge's text.
-    const words = s.label.split(' ');
-    const nameLines = words.length > 1 ? [words.slice(0, -1).join(' '), words[words.length - 1]] : [s.label];
-    const lineH = 13;
-    const textParts = [];
-    let y = cy - labelR - (nameLines.length - 1) * lineH;
-    for (const line of nameLines) {
-      textParts.push(`<text x="${cx}" y="${y.toFixed(2)}" text-anchor="middle" font-size="12" font-weight="800" fill="#241708" font-family="'Baloo 2', sans-serif">${line}</text>`);
-      y += lineH;
-    }
-    textParts.push(`<text x="${cx}" y="${(y + 5).toFixed(2)}" text-anchor="middle" font-size="12" font-weight="700" fill="#241708" font-family="'Baloo 2', sans-serif">${s.pctLabel}</text>`);
-    // Draw every label at the top (12 o'clock), then rotate the whole
-    // group around the wheel's center by this wedge's own angle — moves
-    // it into place AND tilts it to follow the wedge, all in one step.
-    parts.push(`<g transform="rotate(${mid.toFixed(2)} ${cx} ${cy})">${textParts.join('')}</g>`);
-  });
-  return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" style="display:block">
-    <circle cx="${cx}" cy="${cy}" r="${r + 3}" fill="#2c1e10"/>
-    ${parts.join('')}
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#241708" stroke-width="3"/>
-  </svg>`;
-}
 
 const SEASON_CHAMPION_COLOR = '#ff5fc4';
 const NORMAL_WHEEL_SLICES = [
@@ -435,11 +390,21 @@ function renderSummonTab(body) {
 function buildWheelColumn(isSeasonal) {
   const col = el('div', { class: 'ttd-gacha-wheel-col' });
 
-  const wheelSVG = buildOddsWheel(isSeasonal ? SEASONAL_WHEEL_SLICES : NORMAL_WHEEL_SLICES, WHEEL_SIZE);
+  // The player's own drawn wheel, cropped straight from their reference
+  // image — not a generated SVG — so it's pixel-for-pixel their art.
+  // Slice order/count still has to match NORMAL_WHEEL_SLICES /
+  // SEASONAL_WHEEL_SLICES exactly, since spinWheelToRarity's landing
+  // angle math is keyed off that same data.
+  const wheelImg = el('img', {
+    src: isSeasonal ? 'assets/gacha_wheel_seasonal.png' : 'assets/gacha_wheel_normal.png',
+    alt: isSeasonal ? 'Seasonal wheel' : 'Normal wheel',
+  });
+  wheelImg.style.width = WHEEL_SIZE + 'px';
+  wheelImg.style.height = WHEEL_SIZE + 'px';
+  wheelImg.style.display = 'block';
   const wheelWrap = el('div', { class: 'ttd-gacha-wheel-wrap' });
   wheelWrap.appendChild(el('div', { class: 'ttd-gacha-wheel-pointer' }));
-  const wheelEl = el('div', { class: 'ttd-gacha-wheel' + (isSeasonal ? '' : ' ttd-gacha-wheel-normal') });
-  wheelEl.innerHTML = wheelSVG;
+  const wheelEl = el('div', { class: 'ttd-gacha-wheel' + (isSeasonal ? '' : ' ttd-gacha-wheel-normal') }, [wheelImg]);
   wheelWrap.appendChild(wheelEl);
   wheelWrap.appendChild(el('div', { class: 'ttd-gacha-stand' }));
   col.appendChild(wheelWrap);
