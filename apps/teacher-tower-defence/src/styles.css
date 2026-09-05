@@ -874,95 +874,66 @@ html, body {
   border: 2px solid var(--gold);
   background: transparent;
 }
-/* A thick yellow frame around both wheels, matching the player's own
-   reference — the single biggest thing that made the screen feel
-   "finished" instead of two wheels floating loose on the card. */
-.ttd-gacha-frame {
-  border: 6px solid #ffd400;
-  border-radius: 18px;
-  padding: clamp(16px, 3vh, 32px) clamp(12px, 3vw, 28px);
+/* The whole gacha screen (frame, both wheels, all six buttons) is one
+   image cropped straight from the player's own reference art. It's
+   sized by aspect-ratio (matching the source image's own 1777x1171)
+   instead of auto height, so the wheel/button overlays below — each
+   positioned by percentages measured off that same image — land in
+   the right spot at any card width. */
+.ttd-gacha-frame-img {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1777 / 1171;
 }
-.ttd-gacha-wheels-row {
-  display: flex;
-  justify-content: center;
-  gap: 32px;
-  flex-wrap: wrap;
-}
-.ttd-gacha-wheel-col {
-  flex: 1 1 340px;
-  max-width: 420px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-}
-.ttd-gacha-wheel-wrap { display: flex; flex-direction: column; align-items: center; }
+.ttd-gacha-frame-bg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.ttd-gacha-wheel-overlay { position: absolute; }
 .ttd-gacha-wheel-pointer {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
   width: 0;
   height: 0;
   border-left: 13px solid transparent;
   border-right: 13px solid transparent;
   border-top: 23px solid var(--gold);
-  margin-bottom: -11px;
   z-index: 2;
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
 }
 .ttd-gacha-wheel {
-  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.4));
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   transform-origin: 50% 50%;
   will-change: transform;
 }
+.ttd-gacha-wheel img { width: 100%; height: 100%; display: block; }
 .ttd-gacha-wheel-landed { animation: ttd-wheel-land-flash 480ms ease-out; }
 @keyframes ttd-wheel-land-flash {
-  0% { filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 0 rgba(255, 214, 130, 0)); }
-  30% { filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 26px rgba(255, 214, 130, 0.9)); }
-  100% { filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 0 rgba(255, 214, 130, 0)); }
+  0% { filter: drop-shadow(0 0 0 rgba(255, 214, 130, 0)); }
+  30% { filter: drop-shadow(0 0 26px rgba(255, 214, 130, 0.9)); }
+  100% { filter: drop-shadow(0 0 0 rgba(255, 214, 130, 0)); }
 }
-.ttd-gacha-stand {
-  width: 276px;
-  height: 64px;
-  margin-top: -4px;
-  background: linear-gradient(165deg, #4a3320, #1c1006);
-  clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%);
-  border-bottom: 2px solid var(--panel-border);
-}
-.ttd-gacha-coming-soon {
-  align-self: center;
-  padding: 5px 14px;
-  border-radius: 999px;
-  border: 2px dashed rgba(255, 180, 84, 0.4);
-  color: var(--muted);
-  font-size: 11.5px;
-  font-weight: 700;
-}
-
-.ttd-pull-row { display: flex; gap: 14px; }
-.ttd-gacha-fullscreen .ttd-pull-row { gap: 16px; }
-.ttd-pull-row-3 .ttd-pull-btn { padding: 14px 8px; }
-.ttd-pull-row-3 .ttd-pull-btn-label { font-size: 15px; }
-.ttd-gacha-fullscreen .ttd-pull-row-3 .ttd-pull-btn-cost { font-size: 14px; }
-/* Plain white/black buttons, matching the player's own reference —
-   instead of the gold-gradient pill used everywhere else in the game. */
-.ttd-pull-btn {
-  flex: 1 1 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 12px 10px;
-  border-radius: 10px;
-  border: 3px solid #1a1a1a;
-  background: #ffffff;
-  color: #1a1a1a;
+/* pointer-events:none on the full-frame wrapper so the two overlays
+   (normal + seasonal), both sized to the whole image, don't shadow
+   each other's buttons — only the buttons themselves opt back in. */
+.ttd-gacha-btn-overlay { position: absolute; inset: 0; pointer-events: none; }
+/* Invisible hit target sitting exactly over each drawn button — the
+   art already has the label/cost baked in, so this only needs to
+   handle clicks and dim the art underneath when disabled. */
+.ttd-gacha-btn-hit {
+  position: absolute;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
   cursor: pointer;
-  box-shadow: 0 4px 0 #1a1a1a;
-  transition: transform 110ms ease, filter 110ms ease;
+  padding: 0;
+  pointer-events: auto;
 }
-.ttd-pull-btn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(0.97); }
-.ttd-pull-btn:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 1px 0 #1a1a1a; }
-.ttd-pull-btn:disabled { filter: grayscale(0.4) brightness(0.85); cursor: not-allowed; }
-.ttd-pull-btn-label { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 14px; }
-.ttd-pull-btn-cost { font-size: 12px; font-weight: 700; opacity: 0.8; }
+.ttd-gacha-btn-hit:disabled { background: rgba(20, 12, 4, 0.55); cursor: not-allowed; }
+.ttd-gacha-btn-hit:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); }
+.ttd-gacha-btn-hit:active:not(:disabled) { background: rgba(0, 0, 0, 0.12); }
 
 .ttd-pull-reveal {
   display: grid;

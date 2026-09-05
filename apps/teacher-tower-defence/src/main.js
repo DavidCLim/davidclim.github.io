@@ -356,6 +356,23 @@ const SEASONAL_WHEEL_SLICES = [
   { label: 'SEASON CHAMPION', pctLabel: '0.1%', color: SEASON_CHAMPION_COLOR },
 ];
 
+// Layout percentages measured directly off assets/gacha_frame.png
+// (1777x1171) — the whole gacha screen is that one image, cropped
+// straight from the player's own reference, with the wheels and spin
+// buttons overlaid as precisely-positioned real elements on top of it
+// so the spin animation and click/disabled behavior still work. Text
+// and cost numbers are baked into the art itself; only interaction
+// lives in the overlay.
+const GACHA_WHEEL_RECT = { top: 13.578, height: 58.070, width: 36.298 };
+const GACHA_WHEEL_LEFT_X = 3.658;
+const GACHA_WHEEL_RIGHT_X = 61.621;
+const GACHA_BTN_RECT = { top: 74.125, height: 16.226 };
+const GACHA_BTN_X = {
+  normal: [3.264, 15.700, 28.420],
+  seasonal: [59.144, 71.581, 84.299],
+};
+const GACHA_BTN_W = [11.536, 11.987, 11.930];
+
 // Both banners sit side by side, full-width — matching the player's own
 // sketch exactly — instead of a Normal/Seasonal tab toggle that only
 // ever shows one wheel at a time.
@@ -366,10 +383,8 @@ function renderSummonTab(body) {
   ]);
   body.appendChild(modeRow);
 
-  const row = el('div', { class: 'ttd-gacha-wheels-row' });
-  row.appendChild(buildWheelColumn(false));
-  row.appendChild(buildWheelColumn(true));
-  const frame = el('div', { class: 'ttd-gacha-frame' }, [row]);
+  const bg = el('img', { class: 'ttd-gacha-frame-bg', src: 'assets/gacha_frame.png', alt: 'Gacha' });
+  const frame = el('div', { class: 'ttd-gacha-frame-img' }, [bg, buildWheelOverlay(false), buildWheelOverlay(true), buildBtnOverlay(false), buildBtnOverlay(true)]);
   body.appendChild(frame);
 
   if (lastPullResults) {
@@ -387,45 +402,49 @@ function renderSummonTab(body) {
   }
 }
 
-function buildWheelColumn(isSeasonal) {
-  const col = el('div', { class: 'ttd-gacha-wheel-col' });
-
+function buildWheelOverlay(isSeasonal) {
+  const x = isSeasonal ? GACHA_WHEEL_RIGHT_X : GACHA_WHEEL_LEFT_X;
+  const wrap = el('div', { class: 'ttd-gacha-wheel-overlay' });
+  wrap.style.left = x + '%';
+  wrap.style.top = GACHA_WHEEL_RECT.top + '%';
+  wrap.style.width = GACHA_WHEEL_RECT.width + '%';
+  wrap.style.height = GACHA_WHEEL_RECT.height + '%';
+  wrap.appendChild(el('div', { class: 'ttd-gacha-wheel-pointer' }));
   // The player's own drawn wheel, cropped straight from their reference
-  // image — not a generated SVG — so it's pixel-for-pixel their art.
-  // Slice order/count still has to match NORMAL_WHEEL_SLICES /
-  // SEASONAL_WHEEL_SLICES exactly, since spinWheelToRarity's landing
-  // angle math is keyed off that same data.
+  // image — not a generated SVG — so it's pixel-for-pixel their art,
+  // positioned to exactly cover the matching wheel baked into the
+  // background image so it reads as one picture until it spins. Slice
+  // order/count still has to match NORMAL_WHEEL_SLICES /
+  // SEASONAL_WHEEL_SLICES, since spinWheelToRarity's landing angle math
+  // is keyed off that same data.
   const wheelImg = el('img', {
     src: isSeasonal ? 'assets/gacha_wheel_seasonal.png' : 'assets/gacha_wheel_normal.png',
     alt: isSeasonal ? 'Seasonal wheel' : 'Normal wheel',
   });
-  wheelImg.style.width = WHEEL_SIZE + 'px';
-  wheelImg.style.height = WHEEL_SIZE + 'px';
-  wheelImg.style.display = 'block';
-  const wheelWrap = el('div', { class: 'ttd-gacha-wheel-wrap' });
-  wheelWrap.appendChild(el('div', { class: 'ttd-gacha-wheel-pointer' }));
   const wheelEl = el('div', { class: 'ttd-gacha-wheel' + (isSeasonal ? '' : ' ttd-gacha-wheel-normal') }, [wheelImg]);
-  wheelWrap.appendChild(wheelEl);
-  wheelWrap.appendChild(el('div', { class: 'ttd-gacha-stand' }));
-  col.appendChild(wheelWrap);
+  wrap.appendChild(wheelEl);
+  return wrap;
+}
 
-  if (isSeasonal) {
-    col.appendChild(el('div', { class: 'ttd-gacha-coming-soon' }, '🌱 Coming soon'));
-  }
-
-  const currencyIcon = isSeasonal ? '🪙' : '📄';
+function buildBtnOverlay(isSeasonal) {
+  const wrap = el('div', { class: 'ttd-gacha-btn-overlay' });
+  const xs = isSeasonal ? GACHA_BTN_X.seasonal : GACHA_BTN_X.normal;
   const seasonalCosts = { 1: 10, 5: 45, 10: 90 };
-  const pullRow = el('div', { class: 'ttd-pull-row ttd-pull-row-3' });
-  for (const count of [1, 5, 10]) {
+  [1, 5, 10].forEach((count, i) => {
     const cost = isSeasonal ? seasonalCosts[count] : pullCost(count);
-    pullRow.appendChild(el('button', {
-      class: 'ttd-pull-btn',
+    const btn = el('button', {
+      class: 'ttd-gacha-btn-hit',
       disabled: (isSeasonal || gachaSpinning || collection.gold < cost) ? 'disabled' : undefined,
       onClick: isSeasonal ? undefined : () => doPull(count),
-    }, [el('span', { class: 'ttd-pull-btn-label' }, `x${count} SPIN`), el('span', { class: 'ttd-pull-btn-cost' }, `${cost} ${currencyIcon}`)]));
-  }
-  col.appendChild(pullRow);
-  return col;
+      'aria-label': `x${count} spin, ${cost} gold`,
+    });
+    btn.style.left = xs[i] + '%';
+    btn.style.top = GACHA_BTN_RECT.top + '%';
+    btn.style.width = GACHA_BTN_W[i] + '%';
+    btn.style.height = GACHA_BTN_RECT.height + '%';
+    wrap.appendChild(btn);
+  });
+  return wrap;
 }
 
 // The wheel actually spins before revealing what you got — a long,
@@ -468,7 +487,7 @@ function doPull(count) {
   const results = pullGacha(collection, 'standard', count);
   if (!results) return;
   gachaSpinning = true;
-  gachaModal.querySelectorAll('.ttd-pull-btn').forEach(b => { b.disabled = true; });
+  gachaModal.querySelectorAll('.ttd-gacha-btn-hit').forEach(b => { b.disabled = true; });
   audio.playUpgrade();
   spinWheelToRarity(results[0].rarity, () => {
     gachaSpinning = false;
