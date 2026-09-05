@@ -554,7 +554,7 @@ function renderPullReveal() {
   const card = el('div', { class: `ttd-reveal-card rarity-${u.rarity}`, onClick: (e) => e.stopPropagation() }, [
     el('div', { class: 'ttd-reveal-label' }, r.label.toUpperCase()),
     portrait,
-    el('div', { class: 'ttd-reveal-name' }, u.name),
+    el('div', { class: 'ttd-reveal-name', style: `color:${u.accent || '#d92b2b'}` }, u.name),
     el('div', { class: 'ttd-reveal-desc' }, u.desc),
     el('div', { class: 'ttd-reveal-stats' }, [
       el('div', { class: 'ttd-reveal-stat' }, [el('div', { class: 'ttd-reveal-stat-val' }, `${hp}❤️`), el('div', { class: 'ttd-reveal-stat-label' }, 'Health')]),
