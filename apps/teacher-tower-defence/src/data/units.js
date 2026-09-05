@@ -45,7 +45,7 @@ export const UNITS = {
     desc: 'Obsessively hunts for the sequence "67" on clocks and receipts, chanting it upon discovery.',
     color: '#fff3d6', glow: '#ffe066', accent: '#e8482c', cost: 20, damage: 10, range: 20, fireRate: 1.2, melee: true,
     hp: 100, gesture: 'raise', portraitFlairLeft: '6', portraitFlairRight: '7',
-    portraitImage: 'assets/sixseven_kid_card.png',
+    cardImage: 'assets/sixseven_kid_card.png',
   }),
 };
 

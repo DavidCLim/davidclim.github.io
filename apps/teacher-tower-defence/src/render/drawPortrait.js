@@ -1,29 +1,15 @@
 import { drawHead } from './drawFigure.js';
 import { drawEnemy } from './drawEnemy.js';
 
-// A student trading-card portrait. A unit carrying its own baked
-// portraitImage (a real asset file, e.g. 67 Kid's card art) is dropped
-// in directly as a plain <img> instead of being redrawn — the same way
-// a static logo gets used — so it's pixel-for-pixel the actual art, not
-// a live approximation. Units without one fall back to the generated
-// version: a 4:3 box with the head sitting low (a sliver of neck
-// clipped by the bottom edge) and, for a unit carrying
+// A student trading-card portrait — a 4:3 box with the head sitting low
+// (a sliver of neck clipped by the bottom edge) and, for a unit carrying
 // portraitFlairLeft/Right, a pair of huge accent-colored digits filling
 // most of the box on either side of the head — not a full standing body.
+// A unit with its own finished card art (cardImage) skips this entirely
+// and is shown as a real image instead — see renderPullReveal.
 export function renderUnitPortrait(unit, sizePx = 120) {
   const w = sizePx;
   const h = sizePx * 0.75;
-
-  if (unit.portraitImage) {
-    const img = document.createElement('img');
-    img.src = unit.portraitImage;
-    img.alt = unit.name;
-    img.style.width = w + 'px';
-    img.style.height = h + 'px';
-    img.style.display = 'block';
-    img.style.objectFit = 'contain';
-    return img;
-  }
 
   const canvas = document.createElement('canvas');
   const dpr = Math.min(window.devicePixelRatio || 1, 2);

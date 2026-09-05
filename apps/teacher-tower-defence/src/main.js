@@ -549,20 +549,30 @@ function renderPullReveal() {
   const u = revealQueue[revealIndex];
   const r = RARITY[u.rarity];
   const hp = u.hp ?? Math.round(40 + u.cost * 0.6);
-  const portrait = el('div', { class: 'ttd-reveal-portrait' });
-  portrait.appendChild(renderUnitPortrait(u, 320));
-  const card = el('div', { class: `ttd-reveal-card rarity-${u.rarity}`, onClick: (e) => e.stopPropagation() }, [
-    el('div', { class: 'ttd-reveal-label' }, r.label.toUpperCase()),
-    portrait,
-    el('div', { class: 'ttd-reveal-name', style: `color:${u.accent || '#d92b2b'}` }, u.name),
-    el('div', { class: 'ttd-reveal-desc' }, u.desc),
-    el('div', { class: 'ttd-reveal-stats' }, [
-      el('div', { class: 'ttd-reveal-stat' }, [el('div', { class: 'ttd-reveal-stat-val' }, `${hp}❤️`), el('div', { class: 'ttd-reveal-stat-label' }, 'Health')]),
-      el('div', { class: 'ttd-reveal-stat' }, [el('div', { class: 'ttd-reveal-stat-val' }, `${u.damage}⚔️`), el('div', { class: 'ttd-reveal-stat-label' }, 'Damage')]),
-      el('div', { class: 'ttd-reveal-stat' }, [el('div', { class: 'ttd-reveal-stat-val' }, `${u.range}🎯`), el('div', { class: 'ttd-reveal-stat-label' }, 'Range')]),
-    ]),
-    el('div', { class: 'ttd-reveal-next' }, revealIndex < revealQueue.length - 1 ? `Tap to continue (${revealIndex + 1}/${revealQueue.length})` : 'Tap to continue'),
-  ]);
+  const nextLabel = el('div', { class: 'ttd-reveal-next' }, revealIndex < revealQueue.length - 1 ? `Tap to continue (${revealIndex + 1}/${revealQueue.length})` : 'Tap to continue');
+
+  let card;
+  if (u.cardImage) {
+    // The player's own finished card art, dropped in whole — no
+    // generated label/portrait/name/stats markup layered on top of it.
+    const img = el('img', { src: u.cardImage, alt: u.name });
+    card = el('div', { class: 'ttd-reveal-card ttd-reveal-card-image', onClick: (e) => e.stopPropagation() }, [img, nextLabel]);
+  } else {
+    const portrait = el('div', { class: 'ttd-reveal-portrait' });
+    portrait.appendChild(renderUnitPortrait(u, 320));
+    card = el('div', { class: `ttd-reveal-card rarity-${u.rarity}`, onClick: (e) => e.stopPropagation() }, [
+      el('div', { class: 'ttd-reveal-label' }, r.label.toUpperCase()),
+      portrait,
+      el('div', { class: 'ttd-reveal-name', style: `color:${u.accent || '#d92b2b'}` }, u.name),
+      el('div', { class: 'ttd-reveal-desc' }, u.desc),
+      el('div', { class: 'ttd-reveal-stats' }, [
+        el('div', { class: 'ttd-reveal-stat' }, [el('div', { class: 'ttd-reveal-stat-val' }, `${hp}❤️`), el('div', { class: 'ttd-reveal-stat-label' }, 'Health')]),
+        el('div', { class: 'ttd-reveal-stat' }, [el('div', { class: 'ttd-reveal-stat-val' }, `${u.damage}⚔️`), el('div', { class: 'ttd-reveal-stat-label' }, 'Damage')]),
+        el('div', { class: 'ttd-reveal-stat' }, [el('div', { class: 'ttd-reveal-stat-val' }, `${u.range}🎯`), el('div', { class: 'ttd-reveal-stat-label' }, 'Range')]),
+      ]),
+      nextLabel,
+    ]);
+  }
   revealOverlay.appendChild(card);
   revealOverlay.onclick = advancePullReveal;
 }
