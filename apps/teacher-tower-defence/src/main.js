@@ -414,7 +414,8 @@ function renderSummonTab(body) {
   const row = el('div', { class: 'ttd-gacha-wheels-row' });
   row.appendChild(buildWheelColumn(false));
   row.appendChild(buildWheelColumn(true));
-  body.appendChild(row);
+  const frame = el('div', { class: 'ttd-gacha-frame' }, [row]);
+  body.appendChild(frame);
 
   if (lastPullResults) {
     const reveal = el('div', { class: 'ttd-pull-reveal' });

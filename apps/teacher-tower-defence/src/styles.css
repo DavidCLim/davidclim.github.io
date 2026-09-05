@@ -874,6 +874,14 @@ html, body {
   border: 2px solid var(--gold);
   background: transparent;
 }
+/* A thick yellow frame around both wheels, matching the player's own
+   reference — the single biggest thing that made the screen feel
+   "finished" instead of two wheels floating loose on the card. */
+.ttd-gacha-frame {
+  border: 6px solid #ffd400;
+  border-radius: 18px;
+  padding: clamp(16px, 3vh, 32px) clamp(12px, 3vw, 28px);
+}
 .ttd-gacha-wheels-row {
   display: flex;
   justify-content: center;
@@ -933,6 +941,8 @@ html, body {
 .ttd-pull-row-3 .ttd-pull-btn { padding: 14px 8px; }
 .ttd-pull-row-3 .ttd-pull-btn-label { font-size: 15px; }
 .ttd-gacha-fullscreen .ttd-pull-row-3 .ttd-pull-btn-cost { font-size: 14px; }
+/* Plain white/black buttons, matching the player's own reference —
+   instead of the gold-gradient pill used everywhere else in the game. */
 .ttd-pull-btn {
   flex: 1 1 0;
   display: flex;
@@ -940,17 +950,17 @@ html, body {
   align-items: center;
   gap: 4px;
   padding: 12px 10px;
-  border-radius: 12px;
-  border: 2px solid rgba(255, 215, 92, 0.7);
-  background: linear-gradient(165deg, #ffe98a, #ffd75c 45%, #f0a52c);
-  color: #2a1a04;
+  border-radius: 10px;
+  border: 3px solid #1a1a1a;
+  background: #ffffff;
+  color: #1a1a1a;
   cursor: pointer;
-  box-shadow: 0 4px 0 #8a5c14, 0 8px 16px rgba(255, 215, 92, 0.22);
+  box-shadow: 0 4px 0 #1a1a1a;
   transition: transform 110ms ease, filter 110ms ease;
 }
-.ttd-pull-btn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.06); }
-.ttd-pull-btn:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 1px 0 #8a5c14; }
-.ttd-pull-btn:disabled { filter: grayscale(0.6) brightness(0.7); cursor: not-allowed; }
+.ttd-pull-btn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(0.97); }
+.ttd-pull-btn:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 1px 0 #1a1a1a; }
+.ttd-pull-btn:disabled { filter: grayscale(0.4) brightness(0.85); cursor: not-allowed; }
 .ttd-pull-btn-label { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 14px; }
 .ttd-pull-btn-cost { font-size: 12px; font-weight: 700; opacity: 0.8; }
 
