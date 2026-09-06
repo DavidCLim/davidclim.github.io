@@ -42,56 +42,61 @@ function getSprite(path) {
 // the whole flat image sliding as one rigid cutout.
 const HIP_FRAC = 0.6;
 
-// A procedural arm drawn on top of the flat sprite art (which has none),
-// reusing the same shoulder/elbow/hand geometry drawStudentBody's punch
-// uses so the motion — chamber back on windup, drive forward on the
-// attack flash — matches what every procedural unit already does.
-function drawPunchArm(ctx, shoulderX, shoulderY, phase, windup, punching, scale, skin, outline, outlineWidth) {
-  const s = scale;
-  const armSwing = Math.sin(phase) * 0.3;
-  const neutralHandX = shoulderX + Math.sin(armSwing) * 9 * s;
-  const neutralHandY = shoulderY + Math.cos(armSwing) * 9 * s;
-  const neutralElbowX = shoulderX + (neutralHandX - shoulderX) * 0.5;
-  const neutralElbowY = shoulderY + (neutralHandY - shoulderY) * 0.5;
+// Must match game/engine.js's ATTACK_FLASH_TIME — there's no shared
+// import between the two, same as drawUnit's existing hardcoded 0.15
+// below for the hit-flash window (game/engine.js's applyDamageToUnit).
+const FLASH_TIME = 0.18;
 
-  let handX, handY, elbowX, elbowY;
-  if (punching) {
-    handX = shoulderX + 15 * s;
-    handY = shoulderY - 1 * s;
-    elbowX = shoulderX + 8 * s;
-    elbowY = shoulderY - 2.5 * s;
-  } else {
-    const cockedHandX = shoulderX - 3.5 * s;
-    const cockedHandY = shoulderY + 6 * s;
-    const cockedElbowX = shoulderX - 7 * s;
-    const cockedElbowY = shoulderY + 1.5 * s;
-    handX = neutralHandX + (cockedHandX - neutralHandX) * windup;
-    handY = neutralHandY + (cockedHandY - neutralHandY) * windup;
-    elbowX = neutralElbowX + (cockedElbowX - neutralElbowX) * windup;
-    elbowY = neutralElbowY + (cockedElbowY - neutralElbowY) * windup;
-  }
-  drawJointedLimb(ctx, shoulderX, shoulderY, elbowX, elbowY, handX, handY, 3 * s, skin, outline, outlineWidth);
+// Sub-frame easing for the attack flash: 0 at the instant it starts, 1 at
+// the instant it ends. Rather than holding one static extended pose for
+// the whole window, the arm snaps out PAST full extension, springs back
+// to it, holds, then eases into a slight recoil right at the end — a
+// thrown punch, not a limb teleporting into a pose.
+function easeOutBack(x) {
+  const c1 = 1.70158, c3 = c1 + 1;
+  return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+}
+function attackReach(pt) {
+  if (pt < 0.4) return easeOutBack(pt / 0.4);
+  if (pt < 0.7) return 1;
+  return 1 - ((pt - 0.7) / 0.3) * 0.2;
 }
 
-// The "67!" gesture's two-arms-up flourish, ported the same way — both
-// hands chamber up beside the head as windup ramps toward 1, instead of
-// only the punch pose being available to sprite-based units.
-function drawRaiseArms(ctx, originX, shoulderY, headCenterY, phase, windup, punching, scale, skin, outline, outlineWidth) {
+// A procedural arm drawn on top of the flat sprite art (which has none) —
+// invisible until the attack flash, then it snaps from a cocked-at-the-
+// ribs start straight through to a full extended jab along `attackReach`'s
+// curve, thicker than a resting limb for a bit more punch.
+function drawPunchArm(ctx, shoulderX, shoulderY, reach, scale, skin, outline, outlineWidth) {
   const s = scale;
-  const armSwing = Math.sin(phase) * 0.3;
-  const tRaise = punching ? 1 : windup;
+  const cockedHandX = shoulderX - 4 * s, cockedHandY = shoulderY + 7 * s;
+  const cockedElbowX = shoulderX - 8 * s, cockedElbowY = shoulderY + 2 * s;
+  const extHandX = shoulderX + 20 * s, extHandY = shoulderY - 1.5 * s;
+  const extElbowX = shoulderX + 9 * s, extElbowY = shoulderY - 3 * s;
+  const handX = cockedHandX + (extHandX - cockedHandX) * reach;
+  const handY = cockedHandY + (extHandY - cockedHandY) * reach;
+  const elbowX = cockedElbowX + (extElbowX - cockedElbowX) * reach;
+  const elbowY = cockedElbowY + (extElbowY - cockedElbowY) * reach;
+  drawJointedLimb(ctx, shoulderX, shoulderY, elbowX, elbowY, handX, handY, 3.6 * s, skin, outline, outlineWidth);
+}
+
+// The "67!" gesture's two-arms-up flourish — both hands snap up past the
+// head and spring back into place the same way the punch does, then
+// shiver in place for the rest of the hold (a fist-pump shake, not a
+// frozen pose) while "67!" is up on screen.
+function drawRaiseArms(ctx, originX, shoulderY, headCenterY, reach, shakeX, scale, skin, outline, outlineWidth) {
+  const s = scale;
   const backShoulderX = originX - 6 * s;
   const frontShoulderX = originX + 6 * s;
-  const backNeutralX = backShoulderX + Math.sin(-armSwing) * 9 * s;
-  const backNeutralY = shoulderY + Math.cos(-armSwing) * 9 * s;
-  const frontNeutralX = frontShoulderX + Math.sin(armSwing) * 9 * s;
-  const frontNeutralY = shoulderY + Math.cos(armSwing) * 9 * s;
-  const backHandX = backNeutralX + (originX - 13 * s - backNeutralX) * tRaise;
-  const backHandY = backNeutralY + (headCenterY - backNeutralY) * tRaise;
-  const frontHandX = frontNeutralX + (originX + 13 * s - frontNeutralX) * tRaise;
-  const frontHandY = frontNeutralY + (headCenterY - frontNeutralY) * tRaise;
-  drawJointedLimb(ctx, backShoulderX, shoulderY, (backShoulderX + backHandX) / 2, (shoulderY + backHandY) / 2, backHandX, backHandY, 3 * s, skin, outline, outlineWidth);
-  drawJointedLimb(ctx, frontShoulderX, shoulderY, (frontShoulderX + frontHandX) / 2, (shoulderY + frontHandY) / 2, frontHandX, frontHandY, 3 * s, skin, outline, outlineWidth);
+  const startBackX = backShoulderX - 2 * s, startBackY = shoulderY + 5 * s;
+  const startFrontX = frontShoulderX + 2 * s, startFrontY = shoulderY + 5 * s;
+  const upBackX = originX - 16 * s, upBackY = headCenterY - 5 * s;
+  const upFrontX = originX + 16 * s, upFrontY = headCenterY - 5 * s;
+  const backHandX = startBackX + (upBackX - startBackX) * reach - shakeX;
+  const backHandY = startBackY + (upBackY - startBackY) * reach;
+  const frontHandX = startFrontX + (upFrontX - startFrontX) * reach + shakeX;
+  const frontHandY = startFrontY + (upFrontY - startFrontY) * reach;
+  drawJointedLimb(ctx, backShoulderX, shoulderY, (backShoulderX + backHandX) / 2, (shoulderY + backHandY) / 2, backHandX, backHandY, 3.6 * s, skin, outline, outlineWidth);
+  drawJointedLimb(ctx, frontShoulderX, shoulderY, (frontShoulderX + frontHandX) / 2, (shoulderY + frontHandY) / 2, frontHandX, frontHandY, 3.6 * s, skin, outline, outlineWidth);
 }
 
 export function drawUnit(ctx, tower, t) {
@@ -135,28 +140,38 @@ export function drawUnit(ctx, tower, t) {
 
     // A single static frame gets its "walking" from a whole-body footstep
     // bounce (double-bounce per stride, since both feet land within one
-    // cycle) with a springy squash at the bottom of each bounce, plus the
-    // torso and legs animating independently instead of together: the
-    // legs scissor into a shear each way (a real stride, not just a
-    // slide) while the torso only counter-sways a little on top of them —
-    // the same top-heavier/legs-busier split a real walk cycle has.
+    // cycle) with a springy squash at the bottom of each bounce, on top of
+    // which the torso only counter-sways a little while the two legs are
+    // animated as separate pieces (see drawLeg below) instead of the whole
+    // silhouette sliding or shearing as one rigid cutout.
     const bounce = Math.abs(Math.sin(phase));
-    const bob = bounce * 3;
-    const squash = 1 - bounce * 0.05;
-    const torsoTilt = Math.sin(phase * 2) * 0.04;
-    const legSkew = Math.sin(phase) * 0.16;
+    const bob = bounce * 4;
+    const torsoTilt = Math.sin(phase * 2) * 0.05;
 
-    // Legs: clipped to the band below the hip line, sheared around that
-    // line so the pants swing like they're actually stepping.
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(-w / 2 - 12, hipY - bob - 1, w + 24, h - h * HIP_FRAC + 8);
-    ctx.clip();
-    ctx.translate(0, hipY - bob);
-    ctx.transform(1, 0, legSkew, 1, 0, 0);
-    ctx.scale(1, squash);
-    ctx.drawImage(sprite, -w / 2, top - hipY, w, h);
-    ctx.restore();
+    // Each leg is the SAME full image, clipped to its own half of the
+    // lower band and given its own lift/reach/squash a half-cycle out of
+    // phase from the other — one leg is airborne (lifted, swung forward)
+    // exactly while the other is planted (squashed flat under the body's
+    // weight), which is what actually reads as a stride instead of a
+    // single shape wobbling in place.
+    function drawLeg(sign, legPhase) {
+      const swing = Math.sin(legPhase);
+      const lift = Math.max(0, swing) * 6;
+      const stepX = swing * 5;
+      const plant = Math.max(0, -swing);
+      const legSquash = 1 - plant * 0.08;
+      ctx.save();
+      ctx.beginPath();
+      const clipX0 = sign < 0 ? -w / 2 - 16 : -1;
+      ctx.rect(clipX0, hipY - bob - lift - 1, w / 2 + 17, h - h * HIP_FRAC + lift + 10);
+      ctx.clip();
+      ctx.translate(stepX, hipY - bob - lift);
+      ctx.scale(1, legSquash);
+      ctx.drawImage(sprite, -w / 2, top - hipY, w, h);
+      ctx.restore();
+    }
+    drawLeg(-1, phase);
+    drawLeg(1, phase + Math.PI);
 
     // Torso + head: clipped to the band above the hip line, with the
     // bounce and a much smaller counter-tilt than the legs get.
@@ -164,25 +179,34 @@ export function drawUnit(ctx, tower, t) {
     ctx.beginPath();
     // Padded generously on x so the drawn-on punch arm (which reaches
     // well past the art's own silhouette) doesn't get clipped off.
-    ctx.rect(-w / 2 - 45, top - bob - 6, w + 90, h * HIP_FRAC + 8);
+    ctx.rect(-w / 2 - 55, top - bob - 6, w + 110, h * HIP_FRAC + 8);
     ctx.clip();
     ctx.translate(0, -bob);
     ctx.rotate(torsoTilt);
-    ctx.drawImage(sprite, -w / 2, top, w, h);
 
     // The art has no arms at all — none are drawn while idle or walking.
-    // One only appears for the instant of the actual attack flash (a punch,
-    // or the 67 Kid's two-hands-up "67!" shout), anchored near the
-    // neckline, using the torso's own bounce/tilt transform so it stays
-    // attached for that one frame instead of floating independently.
+    // One only appears for the actual attack flash (a punch, or the 67
+    // Kid's two-hands-up "67!" shout), driven by `attackReach`'s
+    // snap-past-full-extension-then-settle curve across that window
+    // instead of one static held pose, plus a small forward body lunge so
+    // the whole torso leans into the punch instead of just the arm moving.
+    const punchT = flashing ? Math.max(0, Math.min(1, 1 - (attackFlashUntil - t) / FLASH_TIME)) : 0;
+    const reach = flashing ? attackReach(punchT) : 0;
+    const lunge = flashing ? Math.min(1, reach) * 4 * SCALE : 0;
+    ctx.translate(lunge, 0);
+    ctx.drawImage(sprite, -w / 2, top, w, h);
+
     if (flashing) {
       const shoulderX = w * 0.16;
       const shoulderY = top + h * 0.4;
       const headCenterY = top + h * 0.19;
       if (gesture === 'raise') {
-        drawRaiseArms(ctx, w * 0.02, shoulderY, headCenterY, phase, 1, true, SCALE, skin, outline, outlineWidth);
+        // A quick shiver on the hands through the hold portion of the
+        // flash — a fist-pump shake instead of a frozen raised pose.
+        const shakeX = punchT > 0.4 && punchT < 0.9 ? Math.sin(t * 50) * 1.2 * SCALE : 0;
+        drawRaiseArms(ctx, w * 0.02, shoulderY, headCenterY, reach, shakeX, SCALE, skin, outline, outlineWidth);
       } else {
-        drawPunchArm(ctx, shoulderX, shoulderY, phase, 1, true, SCALE, skin, outline, outlineWidth);
+        drawPunchArm(ctx, shoulderX, shoulderY, reach, SCALE, skin, outline, outlineWidth);
       }
     }
     ctx.restore();
@@ -195,7 +219,7 @@ export function drawUnit(ctx, tower, t) {
       ctx.globalCompositeOperation = 'source-atop';
       ctx.globalAlpha = hitFlashing ? 0.5 : 0.35;
       ctx.fillStyle = hitFlashing ? '#ff3b3b' : '#fff6ea';
-      ctx.fillRect(-w / 2 - 10, top - bob - 10, w + 20, h + 20);
+      ctx.fillRect(-w / 2 - 60, top - bob - 10, w + 120, h + 20);
       ctx.globalCompositeOperation = 'source-over';
       ctx.globalAlpha = 1;
     }

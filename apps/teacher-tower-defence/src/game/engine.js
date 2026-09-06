@@ -18,6 +18,9 @@ const DEPLOY_COOLDOWN = { common: 2, rare: 3, epic: 4.5, legend: 6, mythic: 9 };
 const CONTACT_RANGE = 26;
 const PASSIVE_GOLD_PER_SEC = 10;
 const WINDUP_TIME = 0.18;
+// Long enough for drawUnit.js to play a snap-out-then-settle punch curve
+// across the window instead of just holding one static extended frame.
+const ATTACK_FLASH_TIME = 0.18;
 
 // 0 while there's plenty of cooldown left, ramping up to 1 right as the
 // next attack is about to fire — drawUnit.js uses this to pull a
@@ -277,7 +280,7 @@ function killEnemy(state, enemy) {
 }
 
 function fireAttacker(state, u, target, enemyList) {
-  u.attackFlashUntil = state.t + 0.12;
+  u.attackFlashUntil = state.t + ATTACK_FLASH_TIME;
   if (u.domain) return fireDomain(state, u, enemyList);
   if (u.melee) return fireMelee(state, u, enemyList);
   fireProjectile(state, u, target);
@@ -317,7 +320,7 @@ function fireMelee(state, u, enemyList) {
 // living teacher left to fight — deals the unit's own damage straight to
 // the base's HP, same punch effect as hitting a teacher.
 function fireAtEnemyBase(state, u) {
-  u.attackFlashUntil = state.t + 0.12;
+  u.attackFlashUntil = state.t + ATTACK_FLASH_TIME;
   const amount = u.damage;
   state.enemyBase.hp = Math.max(0, state.enemyBase.hp - amount);
   // The base itself reacts to the hit — a brief shake + white flash,

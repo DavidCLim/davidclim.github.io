@@ -43,29 +43,41 @@ function drawImpact(ctx, e, t) {
   ctx.restore();
 }
 
-// A quick comic-book "POW" — a bright flash core with a few short spikes
-// radiating out, at the point of contact — for melee hits, which read
-// poorly as the plain expanding ring drawImpact makes for splash/AoE.
+// A quick comic-book "POW" — a hot white contact flash, then a colored
+// core with spikes radiating out — for melee hits, which read poorly as
+// the plain expanding ring drawImpact makes for splash/AoE. `big` (the
+// base-slam variant) scales the whole thing up for a heavier hit.
 function drawPunch(ctx, e, t) {
   const p = progress(e, t);
+  const mul = e.big ? 1.6 : 1;
   ctx.save();
   ctx.translate(e.x, e.y);
-  ctx.globalAlpha = 1 - p;
   const color = e.color || '#fff6ea';
-  const r = 3 + p * 9;
 
+  // The instant-of-contact flash — bright white, gone fast — separate
+  // from the colored burst so the hit reads as a bright snap first.
+  if (p < 0.35) {
+    ctx.globalAlpha = (1 - p / 0.35) * 0.9;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(0, 0, (4 + p * 12) * mul, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const r = (3 + p * 13) * mul;
+  ctx.globalAlpha = 1 - p;
   ctx.fillStyle = color;
   ctx.beginPath();
-  ctx.arc(0, 0, r * 0.5, 0, Math.PI * 2);
+  ctx.arc(0, 0, r * 0.45, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.strokeStyle = color;
-  ctx.lineWidth = 2.2;
-  const spikes = 6;
+  ctx.lineWidth = 2.6;
+  const spikes = e.big ? 10 : 8;
   for (let i = 0; i < spikes; i++) {
-    const a = (i / spikes) * Math.PI * 2 + p * 0.6;
-    const inner = r * 0.55;
-    const outer = inner + 9 * (1 - p * 0.5);
+    const a = (i / spikes) * Math.PI * 2 + p * 0.8;
+    const inner = r * 0.5;
+    const outer = inner + 13 * mul * (1 - p * 0.4);
     ctx.beginPath();
     ctx.moveTo(Math.cos(a) * inner, Math.sin(a) * inner);
     ctx.lineTo(Math.cos(a) * outer, Math.sin(a) * outer);
@@ -90,17 +102,62 @@ function drawDeathBurst(ctx, e, t) {
   ctx.restore();
 }
 
+function easeOutBack(x) {
+  const c1 = 1.70158, c3 = c1 + 1;
+  return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+}
+
 function drawFloatingText(ctx, e, t) {
   const p = progress(e, t);
   ctx.save();
-  ctx.globalAlpha = 1 - p;
-  ctx.translate(e.x, e.y - p * 26);
-  ctx.font = `bold ${e.big ? 15 : 12}px 'Baloo 2', sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.fillStyle = e.color || '#fff6ea';
-  ctx.shadowColor = 'rgba(0,0,0,0.7)';
-  ctx.shadowBlur = 3;
-  ctx.fillText(e.text, 0, 0);
+
+  if (e.big) {
+    // A full comic-book pop for the "big" callouts (the 67 Kid's "67!",
+    // a base getting slammed) — the text springs in past full size and
+    // settles, with a tiny rotation wobble and a starburst flash behind
+    // it, instead of a plain label drifting upward.
+    ctx.translate(e.x, e.y - p * 34);
+    const growP = Math.min(1, p / 0.3);
+    const scale = 0.3 + 0.7 * easeOutBack(growP);
+    const wob = Math.sin(p * Math.PI * 5) * Math.max(0, 1 - p / 0.5) * 0.14;
+    ctx.globalAlpha = p > 0.7 ? Math.max(0, 1 - (p - 0.7) / 0.3) : 1;
+    ctx.rotate(wob);
+    ctx.scale(scale, scale);
+
+    if (p < 0.35) {
+      ctx.save();
+      ctx.globalAlpha *= 1 - p / 0.35;
+      ctx.strokeStyle = e.color || '#ffe066';
+      ctx.lineWidth = 2;
+      const spikes = 8;
+      for (let i = 0; i < spikes; i++) {
+        const a = (i / spikes) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a) * 11, Math.sin(a) * 11);
+        ctx.lineTo(Math.cos(a) * 24, Math.sin(a) * 24);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    ctx.font = `900 24px 'Baloo 2', sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#241708';
+    ctx.strokeText(e.text, 0, 0);
+    ctx.fillStyle = e.color || '#fff6ea';
+    ctx.fillText(e.text, 0, 0);
+  } else {
+    ctx.globalAlpha = 1 - p;
+    ctx.translate(e.x, e.y - p * 26);
+    ctx.font = `bold 12px 'Baloo 2', sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = e.color || '#fff6ea';
+    ctx.shadowColor = 'rgba(0,0,0,0.7)';
+    ctx.shadowBlur = 3;
+    ctx.fillText(e.text, 0, 0);
+  }
   ctx.restore();
 }
 
