@@ -39,6 +39,12 @@ export const UNITS = {
     color: '#f5f1e4', glow: '#ffffff', accent: '#1b6b3a', cost: 20, damage: 5, range: 28, fireRate: 1.2, melee: true,
     notRollable: true, awakenCrystal: 'class',
     battleSprite: 'assets/starter_student_sprite.png',
+    attackFrames: [
+      'assets/starter_attack_1.png',
+      'assets/starter_attack_2.png',
+      'assets/starter_attack_3.png',
+      'assets/starter_attack_4.png',
+    ],
   }),
   // The only unit actually in the Common pool right now.
   sixseven_kid: unit({
@@ -49,6 +55,12 @@ export const UNITS = {
     cardImage: 'assets/sixseven_kid_card.png',
     slotImage: 'assets/sixseven_kid_slot.png',
     battleSprite: 'assets/sixseven_kid_sprite.png',
+    attackFrames: [
+      'assets/sixseven_attack_1.png',
+      'assets/sixseven_attack_2.png',
+      'assets/sixseven_attack_3.png',
+      'assets/sixseven_attack_4.png',
+    ],
     awakenCrystal: 'ish',
   }),
 };
