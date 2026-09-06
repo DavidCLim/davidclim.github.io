@@ -60,15 +60,28 @@ export function drawUnit(ctx, tower, t) {
   ctx.save();
   ctx.scale(dir < 0 ? -1 : 1, 1);
   if (sprite && sprite.complete && sprite.naturalWidth) {
-    // The player's own drawing, face left/right mirrored the same as the
-    // procedural figure. Sized to roughly the same head-to-feet footprint
-    // the stick-figure occupied, so it doesn't look out of scale next to
-    // teachers or the base. A brief hint of the walking bob keeps it from
-    // reading as a cardboard cutout even with no limb animation.
-    const bob = Math.sin(phase) * 1.2;
+    // The player's own drawing, sized to roughly the same head-to-feet
+    // footprint the stick-figure occupied so it doesn't look out of scale
+    // next to teachers or the base. The photo's own lean faces the
+    // opposite way from the outer dir flip's "forward", so it gets one
+    // extra horizontal mirror on top of that, scoped to just this block.
+    ctx.save();
+    ctx.scale(-1, 1);
     const h = 46 * SCALE;
     const w = h * (sprite.naturalWidth / sprite.naturalHeight);
-    ctx.drawImage(sprite, -w / 2, -30 * SCALE + bob, w, h);
+    // A single static frame gets its "walking" from a footstep bounce
+    // (double-bounce per stride, since both feet land within one cycle),
+    // a squash at the bottom of each bounce for a springy footfall, and a
+    // slight side-to-side tilt — instead of reading as a cardboard cutout
+    // sliding across the lane.
+    const bounce = Math.abs(Math.sin(phase));
+    const bob = bounce * 3;
+    const squash = 1 - bounce * 0.05;
+    const tilt = Math.sin(phase * 2) * 0.05;
+    ctx.translate(0, -bob);
+    ctx.rotate(tilt);
+    ctx.scale(1, squash);
+    ctx.drawImage(sprite, -w / 2, -30 * SCALE, w, h);
     // Same get-hit/attack tint the procedural figure used, reapplied as a
     // compositing overlay clipped to the sprite's own opaque pixels
     // instead of a fillStyle swap, so the feedback isn't lost just
@@ -77,10 +90,11 @@ export function drawUnit(ctx, tower, t) {
       ctx.globalCompositeOperation = 'source-atop';
       ctx.globalAlpha = hitFlashing ? 0.5 : 0.35;
       ctx.fillStyle = hitFlashing ? '#ff3b3b' : '#fff6ea';
-      ctx.fillRect(-w / 2, -30 * SCALE + bob, w, h);
+      ctx.fillRect(-w / 2, -30 * SCALE, w, h);
       ctx.globalCompositeOperation = 'source-over';
       ctx.globalAlpha = 1;
     }
+    ctx.restore();
   } else {
     // Body + prop face left/right (mirrored); the level pips and star are
     // drawn afterward, unflipped. Flat fill, no gradient/glow — plain 2D
