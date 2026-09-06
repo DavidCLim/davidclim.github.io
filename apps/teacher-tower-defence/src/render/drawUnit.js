@@ -170,16 +170,20 @@ export function drawUnit(ctx, tower, t) {
     ctx.rotate(torsoTilt);
     ctx.drawImage(sprite, -w / 2, top, w, h);
 
-    // The art has no arms at all, so a punch (or the 67 Kid's two-hands-up
-    // shout) is drawn on top here, anchored near the neckline, using the
-    // torso's own bounce/tilt transform so it stays attached while it moves.
-    const shoulderX = w * 0.16;
-    const shoulderY = top + h * 0.4;
-    const headCenterY = top + h * 0.19;
-    if (gesture === 'raise') {
-      drawRaiseArms(ctx, w * 0.02, shoulderY, headCenterY, phase, attackWindup || 0, flashing, SCALE, skin, outline, outlineWidth);
-    } else {
-      drawPunchArm(ctx, shoulderX, shoulderY, phase, attackWindup || 0, flashing, SCALE, skin, outline, outlineWidth);
+    // The art has no arms at all — none are drawn while idle or walking.
+    // One only appears for the instant of the actual attack flash (a punch,
+    // or the 67 Kid's two-hands-up "67!" shout), anchored near the
+    // neckline, using the torso's own bounce/tilt transform so it stays
+    // attached for that one frame instead of floating independently.
+    if (flashing) {
+      const shoulderX = w * 0.16;
+      const shoulderY = top + h * 0.4;
+      const headCenterY = top + h * 0.19;
+      if (gesture === 'raise') {
+        drawRaiseArms(ctx, w * 0.02, shoulderY, headCenterY, phase, 1, true, SCALE, skin, outline, outlineWidth);
+      } else {
+        drawPunchArm(ctx, shoulderX, shoulderY, phase, 1, true, SCALE, skin, outline, outlineWidth);
+      }
     }
     ctx.restore();
 
