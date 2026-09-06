@@ -44,9 +44,9 @@ function drawImpact(ctx, e, t) {
 }
 
 // A quick comic-book "POW" — a hot white contact flash, then a colored
-// core with spikes radiating out — for melee hits, which read poorly as
-// the plain expanding ring drawImpact makes for splash/AoE. `big` (the
-// base-slam variant) scales the whole thing up for a heavier hit.
+// core — for melee hits, which read poorly as the plain expanding ring
+// drawImpact makes for splash/AoE. `big` (the base-slam variant) scales
+// the whole thing up for a heavier hit.
 function drawPunch(ctx, e, t) {
   const p = progress(e, t);
   const mul = e.big ? 1.6 : 1;
@@ -55,7 +55,7 @@ function drawPunch(ctx, e, t) {
   const color = e.color || '#fff6ea';
 
   // The instant-of-contact flash — bright white, gone fast — separate
-  // from the colored burst so the hit reads as a bright snap first.
+  // from the colored core so the hit reads as a bright snap first.
   if (p < 0.35) {
     ctx.globalAlpha = (1 - p / 0.35) * 0.9;
     ctx.fillStyle = '#ffffff';
@@ -70,19 +70,6 @@ function drawPunch(ctx, e, t) {
   ctx.beginPath();
   ctx.arc(0, 0, r * 0.45, 0, Math.PI * 2);
   ctx.fill();
-
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2.6;
-  const spikes = e.big ? 10 : 8;
-  for (let i = 0; i < spikes; i++) {
-    const a = (i / spikes) * Math.PI * 2 + p * 0.8;
-    const inner = r * 0.5;
-    const outer = inner + 13 * mul * (1 - p * 0.4);
-    ctx.beginPath();
-    ctx.moveTo(Math.cos(a) * inner, Math.sin(a) * inner);
-    ctx.lineTo(Math.cos(a) * outer, Math.sin(a) * outer);
-    ctx.stroke();
-  }
   ctx.restore();
 }
 
@@ -107,6 +94,19 @@ function easeOutBack(x) {
   return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
 }
 
+// The 67 Kid's own hand-drawn "6" and "7" (lifted straight from his attack
+// reference art) for the "67!" callout, instead of a typed font.
+const imgCache = {};
+function getImg(path) {
+  let img = imgCache[path];
+  if (!img) {
+    img = new Image();
+    img.src = path;
+    imgCache[path] = img;
+  }
+  return img;
+}
+
 function drawFloatingText(ctx, e, t) {
   const p = progress(e, t);
   ctx.save();
@@ -114,8 +114,8 @@ function drawFloatingText(ctx, e, t) {
   if (e.big) {
     // A full comic-book pop for the "big" callouts (the 67 Kid's "67!",
     // a base getting slammed) — the text springs in past full size and
-    // settles, with a tiny rotation wobble and a starburst flash behind
-    // it, instead of a plain label drifting upward.
+    // settles, with a tiny rotation wobble, instead of a plain label
+    // drifting upward.
     ctx.translate(e.x, e.y - p * 34);
     const growP = Math.min(1, p / 0.3);
     const scale = 0.3 + 0.7 * easeOutBack(growP);
@@ -124,30 +124,21 @@ function drawFloatingText(ctx, e, t) {
     ctx.rotate(wob);
     ctx.scale(scale, scale);
 
-    if (p < 0.35) {
-      ctx.save();
-      ctx.globalAlpha *= 1 - p / 0.35;
-      ctx.strokeStyle = e.color || '#ffe066';
-      ctx.lineWidth = 2;
-      const spikes = 8;
-      for (let i = 0; i < spikes; i++) {
-        const a = (i / spikes) * Math.PI * 2;
-        ctx.beginPath();
-        ctx.moveTo(Math.cos(a) * 11, Math.sin(a) * 11);
-        ctx.lineTo(Math.cos(a) * 24, Math.sin(a) * 24);
-        ctx.stroke();
-      }
-      ctx.restore();
+    const img = e.image ? getImg(e.image) : null;
+    if (img && img.complete && img.naturalWidth) {
+      const dh = 34;
+      const dw = dh * (img.naturalWidth / img.naturalHeight);
+      ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh);
+    } else {
+      ctx.font = `900 24px 'Baloo 2', sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#241708';
+      ctx.strokeText(e.text, 0, 0);
+      ctx.fillStyle = e.color || '#fff6ea';
+      ctx.fillText(e.text, 0, 0);
     }
-
-    ctx.font = `900 24px 'Baloo 2', sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.lineJoin = 'round';
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = '#241708';
-    ctx.strokeText(e.text, 0, 0);
-    ctx.fillStyle = e.color || '#fff6ea';
-    ctx.fillText(e.text, 0, 0);
   } else {
     ctx.globalAlpha = 1 - p;
     ctx.translate(e.x, e.y - p * 26);

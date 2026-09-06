@@ -299,7 +299,7 @@ function fireDomain(state, u, enemyList) {
 // effects, not a mechanical difference.
 function gestureFlourish(state, u) {
   if (u.gesture === 'raise') {
-    pushEffect(state, { kind: 'text', text: '67!', x: u.x, y: u.y - 44, color: '#ffe066', start: state.t, duration: 0.5, big: true });
+    pushEffect(state, { kind: 'text', text: '67!', image: 'assets/sixseven_67mark.png', x: u.x, y: u.y - 44, color: '#ffe066', start: state.t, duration: 0.5, big: true });
   }
 }
 
