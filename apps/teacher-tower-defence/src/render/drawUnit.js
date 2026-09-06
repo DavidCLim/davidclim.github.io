@@ -19,8 +19,25 @@ function archetypeOf(u) {
 // bigger body instead of sinking into it.
 const SCALE = 1.8;
 
+// Units drawn from the player's own flat cropped artwork instead of the
+// procedural stick-figure (currently the Starter Student and 67 Kid) —
+// loaded once per path and cached here, keyed by `battleSprite`. Drawing
+// is skipped until an image finishes loading, so a not-yet-ready sprite
+// just falls back to the procedural figure for a frame or two rather than
+// throwing.
+const spriteCache = {};
+function getSprite(path) {
+  let img = spriteCache[path];
+  if (!img) {
+    img = new Image();
+    img.src = path;
+    spriteCache[path] = img;
+  }
+  return img;
+}
+
 export function drawUnit(ctx, tower, t) {
-  const { x, y, color, accent, attackFlashUntil, attackWindup, hitFlashUntil, level, star, dir, hp, maxHp, gesture } = tower;
+  const { x, y, color, accent, attackFlashUntil, attackWindup, hitFlashUntil, level, star, dir, hp, maxHp, gesture, battleSprite } = tower;
   ctx.save();
 
   const flashing = attackFlashUntil && attackFlashUntil > t;
@@ -38,24 +55,49 @@ export function drawUnit(ctx, tower, t) {
   // row of them doesn't all step in lockstep.
   const phase = t * 11 + x * 0.08;
 
-  // Body + prop face left/right (mirrored); the level pips and star are
-  // drawn afterward, unflipped. Flat fill, no gradient/glow — plain 2D
-  // like the sketch. No icon badge — the figure itself is identifying
-  // enough now that only the Starter Student is on the roster.
+  const sprite = battleSprite ? getSprite(battleSprite) : null;
+
   ctx.save();
   ctx.scale(dir < 0 ? -1 : 1, 1);
-  ctx.fillStyle = hitFlashing ? '#ff8a8a' : flashing ? '#fff6ea' : color;
-  ctx.strokeStyle = '#241708';
-  ctx.lineWidth = 1.6;
-  // lean=0 keeps the figure centered/upright in the lane (only the small
-  // per-step stride wobble remains) instead of holding the old constant
-  // forward tilt. `flashing` snaps the front arm into a punch during the
-  // attack window; `attackWindup` pulls it back into an anticipation pose
-  // in the moments just before that, instead of the punch appearing out
-  // of nowhere.
-  drawStudentBody(ctx, SCALE, accent, phase, 0, flashing, attackWindup || 0, gesture || 'punch');
-  drawHead(ctx, 9 * SCALE, -20 * SCALE);
-  drawProp(ctx, archetypeOf(tower), color, accent, SCALE);
+  if (sprite && sprite.complete && sprite.naturalWidth) {
+    // The player's own drawing, face left/right mirrored the same as the
+    // procedural figure. Sized to roughly the same head-to-feet footprint
+    // the stick-figure occupied, so it doesn't look out of scale next to
+    // teachers or the base. A brief hint of the walking bob keeps it from
+    // reading as a cardboard cutout even with no limb animation.
+    const bob = Math.sin(phase) * 1.2;
+    const h = 46 * SCALE;
+    const w = h * (sprite.naturalWidth / sprite.naturalHeight);
+    ctx.drawImage(sprite, -w / 2, -30 * SCALE + bob, w, h);
+    // Same get-hit/attack tint the procedural figure used, reapplied as a
+    // compositing overlay clipped to the sprite's own opaque pixels
+    // instead of a fillStyle swap, so the feedback isn't lost just
+    // because the art is a bitmap now.
+    if (hitFlashing || flashing) {
+      ctx.globalCompositeOperation = 'source-atop';
+      ctx.globalAlpha = hitFlashing ? 0.5 : 0.35;
+      ctx.fillStyle = hitFlashing ? '#ff3b3b' : '#fff6ea';
+      ctx.fillRect(-w / 2, -30 * SCALE + bob, w, h);
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = 1;
+    }
+  } else {
+    // Body + prop face left/right (mirrored); the level pips and star are
+    // drawn afterward, unflipped. Flat fill, no gradient/glow — plain 2D
+    // like the sketch.
+    ctx.fillStyle = hitFlashing ? '#ff8a8a' : flashing ? '#fff6ea' : color;
+    ctx.strokeStyle = '#241708';
+    ctx.lineWidth = 1.6;
+    // lean=0 keeps the figure centered/upright in the lane (only the small
+    // per-step stride wobble remains) instead of holding the old constant
+    // forward tilt. `flashing` snaps the front arm into a punch during the
+    // attack window; `attackWindup` pulls it back into an anticipation pose
+    // in the moments just before that, instead of the punch appearing out
+    // of nowhere.
+    drawStudentBody(ctx, SCALE, accent, phase, 0, flashing, attackWindup || 0, gesture || 'punch');
+    drawHead(ctx, 9 * SCALE, -20 * SCALE);
+    drawProp(ctx, archetypeOf(tower), color, accent, SCALE);
+  }
   ctx.restore();
 
   const lvl = level || 0;
