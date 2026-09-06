@@ -138,7 +138,7 @@ export function drawHumanBody(ctx, scale = 1, accent, phase = 0) {
 // carried entirely by the outer ctx.scale(dir<0?-1:1,1) flip in
 // drawUnit.js plus this lean, not by an asymmetric silhouette.
 // drawHumanBody (used by teachers) is untouched.
-function drawJointedLimb(ctx, x0, y0, x1, y1, x2, y2, thickness, color, outline, outlineWidth) {
+export function drawJointedLimb(ctx, x0, y0, x1, y1, x2, y2, thickness, color, outline, outlineWidth) {
   ctx.strokeStyle = outline;
   ctx.lineWidth = thickness + outlineWidth * 2;
   ctx.lineCap = 'round';
