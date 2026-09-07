@@ -15,7 +15,7 @@ function archetypeOf(u) {
 
 // Rendered much larger than the old badge-scale towers, so every
 // position that used to be a hand-tuned constant is scaled by SCALE
-// instead — keeps the pips/star/HP-bar sitting correctly relative to the
+// instead — keeps the star/HP-bar sitting correctly relative to the
 // bigger body instead of sinking into it.
 const SCALE = 1.8;
 
@@ -56,7 +56,7 @@ function drawScaledSprite(ctx, img, dx = 0) {
 }
 
 export function drawUnit(ctx, tower, t) {
-  const { x, y, color, accent, attackFlashUntil, attackWindup, hitFlashUntil, level, star, dir, hp, maxHp, gesture, battleSprite, attackFrames } = tower;
+  const { x, y, color, accent, attackFlashUntil, attackWindup, hitFlashUntil, star, dir, hp, maxHp, gesture, battleSprite, attackFrames } = tower;
   ctx.save();
 
   const flashing = attackFlashUntil && attackFlashUntil > t;
@@ -138,9 +138,9 @@ export function drawUnit(ctx, tower, t) {
     }
     ctx.restore();
   } else {
-    // Body + prop face left/right (mirrored); the level pips and star are
-    // drawn afterward, unflipped. Flat fill, no gradient/glow — plain 2D
-    // like the sketch.
+    // Body + prop face left/right (mirrored); the star is drawn
+    // afterward, unflipped. Flat fill, no gradient/glow — plain 2D like
+    // the sketch.
     ctx.fillStyle = hitFlashing ? '#ff8a8a' : flashing ? '#fff6ea' : color;
     ctx.strokeStyle = '#241708';
     ctx.lineWidth = 1.6;
@@ -155,17 +155,6 @@ export function drawUnit(ctx, tower, t) {
     drawProp(ctx, archetypeOf(tower), color, accent, SCALE);
   }
   ctx.restore();
-
-  const lvl = level || 0;
-  for (let i = 0; i <= lvl; i++) {
-    ctx.fillStyle = '#fff6ea';
-    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
-    ctx.lineWidth = 0.8;
-    ctx.beginPath();
-    ctx.arc((-6 + i * 6) * SCALE, 22 * SCALE, 2 * SCALE, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-  }
 
   if (star) {
     ctx.fillStyle = '#ffd670';
