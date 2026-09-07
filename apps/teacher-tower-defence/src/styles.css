@@ -1105,15 +1105,6 @@ html, body {
   text-underline-offset: 6px;
   align-self: center;
 }
-.ttd-gacha-fullscreen .ttd-slot-grid {
-  grid-template-columns: repeat(5, 1fr);
-  /* Big, but capped well short of the fullscreen modal's own edges —
-     "really really big" without the grid itself going full-bleed. */
-  max-width: 1300px;
-  gap: clamp(14px, 2.4vw, 30px);
-  margin: 0 auto;
-}
-
 /* ---------- Awaken tab ---------- */
 .ttd-list { display: flex; flex-direction: column; gap: 8px; }
 .ttd-list-row {

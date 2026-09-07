@@ -254,7 +254,7 @@ function renderGachaModal() {
 }
 
 // ---------- Inventory modal ----------
-const inventoryModal = el('div', { class: 'ttd-gacha-modal ttd-gacha-fullscreen hidden' });
+const inventoryModal = el('div', { class: 'ttd-gacha-modal hidden' });
 root.appendChild(inventoryModal);
 function openInventoryModal() { renderInventoryModal(); inventoryModal.classList.remove('hidden'); }
 function closeInventoryModal() { inventoryModal.classList.add('hidden'); }
@@ -623,7 +623,7 @@ function renderInventoryTab(body) {
     const owned = count > 0;
     const equipped = collection.equipped.includes(def.id);
     const portraitBox = el('div', { class: 'ttd-slot-portrait' });
-    portraitBox.appendChild(renderUnitFace(def, 220));
+    portraitBox.appendChild(renderUnitFace(def, 140));
     const slot = el('button', {
       class: 'ttd-slot ttd-slot-filled' + (owned ? ' owned' : ' locked') + (equipped ? ' equipped' : ''),
       onClick: owned ? () => { toggleEquip(collection, def.id); renderInventoryModal(); refreshEquipRow(); } : undefined,
