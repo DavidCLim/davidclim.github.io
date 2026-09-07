@@ -1048,27 +1048,31 @@ html, body {
 /* ---------- Units tab — a fixed grid of numbered slots (matching the
    player's own sketch) instead of a card list that only shows what you
    already own. ---------- */
-.ttd-equip-status { font-size: 12.5px; color: var(--muted); font-weight: 700; }
+.ttd-equip-status { font-size: 18px; color: var(--muted); font-weight: 700; }
 .ttd-slot-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 10px;
+  gap: 18px;
 }
 .ttd-slot {
   position: relative;
   aspect-ratio: 1;
+  /* Without this, a grid item won't shrink below its content's intrinsic
+     size — and the fixed-pixel portrait image inside would force every
+     column wider than the track, overflowing the grid horizontally. */
+  min-width: 0;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid rgba(255, 180, 84, 0.22);
+  border: 3px solid rgba(255, 180, 84, 0.22);
   background: rgba(0, 0, 0, 0.25);
   font-family: 'Russo One', sans-serif;
-  font-size: 16px;
+  font-size: 34px;
   color: var(--muted);
 }
 .ttd-slot-filled {
-  border: 2px solid rgba(255, 180, 84, 0.22);
+  border: 3px solid rgba(255, 180, 84, 0.22);
   background: rgba(0, 0, 0, 0.25);
   overflow: visible;
   padding: 0;
@@ -1084,16 +1088,16 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 46px;
 }
-.ttd-slot-hint { color: var(--muted); font-size: 11.5px; text-align: center; margin-top: 2px; }
+.ttd-slot-hint { color: var(--muted); font-size: 16px; text-align: center; margin-top: 2px; }
 
 /* ---------- Units tab — plain title + a grid of plain circles, matching
    the player's own sketch: no rarity-colored rings, no badges, just a
    small head in a circle (or a bare number for an empty slot). ---------- */
 .ttd-units-title {
   font-family: 'Russo One', sans-serif;
-  font-size: 1.8rem;
+  font-size: 2.6rem;
   color: var(--gold);
   letter-spacing: 0.06em;
   text-decoration: underline;
@@ -1103,8 +1107,10 @@ html, body {
 }
 .ttd-gacha-fullscreen .ttd-slot-grid {
   grid-template-columns: repeat(5, 1fr);
-  max-width: 640px;
-  gap: clamp(10px, 2vw, 22px);
+  /* Big, but capped well short of the fullscreen modal's own edges —
+     "really really big" without the grid itself going full-bleed. */
+  max-width: 1300px;
+  gap: clamp(14px, 2.4vw, 30px);
   margin: 0 auto;
 }
 

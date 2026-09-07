@@ -38,6 +38,7 @@ export const UNITS = {
     desc: 'Everyone starts somewhere — a plain, reliable punch to the face.',
     color: '#f5f1e4', glow: '#ffffff', accent: '#1b6b3a', cost: 20, damage: 5, range: 28, fireRate: 1.2, melee: true,
     notRollable: true, awakenCrystal: 'class',
+    slotImage: 'assets/starter_student_slot.png',
     battleSprite: 'assets/starter_student_sprite.png',
     attackFrames: [
       'assets/starter_attack_1.png',

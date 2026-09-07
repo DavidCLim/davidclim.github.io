@@ -608,7 +608,7 @@ function renderPullReveal() {
 // owned, a dimmed icon if it exists but you haven't pulled it yet); any
 // slots beyond the current roster stay plain numbered placeholders for
 // students still to come.
-const TOTAL_UNIT_SLOTS = 20;
+const TOTAL_UNIT_SLOTS = 30;
 
 function renderInventoryTab(body) {
   body.appendChild(el('div', { class: 'ttd-equip-status' }, `Equipped ${collection.equipped.length} / ${MAX_EQUIPPED}`));
@@ -623,7 +623,7 @@ function renderInventoryTab(body) {
     const owned = count > 0;
     const equipped = collection.equipped.includes(def.id);
     const portraitBox = el('div', { class: 'ttd-slot-portrait' });
-    portraitBox.appendChild(renderUnitFace(def, 60));
+    portraitBox.appendChild(renderUnitFace(def, 220));
     const slot = el('button', {
       class: 'ttd-slot ttd-slot-filled' + (owned ? ' owned' : ' locked') + (equipped ? ' equipped' : ''),
       onClick: owned ? () => { toggleEquip(collection, def.id); renderInventoryModal(); refreshEquipRow(); } : undefined,
