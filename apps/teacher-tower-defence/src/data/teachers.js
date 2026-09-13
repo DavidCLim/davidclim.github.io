@@ -8,11 +8,13 @@ export const TEACHERS = {
     id: 'random1', name: 'Random Teacher', color: '#8a8f92', glow: '#d6d9db',
     hp: 22, speed: 95, reward: 3, size: 16, damage: 1, range: 10,
     desc: 'A Teacher. The base species of Docens Stultus. Seemingly weak, but still capable of defeating weaker students.',
+    battleSprite: 'assets/regular_teacher_sprite.png',
   },
   random2: {
     id: 'random2', name: 'Random Teacher', color: '#7a8a6a', glow: '#d4e0b8',
     hp: 28, speed: 85, reward: 3, size: 17, damage: 1, range: 10,
     desc: 'A Teacher. The base species of Docens Stultus. Seemingly weak, but still capable of defeating weaker students.',
+    battleSprite: 'assets/regular_teacher_sprite.png',
   },
   p: {
     id: 'p', name: 'P', color: '#ff8a4c', glow: '#ffd8ba',

@@ -1,4 +1,5 @@
 import { drawHumanBody, drawButtons, drawRoundBlob, drawHead } from './drawFigure.js';
+import { TEACHERS } from '../data/teachers.js';
 
 // The same arms-and-legs figure the students use, colored per teacher —
 // K is the one exception, drawn as the squat round blob from the sketch.
@@ -36,8 +37,26 @@ const SHAPES = {
   },
 };
 
+const spriteCache = {};
+function getSprite(path) {
+  let img = spriteCache[path];
+  if (!img) { img = new Image(); img.src = path; spriteCache[path] = img; }
+  return img;
+}
+
+// Sized to match drawHumanBody's own footprint at scale 1 (head top at
+// -29, feet around +15) so a real sprite lines up with the procedural
+// shapes it stands in for.
+const SPRITE_H = 44;
+const SPRITE_TOP = -29;
+
+function drawScaledSprite(ctx, img) {
+  const w = SPRITE_H * (img.naturalWidth / img.naturalHeight);
+  ctx.drawImage(img, -w / 2, SPRITE_TOP, w, SPRITE_H);
+}
+
 export function drawEnemy(ctx, enemy, t) {
-  const { x, y, size, color, hp, maxHp, slowUntil, evasive, dir } = enemy;
+  const { x, y, size, color, hp, maxHp, slowUntil, evasive, dir, typeId } = enemy;
   const scale = size / 16;
   ctx.save();
   ctx.translate(x, y);
@@ -46,11 +65,27 @@ export function drawEnemy(ctx, enemy, t) {
   const flicker = evasive && Math.sin(t * 14 + x) > 0.6 ? 0.4 : 1;
   ctx.globalAlpha = flicker;
 
-  ctx.fillStyle = color;
-  ctx.strokeStyle = '#241708';
-  ctx.lineWidth = 1.6;
-  const shapeFn = SHAPES[enemy.typeId] || SHAPES.random1;
-  shapeFn(ctx);
+  const spritePath = TEACHERS[typeId] && TEACHERS[typeId].battleSprite;
+  const sprite = spritePath ? getSprite(spritePath) : null;
+  if (sprite && sprite.complete && sprite.naturalWidth) {
+    const phase = t * 9 + x * 0.08;
+    const bounce = Math.abs(Math.sin(phase));
+    const bob = bounce * 3;
+    const squash = 1 - bounce * 0.04;
+    const tilt = Math.sin(phase * 2) * 0.04;
+    ctx.save();
+    ctx.translate(0, -bob);
+    ctx.rotate(tilt);
+    ctx.scale(1, squash);
+    drawScaledSprite(ctx, sprite);
+    ctx.restore();
+  } else {
+    ctx.fillStyle = color;
+    ctx.strokeStyle = '#241708';
+    ctx.lineWidth = 1.6;
+    const shapeFn = SHAPES[typeId] || SHAPES.random1;
+    shapeFn(ctx);
+  }
 
   if (slowUntil && slowUntil > t) {
     ctx.globalAlpha = 0.35;
