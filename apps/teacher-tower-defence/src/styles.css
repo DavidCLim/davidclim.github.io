@@ -284,7 +284,9 @@ html, body {
    label renders on top from the button's own text. */
 .ttd-start-btn {
   padding: 16px 44px;
-  font-size: 15px;
+  font-family: 'Russo One', sans-serif;
+  font-size: 20px;
+  letter-spacing: 0.04em;
   border: none;
   border-radius: 999px;
   background: url('../assets/menu_button_pill.png') center / 100% 100% no-repeat;
