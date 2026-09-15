@@ -284,7 +284,9 @@ html, body {
    "Play" text already reads correctly, so the button's real text is
    made transparent instead of drawing a second label on top of it. */
 .ttd-start-btn {
-  padding: 16px 44px;
+  width: min(320px, 78vw);
+  aspect-ratio: 765 / 137;
+  padding: 0;
   color: transparent;
   border: none;
   border-radius: 999px;
