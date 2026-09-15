@@ -179,12 +179,11 @@ function renderMenuScreen() {
   // stacked below it. Awakenings shares the bottom row with the loadout
   // tray instead of stacking as a 5th full-width button.
   menuScreen.appendChild(el('div', { class: 'ttd-menu-logo' }, [
-    el('div', { class: 'ttd-menu-logo-title' }, 'BATTLE KIDS'),
-    el('div', { class: 'ttd-menu-logo-icon' }, '⚔️'),
+    el('img', { class: 'ttd-menu-logo-img', src: 'assets/battle_kids_logo.png', alt: 'The Battle Kids' }),
   ]));
   menuScreen.appendChild(el('div', { class: 'ttd-menu-nav' }, [
     el('button', {
-      class: `ttd-menu-nav-btn ttd-menu-nav-primary${BATTLE_ENABLED ? '' : ' ttd-action-primary-disabled'}`,
+      class: `ttd-menu-nav-btn${BATTLE_ENABLED ? '' : ' ttd-action-primary-disabled'}`,
       disabled: BATTLE_ENABLED ? undefined : true,
       onClick: BATTLE_ENABLED ? openDungeonModal : undefined,
     }, 'BATTLE'),
@@ -702,8 +701,7 @@ function renderDungeonModal() {
 // ---------- Title / Credits / Game Over / Victory screens ----------
 const titleScreen = el('div', { class: 'ttd-title-screen' }, [
   el('div', { class: 'ttd-title-card' }, [
-    el('div', { class: 'ttd-title-emblem' }, '🎓'),
-    el('h1', { class: 'ttd-title' }, 'BATTLE KIDS'),
+    el('img', { class: 'ttd-title-logo', src: 'assets/battle_kids_logo.png', alt: 'The Battle Kids' }),
     el('div', { class: 'ttd-title-actions' }, [
       el('button', { class: 'btn btn-primary ttd-start-btn', text: 'PLAY', onClick: enterMenu }),
       el('button', { class: 'btn ttd-credits-btn', text: 'CREDITS', onClick: showCredits }),
