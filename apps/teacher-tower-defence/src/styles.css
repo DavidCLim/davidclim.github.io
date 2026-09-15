@@ -285,7 +285,7 @@ html, body {
    made transparent instead of drawing a second label on top of it. */
 .ttd-start-btn {
   width: min(460px, 84vw);
-  aspect-ratio: 765 / 137;
+  aspect-ratio: 754 / 131;
   padding: 0;
   color: transparent;
   border: none;
@@ -297,20 +297,7 @@ html, body {
   0%, 100% { box-shadow: 0 4px 0 #8a5c14, 0 8px 18px rgba(255, 180, 84, 0.25); }
   50% { box-shadow: 0 4px 0 #8a5c14, 0 8px 26px rgba(255, 180, 84, 0.55); }
 }
-/* Same treatment as the Play button and the menu screen's nav buttons —
-   the player's own drawn pill graphic (background removed, baked-in
-   text erased) with a real "CREDITS" label on top, sized to the
-   image's own aspect ratio so it isn't stretched/squished. */
-.ttd-credits-btn {
-  width: min(360px, 74vw);
-  aspect-ratio: 765 / 139;
-  padding: 0;
-  font-family: 'Russo One', sans-serif;
-  font-size: 20px;
-  letter-spacing: 0.04em;
-  border: none;
-  background: url('../assets/menu_button_pill.png') center / 100% 100% no-repeat;
-}
+.ttd-credits-btn { padding: 10px 36px; font-size: 14px; background: linear-gradient(165deg, #3a2c14, #241708); }
 .ttd-howto {
   margin-top: 10px;
   display: flex;
