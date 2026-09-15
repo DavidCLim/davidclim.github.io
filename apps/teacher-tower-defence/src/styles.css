@@ -279,11 +279,15 @@ html, body {
   box-shadow: 0 0 8px rgba(255, 180, 84, 0.7);
 }
 .ttd-title-actions { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 4px; }
+/* The player's own drawn button graphic, used as-is (background made
+   transparent) instead of a CSS-recreated gradient — the real "PLAY"
+   label renders on top from the button's own text. */
 .ttd-start-btn {
-  padding: 12px 44px;
+  padding: 16px 44px;
   font-size: 15px;
-  border-width: 3px;
-  border-color: #2a1a04;
+  border: none;
+  border-radius: 999px;
+  background: url('../assets/menu_button_pill.png') center / 100% 100% no-repeat;
   animation: ttd-start-btn-glow 3.2s ease-in-out infinite;
 }
 @keyframes ttd-start-btn-glow {
@@ -620,7 +624,7 @@ html, body {
 .ttd-menu-logo {
   position: absolute;
   top: 14px;
-  left: 14px;
+  right: 14px;
   z-index: 20;
   display: flex;
   flex-direction: column;
@@ -663,21 +667,22 @@ html, body {
   gap: 10px;
   width: min(190px, 44vw);
 }
-/* A gold pill button for every nav action, matching the player's own
-   mockup — no more dark-vs-gold split between Battle and the rest. */
+/* The player's own drawn button graphic (background removed, baked-in
+   "Play" text erased) reused for every nav action, with the real label
+   rendered on top — matches the "menu 2" mockup exactly instead of a
+   CSS-recreated gradient. */
 .ttd-menu-nav-btn {
-  padding: 14px 18px;
+  padding: 16px 18px;
   border-radius: 999px;
-  border: 3px solid #2a1a04;
-  background: linear-gradient(165deg, #ffe98a, #ffd75c 45%, #f0a52c);
+  border: none;
+  background: url('../assets/menu_button_pill.png') center / 100% 100% no-repeat;
   color: #2a1a04;
   font-family: 'Russo One', sans-serif;
   font-size: 16px;
   letter-spacing: 0.04em;
   text-align: center;
   cursor: pointer;
-  box-shadow: 0 4px 0 #8a5c14, 0 8px 16px rgba(0, 0, 0, 0.3);
-  transition: transform 110ms ease, box-shadow 110ms ease, filter 110ms ease;
+  transition: transform 110ms ease, filter 110ms ease;
 }
 .ttd-menu-nav-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
 .ttd-menu-nav-btn:active { transform: translateY(1px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35); }
