@@ -155,74 +155,92 @@ function refreshDeployRoster() {
   }
 }
 
-// ---------- Main menu (replaces the walkable lobby — straight to the
-// point, matching a menu-driven flow instead of an explorable hub) ----------
+// ---------- Main menu ----------
+// The player's own real screenshot (Downloads: "real main menu put this
+// directly in the game store is gacha special sale is something will
+// tell you next time change the xp on the top right to the pages
+// upgrade is awaken and equip is the units.jpg") IS the whole menu
+// screen now — Start!!/Upgrade/Equip/Store/Enemy Endex/the back arrow
+// are real invisible buttons placed over the picture's own drawn
+// buttons. "Special Sale" is left purely decorative per that filename
+// (a future feature, not built yet).
+//
+// Unlike the title screen, this fits to width instead of using
+// background-size:cover: the source screenshot is a very wide 2:1
+// landscape shot with its buttons spread across the full width, so
+// cover-cropping it into a tall phone viewport hides every button
+// off-screen. Fitting to width means plain CSS percentages line up
+// with the picture's own buttons with no JS/resize math needed.
 const menuGoldValue = el('span', { class: 'ttd-stat-value' }, '0');
-const menuHud = el('div', { class: 'ttd-lobby-hud hidden' }, [
-  el('div', { class: 'ttd-stat ttd-stat-gold' }, [el('span', { class: 'ttd-stat-icon' }, '📄'), menuGoldValue]),
-]);
-root.appendChild(menuHud);
 function refreshMenuHud() { menuGoldValue.textContent = collection.gold.toLocaleString(); }
 
-const menuScreen = el('div', { class: 'ttd-menu-screen hidden' });
-root.appendChild(menuScreen);
-// A full-screen academy hub instead of a small centered card: a title
-// badge in the corner, a vertical stack of action buttons down the left
-// (Battle first and biggest, since that's the thing you came here to do),
-// and the 5-slot loadout tray anchored at the bottom.
-function renderMenuScreen() {
-  clearChildren(menuScreen);
-  // A compact logo card (title + crossed-swords icon), then Battle as
-  // its own primary button — actually starting a fight, restored after
-  // Index took over that slot — with Index (now a swipeable
-  // Teacher/Student reference, not a battle-starter), Gacha, and Units
-  // stacked below it. Awakenings shares the bottom row with the loadout
-  // tray instead of stacking as a 5th full-width button.
-  menuScreen.appendChild(el('div', { class: 'ttd-menu-logo' }, [
-    el('img', { class: 'ttd-menu-logo-img', src: 'assets/battle_kids_logo.png', alt: 'The Battle Kids' }),
-  ]));
-  menuScreen.appendChild(el('div', { class: 'ttd-menu-nav' }, [
-    el('button', {
-      class: `ttd-menu-nav-btn${BATTLE_ENABLED ? '' : ' ttd-action-primary-disabled'}`,
-      disabled: BATTLE_ENABLED ? undefined : true,
-      onClick: BATTLE_ENABLED ? openDungeonModal : undefined,
-    }, 'BATTLE'),
-    el('button', {
-      class: `ttd-menu-nav-btn${INDEX_ENABLED ? '' : ' ttd-action-primary-disabled'}`,
-      disabled: INDEX_ENABLED ? undefined : true,
-      onClick: INDEX_ENABLED ? openIndexModal : undefined,
-    }, 'INDEX'),
-    el('button', {
-      class: `ttd-menu-nav-btn${GACHA_ENABLED ? '' : ' ttd-action-primary-disabled'}`,
-      disabled: GACHA_ENABLED ? undefined : true,
-      onClick: GACHA_ENABLED ? openGachaModal : undefined,
-    }, 'GACHA'),
-    el('button', {
-      class: `ttd-menu-nav-btn${UNITS_ENABLED ? '' : ' ttd-action-primary-disabled'}`,
-      disabled: UNITS_ENABLED ? undefined : true,
-      onClick: UNITS_ENABLED ? openInventoryModal : undefined,
-    }, 'UNITS'),
-    el('button', { class: 'ttd-menu-nav-btn', onClick: openAwakenModal }, 'AWAKENINGS'),
-  ]));
-  menuScreen.appendChild(el('div', { class: 'ttd-equip-row', id: 'ttd-menu-equip-row' }));
-  refreshEquipRow();
+function backToTitleFromMenu() {
+  screen = 'title';
+  hideAllScreens();
+  titleScreen.classList.remove('hidden');
+  positionTitlePlayButton();
 }
 
-// ---------- Bottom equip row (the 5 loadout slots from the sketch) ----------
-function refreshEquipRow() {
-  const equipRow = menuScreen.querySelector('#ttd-menu-equip-row');
-  if (!equipRow) return;
-  clearChildren(equipRow);
-  for (let i = 0; i < MAX_EQUIPPED; i++) {
-    const unitId = collection.equipped[i];
-    const def = unitId ? UNITS[unitId] : null;
-    const slot = el('button', {
-      class: 'ttd-equip-slot' + (def ? ` rarity-${def.rarity}` : ''),
-      onClick: openInventoryModal,
-    }, def ? [] : String(i + 1));
-    if (def) slot.appendChild(renderUnitFace(def, 40));
-    equipRow.appendChild(slot);
-  }
+// Fractions of the source screenshot's own width/height, measured
+// directly off its drawn buttons/badge, applied as plain CSS percentages.
+function bboxStyle(bbox) {
+  return `left:${bbox.x0 * 100}%;top:${bbox.y0 * 100}%;width:${(bbox.x1 - bbox.x0) * 100}%;height:${(bbox.y1 - bbox.y0) * 100}%;`;
+}
+const MENU_BBOX = {
+  start: { x0: 0.010, y0: 0.234, x1: 0.320, y1: 0.349 },
+  upgrade: { x0: 0.010, y0: 0.367, x1: 0.320, y1: 0.482 },
+  equip: { x0: 0.010, y0: 0.510, x1: 0.320, y1: 0.625 },
+  store: { x0: 0.792, y0: 0.920, x1: 1.000, y1: 1.000 },
+  endex: { x0: 0.849, y0: 0.638, x1: 1.000, y1: 0.917 },
+  back: { x0: 0.000, y0: 0.845, x1: 0.090, y1: 0.975 },
+  pages: { x0: 0.730, y0: 0.000, x1: 1.000, y1: 0.090 },
+};
+// The source art's own "XP  60545" badge is covered with a plain tan
+// patch (sampled from its own gradient) instead of trying to erase
+// just the baked digits, then the real, always-current pages count is
+// drawn on top with the label the filename asked for.
+const menuScenePages = el('div', { class: 'ttd-menu-scene-pages', style: bboxStyle(MENU_BBOX.pages) }, [
+  el('span', { class: 'ttd-menu-scene-pages-label' }, 'PAGES'),
+  menuGoldValue,
+]);
+const menuSceneStartBtn = el('button', {
+  class: `ttd-menu-scene-btn${BATTLE_ENABLED ? '' : ' ttd-scene-btn-disabled'}`,
+  style: bboxStyle(MENU_BBOX.start),
+  disabled: BATTLE_ENABLED ? undefined : true,
+  onClick: BATTLE_ENABLED ? openDungeonModal : undefined,
+});
+const menuSceneUpgradeBtn = el('button', { class: 'ttd-menu-scene-btn', style: bboxStyle(MENU_BBOX.upgrade), onClick: openAwakenModal });
+const menuSceneEquipBtn = el('button', {
+  class: `ttd-menu-scene-btn${UNITS_ENABLED ? '' : ' ttd-scene-btn-disabled'}`,
+  style: bboxStyle(MENU_BBOX.equip),
+  disabled: UNITS_ENABLED ? undefined : true,
+  onClick: UNITS_ENABLED ? openInventoryModal : undefined,
+});
+const menuSceneStoreBtn = el('button', {
+  class: `ttd-menu-scene-btn${GACHA_ENABLED ? '' : ' ttd-scene-btn-disabled'}`,
+  style: bboxStyle(MENU_BBOX.store),
+  disabled: GACHA_ENABLED ? undefined : true,
+  onClick: GACHA_ENABLED ? openGachaModal : undefined,
+});
+const menuSceneEndexBtn = el('button', {
+  class: `ttd-menu-scene-btn${INDEX_ENABLED ? '' : ' ttd-scene-btn-disabled'}`,
+  style: bboxStyle(MENU_BBOX.endex),
+  disabled: INDEX_ENABLED ? undefined : true,
+  onClick: INDEX_ENABLED ? openIndexModal : undefined,
+});
+const menuSceneBackBtn = el('button', { class: 'ttd-menu-scene-btn', style: bboxStyle(MENU_BBOX.back), onClick: backToTitleFromMenu });
+
+const menuScene = el('div', { class: 'ttd-menu-scene' }, [
+  el('img', { class: 'ttd-menu-scene-img', src: 'assets/menu_screen_bg.jpg', alt: 'Kid Base' }),
+  menuSceneStartBtn, menuSceneUpgradeBtn, menuSceneEquipBtn,
+  menuSceneStoreBtn, menuSceneEndexBtn, menuSceneBackBtn,
+  menuScenePages,
+]);
+const menuScreen = el('div', { class: 'ttd-menu-screen hidden' }, [menuScene]);
+root.appendChild(menuScreen);
+
+function renderMenuScreen() {
+  refreshMenuHud();
 }
 
 // ---------- Gacha modal (Summon only — Inventory/Awaken are their own
@@ -625,7 +643,7 @@ function renderInventoryTab(body) {
     portraitBox.appendChild(renderUnitFace(def, 140));
     const slot = el('button', {
       class: 'ttd-slot ttd-slot-filled' + (owned ? ' owned' : ' locked') + (equipped ? ' equipped' : ''),
-      onClick: owned ? () => { toggleEquip(collection, def.id); renderInventoryModal(); refreshEquipRow(); } : undefined,
+      onClick: owned ? () => { toggleEquip(collection, def.id); renderInventoryModal(); } : undefined,
       disabled: owned ? undefined : true,
     }, [portraitBox]);
     grid.appendChild(slot);
@@ -718,25 +736,37 @@ root.appendChild(titleScreen);
 // in JS using the same cover math, recomputed on resize. Coordinates are
 // fractions of the source art's natural size (2258x1261), measured
 // directly off its drawn Play button.
+// Shared by every full-bleed "picture is the screen" layout (title,
+// menu): background-size:cover crops a different amount of the source
+// image depending on the viewport's own aspect ratio, so overlaid real
+// buttons/text can't be positioned with a static CSS percentage the way
+// a plain width:100% image could — this reproduces cover's own scale
+// math and places each element in px accordingly.
+function positionSceneOverlays(container, natural, mappings) {
+  const cw = container.clientWidth;
+  const ch = container.clientHeight;
+  if (!cw || !ch) return;
+  const scale = Math.max(cw / natural.w, ch / natural.h);
+  const renderedW = natural.w * scale;
+  const renderedH = natural.h * scale;
+  const offsetX = (cw - renderedW) / 2;
+  const offsetY = (ch - renderedH) / 2;
+  for (const { el: node, bbox } of mappings) {
+    const left = offsetX + bbox.x0 * renderedW;
+    const top = offsetY + bbox.y0 * renderedH;
+    const right = offsetX + bbox.x1 * renderedW;
+    const bottom = offsetY + bbox.y1 * renderedH;
+    node.style.left = `${left}px`;
+    node.style.top = `${top}px`;
+    node.style.width = `${right - left}px`;
+    node.style.height = `${bottom - top}px`;
+  }
+}
+
 const TITLE_PLAY_BBOX = { x0: 0.3243, y0: 0.5529, x1: 0.7244, y1: 0.6986 };
 const TITLE_IMG_NATURAL = { w: 2258, h: 1261 };
 function positionTitlePlayButton() {
-  const cw = titleScreen.clientWidth;
-  const ch = titleScreen.clientHeight;
-  if (!cw || !ch) return;
-  const scale = Math.max(cw / TITLE_IMG_NATURAL.w, ch / TITLE_IMG_NATURAL.h);
-  const renderedW = TITLE_IMG_NATURAL.w * scale;
-  const renderedH = TITLE_IMG_NATURAL.h * scale;
-  const offsetX = (cw - renderedW) / 2;
-  const offsetY = (ch - renderedH) / 2;
-  const left = offsetX + TITLE_PLAY_BBOX.x0 * renderedW;
-  const top = offsetY + TITLE_PLAY_BBOX.y0 * renderedH;
-  const right = offsetX + TITLE_PLAY_BBOX.x1 * renderedW;
-  const bottom = offsetY + TITLE_PLAY_BBOX.y1 * renderedH;
-  titleScenePlayBtn.style.left = `${left}px`;
-  titleScenePlayBtn.style.top = `${top}px`;
-  titleScenePlayBtn.style.width = `${right - left}px`;
-  titleScenePlayBtn.style.height = `${bottom - top}px`;
+  positionSceneOverlays(titleScreen, TITLE_IMG_NATURAL, [{ el: titleScenePlayBtn, bbox: TITLE_PLAY_BBOX }]);
 }
 window.addEventListener('resize', positionTitlePlayButton);
 positionTitlePlayButton();
@@ -844,7 +874,6 @@ function hideAllScreens() {
   hud.classList.add('hidden');
   squad.classList.add('hidden');
   menuScreen.classList.add('hidden');
-  menuHud.classList.add('hidden');
   gachaModal.classList.add('hidden');
   inventoryModal.classList.add('hidden');
   awakenModal.classList.add('hidden');
@@ -855,9 +884,7 @@ function enterMenu() {
   screen = 'menu';
   hideAllScreens();
   menuScreen.classList.remove('hidden');
-  menuHud.classList.remove('hidden');
   renderMenuScreen();
-  refreshMenuHud();
 }
 
 function startGame(mapId) {
