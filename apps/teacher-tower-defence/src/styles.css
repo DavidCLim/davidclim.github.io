@@ -211,72 +211,23 @@ html, body {
 }
 
 /* ---------- Title screen ---------- */
+/* The player's own finished home-screen art (logo, Play button, and
+   scene all baked into one picture) IS the whole home screen — a
+   full-bleed background rather than a picture boxed into a card. */
 .ttd-title-screen {
   position: absolute;
   inset: 0;
   z-index: 40;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(16, 10, 4, 0.55);
-  padding: 16px;
-}
-.ttd-title-card {
-  position: relative;
-  width: min(860px, 96vw);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 16px;
-  padding: 48px 44px;
-  border-radius: 24px;
-  background: var(--panel-bg);
-  border: 3px solid var(--panel-border);
-  box-shadow: 0 0 60px rgba(255, 180, 84, 0.25), 0 20px 50px rgba(0, 0, 0, 0.5);
-  animation: ttd-title-card-glow 5s ease-in-out infinite;
-}
-@keyframes ttd-title-card-glow {
-  0%, 100% { box-shadow: 0 0 50px rgba(255, 180, 84, 0.2), 0 20px 50px rgba(0, 0, 0, 0.5); }
-  50% { box-shadow: 0 0 80px rgba(255, 180, 84, 0.4), 0 20px 50px rgba(0, 0, 0, 0.5); }
-}
-.ttd-title-card::before, .ttd-title-card::after {
-  content: '';
-  position: absolute;
-  top: 14px;
-  width: 8px;
-  height: 8px;
-  background: var(--gold);
-  transform: rotate(45deg);
-  box-shadow: 0 0 10px rgba(255, 180, 84, 0.8);
-}
-.ttd-title-card::before { left: 14px; }
-.ttd-title-card::after { right: 14px; }
-/* The player's own finished home-screen art, used directly instead of a
-   separately-built logo + button — sized to the card's full width so
-   nothing is cropped (a landscape image would lose its sides under
-   background-size:cover on this portrait layout), with a real button
-   placed invisibly over the picture's own drawn Play button. The
-   percentages below were measured directly off the source art's Play
-   button bounding box. */
-.ttd-title-scene {
-  position: relative;
-  width: 100%;
-  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  background: url('../assets/title_screen_bg.jpg') center / cover no-repeat;
 }
-.ttd-title-scene-img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
+/* Sized and positioned in JS (see positionTitlePlayButton in main.js) —
+   background-size:cover crops a different amount of the source image
+   depending on the viewport's own aspect ratio, so a static CSS percent
+   can't track the picture's own drawn Play button the way it could for
+   a plain width:100% image. */
 .ttd-title-scene-play {
   position: absolute;
-  left: 33%;
-  top: 56.5%;
-  width: 38.5%;
-  height: 12%;
   padding: 0;
   margin: 0;
   border: none;
@@ -284,30 +235,36 @@ html, body {
   color: transparent;
   cursor: pointer;
 }
+.ttd-title-info {
+  position: absolute;
+  left: 50%;
+  bottom: 4%;
+  transform: translateX(-50%);
+  width: min(560px, 92vw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 16px 20px;
+  border-radius: 16px;
+  background: rgba(16, 10, 4, 0.72);
+  border: 1px solid rgba(255, 180, 84, 0.25);
+  backdrop-filter: blur(4px);
+}
 .ttd-subtitle {
-  position: relative;
   margin: 0;
-  padding-top: 14px;
   color: var(--muted);
-  font-size: 17px;
+  font-size: 15px;
   max-width: 46ch;
   line-height: 1.5;
 }
-.ttd-subtitle::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 50%;
-  transform: translateX(-50%) rotate(45deg);
-  width: 7px; height: 7px;
-  background: var(--gold);
-  box-shadow: 0 0 8px rgba(255, 180, 84, 0.7);
-}
 .ttd-howto {
-  margin-top: 10px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  font-size: 15px;
+  width: 100%;
+  font-size: 13.5px;
   color: var(--muted);
 }
 .ttd-howto > div {

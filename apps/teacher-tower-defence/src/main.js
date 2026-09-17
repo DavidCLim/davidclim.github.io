@@ -700,18 +700,15 @@ function renderDungeonModal() {
 
 // ---------- Title / Credits / Game Over / Victory screens ----------
 // The player's own finished home-screen art (Downloads: "battle kids home
-// screen directly put into the game remove credits for now.jpg") used
-// directly instead of a separately-built logo + button — a real,
-// invisible button is placed exactly over the picture's own drawn Play
-// button so it stays clickable. Credits is dropped for now per that
-// filename's own instruction; showCredits/the credits screen itself are
-// left in place in case it comes back.
+// screen directly put into the game remove credits for now.jpg") IS the
+// whole home screen now — a full-bleed background, not a picture boxed
+// into a card. Credits is dropped for now per that filename's own
+// instruction; showCredits/the credits screen itself are left in place
+// in case it comes back.
+const titleScenePlayBtn = el('button', { class: 'ttd-title-scene-play', text: 'PLAY', onClick: enterMenu });
 const titleScreen = el('div', { class: 'ttd-title-screen' }, [
-  el('div', { class: 'ttd-title-card' }, [
-    el('div', { class: 'ttd-title-scene' }, [
-      el('img', { class: 'ttd-title-scene-img', src: 'assets/title_screen_bg.jpg', alt: 'The Battle Kids' }),
-      el('button', { class: 'ttd-title-scene-play', text: 'PLAY', onClick: enterMenu }),
-    ]),
+  titleScenePlayBtn,
+  el('div', { class: 'ttd-title-info' }, [
     el('p', { class: 'ttd-subtitle' }, 'Cursed teachers are pouring out of their base. Recruit students, hold the courtyard, and don\'t let anything reach your desk.'),
     el('div', { class: 'ttd-howto' }, [
       el('div', {}, '🎰 Visit the Gacha to recruit new students.'),
@@ -721,6 +718,36 @@ const titleScreen = el('div', { class: 'ttd-title-screen' }, [
   ]),
 ]);
 root.appendChild(titleScreen);
+
+// The background is `background-size: cover`, so how much of the source
+// image's sides get cropped depends on the viewport's own aspect ratio —
+// a static CSS percentage can't track that the way it could for a plain
+// width:100% image, so the invisible Play hit-region is positioned here
+// in JS using the same cover math, recomputed on resize. Coordinates are
+// fractions of the source art's natural size (2258x1261), measured
+// directly off its drawn Play button.
+const TITLE_PLAY_BBOX = { x0: 0.3243, y0: 0.5529, x1: 0.7244, y1: 0.6986 };
+const TITLE_IMG_NATURAL = { w: 2258, h: 1261 };
+function positionTitlePlayButton() {
+  const cw = titleScreen.clientWidth;
+  const ch = titleScreen.clientHeight;
+  if (!cw || !ch) return;
+  const scale = Math.max(cw / TITLE_IMG_NATURAL.w, ch / TITLE_IMG_NATURAL.h);
+  const renderedW = TITLE_IMG_NATURAL.w * scale;
+  const renderedH = TITLE_IMG_NATURAL.h * scale;
+  const offsetX = (cw - renderedW) / 2;
+  const offsetY = (ch - renderedH) / 2;
+  const left = offsetX + TITLE_PLAY_BBOX.x0 * renderedW;
+  const top = offsetY + TITLE_PLAY_BBOX.y0 * renderedH;
+  const right = offsetX + TITLE_PLAY_BBOX.x1 * renderedW;
+  const bottom = offsetY + TITLE_PLAY_BBOX.y1 * renderedH;
+  titleScenePlayBtn.style.left = `${left}px`;
+  titleScenePlayBtn.style.top = `${top}px`;
+  titleScenePlayBtn.style.width = `${right - left}px`;
+  titleScenePlayBtn.style.height = `${bottom - top}px`;
+}
+window.addEventListener('resize', positionTitlePlayButton);
+positionTitlePlayButton();
 
 // The credits — a movie-style scroll straight out of the player's own
 // sketch: Owner/Developer/Coding/Innovation/VFX/Music/Graphics up top,
@@ -812,6 +839,7 @@ function hideCredits() {
   screen = 'title';
   hideAllScreens();
   titleScreen.classList.remove('hidden');
+  positionTitlePlayButton();
 }
 
 const endScreen = el('div', { class: 'ttd-end-screen hidden' });
