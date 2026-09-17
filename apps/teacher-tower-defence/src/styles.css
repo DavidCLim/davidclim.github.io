@@ -252,13 +252,37 @@ html, body {
 }
 .ttd-title-card::before { left: 14px; }
 .ttd-title-card::after { right: 14px; }
-/* The player's own drawn logo art, used as-is instead of a CSS text
-   treatment — swapped in after gradient-stroke "chocolate" text on the
-   title was flagged as hard to read. */
-.ttd-title-logo {
+/* The player's own finished home-screen art, used directly instead of a
+   separately-built logo + button — sized to the card's full width so
+   nothing is cropped (a landscape image would lose its sides under
+   background-size:cover on this portrait layout), with a real button
+   placed invisibly over the picture's own drawn Play button. The
+   percentages below were measured directly off the source art's Play
+   button bounding box. */
+.ttd-title-scene {
+  position: relative;
+  width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.ttd-title-scene-img {
   display: block;
-  width: min(640px, 88vw);
+  width: 100%;
   height: auto;
+}
+.ttd-title-scene-play {
+  position: absolute;
+  left: 33%;
+  top: 56.5%;
+  width: 38.5%;
+  height: 12%;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  color: transparent;
+  cursor: pointer;
 }
 .ttd-subtitle {
   position: relative;
@@ -278,26 +302,6 @@ html, body {
   background: var(--gold);
   box-shadow: 0 0 8px rgba(255, 180, 84, 0.7);
 }
-.ttd-title-actions { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 4px; }
-/* The exact "Play" button from the home screen mockup (Downloads:
-   "Battle kids main menu.jpg"), background removed — its own baked-in
-   "Play" text already reads correctly, so the button's real text is
-   made transparent instead of drawing a second label on top of it. */
-.ttd-start-btn {
-  width: min(460px, 84vw);
-  aspect-ratio: 754 / 131;
-  padding: 0;
-  color: transparent;
-  border: none;
-  border-radius: 999px;
-  background: url('../assets/home_play_button.png') center / 100% 100% no-repeat;
-  animation: ttd-start-btn-glow 3.2s ease-in-out infinite;
-}
-@keyframes ttd-start-btn-glow {
-  0%, 100% { box-shadow: 0 4px 0 #8a5c14, 0 8px 18px rgba(255, 180, 84, 0.25); }
-  50% { box-shadow: 0 4px 0 #8a5c14, 0 8px 26px rgba(255, 180, 84, 0.55); }
-}
-.ttd-credits-btn { padding: 10px 36px; font-size: 14px; background: linear-gradient(165deg, #3a2c14, #241708); }
 .ttd-howto {
   margin-top: 10px;
   display: flex;

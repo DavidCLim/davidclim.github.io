@@ -699,12 +699,18 @@ function renderDungeonModal() {
 }
 
 // ---------- Title / Credits / Game Over / Victory screens ----------
+// The player's own finished home-screen art (Downloads: "battle kids home
+// screen directly put into the game remove credits for now.jpg") used
+// directly instead of a separately-built logo + button — a real,
+// invisible button is placed exactly over the picture's own drawn Play
+// button so it stays clickable. Credits is dropped for now per that
+// filename's own instruction; showCredits/the credits screen itself are
+// left in place in case it comes back.
 const titleScreen = el('div', { class: 'ttd-title-screen' }, [
   el('div', { class: 'ttd-title-card' }, [
-    el('img', { class: 'ttd-title-logo', src: 'assets/battle_kids_logo.png', alt: 'The Battle Kids' }),
-    el('div', { class: 'ttd-title-actions' }, [
-      el('button', { class: 'btn btn-primary ttd-start-btn', text: 'PLAY', onClick: enterMenu }),
-      el('button', { class: 'btn ttd-credits-btn', text: 'CREDITS', onClick: showCredits }),
+    el('div', { class: 'ttd-title-scene' }, [
+      el('img', { class: 'ttd-title-scene-img', src: 'assets/title_screen_bg.jpg', alt: 'The Battle Kids' }),
+      el('button', { class: 'ttd-title-scene-play', text: 'PLAY', onClick: enterMenu }),
     ]),
     el('p', { class: 'ttd-subtitle' }, 'Cursed teachers are pouring out of their base. Recruit students, hold the courtyard, and don\'t let anything reach your desk.'),
     el('div', { class: 'ttd-howto' }, [
