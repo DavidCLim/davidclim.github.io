@@ -708,14 +708,6 @@ function renderDungeonModal() {
 const titleScenePlayBtn = el('button', { class: 'ttd-title-scene-play', text: 'PLAY', onClick: enterMenu });
 const titleScreen = el('div', { class: 'ttd-title-screen' }, [
   titleScenePlayBtn,
-  el('div', { class: 'ttd-title-info' }, [
-    el('p', { class: 'ttd-subtitle' }, 'Cursed teachers are pouring out of their base. Recruit students, hold the courtyard, and don\'t let anything reach your desk.'),
-    el('div', { class: 'ttd-howto' }, [
-      el('div', {}, '🎰 Visit the Gacha to recruit new students.'),
-      el('div', {}, '📦 Equip up to 5 students from your Inventory.'),
-      el('div', {}, '⚔️ In battle: tap a student to deploy them — they march the lane and fight on their own.'),
-    ]),
-  ]),
 ]);
 root.appendChild(titleScreen);
 
