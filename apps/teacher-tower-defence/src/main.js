@@ -236,7 +236,10 @@ const menuScene = el('div', { class: 'ttd-menu-scene' }, [
   menuSceneStoreBtn, menuSceneEndexBtn, menuSceneBackBtn,
   menuScenePages,
 ]);
-const menuScreen = el('div', { class: 'ttd-menu-screen hidden' }, [menuScene]);
+const menuScreen = el('div', { class: 'ttd-menu-screen hidden' }, [
+  el('img', { class: 'ttd-menu-scene-backdrop', src: 'assets/menu_screen_bg.jpg', alt: '' }),
+  menuScene,
+]);
 root.appendChild(menuScreen);
 
 function renderMenuScreen() {
