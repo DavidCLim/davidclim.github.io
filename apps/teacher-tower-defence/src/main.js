@@ -45,6 +45,22 @@ document.addEventListener('click', (e) => {
   if (e.target.closest('button:not(:disabled)')) audio.playClick();
 }, { capture: true, once: false });
 
+// The squash-and-bounce press animation (see --bounce-ease/.ttd-pressed
+// in styles.css) is driven from here instead of relying on CSS :active
+// alone — :active is unreliable for a quick tap on a lot of mobile
+// browsers (it can require a touch listener to exist at all before it's
+// honored), so this adds a real class on pointerdown and clears it on
+// pointerup/cancel, which fires consistently on mouse, touch, and pen.
+document.addEventListener('pointerdown', (e) => {
+  const btn = e.target.closest('button:not(:disabled)');
+  if (btn) btn.classList.add('ttd-pressed');
+}, { capture: true });
+function clearPressed() {
+  document.querySelectorAll('.ttd-pressed').forEach((b) => b.classList.remove('ttd-pressed'));
+}
+document.addEventListener('pointerup', clearPressed, { capture: true });
+document.addEventListener('pointercancel', clearPressed, { capture: true });
+
 // `screen` is the single source of truth for which mode is active
 // ('title' | 'menu' | 'playing' | 'gameover' | 'victory'). `state` (the
 // battle) is only ever created once a dungeon is entered — it starts null.
