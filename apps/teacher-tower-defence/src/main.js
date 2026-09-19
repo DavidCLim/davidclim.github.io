@@ -34,8 +34,15 @@ const GACHA_ENABLED = true;
 const INDEX_ENABLED = IS_LOCAL;
 const UNITS_ENABLED = IS_LOCAL;
 
-document.addEventListener('click', () => {
+// A satisfying little blip on every button in the game — one listener
+// here instead of wiring audio.playClick() into each individual button's
+// own onClick, so nothing gets missed (and nothing has to remember to
+// call it). Buttons that already play a bigger, more specific sound
+// (a pull, an upgrade, a shot) just get this plain click layered under
+// it, same as a real UI tends to.
+document.addEventListener('click', (e) => {
   audio.ensureAudioContext();
+  if (e.target.closest('button:not(:disabled)')) audio.playClick();
 }, { capture: true, once: false });
 
 // `screen` is the single source of truth for which mode is active

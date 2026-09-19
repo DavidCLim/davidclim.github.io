@@ -225,7 +225,15 @@ html, body {
   inset: 0;
   z-index: 40;
   overflow: hidden;
-  background: url('../assets/title_screen_bg.jpg') center / cover no-repeat;
+  background: url('../assets/title_screen_bg.jpg') 50% 50% / cover no-repeat;
+  animation: ttd-scene-in 420ms ease-out, ttd-title-bg-drift 40s ease-in-out infinite;
+}
+/* A slow side-to-side drift on the background-position instead of a
+   static frame — cheap, no extra art, but it's what makes the clouds
+   and courtyard actually read as a living scene instead of a photo. */
+@keyframes ttd-title-bg-drift {
+  0%, 100% { background-position: 47% 48%; }
+  50% { background-position: 53% 52%; }
 }
 /* Sized and positioned in JS (see positionTitlePlayButton in main.js) —
    background-size:cover crops a different amount of the source image
@@ -240,11 +248,6 @@ html, body {
   background: transparent;
   color: transparent;
   cursor: pointer;
-  transition: transform 100ms ease, background 100ms ease;
-}
-.ttd-title-scene-play:active {
-  background: rgba(255, 255, 255, 0.28);
-  transform: scale(0.95);
 }
 /* ---------- Credits screen — a cinematic Star-Wars-style crawl ---------- */
 .ttd-credits-screen {
@@ -579,18 +582,12 @@ html, body {
   border: none;
   background: transparent;
   cursor: pointer;
-  transition: transform 100ms ease, background 100ms ease;
-}
-.ttd-menu-scene-btn:active {
-  background: rgba(255, 255, 255, 0.28);
-  transform: scale(0.95);
 }
 .ttd-scene-btn-disabled {
   background: rgba(0, 0, 0, 0.45);
   cursor: not-allowed;
   pointer-events: none;
 }
-.ttd-scene-btn-disabled:active { background: rgba(0, 0, 0, 0.45); transform: none; }
 
 /* ---------- Modal shell shared by Gacha Hall / Dungeon Gate / Teleport ---------- */
 .ttd-gacha-modal, .ttd-dungeon-modal {
@@ -1030,7 +1027,8 @@ button:active:not(:disabled) { transition: transform 70ms ease-out; transform: s
   from { opacity: 0; transform: scale(0.97); }
   to { opacity: 1; transform: scale(1); }
 }
-.ttd-title-screen { animation: ttd-scene-in 420ms ease-out; }
+/* .ttd-title-screen's entrance + cloud-drift animation is combined
+   directly on its main rule above, since it needs both. */
 .ttd-menu-scene { animation: ttd-scene-in 380ms ease-out; }
 
 @keyframes ttd-modal-backdrop-in {
