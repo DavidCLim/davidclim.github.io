@@ -187,13 +187,13 @@ function bboxStyle(bbox) {
   return `left:${bbox.x0 * 100}%;top:${bbox.y0 * 100}%;width:${(bbox.x1 - bbox.x0) * 100}%;height:${(bbox.y1 - bbox.y0) * 100}%;`;
 }
 const MENU_BBOX = {
-  start: { x0: 0.010, y0: 0.234, x1: 0.320, y1: 0.349 },
-  upgrade: { x0: 0.010, y0: 0.367, x1: 0.320, y1: 0.482 },
-  equip: { x0: 0.010, y0: 0.510, x1: 0.320, y1: 0.625 },
-  store: { x0: 0.792, y0: 0.920, x1: 1.000, y1: 1.000 },
-  endex: { x0: 0.849, y0: 0.638, x1: 1.000, y1: 0.917 },
-  back: { x0: 0.000, y0: 0.845, x1: 0.090, y1: 0.975 },
-  pages: { x0: 0.730, y0: 0.000, x1: 1.000, y1: 0.090 },
+  start: { x0: 0.006, y0: 0.239, x1: 0.322, y1: 0.350 },
+  upgrade: { x0: 0.006, y0: 0.377, x1: 0.322, y1: 0.492 },
+  equip: { x0: 0.006, y0: 0.522, x1: 0.322, y1: 0.637 },
+  store: { x0: 0.792, y0: 0.916, x1: 1.000, y1: 0.994 },
+  endex: { x0: 0.735, y0: 0.638, x1: 1.000, y1: 0.905 },
+  back: { x0: 0.000, y0: 0.852, x1: 0.087, y1: 0.968 },
+  pages: { x0: 0.755, y0: 0.000, x1: 1.000, y1: 0.130 },
 };
 // The source art's own "XP  60545" badge is covered with a plain tan
 // patch (sampled from its own gradient) instead of trying to erase
