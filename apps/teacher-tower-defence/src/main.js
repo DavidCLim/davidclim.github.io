@@ -171,9 +171,10 @@ function refreshDeployRoster() {
 // cover-cropping it into a tall phone viewport hides every button
 // off-screen. Fitting to width means plain CSS percentages line up
 // with the picture's own buttons with no JS/resize math needed.
-const menuGoldValue = el('span', { class: 'ttd-stat-value' }, '0');
-function refreshMenuHud() { menuGoldValue.textContent = collection.gold.toLocaleString(); }
-
+//
+// The art's own pages badge is left as-is (no live-count overlay on top
+// of it) — the newest version of this screenshot already reads well on
+// its own, so there's no need to cover it with a custom construct.
 function backToTitleFromMenu() {
   screen = 'title';
   hideAllScreens();
@@ -193,16 +194,7 @@ const MENU_BBOX = {
   store: { x0: 0.792, y0: 0.916, x1: 1.000, y1: 0.994 },
   endex: { x0: 0.735, y0: 0.638, x1: 1.000, y1: 0.905 },
   back: { x0: 0.000, y0: 0.852, x1: 0.087, y1: 0.968 },
-  pages: { x0: 0.755, y0: 0.000, x1: 1.000, y1: 0.130 },
 };
-// The source art's own "XP  60545" badge is covered with a plain tan
-// patch (sampled from its own gradient) instead of trying to erase
-// just the baked digits, then the real, always-current pages count is
-// drawn on top with the label the filename asked for.
-const menuScenePages = el('div', { class: 'ttd-menu-scene-pages', style: bboxStyle(MENU_BBOX.pages) }, [
-  el('span', { class: 'ttd-menu-scene-pages-label' }, 'PAGES'),
-  menuGoldValue,
-]);
 const menuSceneStartBtn = el('button', {
   class: `ttd-menu-scene-btn${BATTLE_ENABLED ? '' : ' ttd-scene-btn-disabled'}`,
   style: bboxStyle(MENU_BBOX.start),
@@ -234,17 +226,12 @@ const menuScene = el('div', { class: 'ttd-menu-scene' }, [
   el('img', { class: 'ttd-menu-scene-img', src: 'assets/menu_screen_bg.jpg', alt: 'Kid Base' }),
   menuSceneStartBtn, menuSceneUpgradeBtn, menuSceneEquipBtn,
   menuSceneStoreBtn, menuSceneEndexBtn, menuSceneBackBtn,
-  menuScenePages,
 ]);
 const menuScreen = el('div', { class: 'ttd-menu-screen hidden' }, [
   el('img', { class: 'ttd-menu-scene-backdrop', src: 'assets/menu_screen_bg.jpg', alt: '' }),
   menuScene,
 ]);
 root.appendChild(menuScreen);
-
-function renderMenuScreen() {
-  refreshMenuHud();
-}
 
 // ---------- Gacha modal (Summon only — Inventory/Awaken are their own
 // their own menu buttons/modals) ----------
@@ -887,7 +874,6 @@ function enterMenu() {
   screen = 'menu';
   hideAllScreens();
   menuScreen.classList.remove('hidden');
-  renderMenuScreen();
 }
 
 function startGame(mapId) {
@@ -944,9 +930,7 @@ function frame(now) {
   lastTime = now;
   renderT += dt;
 
-  if (screen === 'menu') {
-    refreshMenuHud();
-  } else if (screen === 'playing') {
+  if (screen === 'playing') {
     update(state, dt);
     screen = state.screen === 'playing' ? 'playing' : state.screen;
   }
