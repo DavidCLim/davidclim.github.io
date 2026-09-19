@@ -60,11 +60,13 @@ function clearPressed() {
   // (.ttd-pop, see styles.css) instead of just letting the transition
   // spring back to scale(1) — a single easing curve read as too subtle;
   // an explicit overshoot-then-settle wobble is what actually sells
-  // "satisfying".
+  // "satisfying". The flat buttons (Endex/Back — see menuSceneEndexBtn)
+  // get a brightness-flash pop instead, since they never scale at all.
   document.querySelectorAll('.ttd-pressed').forEach((b) => {
     b.classList.remove('ttd-pressed');
-    b.classList.add('ttd-pop');
-    b.addEventListener('animationend', () => b.classList.remove('ttd-pop'), { once: true });
+    const popClass = b.classList.contains('ttd-menu-scene-btn-flat') ? 'ttd-pop-flat' : 'ttd-pop';
+    b.classList.add(popClass);
+    b.addEventListener('animationend', () => b.classList.remove(popClass), { once: true });
   });
 }
 document.addEventListener('pointerup', clearPressed, { capture: true });
@@ -259,14 +261,19 @@ const menuSceneStoreBtn = el('button', {
   disabled: GACHA_ENABLED ? undefined : true,
   onClick: GACHA_ENABLED ? openGachaModal : undefined,
 });
+// Endex and Back scale badly (a tall icon+label block and a tiny corner
+// circle) — the same shrink/pop everything else uses read as broken on
+// these two, so they get the "flat" treatment instead: no transform at
+// all, just a brightness dip on press and a quick light flash on
+// release (see .ttd-menu-scene-btn-flat / .ttd-pop-flat in styles.css).
 const menuSceneEndexBtn = el('button', {
-  class: `ttd-menu-scene-btn${INDEX_ENABLED ? '' : ' ttd-scene-btn-disabled'}`,
+  class: `ttd-menu-scene-btn ttd-menu-scene-btn-flat${INDEX_ENABLED ? '' : ' ttd-scene-btn-disabled'}`,
   style: sceneButtonStyle(MENU_BBOX.endex, 'assets/menu_endex_button.png'),
   disabled: INDEX_ENABLED ? undefined : true,
   onClick: INDEX_ENABLED ? openIndexModal : undefined,
 });
 const menuSceneBackBtn = el('button', {
-  class: 'ttd-menu-scene-btn',
+  class: 'ttd-menu-scene-btn ttd-menu-scene-btn-flat',
   style: sceneButtonStyle(MENU_BBOX.back, 'assets/menu_back_button.png'),
   onClick: backToTitleFromMenu,
 });
