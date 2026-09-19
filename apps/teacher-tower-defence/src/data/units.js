@@ -64,6 +64,18 @@ export const UNITS = {
     ],
     awakenCrystal: 'ish',
   }),
+  // A ranged unit alongside the two melee starters — ranged so it
+  // actually plays differently once someone has more than one slot
+  // filled, not just a third punch.
+  rocketeer: unit({
+    id: 'rocketeer', name: 'Rocketeer', rarity: 'common', icon: '🚀',
+    desc: 'Never leaves the ground without a full tank and a spare pair of boots.',
+    color: '#f5f1e4', glow: '#ffffff', accent: '#1b6b3a', cost: 30, damage: 14, range: 110, fireRate: 0.8, melee: false,
+    hp: 90,
+    cardImage: 'assets/rocketeer_card.png',
+    battleSprite: 'assets/rocketeer_sprite.png',
+    awakenCrystal: 'lounge',
+  }),
 };
 
 export const UNIT_LIST = Object.values(UNITS);
