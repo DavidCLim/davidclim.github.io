@@ -219,40 +219,57 @@ function backToTitleFromMenu() {
 function bboxStyle(bbox) {
   return `left:${bbox.x0 * 100}%;top:${bbox.y0 * 100}%;width:${(bbox.x1 - bbox.x0) * 100}%;height:${(bbox.y1 - bbox.y0) * 100}%;`;
 }
+// Each button used to be a fully transparent hit-region over the shared
+// background picture, so pressing one could only show a color-tint
+// effect layered on top rather than the button itself moving. Each is
+// now its own real button graphic (cropped straight from the same
+// source art) positioned exactly over that same spot, so the actual
+// pill/icon is what shrinks and bounces on press, not a box around it.
+function sceneButtonStyle(bbox, img) {
+  return bboxStyle(bbox) + `background-image:url('${img}');background-size:100% 100%;background-position:center;background-repeat:no-repeat;`;
+}
 const MENU_BBOX = {
-  start: { x0: 0.006, y0: 0.239, x1: 0.322, y1: 0.350 },
-  upgrade: { x0: 0.006, y0: 0.377, x1: 0.322, y1: 0.492 },
-  equip: { x0: 0.006, y0: 0.522, x1: 0.322, y1: 0.637 },
-  store: { x0: 0.792, y0: 0.916, x1: 1.000, y1: 0.994 },
-  endex: { x0: 0.735, y0: 0.638, x1: 1.000, y1: 0.905 },
-  back: { x0: 0.000, y0: 0.852, x1: 0.087, y1: 0.968 },
+  start: { x0: 0.01565, y0: 0.24789, x1: 0.31336, y1: 0.34106 },
+  upgrade: { x0: 0.01565, y0: 0.38605, x1: 0.31336, y1: 0.48268 },
+  equip: { x0: 0.01565, y0: 0.53113, x1: 0.31336, y1: 0.62776 },
+  store: { x0: 0.80093, y0: 0.92492, x1: 0.99128, y1: 0.98527 },
+  endex: { x0: 0.744, y0: 0.647, x1: 1.000, y1: 0.911 },
+  back: { x0: 0.0018, y0: 0.861, x1: 0.0787, y1: 0.9593 },
 };
 const menuSceneStartBtn = el('button', {
   class: `ttd-menu-scene-btn${BATTLE_ENABLED ? '' : ' ttd-scene-btn-disabled'}`,
-  style: bboxStyle(MENU_BBOX.start),
+  style: sceneButtonStyle(MENU_BBOX.start, 'assets/menu_start_button.png'),
   disabled: BATTLE_ENABLED ? undefined : true,
   onClick: BATTLE_ENABLED ? openDungeonModal : undefined,
 });
-const menuSceneUpgradeBtn = el('button', { class: 'ttd-menu-scene-btn', style: bboxStyle(MENU_BBOX.upgrade), onClick: openAwakenModal });
+const menuSceneUpgradeBtn = el('button', {
+  class: 'ttd-menu-scene-btn',
+  style: sceneButtonStyle(MENU_BBOX.upgrade, 'assets/menu_upgrade_button.png'),
+  onClick: openAwakenModal,
+});
 const menuSceneEquipBtn = el('button', {
   class: `ttd-menu-scene-btn${UNITS_ENABLED ? '' : ' ttd-scene-btn-disabled'}`,
-  style: bboxStyle(MENU_BBOX.equip),
+  style: sceneButtonStyle(MENU_BBOX.equip, 'assets/menu_equip_button.png'),
   disabled: UNITS_ENABLED ? undefined : true,
   onClick: UNITS_ENABLED ? openInventoryModal : undefined,
 });
 const menuSceneStoreBtn = el('button', {
   class: `ttd-menu-scene-btn${GACHA_ENABLED ? '' : ' ttd-scene-btn-disabled'}`,
-  style: bboxStyle(MENU_BBOX.store),
+  style: sceneButtonStyle(MENU_BBOX.store, 'assets/menu_store_button.png'),
   disabled: GACHA_ENABLED ? undefined : true,
   onClick: GACHA_ENABLED ? openGachaModal : undefined,
 });
 const menuSceneEndexBtn = el('button', {
   class: `ttd-menu-scene-btn${INDEX_ENABLED ? '' : ' ttd-scene-btn-disabled'}`,
-  style: bboxStyle(MENU_BBOX.endex),
+  style: sceneButtonStyle(MENU_BBOX.endex, 'assets/menu_endex_button.png'),
   disabled: INDEX_ENABLED ? undefined : true,
   onClick: INDEX_ENABLED ? openIndexModal : undefined,
 });
-const menuSceneBackBtn = el('button', { class: 'ttd-menu-scene-btn', style: bboxStyle(MENU_BBOX.back), onClick: backToTitleFromMenu });
+const menuSceneBackBtn = el('button', {
+  class: 'ttd-menu-scene-btn',
+  style: sceneButtonStyle(MENU_BBOX.back, 'assets/menu_back_button.png'),
+  onClick: backToTitleFromMenu,
+});
 
 const menuScene = el('div', { class: 'ttd-menu-scene' }, [
   el('img', { class: 'ttd-menu-scene-img', src: 'assets/menu_screen_bg.jpg', alt: 'Kid Base' }),
@@ -785,7 +802,7 @@ function positionSceneOverlays(container, natural, mappings) {
   }
 }
 
-const TITLE_PLAY_BBOX = { x0: 0.3243, y0: 0.5529, x1: 0.7244, y1: 0.6986 };
+const TITLE_PLAY_BBOX = { x0: 0.3483, y0: 0.5769, x1: 0.7004, y1: 0.6746 };
 const TITLE_IMG_NATURAL = { w: 2258, h: 1261 };
 function positionTitlePlayButton() {
   positionSceneOverlays(titleScreen, TITLE_IMG_NATURAL, [{ el: titleScenePlayBtn, bbox: TITLE_PLAY_BBOX }]);

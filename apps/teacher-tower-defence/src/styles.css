@@ -240,24 +240,27 @@ html, body {
    depending on the viewport's own aspect ratio, so a static CSS percent
    can't track the picture's own drawn Play button the way it could for
    a plain width:100% image. */
+/* This used to be a fully transparent hit-region over the background
+   picture, which meant pressing it could only show a color-tint effect
+   layered on top rather than the button itself moving. It's now its own
+   real button graphic (cropped straight from the same source art, see
+   title_play_button.png) positioned exactly over that same spot, so the
+   actual "Play" pill is what shrinks and bounces, not a box around it. */
 .ttd-title-scene-play {
   position: absolute;
   padding: 0;
   margin: 0;
   border: none;
-  background: transparent;
+  border-radius: 999px;
+  background: url('../assets/title_play_button.png') center / 100% 100% no-repeat;
   color: transparent;
   cursor: pointer;
-  transition: transform 240ms var(--bounce-ease), background 150ms ease;
+  transition: transform 240ms var(--bounce-ease), filter 150ms ease;
 }
-/* These sit over real art with nothing of their own to see, so a plain
-   scale on the invisible box alone would show nothing — a soft gold
-   tint (matching the game's own palette, not a flat white flash) makes
-   the shrink-then-bounce actually visible without covering the art. */
 .ttd-title-scene-play:active, .ttd-title-scene-play.ttd-pressed {
-  transition: transform 60ms ease-out, background 60ms ease-out;
+  transition: transform 60ms ease-out, filter 60ms ease-out;
   transform: scale(0.85);
-  background: rgba(255, 214, 112, 0.42);
+  filter: brightness(1.18);
 }
 /* ---------- Credits screen — a cinematic Star-Wars-style crawl ---------- */
 .ttd-credits-screen {
@@ -590,21 +593,24 @@ html, body {
   padding: 0;
   margin: 0;
   border: none;
-  background: transparent;
+  border-radius: 999px;
   cursor: pointer;
-  transition: transform 240ms var(--bounce-ease), background 150ms ease;
+  transition: transform 240ms var(--bounce-ease), filter 150ms ease;
 }
 .ttd-menu-scene-btn:active, .ttd-menu-scene-btn.ttd-pressed {
-  transition: transform 60ms ease-out, background 60ms ease-out;
+  transition: transform 60ms ease-out, filter 60ms ease-out;
   transform: scale(0.85);
-  background: rgba(255, 214, 112, 0.42);
+  filter: brightness(1.18);
 }
+/* Dims via opacity, not a background-color layer — these buttons' own
+   background-image (set inline per-button in main.js) is fully opaque,
+   so a color painted underneath it would never show through. */
 .ttd-scene-btn-disabled {
-  background: rgba(0, 0, 0, 0.45);
+  opacity: 0.45;
+  filter: grayscale(0.7);
   cursor: not-allowed;
   pointer-events: none;
 }
-.ttd-scene-btn-disabled:active, .ttd-scene-btn-disabled.ttd-pressed { background: rgba(0, 0, 0, 0.45); transform: none; }
 
 /* ---------- Modal shell shared by Gacha Hall / Dungeon Gate / Teleport ---------- */
 .ttd-gacha-modal, .ttd-dungeon-modal {
