@@ -45,33 +45,6 @@ document.addEventListener('click', (e) => {
   if (e.target.closest('button:not(:disabled)')) audio.playClick();
 }, { capture: true, once: false });
 
-// The squash-and-bounce press animation (see --bounce-ease/.ttd-pressed
-// in styles.css) is driven from here instead of relying on CSS :active
-// alone — :active is unreliable for a quick tap on a lot of mobile
-// browsers (it can require a touch listener to exist at all before it's
-// honored), so this adds a real class on pointerdown and clears it on
-// pointerup/cancel, which fires consistently on mouse, touch, and pen.
-document.addEventListener('pointerdown', (e) => {
-  const btn = e.target.closest('button:not(:disabled)');
-  if (btn) btn.classList.add('ttd-pressed');
-}, { capture: true });
-function clearPressed() {
-  // Releasing hands off to a real multi-step @keyframes bounce
-  // (.ttd-pop, see styles.css) instead of just letting the transition
-  // spring back to scale(1) — a single easing curve read as too subtle;
-  // an explicit overshoot-then-settle wobble is what actually sells
-  // "satisfying". The flat buttons (Endex/Back — see menuSceneEndexBtn)
-  // get a brightness-flash pop instead, since they never scale at all.
-  document.querySelectorAll('.ttd-pressed').forEach((b) => {
-    b.classList.remove('ttd-pressed');
-    const popClass = b.classList.contains('ttd-menu-scene-btn-flat') ? 'ttd-pop-flat' : 'ttd-pop';
-    b.classList.add(popClass);
-    b.addEventListener('animationend', () => b.classList.remove(popClass), { once: true });
-  });
-}
-document.addEventListener('pointerup', clearPressed, { capture: true });
-document.addEventListener('pointercancel', clearPressed, { capture: true });
-
 // `screen` is the single source of truth for which mode is active
 // ('title' | 'menu' | 'playing' | 'gameover' | 'victory'). `state` (the
 // battle) is only ever created once a dungeon is entered — it starts null.
@@ -222,11 +195,9 @@ function bboxStyle(bbox) {
   return `left:${bbox.x0 * 100}%;top:${bbox.y0 * 100}%;width:${(bbox.x1 - bbox.x0) * 100}%;height:${(bbox.y1 - bbox.y0) * 100}%;`;
 }
 // Each button used to be a fully transparent hit-region over the shared
-// background picture, so pressing one could only show a color-tint
-// effect layered on top rather than the button itself moving. Each is
-// now its own real button graphic (cropped straight from the same
-// source art) positioned exactly over that same spot, so the actual
-// pill/icon is what shrinks and bounces on press, not a box around it.
+// background picture. Each is now its own real button graphic (cropped
+// straight from the same source art) positioned exactly over that same
+// spot — no press animation, just the real art sitting where it belongs.
 function sceneButtonStyle(bbox, img) {
   return bboxStyle(bbox) + `background-image:url('${img}');background-size:100% 100%;background-position:center;background-repeat:no-repeat;`;
 }
@@ -262,18 +233,14 @@ const menuSceneStoreBtn = el('button', {
   onClick: GACHA_ENABLED ? openGachaModal : undefined,
 });
 // Endex and Back scale badly (a tall icon+label block and a tiny corner
-// circle) — the same shrink/pop everything else uses read as broken on
-// these two, so they get the "flat" treatment instead: no transform at
-// all, just a brightness dip on press and a quick light flash on
-// release (see .ttd-menu-scene-btn-flat / .ttd-pop-flat in styles.css).
 const menuSceneEndexBtn = el('button', {
-  class: `ttd-menu-scene-btn ttd-menu-scene-btn-flat${INDEX_ENABLED ? '' : ' ttd-scene-btn-disabled'}`,
+  class: `ttd-menu-scene-btn${INDEX_ENABLED ? '' : ' ttd-scene-btn-disabled'}`,
   style: sceneButtonStyle(MENU_BBOX.endex, 'assets/menu_endex_button.png'),
   disabled: INDEX_ENABLED ? undefined : true,
   onClick: INDEX_ENABLED ? openIndexModal : undefined,
 });
 const menuSceneBackBtn = el('button', {
-  class: 'ttd-menu-scene-btn ttd-menu-scene-btn-flat',
+  class: 'ttd-menu-scene-btn',
   style: sceneButtonStyle(MENU_BBOX.back, 'assets/menu_back_button.png'),
   onClick: backToTitleFromMenu,
 });

@@ -16,11 +16,6 @@
   --parchment-ink: #3a2a16;
   --panel-bg: linear-gradient(165deg, #4a3320 0%, #2c1e10 100%);
   --panel-border: rgba(255, 180, 84, 0.55);
-  /* A springy overshoot curve — press animations shrink fast on the way
-     down (plain ease-out, see each :active rule) then bounce back past
-     their normal size before settling on the way up, which is what
-     actually reads as "satisfying" instead of a flat snap-back. */
-  --bounce-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 * { box-sizing: border-box; }
@@ -72,10 +67,9 @@ html, body {
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
-  transition: transform 240ms var(--bounce-ease), border-color 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
 }
-.btn:hover:not(:disabled) { border-color: var(--mint); transform: translateY(-1px); }
-.btn:active:not(:disabled), .btn.ttd-pressed:not(:disabled) { transition: transform 60ms ease-out, border-color 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease; transform: scale(0.97); }
+.btn:hover:not(:disabled) { border-color: var(--mint); }
 .btn:disabled { opacity: 0.4; cursor: default; }
 .btn-primary {
   background: linear-gradient(165deg, #ffe0a0, #c9922a);
@@ -150,13 +144,13 @@ html, body {
   background: rgba(74, 51, 32, 0.55);
   color: var(--ink);
   cursor: pointer;
-  transition: border-color 0.12s ease, transform 0.12s ease, background 0.12s ease;
+  transition: border-color 0.12s ease, background 0.12s ease;
 }
-.ttd-shop-item:hover:not(.disabled) { border-color: var(--mint); transform: translateY(-2px); }
+.ttd-shop-item:hover:not(.disabled) { border-color: var(--mint); }
 .ttd-shop-item.selected { border-color: var(--gold); background: rgba(120, 90, 30, 0.35); box-shadow: 0 0 14px rgba(255, 214, 112, 0.35); }
 .ttd-shop-item.disabled { opacity: 0.4; cursor: default; }
 .ttd-shop-item-empty { cursor: default; opacity: 0.5; border-style: dashed; }
-.ttd-shop-item-empty:hover { transform: none; border-color: rgba(255, 180, 84, 0.25); }
+.ttd-shop-item-empty:hover { border-color: rgba(255, 180, 84, 0.25); }
 .ttd-shop-slot-num {
   position: absolute;
   transform: translate(-6px, -14px);
@@ -241,11 +235,10 @@ html, body {
    can't track the picture's own drawn Play button the way it could for
    a plain width:100% image. */
 /* This used to be a fully transparent hit-region over the background
-   picture, which meant pressing it could only show a color-tint effect
-   layered on top rather than the button itself moving. It's now its own
-   real button graphic (cropped straight from the same source art, see
-   title_play_button.png) positioned exactly over that same spot, so the
-   actual "Play" pill is what shrinks and bounces, not a box around it. */
+   picture with its own press animation; that read as broken no matter
+   how it was tuned, so it's back to a plain hit target — no transform,
+   no filter, just the real button graphic (cropped straight from the
+   same source art, see title_play_button.png) sitting over that spot. */
 .ttd-title-scene-play {
   position: absolute;
   padding: 0;
@@ -255,12 +248,6 @@ html, body {
   background: url('../assets/title_play_button.png') center / 100% 100% no-repeat;
   color: transparent;
   cursor: pointer;
-  transition: transform 240ms var(--bounce-ease), filter 150ms ease;
-}
-.ttd-title-scene-play:active, .ttd-title-scene-play.ttd-pressed {
-  transition: transform 60ms ease-out, filter 60ms ease-out;
-  transform: scale(0.97);
-  filter: brightness(1.06);
 }
 /* ---------- Credits screen — a cinematic Star-Wars-style crawl ---------- */
 .ttd-credits-screen {
@@ -595,21 +582,6 @@ html, body {
   border: none;
   border-radius: 999px;
   cursor: pointer;
-  transition: transform 240ms var(--bounce-ease), filter 150ms ease;
-}
-.ttd-menu-scene-btn:active, .ttd-menu-scene-btn.ttd-pressed {
-  transition: transform 60ms ease-out, filter 60ms ease-out;
-  transform: scale(0.97);
-  filter: brightness(1.06);
-}
-/* Endex (a tall icon+label block) and Back (a tiny corner circle) look
-   broken when they shrink/bounce like the pill buttons — not enough
-   room for the motion to read as anything but a glitch. No transform at
-   all for these: a slight brightness dip while held, then a quick flash
-   of light on release (.ttd-pop-flat below) instead of movement. */
-.ttd-menu-scene-btn-flat:active, .ttd-menu-scene-btn-flat.ttd-pressed {
-  transform: none;
-  filter: brightness(0.86);
 }
 /* Dims via opacity, not a background-color layer — these buttons' own
    background-image (set inline per-button in main.js) is fully opaque,
@@ -695,10 +667,9 @@ html, body {
   color: var(--ink);
   font-size: 15px;
   cursor: pointer;
-  transition: transform 110ms ease, border-color 110ms ease;
+  transition: border-color 110ms ease;
 }
-.ttd-index-arrow:hover { transform: translateY(-1px); border-color: var(--gold); }
-.ttd-index-arrow:active { transform: scale(0.96); }
+.ttd-index-arrow:hover { border-color: var(--gold); }
 .ttd-index-count { font-size: 11.5px; font-weight: 700; color: var(--muted); min-width: 12ch; text-align: center; }
 
 /* ---------- Summon tab — Normal and Seasonal side by side, full width,
@@ -1022,70 +993,14 @@ html, body {
   font-family: 'Baloo 2', sans-serif;
   font-weight: 700;
   font-size: 13px;
-  transition: transform 110ms ease, border-color 110ms ease;
+  transition: border-color 110ms ease;
 }
-.ttd-map-card:hover { border-color: var(--mint); transform: translateY(-2px); }
-.ttd-map-card:active { transform: scale(0.97); }
+.ttd-map-card:hover { border-color: var(--mint); }
 .ttd-map-icon { font-size: 30px; }
 .ttd-map-card-locked { opacity: 0.5; cursor: not-allowed; }
-.ttd-map-card-locked:hover { border-color: rgba(255, 180, 84, 0.3); transform: none; }
-.ttd-map-card-locked:active { transform: none; }
+.ttd-map-card-locked:hover { border-color: rgba(255, 180, 84, 0.3); }
 .ttd-map-cleared { color: var(--mint); font-size: 10.5px; font-weight: 800; }
 .ttd-map-drop { color: var(--muted); font-size: 10px; text-align: center; }
-
-/* ---------- Universal press feedback — shrink fast on the way down,
-   bounce back past full size on the way up (see --bounce-ease), for any
-   button not already given its own :active rule above, so every control
-   in the game feels tappable, not just the few that had a hover effect
-   to build on. Placed last so it wins the cascade for plain-button
-   targets that only had :hover-driven transforms. ---------- */
-/* .ttd-pressed is a real class toggled from JS on pointerdown/pointerup
-   (see main.js) — :active alone is unreliable for a quick tap on some
-   mobile browsers, so every rule below fires off both so the bounce
-   actually shows up on a real phone, not just a mouse. */
-button { transition: transform 240ms var(--bounce-ease); }
-button:active:not(:disabled), button.ttd-pressed:not(:disabled) { transition: transform 60ms ease-out; transform: scale(0.97); }
-.ttd-shop-item, .ttd-slot-filled, .ttd-gacha-btn-hit, .ttd-index-arrow,
-.ttd-map-card, .ttd-modal-close, .ttd-equip-slot {
-  transition: transform 240ms var(--bounce-ease), border-color 110ms ease, background 110ms ease;
-}
-.ttd-shop-item:active, .ttd-slot-filled:active, .ttd-gacha-btn-hit:active,
-.ttd-index-arrow:active, .ttd-map-card:active, .ttd-modal-close:active, .ttd-equip-slot:active,
-.ttd-shop-item.ttd-pressed, .ttd-slot-filled.ttd-pressed, .ttd-gacha-btn-hit.ttd-pressed,
-.ttd-index-arrow.ttd-pressed, .ttd-map-card.ttd-pressed, .ttd-modal-close.ttd-pressed, .ttd-equip-slot.ttd-pressed {
-  transition: transform 60ms ease-out, border-color 110ms ease, background 110ms ease;
-}
-.ttd-modal-close:active, .ttd-modal-close.ttd-pressed { transform: scale(0.94); }
-.ttd-shop-item:active, .ttd-shop-item.ttd-pressed { transform: scale(0.97); }
-.ttd-slot-filled:active, .ttd-slot-filled.ttd-pressed { transform: scale(0.96); }
-.ttd-gacha-btn-hit:active, .ttd-index-arrow:active, .ttd-map-card:active, .ttd-equip-slot:active,
-.ttd-gacha-btn-hit.ttd-pressed, .ttd-index-arrow.ttd-pressed, .ttd-map-card.ttd-pressed, .ttd-equip-slot.ttd-pressed {
-  transform: scale(0.96);
-}
-
-/* .ttd-pop plays on release (added/removed from JS in main.js right as
-   .ttd-pressed comes off) — a barely-there overshoot-then-settle, just
-   enough to read as a tiny detail rather than a showy bounce. Takes over
-   from any transition already in flight since a running animation wins
-   that tug-of-war. */
-@keyframes ttd-btn-pop {
-  0% { transform: scale(0.97); }
-  45% { transform: scale(1.025); }
-  68% { transform: scale(0.99); }
-  86% { transform: scale(1.008); }
-  100% { transform: scale(1); }
-}
-.ttd-pop { animation: ttd-btn-pop 320ms cubic-bezier(0.22, 1, 0.36, 1); }
-
-/* The no-transform alternative for .ttd-menu-scene-btn-flat (Endex/Back)
-   — a quick flash of light instead of a bounce, so releasing still
-   reads as a satisfying "tap landed" without any shrink/scale motion. */
-@keyframes ttd-btn-pop-flat {
-  0% { filter: brightness(0.86); }
-  40% { filter: brightness(1.35); }
-  100% { filter: brightness(1); }
-}
-.ttd-pop-flat { animation: ttd-btn-pop-flat 260ms ease-out; }
 
 /* ---------- Screen/modal entrance animations ---------- */
 @keyframes ttd-scene-in {
