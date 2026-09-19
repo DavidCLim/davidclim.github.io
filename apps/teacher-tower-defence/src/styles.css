@@ -75,7 +75,7 @@ html, body {
   transition: transform 240ms var(--bounce-ease), border-color 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
 }
 .btn:hover:not(:disabled) { border-color: var(--mint); transform: translateY(-1px); }
-.btn:active:not(:disabled), .btn.ttd-pressed:not(:disabled) { transition: transform 60ms ease-out, border-color 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease; transform: scale(0.82); }
+.btn:active:not(:disabled), .btn.ttd-pressed:not(:disabled) { transition: transform 60ms ease-out, border-color 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease; transform: scale(0.97); }
 .btn:disabled { opacity: 0.4; cursor: default; }
 .btn-primary {
   background: linear-gradient(165deg, #ffe0a0, #c9922a);
@@ -259,8 +259,8 @@ html, body {
 }
 .ttd-title-scene-play:active, .ttd-title-scene-play.ttd-pressed {
   transition: transform 60ms ease-out, filter 60ms ease-out;
-  transform: scale(0.85);
-  filter: brightness(1.18);
+  transform: scale(0.97);
+  filter: brightness(1.06);
 }
 /* ---------- Credits screen — a cinematic Star-Wars-style crawl ---------- */
 .ttd-credits-screen {
@@ -599,8 +599,8 @@ html, body {
 }
 .ttd-menu-scene-btn:active, .ttd-menu-scene-btn.ttd-pressed {
   transition: transform 60ms ease-out, filter 60ms ease-out;
-  transform: scale(0.85);
-  filter: brightness(1.18);
+  transform: scale(0.97);
+  filter: brightness(1.06);
 }
 /* Dims via opacity, not a background-color layer — these buttons' own
    background-image (set inline per-button in main.js) is fully opaque,
@@ -689,7 +689,7 @@ html, body {
   transition: transform 110ms ease, border-color 110ms ease;
 }
 .ttd-index-arrow:hover { transform: translateY(-1px); border-color: var(--gold); }
-.ttd-index-arrow:active { transform: scale(0.9); }
+.ttd-index-arrow:active { transform: scale(0.96); }
 .ttd-index-count { font-size: 11.5px; font-weight: 700; color: var(--muted); min-width: 12ch; text-align: center; }
 
 /* ---------- Summon tab — Normal and Seasonal side by side, full width,
@@ -1016,7 +1016,7 @@ html, body {
   transition: transform 110ms ease, border-color 110ms ease;
 }
 .ttd-map-card:hover { border-color: var(--mint); transform: translateY(-2px); }
-.ttd-map-card:active { transform: scale(0.95); }
+.ttd-map-card:active { transform: scale(0.97); }
 .ttd-map-icon { font-size: 30px; }
 .ttd-map-card-locked { opacity: 0.5; cursor: not-allowed; }
 .ttd-map-card-locked:hover { border-color: rgba(255, 180, 84, 0.3); transform: none; }
@@ -1035,7 +1035,7 @@ html, body {
    mobile browsers, so every rule below fires off both so the bounce
    actually shows up on a real phone, not just a mouse. */
 button { transition: transform 240ms var(--bounce-ease); }
-button:active:not(:disabled), button.ttd-pressed:not(:disabled) { transition: transform 60ms ease-out; transform: scale(0.85); }
+button:active:not(:disabled), button.ttd-pressed:not(:disabled) { transition: transform 60ms ease-out; transform: scale(0.97); }
 .ttd-shop-item, .ttd-slot-filled, .ttd-gacha-btn-hit, .ttd-index-arrow,
 .ttd-map-card, .ttd-modal-close, .ttd-equip-slot {
   transition: transform 240ms var(--bounce-ease), border-color 110ms ease, background 110ms ease;
@@ -1046,27 +1046,27 @@ button:active:not(:disabled), button.ttd-pressed:not(:disabled) { transition: tr
 .ttd-index-arrow.ttd-pressed, .ttd-map-card.ttd-pressed, .ttd-modal-close.ttd-pressed, .ttd-equip-slot.ttd-pressed {
   transition: transform 60ms ease-out, border-color 110ms ease, background 110ms ease;
 }
-.ttd-modal-close:active, .ttd-modal-close.ttd-pressed { transform: scale(0.78); }
-.ttd-shop-item:active, .ttd-shop-item.ttd-pressed { transform: scale(0.88); }
-.ttd-slot-filled:active, .ttd-slot-filled.ttd-pressed { transform: scale(0.82); }
+.ttd-modal-close:active, .ttd-modal-close.ttd-pressed { transform: scale(0.94); }
+.ttd-shop-item:active, .ttd-shop-item.ttd-pressed { transform: scale(0.97); }
+.ttd-slot-filled:active, .ttd-slot-filled.ttd-pressed { transform: scale(0.96); }
 .ttd-gacha-btn-hit:active, .ttd-index-arrow:active, .ttd-map-card:active, .ttd-equip-slot:active,
 .ttd-gacha-btn-hit.ttd-pressed, .ttd-index-arrow.ttd-pressed, .ttd-map-card.ttd-pressed, .ttd-equip-slot.ttd-pressed {
-  transform: scale(0.83);
+  transform: scale(0.96);
 }
 
 /* .ttd-pop plays on release (added/removed from JS in main.js right as
-   .ttd-pressed comes off) — an explicit multi-step overshoot-then-settle
-   instead of leaning on a transition's single easing curve, which read
-   as too subtle to call "satisfying". Takes over from any transition
-   already in flight since a running animation wins that tug-of-war. */
+   .ttd-pressed comes off) — a barely-there overshoot-then-settle, just
+   enough to read as a tiny detail rather than a showy bounce. Takes over
+   from any transition already in flight since a running animation wins
+   that tug-of-war. */
 @keyframes ttd-btn-pop {
-  0% { transform: scale(0.85); }
-  45% { transform: scale(1.22); }
-  68% { transform: scale(0.93); }
-  86% { transform: scale(1.06); }
+  0% { transform: scale(0.97); }
+  45% { transform: scale(1.025); }
+  68% { transform: scale(0.99); }
+  86% { transform: scale(1.008); }
   100% { transform: scale(1); }
 }
-.ttd-pop { animation: ttd-btn-pop 380ms cubic-bezier(0.22, 1, 0.36, 1); }
+.ttd-pop { animation: ttd-btn-pop 320ms cubic-bezier(0.22, 1, 0.36, 1); }
 
 /* ---------- Screen/modal entrance animations ---------- */
 @keyframes ttd-scene-in {
