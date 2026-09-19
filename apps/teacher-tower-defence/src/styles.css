@@ -75,7 +75,7 @@ html, body {
   transition: transform 240ms var(--bounce-ease), border-color 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
 }
 .btn:hover:not(:disabled) { border-color: var(--mint); transform: translateY(-1px); }
-.btn:active:not(:disabled), .btn.ttd-pressed:not(:disabled) { transition: transform 70ms ease-out, border-color 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease; transform: scale(0.88); }
+.btn:active:not(:disabled), .btn.ttd-pressed:not(:disabled) { transition: transform 60ms ease-out, border-color 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease; transform: scale(0.82); }
 .btn:disabled { opacity: 0.4; cursor: default; }
 .btn-primary {
   background: linear-gradient(165deg, #ffe0a0, #c9922a);
@@ -255,9 +255,9 @@ html, body {
    tint (matching the game's own palette, not a flat white flash) makes
    the shrink-then-bounce actually visible without covering the art. */
 .ttd-title-scene-play:active, .ttd-title-scene-play.ttd-pressed {
-  transition: transform 70ms ease-out, background 70ms ease-out;
-  transform: scale(0.93);
-  background: rgba(255, 214, 112, 0.3);
+  transition: transform 60ms ease-out, background 60ms ease-out;
+  transform: scale(0.85);
+  background: rgba(255, 214, 112, 0.42);
 }
 /* ---------- Credits screen — a cinematic Star-Wars-style crawl ---------- */
 .ttd-credits-screen {
@@ -595,9 +595,9 @@ html, body {
   transition: transform 240ms var(--bounce-ease), background 150ms ease;
 }
 .ttd-menu-scene-btn:active, .ttd-menu-scene-btn.ttd-pressed {
-  transition: transform 70ms ease-out, background 70ms ease-out;
-  transform: scale(0.93);
-  background: rgba(255, 214, 112, 0.3);
+  transition: transform 60ms ease-out, background 60ms ease-out;
+  transform: scale(0.85);
+  background: rgba(255, 214, 112, 0.42);
 }
 .ttd-scene-btn-disabled {
   background: rgba(0, 0, 0, 0.45);
@@ -1029,7 +1029,7 @@ html, body {
    mobile browsers, so every rule below fires off both so the bounce
    actually shows up on a real phone, not just a mouse. */
 button { transition: transform 240ms var(--bounce-ease); }
-button:active:not(:disabled), button.ttd-pressed:not(:disabled) { transition: transform 70ms ease-out; transform: scale(0.94); }
+button:active:not(:disabled), button.ttd-pressed:not(:disabled) { transition: transform 60ms ease-out; transform: scale(0.85); }
 .ttd-shop-item, .ttd-slot-filled, .ttd-gacha-btn-hit, .ttd-index-arrow,
 .ttd-map-card, .ttd-modal-close, .ttd-equip-slot {
   transition: transform 240ms var(--bounce-ease), border-color 110ms ease, background 110ms ease;
@@ -1038,15 +1038,29 @@ button:active:not(:disabled), button.ttd-pressed:not(:disabled) { transition: tr
 .ttd-index-arrow:active, .ttd-map-card:active, .ttd-modal-close:active, .ttd-equip-slot:active,
 .ttd-shop-item.ttd-pressed, .ttd-slot-filled.ttd-pressed, .ttd-gacha-btn-hit.ttd-pressed,
 .ttd-index-arrow.ttd-pressed, .ttd-map-card.ttd-pressed, .ttd-modal-close.ttd-pressed, .ttd-equip-slot.ttd-pressed {
-  transition: transform 70ms ease-out, border-color 110ms ease, background 110ms ease;
+  transition: transform 60ms ease-out, border-color 110ms ease, background 110ms ease;
 }
-.ttd-modal-close:active, .ttd-modal-close.ttd-pressed { transform: scale(0.82); }
-.ttd-shop-item:active, .ttd-shop-item.ttd-pressed { transform: scale(0.95); }
-.ttd-slot-filled:active, .ttd-slot-filled.ttd-pressed { transform: scale(0.9); }
+.ttd-modal-close:active, .ttd-modal-close.ttd-pressed { transform: scale(0.78); }
+.ttd-shop-item:active, .ttd-shop-item.ttd-pressed { transform: scale(0.88); }
+.ttd-slot-filled:active, .ttd-slot-filled.ttd-pressed { transform: scale(0.82); }
 .ttd-gacha-btn-hit:active, .ttd-index-arrow:active, .ttd-map-card:active, .ttd-equip-slot:active,
 .ttd-gacha-btn-hit.ttd-pressed, .ttd-index-arrow.ttd-pressed, .ttd-map-card.ttd-pressed, .ttd-equip-slot.ttd-pressed {
-  transform: scale(0.9);
+  transform: scale(0.83);
 }
+
+/* .ttd-pop plays on release (added/removed from JS in main.js right as
+   .ttd-pressed comes off) — an explicit multi-step overshoot-then-settle
+   instead of leaning on a transition's single easing curve, which read
+   as too subtle to call "satisfying". Takes over from any transition
+   already in flight since a running animation wins that tug-of-war. */
+@keyframes ttd-btn-pop {
+  0% { transform: scale(0.85); }
+  45% { transform: scale(1.22); }
+  68% { transform: scale(0.93); }
+  86% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+.ttd-pop { animation: ttd-btn-pop 380ms cubic-bezier(0.22, 1, 0.36, 1); }
 
 /* ---------- Screen/modal entrance animations ---------- */
 @keyframes ttd-scene-in {

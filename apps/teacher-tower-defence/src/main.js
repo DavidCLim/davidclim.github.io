@@ -56,7 +56,16 @@ document.addEventListener('pointerdown', (e) => {
   if (btn) btn.classList.add('ttd-pressed');
 }, { capture: true });
 function clearPressed() {
-  document.querySelectorAll('.ttd-pressed').forEach((b) => b.classList.remove('ttd-pressed'));
+  // Releasing hands off to a real multi-step @keyframes bounce
+  // (.ttd-pop, see styles.css) instead of just letting the transition
+  // spring back to scale(1) — a single easing curve read as too subtle;
+  // an explicit overshoot-then-settle wobble is what actually sells
+  // "satisfying".
+  document.querySelectorAll('.ttd-pressed').forEach((b) => {
+    b.classList.remove('ttd-pressed');
+    b.classList.add('ttd-pop');
+    b.addEventListener('animationend', () => b.classList.remove('ttd-pop'), { once: true });
+  });
 }
 document.addEventListener('pointerup', clearPressed, { capture: true });
 document.addEventListener('pointercancel', clearPressed, { capture: true });

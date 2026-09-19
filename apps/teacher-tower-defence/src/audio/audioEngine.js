@@ -78,9 +78,14 @@ function noiseBurst(duration, { filterType = 'bandpass', freq = 900, q = 0.7, ga
 }
 
 // ---------- SFX ----------
+// A punchy little "pop" instead of a single quiet blip — a bright
+// upward-sweeping transient for the attack, plus a low thump underneath
+// for body, so a tap actually feels like it landed on something instead
+// of just ticking.
 export function playClick() {
   if (!ctx) return;
-  tone(700, 0.05, { type: 'triangle', gain: 0.1 });
+  tone(920, 0.08, { type: 'square', gain: 0.16, sweepTo: 1400, sweepTime: 0.05, attack: 0.002, decay: 0.09 });
+  tone(200, 0.07, { type: 'sine', gain: 0.14, attack: 0.001, decay: 0.08 });
 }
 
 export function playPlaceTower() {
