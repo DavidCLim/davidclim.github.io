@@ -211,28 +211,30 @@ html, body {
 }
 
 /* ---------- Title screen ---------- */
-/* The player's own finished home-screen art (logo, Play button, and
-   scene all baked into one picture) IS the whole home screen — a
+/* The player's own finished home-screen footage (logo, Play button, and
+   scene all baked into one looping video) IS the whole home screen — a
    full-bleed background rather than a picture boxed into a card. */
 .ttd-title-screen {
   position: absolute;
   inset: 0;
   z-index: 40;
   overflow: hidden;
-  background: url('../assets/title_screen_bg.jpg') 50% 50% / cover no-repeat;
-  animation: ttd-scene-in 420ms ease-out, ttd-title-bg-drift 40s ease-in-out infinite;
+  background: #100a04;
+  animation: ttd-scene-in 420ms ease-out;
 }
-/* A slow side-to-side drift on the background-position instead of a
-   static frame — cheap, no extra art, but it's what makes the clouds
-   and courtyard actually read as a living scene instead of a photo. */
-@keyframes ttd-title-bg-drift {
-  0%, 100% { background-position: 47% 48%; }
-  50% { background-position: 53% 52%; }
+.ttd-title-screen-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
 }
 /* Sized and positioned in JS (see positionTitlePlayButton in main.js) —
-   background-size:cover crops a different amount of the source image
+   object-fit:cover crops a different amount of the source video
    depending on the viewport's own aspect ratio, so a static CSS percent
-   can't track the picture's own drawn Play button the way it could for
+   can't track the footage's own drawn Play button the way it could for
    a plain width:100% image. */
 /* This used to be a fully transparent hit-region over the background
    picture with its own press animation; that read as broken no matter
@@ -1007,8 +1009,6 @@ html, body {
   from { opacity: 0; transform: scale(0.97); }
   to { opacity: 1; transform: scale(1); }
 }
-/* .ttd-title-screen's entrance + cloud-drift animation is combined
-   directly on its main rule above, since it needs both. */
 .ttd-menu-scene { animation: ttd-scene-in 380ms ease-out; }
 
 @keyframes ttd-modal-backdrop-in {

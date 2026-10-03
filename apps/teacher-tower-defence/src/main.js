@@ -736,19 +736,40 @@ function renderDungeonModal() {
 // into a card. Credits is dropped for now per that filename's own
 // instruction; showCredits/the credits screen itself are left in place
 // in case it comes back.
+// A looping ambient video replaces the old static image + CSS
+// background-position drift — same scene, same baked-in Play button
+// position, just genuinely animated (drifting clouds, a leaf) instead
+// of faked with a slow pan. Muted/loop/playsinline are set both as
+// attributes (so a plain re-render still autoplays) and as properties
+// right after creation, since Safari in particular only honors autoplay
+// reliably when `.muted` is true as a property, not just an attribute.
+const titleScreenVideo = el('video', {
+  class: 'ttd-title-screen-video',
+  src: 'assets/title_screen_bg.mp4',
+  poster: 'assets/title_screen_bg.jpg',
+  autoplay: true,
+  loop: true,
+  muted: true,
+  playsinline: true,
+});
+titleScreenVideo.muted = true;
+titleScreenVideo.playsInline = true;
+titleScreenVideo.play?.().catch(() => {});
+
 const titleScenePlayBtn = el('button', { class: 'ttd-title-scene-play', text: 'PLAY', onClick: enterMenu });
 const titleScreen = el('div', { class: 'ttd-title-screen' }, [
+  titleScreenVideo,
   titleScenePlayBtn,
 ]);
 root.appendChild(titleScreen);
 
-// The background is `background-size: cover`, so how much of the source
-// image's sides get cropped depends on the viewport's own aspect ratio —
+// The background is `object-fit: cover` on the video, so how much of
+// the source gets cropped depends on the viewport's own aspect ratio —
 // a static CSS percentage can't track that the way it could for a plain
 // width:100% image, so the invisible Play hit-region is positioned here
 // in JS using the same cover math, recomputed on resize. Coordinates are
-// fractions of the source art's natural size (2258x1261), measured
-// directly off its drawn Play button.
+// fractions of the source video's natural size (1280x720), measured
+// directly off its baked-in Play button.
 // Shared by every full-bleed "picture is the screen" layout (title,
 // menu): background-size:cover crops a different amount of the source
 // image depending on the viewport's own aspect ratio, so overlaid real
@@ -777,7 +798,7 @@ function positionSceneOverlays(container, natural, mappings) {
 }
 
 const TITLE_PLAY_BBOX = { x0: 0.3483, y0: 0.5769, x1: 0.7004, y1: 0.6746 };
-const TITLE_IMG_NATURAL = { w: 2258, h: 1261 };
+const TITLE_IMG_NATURAL = { w: 1280, h: 720 };
 function positionTitlePlayButton() {
   positionSceneOverlays(titleScreen, TITLE_IMG_NATURAL, [{ el: titleScenePlayBtn, bbox: TITLE_PLAY_BBOX }]);
 }
