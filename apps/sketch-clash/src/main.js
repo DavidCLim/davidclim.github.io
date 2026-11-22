@@ -1,6 +1,6 @@
-import { TEAMS, TAU, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES } from './config.js?v=6';
-import { World } from './world.js?v=6';
-import { buildSprites, drawLayer, paintSoldierIcon, stampHelmet } from './sprites.js?v=6';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=7';
+import { World } from './world.js?v=7';
+import { buildSprites, drawLayer, paintIcon, stampHelmet, stampHat } from './sprites.js?v=7';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -34,9 +34,18 @@ let erasing = false;
 let over = false;
 const ptr = { x: 0, y: 0, inside: false, down: false };
 
-world.onDeath = (u) => stampHelmet(gctx, u.x, u.y + FEET - 4);
+world.onDeath = (u) => (u.species === 'sniper' ? stampHat : stampHelmet)(gctx, u.x, u.y + FEET - 4);
 
-paintSoldierIcon($('soldier-icon'), sprites);
+// The palette icons are the same art as on the field.
+let species = 'soldier';
+const unitButtons = [...document.querySelectorAll('.unit-btn')];
+for (const b of unitButtons) {
+  paintIcon(b.querySelector('canvas'), sprites, b.dataset.species);
+  b.addEventListener('click', () => {
+    species = b.dataset.species;
+    for (const o of unitButtons) o.setAttribute('aria-pressed', String(o === b));
+  });
+}
 
 // ---------- Layout ----------
 function resize() {
@@ -89,7 +98,7 @@ function dab(x, y) {
     let px = Math.min(W - 20, Math.max(20, x + Math.cos(a) * r));
     const py = Math.min(H - 30, Math.max(30, y + Math.sin(a) * r));
     if (team) px = team === 'red' ? Math.min(px, half - 14) : Math.max(px, half + 14);
-    world.addSoldier(team, px, py);
+    world.addUnit(species, team, px, py);
   }
 }
 
@@ -280,7 +289,7 @@ startBtn.addEventListener('click', () => {
 // Bottom-left legend: how many of each unit are on the field.
 const legendRows = new Map();
 function syncLegend() {
-  const present = Object.entries(world.speciesCounts).filter(([, n]) => n > 0);
+  const present = SPECIES_ORDER.filter((id) => world.speciesCounts[id] > 0).map((id) => [id, world.speciesCounts[id]]);
   legend.hidden = present.length === 0;
   for (const [id, n] of present) {
     let row = legendRows.get(id);
@@ -288,7 +297,7 @@ function syncLegend() {
       const icon = document.createElement('canvas');
       icon.width = 104;
       icon.height = 76;
-      paintSoldierIcon(icon, sprites);
+      paintIcon(icon, sprites, id);
       const count = document.createElement('b');
       const label = document.createElement('span');
       label.textContent = SPECIES[id].label;
@@ -356,6 +365,159 @@ function drawBrushRing() {
 
 const GHOST_LIFE = 1.7;
 
+function smooth(a, b, x) {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+}
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+// Scratch marks appear as a unit gets hurt.
+function drawHurt(u) {
+  if (u.hp >= 65) return;
+  drawLayer(ctx, sprites.hurt[u.hp < 30 ? 1 : 0]);
+}
+
+function drawSoldier(u) {
+  const S = sprites.soldier;
+  const f = u.facing;
+  const ph = (u.anim * Math.PI) / 2;
+  const wobble = u.hit > 0 ? (Math.random() - 0.5) * 2 : 0;
+
+  ctx.setTransform(f * dpr, 0, 0, dpr, (u.x + wobble) * dpr, u.y * dpr);
+  drawLayer(ctx, S.feet[u.moving ? (u.anim | 0) & 3 : 0]);
+
+  const pose = u.pose;
+  if (u.moving) {
+    ctx.translate(0, -Math.abs(Math.sin(ph)) * 2.4);
+    ctx.rotate(Math.sin(ph) * 0.07);
+  } else if (pose < 1) {
+    ctx.translate(0, Math.sin(u.breath * 2.2) * 0.55 * (1 - pose));
+  }
+  drawLayer(ctx, pose < 0.5 ? S.torsoFront[u.gaze] : S.torso);
+  drawHurt(u);
+
+  // Standing around the rifle is held upright at the side; it swings
+  // down to aim as the soldier readies up.
+  ctx.translate(
+    IDLE_PIVOT.x + (PIVOT.x - IDLE_PIVOT.x) * pose,
+    IDLE_PIVOT.y + (PIVOT.y - IDLE_PIVOT.y) * pose,
+  );
+  ctx.rotate(IDLE_AIM + (u.aim - IDLE_AIM) * pose + Math.sin(u.breath * 1.6) * 0.03 * (1 - pose));
+  drawLayer(ctx, u.flash > 0 ? S.rifleFire : S.rifle);
+}
+
+// The sniper's own idle routine (see SNIPER_IDLES in world.js): rifle
+// planted like a walking stick, slow scans, a hat tip, blinks, and a peek
+// through the scope.
+function sniperIdle(u) {
+  const p = Math.min(1, u.idleT / u.idleDur);
+  const bell = Math.sin(Math.PI * p);
+  const out = { look: 1, blink: (u.breath % 4.3) < 0.13, tip: 0, lift: 0 };
+  switch (u.idleKind) {
+    case 'scan': {
+      const s = Math.sin(p * TAU);
+      out.look = s < -0.35 ? 0 : s > 0.35 ? 2 : 1;
+      break;
+    }
+    case 'tip':
+      out.tip = bell * 0.4;
+      break;
+    case 'scope':
+      out.lift = Math.min(1, bell * 1.7);
+      break;
+    case 'blink':
+      out.blink = p > 0.15 && p < 0.5;
+      break;
+    default:
+  }
+  return out;
+}
+
+const CANE = { x: 25 * K, y: 18 * K }; // rifle planted on the ground at his side
+const PEEK = { x: 6 * K, y: 2 * K }; // rifle up at his eye
+const LENS = { x: 25.6 * K, y: -7.9 * K }; // scope lens, in rifle space
+
+function drawSniper(u) {
+  const S = sprites.sniper;
+  const d = u.def;
+  const f = u.facing;
+  const ph = (u.anim * Math.PI) / 2;
+  const wobble = u.hit > 0 ? (Math.random() - 0.5) * 2 : 0;
+  const pr = u.prone;
+  const standA = 1 - smooth(0.3, 0.55, pr);
+  const proneA = smooth(0.4, 0.6, pr);
+
+  if (standA > 0.01) {
+    ctx.globalAlpha = standA;
+    ctx.setTransform(f * dpr, 0, 0, dpr, (u.x + wobble) * dpr, u.y * dpr);
+    drawLayer(ctx, S.feet[u.moving ? (u.anim | 0) & 3 : 0]);
+
+    const pose = u.pose;
+    const idle = pose < 1 ? sniperIdle(u) : null;
+    if (pr > 0) {
+      // dropping to the ground: lean over and squash down onto the feet
+      const drop = Math.min(1, pr / 0.5);
+      ctx.translate(0, FEET);
+      ctx.rotate(0.5 * drop);
+      ctx.scale(1, 1 - 0.45 * drop);
+      ctx.translate(0, -FEET);
+    } else if (u.moving) {
+      ctx.translate(0, -Math.abs(Math.sin(ph)) * 2.4);
+      ctx.rotate(Math.sin(ph) * 0.07);
+    } else if (pose < 1) {
+      ctx.translate(0, Math.sin(u.breath * 1.7) * 0.5 * (1 - pose));
+    }
+    if (pose < 0.5) drawLayer(ctx, S.torsoFront[idle.blink ? 3 : idle.look]);
+    else drawLayer(ctx, S.torso);
+    drawHurt(u);
+
+    ctx.save();
+    ctx.translate(0, -12.7 * K);
+    if (idle) ctx.rotate(idle.tip * (1 - pose));
+    drawLayer(ctx, S.hat);
+    ctx.restore();
+
+    const lift = idle ? idle.lift : 0;
+    const ix = lerp(CANE.x, PEEK.x, lift);
+    const iy = lerp(CANE.y, PEEK.y, lift);
+    const ia = lerp(-1.5, -0.08, lift) + Math.sin(u.breath * 1.4) * 0.025;
+    ctx.translate(lerp(ix, d.pivot.x, pose), lerp(iy, d.pivot.y, pose));
+    ctx.rotate(lerp(ia, u.aim, pose));
+    drawLayer(ctx, u.flash > 0 ? S.rifleFire : S.rifle);
+    if (idle && lift > 0.85 && pose < 0.3) {
+      // sun glint off the scope
+      ctx.globalAlpha = standA * ((lift - 0.85) / 0.15);
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(LENS.x, LENS.y - 4.5);
+      ctx.lineTo(LENS.x + 1.2, LENS.y - 1.2);
+      ctx.lineTo(LENS.x + 4.5, LENS.y);
+      ctx.lineTo(LENS.x + 1.2, LENS.y + 1.2);
+      ctx.lineTo(LENS.x, LENS.y + 4.5);
+      ctx.lineTo(LENS.x - 1.2, LENS.y + 1.2);
+      ctx.lineTo(LENS.x - 4.5, LENS.y);
+      ctx.lineTo(LENS.x - 1.2, LENS.y - 1.2);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  if (proneA > 0.01) {
+    // lying on his belly, the whole body pointed at the target
+    ctx.globalAlpha = proneA;
+    ctx.setTransform(f * dpr, 0, 0, dpr, (u.x + wobble) * dpr, u.y * dpr);
+    ctx.translate(0, d.prone.cy);
+    ctx.rotate(u.aim);
+    const settle = 0.88 + 0.12 * smooth(0.5, 1, pr);
+    ctx.scale(settle, settle);
+    ctx.translate(-u.recoil * 2.2, 0);
+    drawLayer(ctx, u.flash > 0 ? S.proneFire : S.prone);
+  }
+  ctx.globalAlpha = 1;
+}
+
 function render() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, W, H);
@@ -367,34 +529,36 @@ function render() {
       ctx.setTransform(dpr, 0, 0, dpr, u.x * dpr, (u.y + FEET + 1) * dpr);
       drawLayer(ctx, sprites.ring[u.team]);
     }
-    const f = u.facing;
-    const ph = (u.anim * Math.PI) / 2;
-    const wobble = u.hit > 0 ? (Math.random() - 0.5) * 2 : 0;
-
-    ctx.setTransform(f * dpr, 0, 0, dpr, (u.x + wobble) * dpr, u.y * dpr);
-    drawLayer(ctx, sprites.feet[u.moving ? (u.anim | 0) & 3 : 0]);
-
-    const pose = u.pose;
-    if (u.moving) {
-      ctx.translate(0, -Math.abs(Math.sin(ph)) * 2.4);
-      ctx.rotate(Math.sin(ph) * 0.07);
-    } else if (pose < 1) {
-      ctx.translate(0, Math.sin(u.breath * 2.2) * 0.55 * (1 - pose));
-    }
-    drawLayer(ctx, pose < 0.5 ? sprites.torsoFront[u.gaze] : sprites.torso);
-
-    // Standing around the rifle is held upright at the side; it swings
-    // down to aim as the soldier readies up.
-    ctx.translate(
-      IDLE_PIVOT.x + (PIVOT.x - IDLE_PIVOT.x) * pose,
-      IDLE_PIVOT.y + (PIVOT.y - IDLE_PIVOT.y) * pose,
-    );
-    ctx.rotate(IDLE_AIM + (u.aim - IDLE_AIM) * pose + Math.sin(u.breath * 1.6) * 0.03 * (1 - pose));
-    drawLayer(ctx, u.flash > 0 ? sprites.rifleFire : sprites.rifle);
+    if (u.species === 'sniper') drawSniper(u);
+    else drawSoldier(u);
   }
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.lineCap = 'round';
+
+  // red laser sights on whatever a lying-down sniper is lining up
+  ctx.lineWidth = 1.2;
+  ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
+  ctx.beginPath();
+  for (const u of units) {
+    if (!u.laser || !u.target || u.target.dead) continue;
+    const m = world.muzzleOf(u);
+    const t = u.target;
+    const dx = t.x - m.x;
+    const dy = t.y - m.y;
+    const len = Math.hypot(dx, dy) || 1;
+    ctx.moveTo(m.x, m.y);
+    ctx.lineTo(t.x + (dx / len) * 70, t.y + (dy / len) * 70);
+  }
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(239, 68, 68, 0.85)';
+  for (const u of units) {
+    if (!u.laser || !u.target || u.target.dead) continue;
+    ctx.beginPath();
+    ctx.arc(u.target.x, u.target.y, 2.2, 0, TAU);
+    ctx.fill();
+  }
+
   ctx.lineWidth = 1.8;
   ctx.strokeStyle = '#3a3a44';
   ctx.beginPath();
@@ -404,6 +568,35 @@ function render() {
   }
   ctx.stroke();
 
+  // sniper shots leave a long streak that fades
+  for (const sk of world.streaks) {
+    const a = 1 - sk.age / sk.life;
+    ctx.strokeStyle = `rgba(88, 92, 104, ${0.75 * a})`;
+    ctx.lineWidth = 0.7 + 2 * a;
+    ctx.beginPath();
+    ctx.moveTo(sk.x0, sk.y0);
+    ctx.lineTo(sk.x1, sk.y1);
+    ctx.stroke();
+  }
+
+  for (const p of world.puffs) {
+    const t = p.age / p.life;
+    ctx.fillStyle = `rgba(165, 167, 176, ${0.45 * (1 - t)})`;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * (1 + 1.8 * t), 0, TAU);
+    ctx.fill();
+  }
+
+  for (const c of world.casings) {
+    ctx.setTransform(dpr, 0, 0, dpr, c.x * dpr, c.y * dpr);
+    ctx.rotate(c.rot);
+    ctx.globalAlpha = 1 - c.age / c.life;
+    ctx.fillStyle = '#6b5a2a';
+    ctx.fillRect(-1.6, -0.7, 3.2, 1.4);
+  }
+  ctx.globalAlpha = 1;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
   ctx.fillStyle = '#23262f';
   for (const s of world.sparks) {
     ctx.globalAlpha = Math.max(0, s.life / s.max);
@@ -412,26 +605,15 @@ function render() {
     ctx.fill();
   }
 
-  // Ghosts drift up and fade where a soldier fell.
-  const gl = sprites.ghost;
+  // Ghosts drift up and fade where a unit fell (a sniper's keeps his hat).
   for (const g of world.ghosts) {
+    const gl = sprites[g.species].ghost;
     const t = g.age / GHOST_LIFE;
     ctx.globalAlpha = (1 - t) * 0.9;
     const sway = Math.sin(g.age * 4 + g.seed * 6) * 3;
     ctx.drawImage(gl.canvas, g.x + gl.x + sway, g.y + gl.y - (4 + t * 36) * UNIT, gl.w, gl.h);
   }
   ctx.globalAlpha = 1;
-
-  for (const u of units) {
-    if (u.hp >= 100) continue;
-    const bw = 15;
-    const bx = u.x - bw / 2;
-    const by = u.y - 21;
-    ctx.fillStyle = 'rgba(35, 38, 47, 0.25)';
-    ctx.fillRect(bx, by, bw, 3);
-    ctx.fillStyle = u.hp > 40 ? '#4caf50' : '#e5484d';
-    ctx.fillRect(bx, by, (bw * Math.max(0, u.hp)) / 100, 3);
-  }
 
   drawBrushRing();
 }
