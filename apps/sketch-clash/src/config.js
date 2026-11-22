@@ -2,7 +2,7 @@ export const TAU = Math.PI * 2;
 
 // The soldier is drawn from "art" coordinates (a 92x82 reference sprite,
 // origin at the body centre) and scaled to the board by K.
-export const K = 0.52;
+export const K = 0.56;
 // Sizes below were tuned at K = 0.62; UNIT rescales them with the sprite.
 export const UNIT = K / 0.62;
 export const PIVOT = { x: 7 * K, y: 12 * K }; // where the rifle swings from, facing right

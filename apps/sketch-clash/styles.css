@@ -190,13 +190,13 @@ canvas {
   width: var(--dot, 10px);
   height: var(--dot, 10px);
   border-radius: 50%;
-  background: #cbd7f6;
-  border: 1.5px solid #6f8fdc;
+  background: #e3e5ec;
+  border: 1.5px solid #8b8e9a;
 }
 .brush-box input {
   width: 110px;
   margin: 0;
-  accent-color: var(--accent);
+  accent-color: #6b6e7a;
   cursor: pointer;
 }
 

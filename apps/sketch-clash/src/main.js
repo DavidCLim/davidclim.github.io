@@ -1,6 +1,6 @@
-import { TEAMS, TAU, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES } from './config.js?v=5';
-import { World } from './world.js?v=5';
-import { buildSprites, drawLayer, paintSoldierIcon, stampHelmet } from './sprites.js?v=5';
+import { TEAMS, TAU, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES } from './config.js?v=6';
+import { World } from './world.js?v=6';
+import { buildSprites, drawLayer, paintSoldierIcon, stampHelmet } from './sprites.js?v=6';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');

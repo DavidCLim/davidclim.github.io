@@ -1,4 +1,4 @@
-import { SOLDIER, PIVOT, MUZZLE_LEN, GAZE_WEIGHTS } from './config.js?v=5';
+import { SOLDIER, PIVOT, MUZZLE_LEN, GAZE_WEIGHTS } from './config.js?v=6';
 
 export const CELL = 32;
 const SEP_CELL = 20;

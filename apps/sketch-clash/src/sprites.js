@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, UNIT, PIVOT } from './config.js?v=5';
+import { TEAMS, TAU, K, UNIT, PIVOT } from './config.js?v=6';
 
 // The soldier is drawn from "art" coordinates matching the reference
 // sprite (origin at the body centre, y down) into small offscreen layers,
