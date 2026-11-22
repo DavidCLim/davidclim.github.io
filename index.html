@@ -25,7 +25,23 @@
       </section>
 
       <section class="apps" aria-labelledby="apps-title">
-        <h2 id="apps-title">Apps</h2>
+        <h2 id="apps-title" class="visually-hidden">Apps</h2>
+        <div class="era-tabs" role="tablist" aria-label="Game era">
+          <button type="button" class="era-tab is-active" role="tab" id="tab-modern" aria-selected="true" aria-controls="panel-modern" data-era="modern">Modern</button>
+          <button type="button" class="era-tab" role="tab" id="tab-legacy" aria-selected="false" aria-controls="panel-legacy" tabindex="-1" data-era="legacy">Legacy</button>
+        </div>
+
+        <div class="era-panel" role="tabpanel" id="panel-modern" aria-labelledby="tab-modern">
+          <div class="app-list">
+            <article class="app-card sketch-clash-card">
+              <span class="coming-soon-badge">Coming soon</span>
+              <h3>Sketch Clash</h3>
+              <p>Something new is on the drawing board. Check back soon.</p>
+            </article>
+          </div>
+        </div>
+
+        <div class="era-panel" role="tabpanel" id="panel-legacy" aria-labelledby="tab-legacy" hidden>
         <div class="app-list">
           <article class="app-card uno-card" data-theme-target="uno">
             <h3>UNO Web Game</h3>
@@ -53,7 +69,9 @@
             <a class="app-link" href="apps/teacher-tower-defence/">Launch game</a>
           </article>
         </div>
+        </div>
       </section>
     </main>
+    <script src="assets/home.js"></script>
   </body>
 </html>
