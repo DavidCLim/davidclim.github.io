@@ -1,10 +1,10 @@
-import { SOLDIER, OTHER } from './config.js';
-
+import { SOLDIER } from './config.js?v=2';
 
 export const CELL = 32;
-const SEP_CELL = 16;
+const SEP_CELL = 20;
 const SEP_DIST = SOLDIER.radius * 2;
 const HIT_R2 = (SOLDIER.radius + 1) * (SOLDIER.radius + 1);
+const MUZZLE = { x: 22, y: 4 };
 
 function segDist2(ax, ay, bx, by, px, py) {
   const abx = bx - ax;
@@ -17,17 +17,25 @@ function segDist2(ax, ay, bx, by, px, py) {
   return dx * dx + dy * dy;
 }
 
-// Unit positions are the soldier's body centre; sprites are drawn with
-// their feet 14px below it.
+// Every unit belongs to a "side" and only ever fights other sides. In
+// free-for-all a side is a species, so a lone species has nobody to fight
+// and just stands there; once there are several species they fight each
+// other. In team battle a side is a team (red / blue) and units stay idle
+// until the battle is started.
+//
+// Unit positions are the body centre; sprites are drawn with their feet
+// FEET pixels below it.
 export class World {
   constructor() {
     this.units = [];
     this.bullets = [];
     this.sparks = [];
-    this.mode = 'free'; // 'free': units are live on spawn. 'team': idle until started.
+    this.mode = 'free'; // 'free' | 'team'
     this.started = false;
-    this.counts = { red: 0, blue: 0 };
-    this.centroids = { red: null, blue: null };
+    this.grids = new Map(); // side -> targeting grid
+    this.enemyGrids = new Map(); // side -> grids of every other occupied side
+    this.counts = {};
+    this.centroids = new Map();
     this.centroidT = 0;
     this.anyDead = false;
     this.nextId = 1;
@@ -35,13 +43,16 @@ export class World {
     this.resize(800, 600);
   }
 
+  makeCells() {
+    return Array.from({ length: this.cols * this.rows }, () => []);
+  }
+
   resize(w, h) {
     this.w = w;
     this.h = h;
     this.cols = Math.ceil(w / CELL) + 1;
     this.rows = Math.ceil(h / CELL) + 1;
-    const make = () => Array.from({ length: this.cols * this.rows }, () => []);
-    this.grids = { red: make(), blue: make() };
+    for (const side of this.grids.keys()) this.grids.set(side, this.makeCells());
     this.sepCols = Math.ceil(w / SEP_CELL) + 1;
     this.sepRows = Math.ceil(h / SEP_CELL) + 1;
     this.sepHead = new Int32Array(this.sepCols * this.sepRows);
@@ -52,14 +63,19 @@ export class World {
     return this.mode === 'free' || this.started;
   }
 
+  // `team` is only meaningful in team battle (null in free-for-all).
   addSoldier(team, x, y) {
+    const side = this.mode === 'team' ? team : 'soldier';
+    if (!this.grids.has(side)) this.grids.set(side, this.makeCells());
     this.units.push({
       id: this.nextId++,
-      team,
+      species: 'soldier',
+      team: this.mode === 'team' ? team : null,
+      side,
       x,
       y,
       hp: SOLDIER.hp,
-      facing: team === 'red' ? 1 : -1,
+      facing: team === 'red' ? 1 : team === 'blue' ? -1 : Math.random() < 0.5 ? 1 : -1,
       speedMul: 0.9 + Math.random() * 0.2,
       target: null,
       marchTarget: null,
@@ -80,10 +96,8 @@ export class World {
     this.bullets = [];
     this.sparks = [];
     this.started = false;
-    this.counts.red = 0;
-    this.counts.blue = 0;
-    this.centroids.red = null;
-    this.centroids.blue = null;
+    this.counts = {};
+    this.centroids.clear();
   }
 
   cellCol(x) {
@@ -97,38 +111,43 @@ export class World {
   }
 
   rebuild() {
-    for (const team of ['red', 'blue']) {
-      const cells = this.grids[team];
+    for (const cells of this.grids.values()) {
       for (let i = 0; i < cells.length; i++) cells[i].length = 0;
-      this.counts[team] = 0;
     }
+    this.counts = {};
     for (const u of this.units) {
       if (u.dead) continue;
-      this.grids[u.team][this.cellRow(u.y) * this.cols + this.cellCol(u.x)].push(u);
-      this.counts[u.team]++;
+      this.grids.get(u.side)[this.cellRow(u.y) * this.cols + this.cellCol(u.x)].push(u);
+      this.counts[u.side] = (this.counts[u.side] || 0) + 1;
+    }
+    this.enemyGrids.clear();
+    for (const side of this.grids.keys()) {
+      const others = [];
+      for (const [s, cells] of this.grids) if (s !== side && this.counts[s]) others.push(cells);
+      this.enemyGrids.set(side, others);
     }
   }
 
   computeCentroids() {
-    const sum = { red: { x: 0, y: 0, n: 0 }, blue: { x: 0, y: 0, n: 0 } };
+    const sum = new Map();
     for (const u of this.units) {
       if (u.dead) continue;
-      const s = sum[u.team];
+      let s = sum.get(u.side);
+      if (!s) sum.set(u.side, (s = { x: 0, y: 0, n: 0 }));
       s.x += u.x;
       s.y += u.y;
       s.n++;
     }
-    for (const team of ['red', 'blue']) {
-      const s = sum[team];
-      this.centroids[team] = s.n ? { x: s.x / s.n, y: s.y / s.n } : null;
-    }
+    this.centroids.clear();
+    for (const [side, s] of sum) this.centroids.set(side, { x: s.x / s.n, y: s.y / s.n });
   }
 
   findTarget(u) {
+    const enemy = this.enemyGrids.get(u.side);
+    if (!enemy || !enemy.length) return null;
     const ccx = this.cellCol(u.x);
     const ccy = this.cellRow(u.y);
     const maxRing = Math.ceil(SOLDIER.sight / CELL);
-    const enemyCells = this.grids[OTHER[u.team]];
     let best = null;
     let bestD2 = SOLDIER.sight * SOLDIER.sight;
     for (let r = 0; r <= maxRing; r++) {
@@ -142,16 +161,18 @@ export class World {
         const step = edgeRow ? 1 : (x1 - x0) || 1;
         for (let cx = x0; cx <= x1; cx += step) {
           if (cx < 0 || cx >= this.cols) continue;
-          const cell = enemyCells[cy * this.cols + cx];
-          for (let i = 0; i < cell.length; i++) {
-            const o = cell[i];
-            if (o.dead) continue;
-            const dx = o.x - u.x;
-            const dy = o.y - u.y;
-            const d2 = dx * dx + dy * dy;
-            if (d2 < bestD2) {
-              bestD2 = d2;
-              best = o;
+          for (let g = 0; g < enemy.length; g++) {
+            const cell = enemy[g][cy * this.cols + cx];
+            for (let i = 0; i < cell.length; i++) {
+              const o = cell[i];
+              if (o.dead) continue;
+              const dx = o.x - u.x;
+              const dy = o.y - u.y;
+              const d2 = dx * dx + dy * dy;
+              if (d2 < bestD2) {
+                bestD2 = d2;
+                best = o;
+              }
             }
           }
         }
@@ -165,7 +186,7 @@ export class World {
     let best = null;
     let bestD2 = Infinity;
     for (const o of this.units) {
-      if (o.team === u.team || o.dead) continue;
+      if (o.side === u.side || o.dead) continue;
       const dx = o.x - u.x;
       const dy = o.y - u.y;
       const d2 = dx * dx + dy * dy;
@@ -177,28 +198,37 @@ export class World {
     return best;
   }
 
-  // Nothing in sight: head for the enemy army's middle, then for a
-  // specific straggler once close to it.
+  // Nothing in sight: head for the middle of the nearest other side, then
+  // for a specific straggler once close to it.
   marchPoint(u) {
-    const c = this.centroids[OTHER[u.team]];
-    if (!c) return null;
-    const dx = c.x - u.x;
-    const dy = c.y - u.y;
-    if (dx * dx + dy * dy > 70 * 70) return c;
+    let best = null;
+    let bestD2 = Infinity;
+    for (const [side, c] of this.centroids) {
+      if (side === u.side) continue;
+      const dx = c.x - u.x;
+      const dy = c.y - u.y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < bestD2) {
+        bestD2 = d2;
+        best = c;
+      }
+    }
+    if (!best) return null;
+    if (bestD2 > 70 * 70) return best;
     if (!u.marchTarget || u.marchTarget.dead) u.marchTarget = this.nearestEnemy(u);
     return u.marchTarget;
   }
 
   fire(u, t) {
-    const mx = u.x + u.facing * 16;
-    const my = u.y - 6;
+    const mx = u.x + u.facing * MUZZLE.x;
+    const my = u.y + MUZZLE.y;
     const a = Math.atan2(t.y - my, t.x - mx) + (Math.random() - 0.5) * 2 * SOLDIER.spread;
     this.bullets.push({
       x: mx,
       y: my,
       vx: Math.cos(a) * SOLDIER.bulletSpeed,
       vy: Math.sin(a) * SOLDIER.bulletSpeed,
-      team: u.team,
+      side: u.side,
       dist: 0,
       dead: false,
     });
@@ -323,10 +353,10 @@ export class World {
         }
       }
     }
-    const maxX = this.w - 10;
-    const maxY = this.h - 20;
+    const maxX = this.w - 14;
+    const maxY = this.h - 24;
     for (const u of units) {
-      if (u.x < 10) u.x = 10;
+      if (u.x < 14) u.x = 14;
       else if (u.x > maxX) u.x = maxX;
       if (u.y < 24) u.y = 24;
       else if (u.y > maxY) u.y = maxY;
@@ -346,21 +376,24 @@ export class World {
         anyGone = true;
         continue;
       }
+      const enemy = this.enemyGrids.get(b.side);
+      if (!enemy || !enemy.length) continue;
       const cx = this.cellCol(b.x);
       const cy = this.cellRow(b.y);
-      const enemyCells = this.grids[OTHER[b.team]];
       let hit = null;
       for (let gy = cy - 1; gy <= cy + 1 && !hit; gy++) {
         if (gy < 0 || gy >= this.rows) continue;
         for (let gx = cx - 1; gx <= cx + 1 && !hit; gx++) {
           if (gx < 0 || gx >= this.cols) continue;
-          const cell = enemyCells[gy * this.cols + gx];
-          for (let i = 0; i < cell.length; i++) {
-            const u = cell[i];
-            if (u.dead) continue;
-            if (segDist2(px, py, b.x, b.y, u.x, u.y) <= HIT_R2) {
-              hit = u;
-              break;
+          for (let g = 0; g < enemy.length && !hit; g++) {
+            const cell = enemy[g][gy * this.cols + gx];
+            for (let i = 0; i < cell.length; i++) {
+              const u = cell[i];
+              if (u.dead) continue;
+              if (segDist2(px, py, b.x, b.y, u.x, u.y) <= HIT_R2) {
+                hit = u;
+                break;
+              }
             }
           }
         }

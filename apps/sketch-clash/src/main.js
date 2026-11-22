@@ -1,24 +1,26 @@
-import { TEAMS, TAU } from './config.js';
-import { World } from './world.js';
-import { buildSprites, stampCorpse, ANCHOR, BOX } from './sprites.js';
+import { TEAMS, TAU } from './config.js?v=2';
+import { World } from './world.js?v=2';
+import { buildSprites, stampCorpse, ANCHOR, BOX, SCALE, FEET } from './sprites.js?v=2';
 
-const wrap = document.getElementById('stage-wrap');
-const groundCanvas = document.getElementById('ground');
-const stageCanvas = document.getElementById('stage');
+const $ = (id) => document.getElementById(id);
+const wrap = $('stage-wrap');
+const groundCanvas = $('ground');
+const stageCanvas = $('stage');
 const gctx = groundCanvas.getContext('2d');
 const ctx = stageCanvas.getContext('2d');
-const hint = document.getElementById('hint');
-const banner = document.getElementById('banner');
-const midline = document.getElementById('midline');
-const toolbar = document.getElementById('toolbar');
-const teamGroup = document.getElementById('team-group');
-const countRed = document.getElementById('count-red');
-const countBlue = document.getElementById('count-blue');
-const brushInput = document.getElementById('brush');
-const startBtn = document.getElementById('start');
-const clearBtn = document.getElementById('clear');
-const modeButtons = [...document.querySelectorAll('[data-mode]')];
-const teamButtons = [...document.querySelectorAll('[data-team]')];
+const hint = $('hint');
+const banner = $('banner');
+const midline = $('midline');
+const countsBox = $('counts');
+const countRed = $('count-red');
+const countBlue = $('count-blue');
+const brushInput = $('brush');
+const brushBtn = $('brush-btn');
+const brushPop = $('brush-pop');
+const clearBtn = $('clear');
+const pauseBtn = $('pause');
+const teamToggle = $('team-toggle');
+const startBtn = $('start');
 
 const sprites = buildSprites();
 const world = new World();
@@ -27,11 +29,22 @@ let W = 1;
 let H = 1;
 let dpr = 1;
 let brush = Number(brushInput.value);
-let paintTeam = 'red';
+let paused = false;
 let over = false;
 const ptr = { x: 0, y: 0, inside: false, down: false };
 
-world.onDeath = (u) => stampCorpse(gctx, sprites, u.team, u.x, u.y);
+world.onDeath = (u) => stampCorpse(gctx, sprites, u.x, u.y);
+
+// The palette icon is the same soldier art as on the field.
+(function drawPaletteIcon() {
+  const c = $('soldier-icon');
+  const g = c.getContext('2d');
+  const sx = (ANCHOR.x - 14) * SCALE;
+  const sy = (ANCHOR.y - 26) * SCALE;
+  const sw = 40 * SCALE;
+  const sh = 29 * SCALE;
+  g.drawImage(sprites.stand, sx, sy, sw, sh, 0, 0, c.width, c.height);
+})();
 
 // ---------- Layout ----------
 function resize() {
@@ -57,11 +70,6 @@ function resize() {
   gctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   world.resize(w, h);
 }
-
-new ResizeObserver(() => {
-  document.documentElement.style.setProperty('--bar-h', `${toolbar.offsetHeight}px`);
-  resize();
-}).observe(toolbar);
 new ResizeObserver(resize).observe(wrap);
 window.addEventListener('resize', resize);
 
@@ -70,8 +78,9 @@ function canPaint() {
   return !(world.mode === 'team' && world.started);
 }
 
+// Team battle: red owns the left half, blue the right.
 function teamAt(x) {
-  return world.mode === 'team' ? (x < W / 2 ? 'red' : 'blue') : paintTeam;
+  return world.mode === 'team' ? (x < W / 2 ? 'red' : 'blue') : null;
 }
 
 function dab(x, y) {
@@ -81,9 +90,9 @@ function dab(x, y) {
   for (let i = 0; i < n; i++) {
     const a = Math.random() * TAU;
     const r = Math.sqrt(Math.random()) * brush;
-    let px = Math.min(W - 12, Math.max(12, x + Math.cos(a) * r));
-    const py = Math.min(H - 20, Math.max(24, y + Math.sin(a) * r));
-    if (world.mode === 'team') px = team === 'red' ? Math.min(px, half - 10) : Math.max(px, half + 10);
+    let px = Math.min(W - 16, Math.max(16, x + Math.cos(a) * r));
+    const py = Math.min(H - 26, Math.max(26, y + Math.sin(a) * r));
+    if (team) px = team === 'red' ? Math.min(px, half - 12) : Math.max(px, half + 12);
     world.addSoldier(team, px, py);
   }
   hint.hidden = true;
@@ -118,6 +127,7 @@ stageCanvas.addEventListener('pointerdown', (e) => {
   setPointer(e);
   ptr.inside = true;
   ptr.down = true;
+  closeBrushPop();
   try {
     stageCanvas.setPointerCapture(e.pointerId);
   } catch {
@@ -148,18 +158,30 @@ stageCanvas.addEventListener('pointerleave', () => {
   if (!ptr.down) ptr.inside = false;
 });
 
-stageCanvas.addEventListener('wheel', (e) => {
-  e.preventDefault();
-  setBrush(brush - Math.sign(e.deltaY) * 4);
-}, { passive: false });
-
 function setBrush(v) {
   brush = Math.min(Number(brushInput.max), Math.max(Number(brushInput.min), v));
   brushInput.value = String(brush);
 }
+stageCanvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  setBrush(brush - Math.sign(e.deltaY) * 4);
+}, { passive: false });
 brushInput.addEventListener('input', () => setBrush(Number(brushInput.value)));
 
 // ---------- Controls ----------
+function closeBrushPop() {
+  brushPop.hidden = true;
+  brushBtn.setAttribute('aria-expanded', 'false');
+}
+brushBtn.addEventListener('click', () => {
+  const open = brushPop.hidden;
+  brushPop.hidden = !open;
+  brushBtn.setAttribute('aria-expanded', String(open));
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeBrushPop();
+});
+
 function reset() {
   world.clear();
   gctx.save();
@@ -170,45 +192,50 @@ function reset() {
   banner.hidden = true;
   hint.hidden = false;
 }
+clearBtn.addEventListener('click', reset);
+
+const PAUSE_ICON = '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>';
+const PLAY_ICON = '<path d="M8 5v14l11-7z"/>';
+pauseBtn.addEventListener('click', () => {
+  paused = !paused;
+  $('pause-icon').innerHTML = paused ? PLAY_ICON : PAUSE_ICON;
+  pauseBtn.setAttribute('aria-label', paused ? 'Resume' : 'Pause');
+  pauseBtn.title = paused ? 'Resume' : 'Pause';
+});
 
 function setMode(mode) {
   if (mode === world.mode) return;
   world.mode = mode;
-  for (const b of modeButtons) b.setAttribute('aria-pressed', String(b.dataset.mode === mode));
-  teamGroup.hidden = mode === 'team';
-  startBtn.hidden = mode !== 'team';
-  midline.hidden = mode !== 'team';
+  const team = mode === 'team';
+  teamToggle.checked = team;
+  startBtn.hidden = !team;
+  midline.hidden = !team;
+  countsBox.hidden = !team;
   reset();
 }
+teamToggle.addEventListener('change', () => setMode(teamToggle.checked ? 'team' : 'free'));
 
-for (const b of modeButtons) b.addEventListener('click', () => setMode(b.dataset.mode));
-for (const b of teamButtons) {
-  b.addEventListener('click', () => {
-    paintTeam = b.dataset.team;
-    for (const o of teamButtons) o.setAttribute('aria-pressed', String(o === b));
-  });
-}
 startBtn.addEventListener('click', () => {
-  if (world.counts.red > 0 && world.counts.blue > 0) {
+  if ((world.counts.red || 0) > 0 && (world.counts.blue || 0) > 0) {
     world.started = true;
     hint.hidden = true;
   }
 });
-clearBtn.addEventListener('click', reset);
 
 function syncUi() {
-  countRed.textContent = String(world.counts.red);
-  countBlue.textContent = String(world.counts.blue);
-  if (world.mode === 'team') {
-    startBtn.disabled = world.started || !(world.counts.red > 0 && world.counts.blue > 0);
-    startBtn.textContent = over ? 'Done' : world.started ? 'Fighting…' : 'Start';
-    if (world.started && !over && (world.counts.red === 0 || world.counts.blue === 0)) {
-      over = true;
-      const winner = world.counts.red > 0 ? 'red' : world.counts.blue > 0 ? 'blue' : null;
-      banner.className = `banner ${winner || ''}`;
-      banner.textContent = winner ? `${TEAMS[winner].label} wins!` : 'Draw!';
-      banner.hidden = false;
-    }
+  if (world.mode !== 'team') return;
+  const red = world.counts.red || 0;
+  const blue = world.counts.blue || 0;
+  countRed.textContent = String(red);
+  countBlue.textContent = String(blue);
+  startBtn.disabled = world.started || !(red > 0 && blue > 0);
+  startBtn.textContent = over ? 'Done' : world.started ? 'Fighting…' : 'Start';
+  if (world.started && !over && (red === 0 || blue === 0)) {
+    over = true;
+    const winner = red > 0 ? 'red' : blue > 0 ? 'blue' : null;
+    banner.className = `banner ${winner || ''}`;
+    banner.textContent = winner ? `${TEAMS[winner].label} wins!` : 'Draw!';
+    banner.hidden = false;
   }
 }
 
@@ -216,13 +243,14 @@ function syncUi() {
 function drawBrushRing() {
   if (!ptr.inside) return;
   const team = teamAt(ptr.x);
-  ctx.strokeStyle = canPaint() ? TEAMS[team].fill : 'rgba(35, 32, 28, 0.3)';
-  ctx.lineWidth = 2;
-  ctx.setLineDash([6, 5]);
+  const rgb = team === 'red' ? '229, 72, 77' : '70, 110, 225';
+  ctx.fillStyle = `rgba(${rgb}, 0.1)`;
+  ctx.strokeStyle = canPaint() ? `rgba(${rgb}, 0.65)` : 'rgba(35, 38, 47, 0.25)';
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.arc(ptr.x, ptr.y, brush, 0, TAU);
+  ctx.fill();
   ctx.stroke();
-  ctx.setLineDash([]);
 }
 
 function render() {
@@ -232,32 +260,33 @@ function render() {
   const units = world.units;
   units.sort((a, b) => a.y - b.y);
   for (const u of units) {
-    const set = sprites[u.team];
+    const feetY = u.y + FEET;
+    if (u.team) {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.drawImage(sprites.ring[u.team], u.x - 15, feetY - 5.5, 30, 12);
+    }
     const frame = u.anim | 0;
     const firing = u.flash > 0;
     const img = u.moving
-      ? (firing ? set.walkFire : set.walk)[frame & 3]
-      : (firing ? set.standFire : set.stand);
+      ? (firing ? sprites.walkFire : sprites.walk)[frame & 3]
+      : (firing ? sprites.standFire : sprites.stand);
     const wobble = u.hit > 0 ? (Math.random() - 0.5) * 2 : 0;
-    ctx.setTransform(u.facing * dpr, 0, 0, dpr, (u.x + wobble) * dpr, (u.y + 14) * dpr);
+    ctx.setTransform(u.facing * dpr, 0, 0, dpr, (u.x + wobble) * dpr, feetY * dpr);
     ctx.drawImage(img, -ANCHOR.x, -ANCHOR.y, BOX.w, BOX.h);
   }
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.lineCap = 'round';
   ctx.lineWidth = 1.8;
-  for (const team of ['red', 'blue']) {
-    ctx.strokeStyle = TEAMS[team].dark;
-    ctx.beginPath();
-    for (const b of world.bullets) {
-      if (b.team !== team) continue;
-      ctx.moveTo(b.x - b.vx * 0.03, b.y - b.vy * 0.03);
-      ctx.lineTo(b.x, b.y);
-    }
-    ctx.stroke();
+  ctx.strokeStyle = '#3a3a44';
+  ctx.beginPath();
+  for (const b of world.bullets) {
+    ctx.moveTo(b.x - b.vx * 0.03, b.y - b.vy * 0.03);
+    ctx.lineTo(b.x, b.y);
   }
+  ctx.stroke();
 
-  ctx.fillStyle = '#23201c';
+  ctx.fillStyle = '#23262f';
   for (const s of world.sparks) {
     ctx.globalAlpha = Math.max(0, s.life / s.max);
     ctx.beginPath();
@@ -268,12 +297,12 @@ function render() {
 
   for (const u of units) {
     if (u.hp >= 100) continue;
-    const bw = 14;
+    const bw = 16;
     const bx = u.x - bw / 2;
-    const by = u.y - 26;
-    ctx.fillStyle = 'rgba(35, 32, 28, 0.35)';
+    const by = u.y - 20;
+    ctx.fillStyle = 'rgba(35, 38, 47, 0.25)';
     ctx.fillRect(bx, by, bw, 3);
-    ctx.fillStyle = u.hp > 40 ? '#5f9f45' : '#e0573f';
+    ctx.fillStyle = u.hp > 40 ? '#4caf50' : '#e5484d';
     ctx.fillRect(bx, by, (bw * Math.max(0, u.hp)) / 100, 3);
   }
 
@@ -288,7 +317,6 @@ function frame(now) {
   let dt = (now - last) / 1000;
   last = now;
   if (dt > 0.1) dt = 0.1;
-  acc += dt;
 
   if (ptr.down && ptr.inside && canPaint()) {
     timeAcc += dt;
@@ -298,19 +326,21 @@ function frame(now) {
     }
   }
 
-  let steps = 0;
-  while (acc >= STEP && steps < 4) {
-    world.update(STEP);
-    acc -= STEP;
-    steps++;
+  if (!paused) {
+    acc += dt;
+    let steps = 0;
+    while (acc >= STEP && steps < 4) {
+      world.update(STEP);
+      acc -= STEP;
+      steps++;
+    }
+    if (steps === 4) acc = 0;
   }
-  if (steps === 4) acc = 0;
 
   syncUi();
   render();
   requestAnimationFrame(frame);
 }
 
-document.documentElement.style.setProperty('--bar-h', `${toolbar.offsetHeight}px`);
 resize();
 requestAnimationFrame(frame);

@@ -1,17 +1,17 @@
 export const TAU = Math.PI * 2;
-export const INK = '#23201c';
 
+// Team battle only: a team is shown by a coloured circle under the feet,
+// never by recolouring the unit itself.
 export const TEAMS = {
-  red: { id: 'red', label: 'Red', fill: '#e0573f', dark: '#9d3322', splat: 'rgba(224, 87, 63, 0.5)' },
-  blue: { id: 'blue', label: 'Blue', fill: '#4a86c8', dark: '#274f7e', splat: 'rgba(74, 134, 200, 0.5)' },
+  red: { id: 'red', label: 'Red', ring: '#e5484d', ringDark: '#a82b30' },
+  blue: { id: 'blue', label: 'Blue', ring: '#2f6bf0', ringDark: '#1f46a8' },
 };
-export const OTHER = { red: 'blue', blue: 'red' };
 
 // A mid-range skirmisher: walks toward the enemy while firing short rifle
 // bursts, no setup delay. Distances are CSS pixels, times are seconds.
 export const SOLDIER = {
   hp: 100,
-  radius: 7,
+  radius: 9,
   speed: 42,
   sight: 340,
   range: 270,
