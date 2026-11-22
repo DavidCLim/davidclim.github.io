@@ -1,10 +1,19 @@
-import { SOLDIER, PIVOT, MUZZLE_LEN } from './config.js?v=3';
+import { SOLDIER, PIVOT, MUZZLE_LEN, GAZE_WEIGHTS } from './config.js?v=4';
 
 export const CELL = 32;
 const SEP_CELL = 20;
 const SEP_DIST = SOLDIER.sep;
 const HIT_R2 = (SOLDIER.radius + 1) * (SOLDIER.radius + 1);
 const GHOST_LIFE = 1.7;
+
+function pickGaze() {
+  let r = Math.random();
+  for (let i = 0; i < GAZE_WEIGHTS.length; i++) {
+    r -= GAZE_WEIGHTS[i];
+    if (r <= 0) return i;
+  }
+  return 0;
+}
 
 function segDist2(ax, ay, bx, by, px, py) {
   const abx = bx - ax;
@@ -87,6 +96,10 @@ export class World {
       burstT: 0,
       cdT: Math.random() * 1.2,
       aim: 0,
+      pose: 0, // 0 = standing around, 1 = ready to fight
+      gaze: pickGaze(),
+      gazeT: Math.random() * 2,
+      breath: Math.random() * 10,
       flash: 0,
       hit: 0,
       anim: Math.random() * 4,
@@ -247,7 +260,11 @@ export class World {
     u.flash = Math.max(0, u.flash - dt);
     u.hit = Math.max(0, u.hit - dt);
     u.moving = false;
-    if (!this.live) return;
+    u.breath += dt;
+    if (!this.live) {
+      this.idleStep(u, dt);
+      return;
+    }
 
     u.retargetT -= dt;
     if (u.retargetT <= 0) {
@@ -305,6 +322,18 @@ export class World {
       }
     }
     if (u.moving) u.anim += dt * 9;
+    if (u.target || u.moving) u.pose = Math.min(1, u.pose + dt * 6);
+    else this.idleStep(u, dt);
+  }
+
+  // Standing around: lower the readiness, and let the eyes wander.
+  idleStep(u, dt) {
+    u.pose = Math.max(0, u.pose - dt * 5);
+    u.gazeT -= dt;
+    if (u.gazeT <= 0) {
+      u.gaze = pickGaze();
+      u.gazeT = 0.8 + Math.random() * 1.8;
+    }
   }
 
   // Soft collisions use their own finer, flat grid (cells just wider than

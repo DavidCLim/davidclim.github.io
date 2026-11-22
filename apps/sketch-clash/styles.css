@@ -46,7 +46,7 @@ canvas {
   bottom: 0;
   left: 50%;
   width: 0;
-  border-left: 1.5px solid #e6e8ef;
+  border-left: 3px dotted #c9cbd3;
   pointer-events: none;
 }
 
@@ -145,13 +145,19 @@ canvas {
   left: 50%;
   top: 34%;
   transform: translate(-50%, -50%);
-  font-size: clamp(2.4rem, 9vw, 5rem);
-  font-weight: 700;
+  font-family: 'Lilita One', 'Arial Black', Impact, sans-serif;
+  font-size: clamp(2.3rem, 9.5vw, 6.5rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
   pointer-events: none;
   animation: banner-pop 380ms cubic-bezier(0.2, 1.4, 0.4, 1);
 }
-.banner.red { color: var(--red); }
-.banner.blue { color: var(--blue); }
+.banner.red { color: #fb4b4b; }
+.banner.blue { color: #4580f4; }
+.banner:not(.red):not(.blue) { color: #8b92a5; }
 @keyframes banner-pop {
   from { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
   to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
@@ -304,22 +310,26 @@ canvas {
   left: 50%;
   bottom: 168px;
   transform: translateX(-50%);
-  padding: 11px 38px 9px;
-  border: 0;
-  border-bottom: 4px solid #b42323;
+  padding: 4px 42px 8px;
+  border: 4px solid #26232c;
   border-radius: 999px;
-  background: #ef4444;
+  background: #fb4b4b;
   color: #ffffff;
-  font: inherit;
-  font-size: 1.35rem;
-  font-weight: 900;
-  letter-spacing: 0.04em;
+  font-family: 'Lilita One', 'Arial Black', Impact, sans-serif;
+  font-size: 2rem;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: 0.03em;
+  text-shadow: 2px 3px 0 #26232c;
+  box-shadow: 0 6px 0 #26232c;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
 }
-.start-btn:hover:not(:disabled) { background: #f35757; }
-.start-btn:active:not(:disabled) { border-bottom-width: 2px; padding-bottom: 11px; }
-.start-btn:disabled { opacity: 0.5; cursor: default; box-shadow: none; }
+.start-btn:hover:not(:disabled) { background: #ff5f5f; }
+.start-btn:active:not(:disabled) {
+  transform: translate(-50%, 3px);
+  box-shadow: 0 3px 0 #26232c;
+}
+.start-btn:disabled { opacity: 0.5; cursor: default; }
 
 .start-btn:focus-visible, .icon-btn:focus-visible, .tabs button:focus-visible, .unit-btn:focus-visible, .back:focus-visible {
   outline: 2px solid var(--accent);
@@ -336,6 +346,6 @@ canvas {
   .legend { left: 10px; bottom: 150px; }
   .palette { bottom: 10px; }
   .tabs button { padding: 6px 10px; font-size: 0.95rem; }
-  .start-btn { bottom: 206px; }
+  .start-btn { bottom: 206px; font-size: 1.7rem; padding: 3px 32px 7px; }
   .team-label { top: 56px; font-size: 0.8rem; }
 }

@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, PIVOT } from './config.js?v=3';
+import { TEAMS, TAU, K, PIVOT } from './config.js?v=4';
 
 // The soldier is drawn from "art" coordinates matching the reference
 // sprite (origin at the body centre, y down) into small offscreen layers,
@@ -69,7 +69,12 @@ function drawFeet(g, pose) {
   }
 }
 
-function drawTorso(g) {
+// Pupil offsets from the eye centre: right, up, up-left, up-right, left.
+const GAZES = [[1.9, 0.8], [0, -2.6], [-1.7, -2.2], [1.7, -2.2], [-2.2, 0.3]];
+
+// `front` is the idle pose (both eyes centred, facing the viewer); the
+// default is the side-on pose used while walking and shooting.
+function drawTorso(g, front, gaze) {
   const gr = g.createLinearGradient(0, -22, 0, 22);
   gr.addColorStop(0, '#5088ea');
   gr.addColorStop(1, '#3365cf');
@@ -86,7 +91,7 @@ function drawTorso(g) {
   g.ellipse(-10.5, -6, 3.4, 5.6, -0.25, 0, TAU);
   g.fill();
 
-  for (const ex of [-2.5, 13.8]) {
+  for (const ex of front ? [-8.4, 8.4] : [-2.5, 13.8]) {
     g.fillStyle = '#fbfbf6';
     g.strokeStyle = OUT;
     g.lineWidth = 1.4;
@@ -94,20 +99,23 @@ function drawTorso(g) {
     g.ellipse(ex, -5.9, 5.2, 6, 0, 0, TAU);
     g.fill();
     g.stroke();
+    const px = ex + gaze[0];
+    const py = -5.9 + gaze[1];
     g.fillStyle = '#121016';
     g.beginPath();
-    g.arc(ex + 1.9, -5.1, 3.4, 0, TAU);
+    g.arc(px, py, 3.4, 0, TAU);
     g.fill();
     g.fillStyle = 'rgba(255, 255, 255, 0.9)';
     g.beginPath();
-    g.arc(ex + 0.9, -7.1, 0.95, 0, TAU);
+    g.arc(px - 1, py - 2, 0.95, 0, TAU);
     g.fill();
   }
 
   g.strokeStyle = OUT;
   g.lineWidth = 1.3;
   g.beginPath();
-  g.arc(6.9, 3.6, 4, Math.PI * 0.15, Math.PI * 0.85);
+  if (front) g.arc(0, 3.2, 5, Math.PI * 0.15, Math.PI * 0.85);
+  else g.arc(6.9, 3.6, 4, Math.PI * 0.15, Math.PI * 0.85);
   g.stroke();
 
   g.fillStyle = '#2e4358';
@@ -193,7 +201,8 @@ function drawGhost(g) {
 export function buildSprites() {
   const sprites = {
     feet: FEET_POSES.map((pose) => makeLayer(-30, 16, 32, 37, (g) => drawFeet(g, pose))),
-    torso: makeLayer(-26, -27, 27, 23, drawTorso),
+    torso: makeLayer(-26, -27, 27, 23, (g) => drawTorso(g, false, GAZES[0])),
+    torsoFront: GAZES.map((gz) => makeLayer(-26, -27, 27, 23, (g) => drawTorso(g, true, gz))),
     rifle: makeLayer(-9, -11, 51, 11, (g) => drawRifle(g, false)),
     rifleFire: makeLayer(-9, -11, 51, 11, (g) => drawRifle(g, true)),
     ghost: makeLayer(-18, -24, 18, 28, drawGhost),

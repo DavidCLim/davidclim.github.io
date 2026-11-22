@@ -1,6 +1,6 @@
-import { TEAMS, TAU, PIVOT, FEET, SPECIES } from './config.js?v=3';
-import { World } from './world.js?v=3';
-import { buildSprites, drawLayer, paintSoldierIcon, stampHelmet } from './sprites.js?v=3';
+import { TEAMS, TAU, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES } from './config.js?v=4';
+import { World } from './world.js?v=4';
+import { buildSprites, drawLayer, paintSoldierIcon, stampHelmet } from './sprites.js?v=4';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -303,6 +303,20 @@ function syncLegend() {
   }
 }
 
+// A thick dark outline plus a hard drop shadow, built from shadow copies
+// of the glyphs so it works in every browser (em units: scales with size).
+function outlineShadow(color, r, dx, dy, n = 20) {
+  const parts = [];
+  for (const [ox, oy] of [[0, 0], [dx, dy]]) {
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * TAU;
+      parts.push(`${(ox + Math.cos(a) * r).toFixed(3)}em ${(oy + Math.sin(a) * r).toFixed(3)}em 0 ${color}`);
+    }
+  }
+  return parts.join(',');
+}
+banner.style.textShadow = outlineShadow('#1f1c24', 0.075, 0.05, 0.09);
+
 function syncUi() {
   syncLegend();
   if (world.mode !== 'team') return;
@@ -313,7 +327,7 @@ function syncUi() {
     over = true;
     const winner = red > 0 ? 'red' : blue > 0 ? 'blue' : null;
     banner.className = `banner ${winner || ''}`;
-    banner.textContent = winner ? `${TEAMS[winner].label} wins!` : 'Draw!';
+    banner.textContent = winner ? `${TEAMS[winner].label} team wins!` : 'Draw!';
     banner.hidden = false;
   }
 }
@@ -354,14 +368,22 @@ function render() {
     ctx.setTransform(f * dpr, 0, 0, dpr, (u.x + wobble) * dpr, u.y * dpr);
     drawLayer(ctx, sprites.feet[u.moving ? (u.anim | 0) & 3 : 0]);
 
+    const pose = u.pose;
     if (u.moving) {
       ctx.translate(0, -Math.abs(Math.sin(ph)) * 2.4);
       ctx.rotate(Math.sin(ph) * 0.07);
+    } else if (pose < 1) {
+      ctx.translate(0, Math.sin(u.breath * 2.2) * 0.55 * (1 - pose));
     }
-    drawLayer(ctx, sprites.torso);
+    drawLayer(ctx, pose < 0.5 ? sprites.torsoFront[u.gaze] : sprites.torso);
 
-    ctx.translate(PIVOT.x, PIVOT.y);
-    ctx.rotate(u.aim);
+    // Standing around the rifle is held upright at the side; it swings
+    // down to aim as the soldier readies up.
+    ctx.translate(
+      IDLE_PIVOT.x + (PIVOT.x - IDLE_PIVOT.x) * pose,
+      IDLE_PIVOT.y + (PIVOT.y - IDLE_PIVOT.y) * pose,
+    );
+    ctx.rotate(IDLE_AIM + (u.aim - IDLE_AIM) * pose + Math.sin(u.breath * 1.6) * 0.03 * (1 - pose));
     drawLayer(ctx, u.flash > 0 ? sprites.rifleFire : sprites.rifle);
   }
 
