@@ -67,8 +67,8 @@ export const SNIPER = {
   spread: 0.008,
   hipCooldown: 1.3,
   hipDamage: 34,
-  pivot: { x: 9 * K, y: 13 * K },
-  muzzleLen: 44 * K,
+  pivot: { x: 8.7 * K, y: 14 * K },
+  muzzleLen: 43 * K,
   // lying down: the whole body points at the target
   prone: { cy: 12 * K, mx: 52 * K, my: 6.4 * K },
 };

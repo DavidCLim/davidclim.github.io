@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=7';
+import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=8';
 
 // Units are drawn from "art" coordinates matching the reference sprites
 // (origin at the body centre, y down) into small offscreen layers, then
@@ -65,7 +65,7 @@ const FEET_POSES = [
   [[-4.3, 24.8], [12, 21.8]],
 ];
 
-function drawFeet(g, pose) {
+function drawFeet(g, pose, big) {
   g.save();
   g.translate(1, 28);
   g.scale(1, 0.27);
@@ -78,12 +78,12 @@ function drawFeet(g, pose) {
   g.fill();
   g.restore();
 
-  g.fillStyle = '#26242e';
+  g.fillStyle = '#25232e';
   g.strokeStyle = OUT;
   g.lineWidth = 1.3;
   for (const [x, y] of pose) {
     g.beginPath();
-    g.ellipse(x, y, 6.2, 3.4, 0, 0, TAU);
+    g.ellipse(x, y + (big ? 0.9 : 0), big ? 6.6 : 6.2, big ? 3.8 : 3.4, 0, 0, TAU);
     g.fill();
     g.stroke();
   }
@@ -234,139 +234,132 @@ function drawGhost(g, withHat) {
 }
 
 // ---------- sniper ----------
-const TAN_TOP = '#cdb27d';
-const TAN_BOT = '#a98d58';
-const HAT = '#56482a';
-const HAT_BRIM = '#4a3e23';
-const LID = '#2a2418';
+// Matched to the supplied pixel sprite: flat khaki body, flat olive hat,
+// big black pupils tucked under the brim, thick dark outlines.
+const TAN_TOP = '#c1ab7c';
+const TAN_BOT = '#b59d6a';
+const HAT = '#5a4e32';
+const HAT_SHADE = '#463b25';
+const INK = '#1d1a22';
 
 function drawSniperBody(g) {
-  const gr = g.createLinearGradient(0, -22, 0, 22);
+  const gr = g.createLinearGradient(0, -22, 0, 24);
   gr.addColorStop(0, TAN_TOP);
   gr.addColorStop(1, TAN_BOT);
   g.fillStyle = gr;
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.8;
+  g.strokeStyle = INK;
+  g.lineWidth = 1.7;
   g.beginPath();
-  g.ellipse(0, 0, 20.6, 22, 0, 0, TAU);
+  g.ellipse(0, 0, 20.8, 24, 0, 0, TAU);
   g.fill();
   g.stroke();
-  g.fillStyle = 'rgba(255, 255, 255, 0.28)';
+  // the small pale patch up by the brim
+  g.fillStyle = '#cdb98a';
   g.beginPath();
-  g.ellipse(-10.5, -6, 3.4, 5.6, -0.25, 0, TAU);
+  g.ellipse(-10.7, -5.4, 2.6, 2.3, 0, 0, TAU);
   g.fill();
 }
 
-function drawSniperFace(g, ex, mx, look, blink) {
-  // Half-lidded eyes: a heavy dark lid over the top of each.
+// Two eyes: a big black pupil with a sliver of white, hanging under the
+// brim. `look` slides the pupil (-1 left .. 1 right); `blink` shuts them.
+function drawSniperFace(g, ex, look, blink) {
   for (const x of ex) {
     if (blink) {
-      g.strokeStyle = LID;
-      g.lineWidth = 1.7;
+      g.strokeStyle = INK;
+      g.lineWidth = 1.8;
       g.beginPath();
-      g.arc(x, -6.8, 4.6, Math.PI * 0.12, Math.PI * 0.88);
+      g.moveTo(x - 4.6, -6.4);
+      g.quadraticCurveTo(x, -3.8, x + 4.6, -6.4);
       g.stroke();
       continue;
     }
-    g.fillStyle = '#fbfbf6';
-    g.strokeStyle = OUT;
-    g.lineWidth = 1.2;
-    g.beginPath();
-    g.ellipse(x, -5.8, 5.6, 3.7, 0, 0, TAU);
-    g.fill();
-    g.stroke();
-    g.fillStyle = '#16120c';
-    g.beginPath();
-    g.ellipse(x + look * 2.3, -5.3, 2.5, 2.7, 0, 0, TAU);
-    g.fill();
     g.save();
     g.beginPath();
-    g.ellipse(x, -5.8, 5.6, 3.7, 0, 0, TAU);
+    g.ellipse(x, -5.6, 5.5, 3.4, 0, 0, TAU);
     g.clip();
-    g.fillStyle = LID;
-    g.fillRect(x - 7, -10.2, 14, 5.2);
+    g.fillStyle = '#fbfbf6';
+    g.fillRect(x - 6, -10, 12, 9);
+    g.fillStyle = '#14121a';
+    g.beginPath();
+    g.ellipse(x + 1.5 + look * 1.9, -5.3, 3.6, 3.9, 0, 0, TAU);
+    g.fill();
     g.restore();
+    g.strokeStyle = INK;
+    g.lineWidth = 1.4;
+    g.beginPath();
+    g.ellipse(x, -5.6, 5.5, 3.4, 0, 0, TAU);
+    g.stroke();
   }
-  // A small dark moustache.
-  g.fillStyle = LID;
-  g.beginPath();
-  g.moveTo(mx - 4.6, 5.8);
-  g.quadraticCurveTo(mx - 2.6, 2.8, mx, 4.6);
-  g.quadraticCurveTo(mx + 2.6, 2.8, mx + 4.6, 5.8);
-  g.quadraticCurveTo(mx + 2.4, 8.2, mx, 6.6);
-  g.quadraticCurveTo(mx - 2.4, 8.2, mx - 4.6, 5.8);
-  g.closePath();
-  g.fill();
 }
 
 // look: -1 left, 0 centre, 1 right. front: facing the viewer (idle).
 function drawSniperTorso(g, front, look, blink) {
   drawSniperBody(g);
-  if (front) drawSniperFace(g, [-8.4, 8.4], 0, look, blink);
-  else drawSniperFace(g, [-1.6, 12.8], 7.5, 1, false);
+  if (front) drawSniperFace(g, [-8.4, 8.4], look, blink);
+  else drawSniperFace(g, [-1.2, 14.3], 1, false);
 }
 
 // Origin is the centre of the brim, so the hat can tip about it.
 function drawSniperHat(g) {
   g.fillStyle = HAT;
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.5;
+  g.strokeStyle = INK;
+  g.lineWidth = 1.6;
   g.beginPath();
-  g.ellipse(0, 0, 13.7, 12.3, 0, Math.PI, TAU);
+  g.moveTo(-13.3, -1.6);
+  g.bezierCurveTo(-13.3, -10.4, -7.5, -12.4, 0, -12.4);
+  g.bezierCurveTo(7.5, -12.4, 13.3, -10.4, 13.3, -1.6);
   g.closePath();
   g.fill();
   g.stroke();
-  g.strokeStyle = 'rgba(255, 255, 255, 0.14)';
-  g.lineWidth = 1.4;
+  // the long, thin, pointed brim
   g.beginPath();
-  g.ellipse(0, 0, 11, 9.4, 0, Math.PI * 1.1, Math.PI * 1.45);
-  g.stroke();
-  g.strokeStyle = '#3b311c';
-  g.lineWidth = 1.3;
-  g.beginPath();
-  g.moveTo(-13.3, -1.6);
-  g.quadraticCurveTo(0, 1, 13.3, -1.6);
-  g.stroke();
-  g.fillStyle = HAT_BRIM;
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.5;
-  g.beginPath();
-  g.ellipse(0, 0.4, 32, 3.7, 0, 0, TAU);
+  g.moveTo(-32.4, 0.2);
+  g.quadraticCurveTo(-16, -4.6, 0, -4.6);
+  g.quadraticCurveTo(16, -4.6, 32.4, 0.2);
+  g.quadraticCurveTo(16, 5, 0, 5);
+  g.quadraticCurveTo(-16, 5, -32.4, 0.2);
+  g.closePath();
   g.fill();
+  g.stroke();
+  g.strokeStyle = HAT_SHADE;
+  g.lineWidth = 1.2;
+  g.beginPath();
+  g.moveTo(-24, 2.3);
+  g.quadraticCurveTo(0, 4.4, 24, 2.3);
   g.stroke();
 }
 
 // Receiver, barrel and scope; origin is the centre of the receiver.
 function drawSniperRifleParts(g, firing) {
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.1;
-  g.fillStyle = '#2a2b33';
-  rr(g, 7, 2.5, 3.6, 6, 1);
+  g.strokeStyle = INK;
+  g.lineWidth = 1.2;
+  // magazine / grip
+  g.fillStyle = '#3d414c';
+  rr(g, 7.1, 1.4, 4, 5.2, 0.6);
   g.fill();
   g.stroke();
-  g.fillStyle = '#3b3d48';
-  rr(g, 5.4, -3.1, 38.6, 4, 1);
+  // barrel, with its pale top edge
+  g.fillStyle = '#3d414c';
+  rr(g, 5.9, -2.65, 37, 4.1, 0.6);
   g.fill();
   g.stroke();
-  g.fillStyle = '#5a5d6a';
-  g.fillRect(6, -2.6, 37, 0.9);
-  g.fillStyle = '#22232a';
-  g.fillRect(12, -5.7, 2, 2.7);
-  g.fillRect(22, -5.7, 2, 2.7);
-  g.fillStyle = '#2b2c35';
-  rr(g, 9.6, -10.4, 16.2, 5, 2);
+  g.fillStyle = 'rgba(150, 152, 162, 0.85)';
+  g.fillRect(7, -3.9, 35, 1.1);
+  // scope: a flat dark block on a small mount
+  g.fillStyle = '#26272e';
+  g.fillRect(4.2, -5.6, 3, 3);
+  g.strokeRect(4.2, -5.6, 3, 3);
+  rr(g, 9.1, -10.4, 16.7, 5.8, 0.8);
   g.fill();
   g.stroke();
-  g.fillStyle = '#7e97b4';
-  g.beginPath();
-  g.ellipse(25.6, -7.9, 1.2, 2, 0, 0, TAU);
-  g.fill();
+  // receiver
   g.fillStyle = '#d79c58';
-  g.strokeStyle = OUT;
-  rr(g, -5.4, -3, 10.8, 6, 1.3);
+  rr(g, -5, -2.65, 10, 5.3, 0.6);
   g.fill();
   g.stroke();
-  if (firing) star(g, 49, -1.1, 9, 3.6);
+  g.fillStyle = '#5a3d28';
+  g.fillRect(-4.4, -2.1, 8.8, 1);
+  if (firing) star(g, 48, -0.6, 9, 3.6);
 }
 
 // Lying on his belly, head to the right, rifle out front. Origin is the
@@ -398,15 +391,15 @@ function drawSniperProne(g, firing) {
   gr.addColorStop(0, TAN_TOP);
   gr.addColorStop(1, TAN_BOT);
   g.fillStyle = gr;
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.8;
+  g.strokeStyle = INK;
+  g.lineWidth = 1.7;
   g.beginPath();
   g.ellipse(-3, 1, 25, 14.5, 0, 0, TAU);
   g.fill();
   g.stroke();
-  g.fillStyle = 'rgba(255, 255, 255, 0.26)';
+  g.fillStyle = '#cdb98a';
   g.beginPath();
-  g.ellipse(-14, -6, 5.5, 2.8, -0.15, 0, TAU);
+  g.ellipse(-14, -6, 4.6, 2.2, -0.15, 0, TAU);
   g.fill();
 
   g.save();
@@ -414,7 +407,7 @@ function drawSniperProne(g, firing) {
   drawSniperRifleParts(g, firing);
   g.restore();
 
-  drawSniperFace(g, [5, 15], 10, 1, false);
+  drawSniperFace(g, [5, 15], 1, false);
 
   g.save();
   g.translate(13, -8);
@@ -425,7 +418,8 @@ function drawSniperProne(g, firing) {
 }
 
 export function buildSprites() {
-  const soldierFeet = FEET_POSES.map((pose) => makeLayer(-30, 16, 32, 37, (g) => drawFeet(g, pose)));
+  const soldierFeet = FEET_POSES.map((pose) => makeLayer(-30, 16, 32, 37, (g) => drawFeet(g, pose, false)));
+  const sniperFeet = FEET_POSES.map((pose) => makeLayer(-30, 16, 32, 38, (g) => drawFeet(g, pose, true)));
   const sprites = {
     soldier: {
       feet: soldierFeet,
@@ -436,13 +430,13 @@ export function buildSprites() {
       ghost: makeLayer(-18, -24, 18, 28, (g) => drawGhost(g, false)),
     },
     sniper: {
-      feet: soldierFeet,
-      torso: makeLayer(-26, -24, 27, 23, (g) => drawSniperTorso(g, false, 1, false)),
+      feet: sniperFeet,
+      torso: makeLayer(-26, -24, 27, 25, (g) => drawSniperTorso(g, false, 1, false)),
       // idle faces the viewer: look left, centre, right, then a blink
-      torsoFront: [-1, 0, 1].map((look) => makeLayer(-26, -24, 27, 23, (g) => drawSniperTorso(g, true, look, false)))
-        .concat([makeLayer(-26, -24, 27, 23, (g) => drawSniperTorso(g, true, 0, true))]),
+      torsoFront: [-1, 0, 1].map((look) => makeLayer(-26, -24, 27, 25, (g) => drawSniperTorso(g, true, look, false)))
+        .concat([makeLayer(-26, -24, 27, 25, (g) => drawSniperTorso(g, true, 0, true))]),
       hat: makeLayer(-36, -16, 36, 8, drawSniperHat),
-      rifle: makeLayer(-9, -14, 56, 12, (g) => drawSniperRifleParts(g, false)),
+      rifle: makeLayer(-9, -14, 54, 12, (g) => drawSniperRifleParts(g, false)),
       rifleFire: makeLayer(-9, -14, 60, 12, (g) => drawSniperRifleParts(g, true)),
       prone: makeLayer(-38, -24, 64, 24, (g) => drawSniperProne(g, false)),
       proneFire: makeLayer(-38, -24, 64, 24, (g) => drawSniperProne(g, true)),
@@ -539,7 +533,7 @@ export function stampHat(g, x, y) {
   g.closePath();
   g.fill();
   g.stroke();
-  g.fillStyle = HAT_BRIM;
+  g.fillStyle = HAT;
   g.beginPath();
   g.ellipse(0, 0.4, 19, 2.8, 0, 0, TAU);
   g.fill();

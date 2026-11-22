@@ -1,6 +1,6 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=7';
-import { World } from './world.js?v=7';
-import { buildSprites, drawLayer, paintIcon, stampHelmet, stampHat } from './sprites.js?v=7';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=8';
+import { World } from './world.js?v=8';
+import { buildSprites, drawLayer, paintIcon, stampHelmet, stampHat } from './sprites.js?v=8';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -446,8 +446,10 @@ function drawSniper(u) {
   const ph = (u.anim * Math.PI) / 2;
   const wobble = u.hit > 0 ? (Math.random() - 0.5) * 2 : 0;
   const pr = u.prone;
-  const standA = 1 - smooth(0.3, 0.55, pr);
-  const proneA = smooth(0.4, 0.6, pr);
+  // A hard swap at the halfway point: cross-fading the two poses lets the
+  // white page show through as a flash.
+  const standA = pr < 0.5 ? 1 : 0;
+  const proneA = pr < 0.5 ? 0 : 1;
 
   if (standA > 0.01) {
     ctx.globalAlpha = standA;
