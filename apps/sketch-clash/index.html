@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Sketch Clash</title>
+    <meta name="description" content="Paint an army and watch the battle unfold.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=1">
+  </head>
+  <body>
+    <div class="stage-wrap" id="stage-wrap">
+      <canvas id="ground"></canvas>
+      <canvas id="stage" role="img" aria-label="Battlefield: click and drag to paint soldiers"></canvas>
+      <div class="midline" id="midline" hidden>
+        <span class="side-label left">Red</span>
+        <span class="side-label right">Blue</span>
+      </div>
+
+      <div class="hud">
+        <a class="back" href="../../">&larr; Home</a>
+        <h1 class="logo" aria-label="Sketch Clash"><span>S</span><span>k</span><span>e</span><span>t</span><span>c</span><span>h</span> <span>C</span><span>l</span><span>a</span><span>s</span><span>h</span></h1>
+        <div class="counts" aria-live="off">
+          <span class="count red"><i></i><b id="count-red">0</b></span>
+          <span class="count blue"><i></i><b id="count-blue">0</b></span>
+        </div>
+      </div>
+
+      <p class="hint" id="hint">Click and drag to paint soldiers.<br>Scroll to change the brush size.</p>
+      <div class="banner" id="banner" role="status" hidden></div>
+    </div>
+
+    <div class="toolbar" id="toolbar">
+      <div class="group" role="group" aria-label="Mode">
+        <div class="seg">
+          <button type="button" data-mode="free" aria-pressed="true">Free-for-all</button>
+          <button type="button" data-mode="team" aria-pressed="false">Team battle</button>
+        </div>
+      </div>
+      <div class="group" id="team-group" role="group" aria-label="Team">
+        <div class="seg">
+          <button type="button" data-team="red" aria-pressed="true"><i class="dot red"></i>Red</button>
+          <button type="button" data-team="blue" aria-pressed="false"><i class="dot blue"></i>Blue</button>
+        </div>
+      </div>
+      <div class="group" role="group" aria-label="Unit">
+        <div class="seg">
+          <button type="button" aria-pressed="true">Soldier</button>
+        </div>
+      </div>
+      <label class="group brush">
+        <span>Brush</span>
+        <input type="range" id="brush" min="12" max="90" value="36">
+      </label>
+      <div class="group">
+        <button type="button" class="btn primary" id="start" hidden>Start</button>
+        <button type="button" class="btn" id="clear">Clear</button>
+      </div>
+    </div>
+
+    <script type="module" src="src/main.js?v=1"></script>
+  </body>
+</html>
