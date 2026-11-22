@@ -2,6 +2,7 @@
 (function () {
   var tabs = Array.prototype.slice.call(document.querySelectorAll('.era-tab'));
   if (!tabs.length) return;
+  var switcher = document.querySelector('.era-switch');
 
   function select(tab, moveFocus) {
     tabs.forEach(function (t) {
@@ -11,6 +12,7 @@
       t.tabIndex = on ? 0 : -1;
       document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
     });
+    switcher.setAttribute('data-era', tab.getAttribute('data-era'));
     if (moveFocus) tab.focus();
   }
 

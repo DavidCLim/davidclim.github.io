@@ -16,6 +16,14 @@
   </head>
   <body>
     <main class="page">
+      <nav class="era-bar" aria-label="Game era">
+        <div class="era-switch" role="tablist" aria-label="Game era" data-era="modern">
+          <span class="era-thumb" aria-hidden="true"></span>
+          <button type="button" class="era-tab is-active" role="tab" id="tab-modern" aria-selected="true" aria-controls="panel-modern" data-era="modern">Modern</button>
+          <button type="button" class="era-tab" role="tab" id="tab-legacy" aria-selected="false" aria-controls="panel-legacy" tabindex="-1" data-era="legacy">Legacy</button>
+        </div>
+      </nav>
+
       <section class="intro" aria-labelledby="site-title">
         <p class="eyebrow">davidclim.github.io</p>
         <h1 id="site-title">David's web app workspace</h1>
@@ -26,11 +34,6 @@
 
       <section class="apps" aria-labelledby="apps-title">
         <h2 id="apps-title" class="visually-hidden">Apps</h2>
-        <div class="era-tabs" role="tablist" aria-label="Game era">
-          <button type="button" class="era-tab is-active" role="tab" id="tab-modern" aria-selected="true" aria-controls="panel-modern" data-era="modern">Modern</button>
-          <button type="button" class="era-tab" role="tab" id="tab-legacy" aria-selected="false" aria-controls="panel-legacy" tabindex="-1" data-era="legacy">Legacy</button>
-        </div>
-
         <div class="era-panel" role="tabpanel" id="panel-modern" aria-labelledby="tab-modern">
           <div class="app-list">
             <article class="app-card sketch-clash-card">
