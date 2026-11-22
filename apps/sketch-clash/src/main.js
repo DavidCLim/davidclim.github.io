@@ -1,6 +1,6 @@
-import { TEAMS, TAU, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES } from './config.js?v=4';
-import { World } from './world.js?v=4';
-import { buildSprites, drawLayer, paintSoldierIcon, stampHelmet } from './sprites.js?v=4';
+import { TEAMS, TAU, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES } from './config.js?v=5';
+import { World } from './world.js?v=5';
+import { buildSprites, drawLayer, paintSoldierIcon, stampHelmet } from './sprites.js?v=5';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -18,6 +18,8 @@ const eraserBtn = $('eraser');
 const pauseBtn = $('pause');
 const teamToggle = $('team-toggle');
 const startBtn = $('start');
+const brushInput = $('brush');
+const brushDot = $('brush-dot');
 const palette = $('palette');
 
 const sprites = buildSprites();
@@ -151,8 +153,12 @@ stageCanvas.addEventListener('pointerleave', () => {
 });
 
 function setBrush(v) {
-  brush = Math.min(90, Math.max(10, v));
+  brush = Math.min(90, Math.max(10, Math.round(v)));
+  brushInput.value = String(brush);
+  brushDot.style.setProperty('--dot', `${6 + ((brush - 10) / 80) * 14}px`);
 }
+brushInput.addEventListener('input', () => setBrush(Number(brushInput.value)));
+setBrush(brush);
 stageCanvas.addEventListener('wheel', (e) => {
   e.preventDefault();
   setBrush(brush - Math.sign(e.deltaY) * 3);
@@ -412,15 +418,15 @@ function render() {
     const t = g.age / GHOST_LIFE;
     ctx.globalAlpha = (1 - t) * 0.9;
     const sway = Math.sin(g.age * 4 + g.seed * 6) * 3;
-    ctx.drawImage(gl.canvas, g.x + gl.x + sway, g.y + gl.y - 4 - t * 36, gl.w, gl.h);
+    ctx.drawImage(gl.canvas, g.x + gl.x + sway, g.y + gl.y - (4 + t * 36) * UNIT, gl.w, gl.h);
   }
   ctx.globalAlpha = 1;
 
   for (const u of units) {
     if (u.hp >= 100) continue;
-    const bw = 18;
+    const bw = 15;
     const bx = u.x - bw / 2;
-    const by = u.y - 24;
+    const by = u.y - 21;
     ctx.fillStyle = 'rgba(35, 38, 47, 0.25)';
     ctx.fillRect(bx, by, bw, 3);
     ctx.fillStyle = u.hp > 40 ? '#4caf50' : '#e5484d';

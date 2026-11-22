@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, PIVOT } from './config.js?v=4';
+import { TEAMS, TAU, K, UNIT, PIVOT } from './config.js?v=5';
 
 // The soldier is drawn from "art" coordinates matching the reference
 // sprite (origin at the body centre, y down) into small offscreen layers,
@@ -210,10 +210,10 @@ export function buildSprites() {
   };
   for (const t of Object.values(TEAMS)) {
     const c = document.createElement('canvas');
-    c.width = 36 * SCALE;
-    c.height = 14 * SCALE;
+    c.width = Math.ceil(36 * UNIT * SCALE);
+    c.height = Math.ceil(14 * UNIT * SCALE);
     const g = c.getContext('2d');
-    g.scale(SCALE, SCALE);
+    g.scale(SCALE * UNIT, SCALE * UNIT);
     g.fillStyle = t.ring;
     g.strokeStyle = t.ringDark;
     g.lineWidth = 1.3;
@@ -221,7 +221,7 @@ export function buildSprites() {
     g.ellipse(18, 7, 15, 5.4, 0, 0, TAU);
     g.fill();
     g.stroke();
-    sprites.ring[t.id] = { canvas: c, x: -18, y: -7, w: 36, h: 14 };
+    sprites.ring[t.id] = { canvas: c, x: -18 * UNIT, y: -7 * UNIT, w: 36 * UNIT, h: 14 * UNIT };
   }
   return sprites;
 }
@@ -231,13 +231,13 @@ export function drawLayer(ctx, layer) {
 }
 
 // A full standing soldier into any canvas (palette / legend icons).
-// The canvas should be about 52:38; the soldier fits that box.
+// The canvas should be about 84:61; the soldier fits that box (in art px).
 export function paintSoldierIcon(canvas, sprites) {
   const g = canvas.getContext('2d');
-  const m = canvas.width / 52;
+  const m = canvas.width / (84 * K);
   g.clearRect(0, 0, canvas.width, canvas.height);
   g.save();
-  g.translate(20 * m, 18 * m);
+  g.translate((32.3 * canvas.width) / 84, (29 * canvas.width) / 84);
   g.scale(m, m);
   drawLayer(g, sprites.feet[0]);
   drawLayer(g, sprites.torso);
@@ -249,8 +249,9 @@ export function paintSoldierIcon(canvas, sprites) {
 // A soldier's helmet is left behind on the ground when they die.
 export function stampHelmet(g, x, y) {
   g.save();
-  g.translate(x + (Math.random() - 0.5) * 22, y + (Math.random() - 0.5) * 8);
+  g.translate(x + (Math.random() - 0.5) * 22 * UNIT, y + (Math.random() - 0.5) * 8 * UNIT);
   g.rotate((Math.random() - 0.5) * 1.7);
+  g.scale(UNIT, UNIT);
   g.globalAlpha = 0.92;
   g.fillStyle = '#2e4358';
   g.strokeStyle = OUT;
