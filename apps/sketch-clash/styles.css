@@ -1,9 +1,9 @@
 :root {
   --ink: #23262f;
-  --muted: #9aa0ad;
-  --line: #e3e6ee;
+  --muted: #9a9ca6;
+  --line: #e4e6ee;
   --accent: #5b8def;
-  --red: #e5484d;
+  --red: #ef4444;
   --blue: #2f6bf0;
 }
 
@@ -16,7 +16,7 @@ html, body {
   overflow: hidden;
   background: #ffffff;
   color: var(--ink);
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: Roboto, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior: none;
   user-select: none;
@@ -46,14 +46,14 @@ canvas {
   bottom: 0;
   left: 50%;
   width: 0;
-  border-left: 2px dashed #e3e6ee;
+  border-left: 1.5px solid #e6e8ef;
   pointer-events: none;
 }
 
 /* ---------- Top bar ---------- */
 .back {
   position: absolute;
-  top: 14px;
+  top: 16px;
   left: 16px;
   color: var(--muted);
   text-decoration: none;
@@ -88,21 +88,26 @@ canvas {
   gap: 8px;
 }
 .icon-btn {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   display: grid;
   place-items: center;
   border: 1px solid var(--line);
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: 0 1px 3px rgba(20, 30, 60, 0.08);
+  box-shadow: 0 1px 4px rgba(20, 30, 60, 0.1);
   cursor: pointer;
 }
 .icon-btn:hover { background: #f5f7fc; }
+.icon-btn[aria-pressed="true"] {
+  background: #eef3ff;
+  border-color: #9db6ee;
+  box-shadow: 0 0 0 2px rgba(91, 141, 239, 0.25);
+}
 .icon-btn svg {
-  width: 19px;
-  height: 19px;
+  width: 20px;
+  height: 20px;
   fill: none;
   stroke: #555b69;
   stroke-width: 1.8;
@@ -110,56 +115,35 @@ canvas {
   stroke-linejoin: round;
 }
 #pause-icon rect, #pause-icon path { fill: #555b69; stroke: none; }
-.brush-wrap { position: relative; }
-.brush-pop {
-  position: absolute;
-  top: 46px;
-  right: 0;
-  padding: 10px 14px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: #ffffff;
-  box-shadow: 0 4px 14px rgba(20, 30, 60, 0.12);
-}
-.brush-pop input { width: 130px; display: block; accent-color: var(--accent); }
 
-.counts {
-  position: absolute;
-  top: 52px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 14px;
-  pointer-events: none;
-}
-.count {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 1.05rem;
-  color: var(--ink);
-}
-.count b { font-weight: 600; min-width: 1.5ch; }
-.dot { display: inline-block; width: 13px; height: 13px; border-radius: 50%; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
 .dot.red { background: var(--red); }
 .dot.blue { background: var(--blue); }
 
-.hint {
+/* Team battle: labels over each half */
+.team-label {
   position: absolute;
-  left: 50%;
-  top: 44%;
-  margin: 0;
-  transform: translate(-50%, -50%);
-  color: #c3c8d4;
-  font-size: 1.25rem;
+  top: 62px;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #6d707c;
+  font-size: 0.85rem;
+  white-space: nowrap;
   pointer-events: none;
-  text-align: center;
 }
+.team-label.red { left: 25%; }
+.team-label.blue { left: 75%; }
 
 .banner {
   position: absolute;
   left: 50%;
-  top: 38%;
+  top: 34%;
   transform: translate(-50%, -50%);
   font-size: clamp(2.4rem, 9vw, 5rem);
   font-weight: 700;
@@ -173,42 +157,91 @@ canvas {
   to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
 }
 
-/* ---------- Unit palette ---------- */
+/* ---------- Unit count legend ---------- */
+.legend {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 14px 8px 8px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(20, 30, 60, 0.07);
+  pointer-events: none;
+}
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  line-height: 1;
+}
+.legend-row canvas {
+  position: static;
+  width: 36px;
+  height: 26px;
+}
+.legend-row b {
+  min-width: 3ch;
+  text-align: right;
+  font-weight: 600;
+  color: #2c2f38;
+}
+.legend-row span { color: var(--muted); }
+
+/* ---------- Unit palette (draggable) ---------- */
 .palette {
   position: absolute;
   left: 50%;
   bottom: 14px;
   transform: translateX(-50%);
-  display: flex;
+  display: inline-flex;
   flex-direction: column;
-  gap: 6px;
   align-items: flex-start;
+  filter: drop-shadow(0 2px 6px rgba(20, 30, 60, 0.09));
+  cursor: grab;
+  touch-action: none;
 }
+.palette.dragging { cursor: grabbing; }
 .tabs, .units {
   display: flex;
   gap: 4px;
-  padding: 4px;
+  padding: 6px;
   border: 1px solid var(--line);
-  border-radius: 12px;
   background: #ffffff;
-  box-shadow: 0 1px 4px rgba(20, 30, 60, 0.08);
+}
+.tabs {
+  position: relative;
+  z-index: 1;
+  margin-bottom: -1px;
+  padding-bottom: 7px;
+  border-bottom-color: #ffffff;
+  border-radius: 16px 16px 0 0;
+}
+.units {
+  align-self: stretch;
+  min-width: 100%;
+  border-radius: 0 18px 18px 18px;
 }
 .tabs button {
-  padding: 6px 12px;
+  padding: 7px 16px;
   border: 0;
-  border-radius: 9px;
+  border-radius: 11px;
   background: transparent;
   color: var(--muted);
   font: inherit;
-  font-size: 0.9rem;
+  font-size: 1.1rem;
   cursor: pointer;
 }
-.tabs button[aria-selected="true"] { background: #eef1f8; color: var(--ink); }
-.tabs button:disabled { cursor: default; opacity: 0.8; }
+.tabs button[aria-selected="true"] { background: #ebeef7; color: var(--ink); }
+.tabs button:disabled { pointer-events: none; }
 .unit-btn {
-  padding: 4px 8px;
+  padding: 4px 10px;
   border: 2px solid transparent;
-  border-radius: 10px;
+  border-radius: 12px;
   background: transparent;
   cursor: pointer;
   display: grid;
@@ -217,8 +250,8 @@ canvas {
 .unit-btn[aria-pressed="true"] { border-color: #9db6ee; background: #eef3ff; }
 .unit-btn canvas {
   position: static;
-  width: 54px;
-  height: 39px;
+  width: 66px;
+  height: 48px;
 }
 
 /* ---------- Team battle ---------- */
@@ -226,29 +259,25 @@ canvas {
   position: absolute;
   right: 16px;
   bottom: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
 }
 .toggle {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  padding: 7px 14px 7px 9px;
+  gap: 10px;
+  padding: 8px 16px 8px 10px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: #ffffff;
   box-shadow: 0 1px 4px rgba(20, 30, 60, 0.08);
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 1.05rem;
   cursor: pointer;
 }
 .toggle input { position: absolute; opacity: 0; pointer-events: none; }
 .track {
   position: relative;
-  width: 30px;
-  height: 17px;
+  width: 34px;
+  height: 19px;
   border-radius: 999px;
   background: #dfe3ec;
   transition: background 160ms ease;
@@ -258,31 +287,40 @@ canvas {
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 13px;
-  height: 13px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
   background: #ffffff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
   transition: transform 160ms ease;
 }
 .toggle input:checked + .track { background: var(--accent); }
-.toggle input:checked + .track::after { transform: translateX(13px); }
+.toggle input:checked + .track::after { transform: translateX(15px); }
 .toggle input:checked ~ .toggle-label { color: var(--ink); }
 .toggle input:focus-visible + .track { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .start-btn {
-  padding: 8px 22px;
+  position: absolute;
+  left: 50%;
+  bottom: 168px;
+  transform: translateX(-50%);
+  padding: 11px 38px 9px;
   border: 0;
+  border-bottom: 4px solid #b42323;
   border-radius: 999px;
-  background: #23262f;
+  background: #ef4444;
   color: #ffffff;
   font: inherit;
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
   cursor: pointer;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
 }
-.start-btn:hover:not(:disabled) { background: #3a3f4d; }
-.start-btn:disabled { opacity: 0.4; cursor: default; }
+.start-btn:hover:not(:disabled) { background: #f35757; }
+.start-btn:active:not(:disabled) { border-bottom-width: 2px; padding-bottom: 11px; }
+.start-btn:disabled { opacity: 0.5; cursor: default; box-shadow: none; }
+
 .start-btn:focus-visible, .icon-btn:focus-visible, .tabs button:focus-visible, .unit-btn:focus-visible, .back:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -293,8 +331,11 @@ canvas {
   .back span { display: none; }
   .back { top: 12px; left: 10px; font-size: 1.3rem; }
   .tools { right: 10px; gap: 6px; }
-  .icon-btn { width: 34px; height: 34px; }
-  .team-box { right: 10px; bottom: 112px; }
+  .icon-btn { width: 36px; height: 36px; }
+  .team-box { right: 10px; bottom: 150px; }
+  .legend { left: 10px; bottom: 150px; }
   .palette { bottom: 10px; }
-  .hint { font-size: 1.05rem; }
+  .tabs button { padding: 6px 10px; font-size: 0.95rem; }
+  .start-btn { bottom: 206px; }
+  .team-label { top: 56px; font-size: 0.8rem; }
 }

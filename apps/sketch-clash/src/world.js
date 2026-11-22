@@ -1,10 +1,10 @@
-import { SOLDIER } from './config.js?v=2';
+import { SOLDIER, PIVOT, MUZZLE_LEN } from './config.js?v=3';
 
 export const CELL = 32;
 const SEP_CELL = 20;
-const SEP_DIST = SOLDIER.radius * 2;
+const SEP_DIST = SOLDIER.sep;
 const HIT_R2 = (SOLDIER.radius + 1) * (SOLDIER.radius + 1);
-const MUZZLE = { x: 22, y: 4 };
+const GHOST_LIFE = 1.7;
 
 function segDist2(ax, ay, bx, by, px, py) {
   const abx = bx - ax;
@@ -24,12 +24,15 @@ function segDist2(ax, ay, bx, by, px, py) {
 // until the battle is started.
 //
 // Unit positions are the body centre; sprites are drawn with their feet
-// FEET pixels below it.
+// FEET pixels below it. `aim` is the rifle angle in the unit's own
+// (facing-mirrored) space.
 export class World {
   constructor() {
     this.units = [];
     this.bullets = [];
     this.sparks = [];
+    this.ghosts = [];
+    this.speciesCounts = {};
     this.mode = 'free'; // 'free' | 'team'
     this.started = false;
     this.grids = new Map(); // side -> targeting grid
@@ -83,6 +86,7 @@ export class World {
       burstLeft: 0,
       burstT: 0,
       cdT: Math.random() * 1.2,
+      aim: 0,
       flash: 0,
       hit: 0,
       anim: Math.random() * 4,
@@ -95,8 +99,10 @@ export class World {
     this.units = [];
     this.bullets = [];
     this.sparks = [];
+    this.ghosts = [];
     this.started = false;
     this.counts = {};
+    this.speciesCounts = {};
     this.centroids.clear();
   }
 
@@ -115,8 +121,10 @@ export class World {
       for (let i = 0; i < cells.length; i++) cells[i].length = 0;
     }
     this.counts = {};
+    this.speciesCounts = {};
     for (const u of this.units) {
       if (u.dead) continue;
+      this.speciesCounts[u.species] = (this.speciesCounts[u.species] || 0) + 1;
       this.grids.get(u.side)[this.cellRow(u.y) * this.cols + this.cellCol(u.x)].push(u);
       this.counts[u.side] = (this.counts[u.side] || 0) + 1;
     }
@@ -220,8 +228,8 @@ export class World {
   }
 
   fire(u, t) {
-    const mx = u.x + u.facing * MUZZLE.x;
-    const my = u.y + MUZZLE.y;
+    const mx = u.x + u.facing * (PIVOT.x + Math.cos(u.aim) * MUZZLE_LEN);
+    const my = u.y + PIVOT.y + Math.sin(u.aim) * MUZZLE_LEN;
     const a = Math.atan2(t.y - my, t.x - mx) + (Math.random() - 0.5) * 2 * SOLDIER.spread;
     this.bullets.push({
       x: mx,
@@ -255,6 +263,9 @@ export class World {
       const dy = t.y - u.y;
       const d = Math.hypot(dx, dy) || 1;
       if (Math.abs(dx) > 3) u.facing = dx > 0 ? 1 : -1;
+      const aimTo = Math.atan2(t.y - (u.y + PIVOT.y), (t.x - (u.x + u.facing * PIVOT.x)) * u.facing);
+      const clamped = Math.max(-1.25, Math.min(1.25, aimTo));
+      u.aim += (clamped - u.aim) * Math.min(1, dt * 14);
       if (d > SOLDIER.holdDist) {
         const s = speed * (u.burstLeft > 0 ? 0.55 : 1);
         u.x += (dx / d) * s * dt;
@@ -280,6 +291,7 @@ export class World {
       }
     } else {
       u.burstLeft = 0;
+      u.aim -= u.aim * Math.min(1, dt * 6);
       const m = this.marchPoint(u);
       if (m) {
         const dx = m.x - u.x;
@@ -411,6 +423,7 @@ export class World {
         if (hit.hp <= 0 && !hit.dead) {
           hit.dead = true;
           this.anyDead = true;
+          this.ghosts.push({ x: hit.x, y: hit.y, age: 0, seed: Math.random() });
           if (this.onDeath) this.onDeath(hit);
         }
       }
@@ -429,6 +442,32 @@ export class World {
     if (gone) this.sparks = this.sparks.filter((s) => s.life > 0);
   }
 
+  stepGhosts(dt) {
+    let gone = false;
+    for (const g of this.ghosts) {
+      g.age += dt;
+      if (g.age > GHOST_LIFE) gone = true;
+    }
+    if (gone) this.ghosts = this.ghosts.filter((g) => g.age <= GHOST_LIFE);
+  }
+
+  // The eraser: removes units under the brush with no ghost or helmet.
+  eraseAt(x, y, r) {
+    const r2 = r * r;
+    let any = false;
+    for (const u of this.units) {
+      const dx = u.x - x;
+      const dy = u.y - y;
+      if (dx * dx + dy * dy <= r2) {
+        u.dead = true;
+        any = true;
+      }
+    }
+    if (!any) return;
+    this.units = this.units.filter((u) => !u.dead);
+    this.rebuild();
+  }
+
   update(dt) {
     this.rebuild();
     this.centroidT -= dt;
@@ -442,6 +481,7 @@ export class World {
     this.separate();
     this.stepBullets(dt);
     this.stepSparks(dt);
+    this.stepGhosts(dt);
     if (this.anyDead) {
       this.units = this.units.filter((u) => !u.dead);
       this.anyDead = false;

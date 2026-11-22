@@ -1,114 +1,148 @@
-import { TEAMS, TAU } from './config.js?v=2';
+import { TEAMS, TAU, K, PIVOT } from './config.js?v=3';
 
-// Every pose is drawn once into a small offscreen canvas and stamped with
-// drawImage, so thousands of units stay cheap to render.
-export const SCALE = 3;
-export const BOX = { w: 52, h: 40 };
-export const ANCHOR = { x: 20, y: 34 }; // feet position inside the sprite box
-export const FEET = 11; // feet sit this far below a unit's body centre
+// The soldier is drawn from "art" coordinates matching the reference
+// sprite (origin at the body centre, y down) into small offscreen layers,
+// then stamped with drawImage. Layers, so each part can move on its own:
+//   feet  - dark feet + soft shadow, glued to the ground (4 walk poses)
+//   torso - egg body, helmet, eyes (hops and tilts while walking)
+//   rifle - swings about the pivot to aim at the target
+export const SCALE = 3; // canvas pixels per board pixel
+const ART = SCALE * K; // canvas pixels per art pixel
+const OUT = '#1c1a22';
 
-const BODY = '#4a8de6';
-const EDGE = '#26468c';
-const DARK = '#2c2d3b';
-
-function makeSprite(w, h, draw) {
+function makeLayer(minX, minY, maxX, maxY, draw) {
   const c = document.createElement('canvas');
-  c.width = Math.ceil(w * SCALE);
-  c.height = Math.ceil(h * SCALE);
+  c.width = Math.ceil((maxX - minX) * ART);
+  c.height = Math.ceil((maxY - minY) * ART);
   const g = c.getContext('2d');
-  g.scale(SCALE, SCALE);
+  g.scale(ART, ART);
+  g.translate(-minX, -minY);
   g.lineCap = 'round';
   g.lineJoin = 'round';
   draw(g);
-  return c;
+  // x/y: offset of the layer's top-left from the anchor, in board pixels
+  return { canvas: c, x: minX * K, y: minY * K, w: (maxX - minX) * K, h: (maxY - minY) * K };
 }
 
-// A round blue blob in a dark cap, holding a rifle. Origin is the feet,
-// facing right. `frame` (0-3) is the walk cycle: feet alternate and the
-// body hops on the step frames.
-function drawSoldier(g, { frame = 0, stand = true, firing = false, dead = false }) {
-  const walking = !stand && !dead;
-  const bob = walking && (frame === 1 || frame === 3) ? -1.1 : 0;
-  const liftA = walking && frame === 1 ? 2.2 : 0;
-  const liftB = walking && frame === 3 ? 2.2 : 0;
-
-  g.fillStyle = DARK;
+function rr(g, x, y, w, h, r) {
   g.beginPath();
-  g.ellipse(-4.2, -1.5 - liftA, 3.4, 2, 0, 0, TAU);
-  g.fill();
-  g.beginPath();
-  g.ellipse(4.4, -1.5 - liftB, 3.4, 2, 0, 0, TAU);
-  g.fill();
+  g.moveTo(x + r, y);
+  g.lineTo(x + w - r, y);
+  g.quadraticCurveTo(x + w, y, x + w, y + r);
+  g.lineTo(x + w, y + h - r);
+  g.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  g.lineTo(x + r, y + h);
+  g.quadraticCurveTo(x, y + h, x, y + h - r);
+  g.lineTo(x, y + r);
+  g.quadraticCurveTo(x, y, x + r, y);
+  g.closePath();
+}
 
-  const cy = -11 + bob;
-  g.fillStyle = BODY;
-  g.beginPath();
-  g.ellipse(0, cy, 10.8, 10.2, 0, 0, TAU);
-  g.fill();
+const FEET_POSES = [
+  [[-4.3, 24.8], [8.8, 24.8]],
+  [[-1, 21.8], [8.8, 24.8]],
+  [[-8, 24.8], [12, 24.8]],
+  [[-4.3, 24.8], [12, 21.8]],
+];
 
+function drawFeet(g, pose) {
   g.save();
+  g.translate(1, 28);
+  g.scale(1, 0.27);
+  const gr = g.createRadialGradient(0, 0, 2, 0, 0, 27);
+  gr.addColorStop(0, 'rgba(0, 0, 0, 0.32)');
+  gr.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  g.fillStyle = gr;
   g.beginPath();
-  g.ellipse(0, cy, 10.8, 10.2, 0, 0, TAU);
-  g.clip();
-  g.fillStyle = DARK;
-  g.fillRect(-12, cy - 12, 24, 9.2);
+  g.arc(0, 0, 27, 0, TAU);
+  g.fill();
   g.restore();
 
-  g.strokeStyle = EDGE;
-  g.lineWidth = 1.4;
+  g.fillStyle = '#26242e';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.3;
+  for (const [x, y] of pose) {
+    g.beginPath();
+    g.ellipse(x, y, 6.2, 3.4, 0, 0, TAU);
+    g.fill();
+    g.stroke();
+  }
+}
+
+function drawTorso(g) {
+  const gr = g.createLinearGradient(0, -22, 0, 22);
+  gr.addColorStop(0, '#5088ea');
+  gr.addColorStop(1, '#3365cf');
+  g.fillStyle = gr;
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.8;
   g.beginPath();
-  g.ellipse(0, cy, 10.8, 10.2, 0, 0, TAU);
+  g.ellipse(0, 0, 20.6, 22, 0, 0, TAU);
+  g.fill();
   g.stroke();
 
-  g.fillStyle = DARK;
+  g.fillStyle = 'rgba(255, 255, 255, 0.28)';
   g.beginPath();
-  g.ellipse(7, cy - 3.2, 6, 1.7, 0, 0, TAU);
+  g.ellipse(-10.5, -6, 3.4, 5.6, -0.25, 0, TAU);
   g.fill();
 
-  const eyes = [[1.4, 3.1, 3.8], [7.9, 2.8, 3.5]];
-  for (const [ex, rx, ry] of eyes) {
-    if (dead) {
-      g.strokeStyle = DARK;
-      g.lineWidth = 1.3;
-      g.beginPath();
-      g.moveTo(ex - 1.8, cy - 0.4 - 1.8);
-      g.lineTo(ex + 1.8, cy - 0.4 + 1.8);
-      g.moveTo(ex + 1.8, cy - 0.4 - 1.8);
-      g.lineTo(ex - 1.8, cy - 0.4 + 1.8);
-      g.stroke();
-    } else {
-      g.fillStyle = '#ffffff';
-      g.strokeStyle = '#1d2a4d';
-      g.lineWidth = 0.8;
-      g.beginPath();
-      g.ellipse(ex, cy + 0.7, rx, ry, 0, 0, TAU);
-      g.fill();
-      g.stroke();
-      g.fillStyle = '#111';
-      g.beginPath();
-      g.arc(ex + 1.2, cy + 1, 1.5, 0, TAU);
-      g.fill();
-    }
+  for (const ex of [-2.5, 13.8]) {
+    g.fillStyle = '#fbfbf6';
+    g.strokeStyle = OUT;
+    g.lineWidth = 1.4;
+    g.beginPath();
+    g.ellipse(ex, -5.9, 5.2, 6, 0, 0, TAU);
+    g.fill();
+    g.stroke();
+    g.fillStyle = '#121016';
+    g.beginPath();
+    g.arc(ex + 1.9, -5.1, 3.4, 0, TAU);
+    g.fill();
+    g.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    g.beginPath();
+    g.arc(ex + 0.9, -7.1, 0.95, 0, TAU);
+    g.fill();
   }
 
-  const gy = -6 + bob;
-  g.lineWidth = 3.6;
-  g.strokeStyle = '#9a6330';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.3;
   g.beginPath();
-  g.moveTo(-3, gy + 0.6);
-  g.lineTo(7, gy);
+  g.arc(6.9, 3.6, 4, Math.PI * 0.15, Math.PI * 0.85);
   g.stroke();
-  g.lineWidth = 2.6;
-  g.strokeStyle = '#33343b';
+
+  g.fillStyle = '#2e4358';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.6;
   g.beginPath();
-  g.moveTo(6, gy);
-  g.lineTo(21, gy - 1);
+  g.ellipse(0, -12.7, 18.8, 12, 0, Math.PI, TAU);
+  g.closePath();
+  g.fill();
   g.stroke();
-  g.fillStyle = BODY;
-  g.strokeStyle = EDGE;
-  g.lineWidth = 1;
+  g.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+  g.lineWidth = 1.5;
   g.beginPath();
-  g.arc(6.4, gy + 0.3, 2.1, 0, TAU);
+  g.ellipse(0, -12.7, 15.5, 9.2, 0, Math.PI * 1.08, Math.PI * 1.42);
+  g.stroke();
+  g.fillStyle = '#1b1920';
+  rr(g, -23.5, -14.3, 49, 3.6, 1.8);
+  g.fill();
+}
+
+function drawRifle(g, firing) {
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.1;
+  g.fillStyle = '#2a2b33';
+  rr(g, 7, 1.5, 4, 7.5, 1);
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#3b3d48';
+  rr(g, 3.5, -2.8, 33, 5.6, 1.2);
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#2b2c35';
+  g.fillRect(6, 0.5, 30, 1.7);
+  g.fillStyle = '#cf9b58';
+  rr(g, -7, -3.6, 11.5, 7.2, 1.4);
   g.fill();
   g.stroke();
 
@@ -119,9 +153,9 @@ function drawSoldier(g, { frame = 0, stand = true, firing = false, dead = false 
     g.beginPath();
     for (let i = 0; i < 16; i++) {
       const a = (i / 16) * TAU;
-      const r = i % 2 === 0 ? 7 : 3;
-      const px = 24.5 + Math.cos(a) * r;
-      const py = gy - 1 + Math.sin(a) * r;
+      const r = i % 2 === 0 ? 9 : 3.6;
+      const px = 42 + Math.cos(a) * r;
+      const py = Math.sin(a) * r;
       if (i === 0) g.moveTo(px, py);
       else g.lineTo(px, py);
     }
@@ -131,47 +165,94 @@ function drawSoldier(g, { frame = 0, stand = true, firing = false, dead = false 
   }
 }
 
+function drawGhost(g) {
+  g.fillStyle = '#f6f6fb';
+  g.strokeStyle = '#bfc1cc';
+  g.lineWidth = 1.6;
+  g.beginPath();
+  g.moveTo(-15, 18);
+  g.lineTo(-15, -6);
+  g.bezierCurveTo(-15, -22, 15, -22, 15, -6);
+  g.lineTo(15, 18);
+  g.quadraticCurveTo(10, 11, 5, 18);
+  g.quadraticCurveTo(0, 25, -5, 18);
+  g.quadraticCurveTo(-10, 11, -15, 18);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#7a7c8a';
+  g.beginPath();
+  g.ellipse(-5.5, -4, 2.2, 3, 0, 0, TAU);
+  g.ellipse(5.5, -4, 2.2, 3, 0, 0, TAU);
+  g.fill();
+  g.beginPath();
+  g.ellipse(0, 6, 2.2, 3, 0, 0, TAU);
+  g.fill();
+}
+
 export function buildSprites() {
-  const mk = (opts) => makeSprite(BOX.w, BOX.h, (g) => {
-    g.translate(ANCHOR.x, ANCHOR.y);
-    drawSoldier(g, opts);
-  });
-  const frames = [0, 1, 2, 3];
   const sprites = {
-    stand: mk({ stand: true }),
-    standFire: mk({ stand: true, firing: true }),
-    walk: frames.map((frame) => mk({ stand: false, frame })),
-    walkFire: frames.map((frame) => mk({ stand: false, frame, firing: true })),
-    corpse: makeSprite(44, 44, (g) => {
-      g.translate(22, 22);
-      g.rotate(1.45);
-      g.translate(0, FEET);
-      drawSoldier(g, { dead: true });
-    }),
+    feet: FEET_POSES.map((pose) => makeLayer(-30, 16, 32, 37, (g) => drawFeet(g, pose))),
+    torso: makeLayer(-26, -27, 27, 23, drawTorso),
+    rifle: makeLayer(-9, -11, 51, 11, (g) => drawRifle(g, false)),
+    rifleFire: makeLayer(-9, -11, 51, 11, (g) => drawRifle(g, true)),
+    ghost: makeLayer(-18, -24, 18, 28, drawGhost),
     ring: {},
   };
   for (const t of Object.values(TEAMS)) {
-    sprites.ring[t.id] = makeSprite(30, 12, (g) => {
-      g.fillStyle = t.ring;
-      g.strokeStyle = t.ringDark;
-      g.lineWidth = 1.2;
-      g.beginPath();
-      g.ellipse(15, 6, 12.5, 4.6, 0, 0, TAU);
-      g.fill();
-      g.stroke();
-    });
+    const c = document.createElement('canvas');
+    c.width = 36 * SCALE;
+    c.height = 14 * SCALE;
+    const g = c.getContext('2d');
+    g.scale(SCALE, SCALE);
+    g.fillStyle = t.ring;
+    g.strokeStyle = t.ringDark;
+    g.lineWidth = 1.3;
+    g.beginPath();
+    g.ellipse(18, 7, 15, 5.4, 0, 0, TAU);
+    g.fill();
+    g.stroke();
+    sprites.ring[t.id] = { canvas: c, x: -18, y: -7, w: 36, h: 14 };
   }
   return sprites;
 }
 
-// Fallen soldiers are stamped once onto a persistent ground layer, so
-// the board slowly fills with flopped-over blobs at no per-frame cost.
-export function stampCorpse(g, sprites, x, y) {
+export function drawLayer(ctx, layer) {
+  ctx.drawImage(layer.canvas, layer.x, layer.y, layer.w, layer.h);
+}
+
+// A full standing soldier into any canvas (palette / legend icons).
+// The canvas should be about 52:38; the soldier fits that box.
+export function paintSoldierIcon(canvas, sprites) {
+  const g = canvas.getContext('2d');
+  const m = canvas.width / 52;
+  g.clearRect(0, 0, canvas.width, canvas.height);
   g.save();
-  g.translate(x, y + 6);
-  if (Math.random() < 0.5) g.scale(-1, 1);
-  g.rotate((Math.random() - 0.5) * 0.6);
-  g.globalAlpha = 0.55;
-  g.drawImage(sprites.corpse, -22, -22, 44, 44);
+  g.translate(20 * m, 18 * m);
+  g.scale(m, m);
+  drawLayer(g, sprites.feet[0]);
+  drawLayer(g, sprites.torso);
+  g.translate(PIVOT.x, PIVOT.y);
+  drawLayer(g, sprites.rifle);
+  g.restore();
+}
+
+// A soldier's helmet is left behind on the ground when they die.
+export function stampHelmet(g, x, y) {
+  g.save();
+  g.translate(x + (Math.random() - 0.5) * 22, y + (Math.random() - 0.5) * 8);
+  g.rotate((Math.random() - 0.5) * 1.7);
+  g.globalAlpha = 0.92;
+  g.fillStyle = '#2e4358';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1;
+  g.beginPath();
+  g.ellipse(0, 0, 11.5, 7, 0, Math.PI, TAU);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#1b1920';
+  rr(g, -14.5, -0.6, 29, 2.4, 1.2);
+  g.fill();
   g.restore();
 }
