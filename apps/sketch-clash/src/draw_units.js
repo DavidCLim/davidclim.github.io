@@ -1,6 +1,6 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=12';
-import { drawLayer, OUT } from './sprites.js?v=12';
-import { drawDrop } from './art_units.js?v=12';
+import { TAU, K, UNIT, FEET } from './config.js?v=13';
+import { drawLayer, OUT } from './sprites.js?v=13';
+import { drawDrop } from './art_units.js?v=13';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -331,43 +331,94 @@ export function drawFx(ctx, dpr, sprites, world) {
 }
 
 // ------------------------------------------------------------- ground marks
-// What a unit leaves on the ground when it dies.
-export function stampDrop(g, species, x, y) {
-  g.save();
-  g.translate(x + (Math.random() - 0.5) * 22 * UNIT, y + (Math.random() - 0.5) * 8 * UNIT);
-  g.rotate((Math.random() - 0.5) * 1.7);
-  g.scale(UNIT, UNIT);
-  g.globalAlpha = 0.92;
-  drawDrop(g, species);
-  g.restore();
+// Headgear and stuck arrows left on the ground. They are small pre-drawn
+// sprites that fade out and disappear after MARK_LIFE seconds.
+export const MARK_LIFE = 30;
+const MARK_FADE = 9;
+const markSprites = new Map();
+
+function markSprite(key, w, h, draw) {
+  let m = markSprites.get(key);
+  if (m) return m;
+  const sc = 3;
+  const c = document.createElement('canvas');
+  c.width = Math.ceil(w * sc);
+  c.height = Math.ceil(h * sc);
+  const g = c.getContext('2d');
+  g.scale(sc, sc);
+  g.translate(w / 2, h / 2);
+  g.lineCap = 'round';
+  g.lineJoin = 'round';
+  draw(g);
+  m = { c, w, h };
+  markSprites.set(key, m);
+  return m;
 }
 
-// An arrow that missed (or hit) stays stuck in the ground.
-export function stampArrow(g, a) {
-  const ang = Math.atan2(a.y1 - a.y0 + 4 * a.h, a.x1 - a.x0);
-  g.save();
-  g.translate(a.x1, a.y1);
-  g.rotate(ang);
-  g.scale(K / 0.56, K / 0.56);
-  g.lineCap = 'round';
-  g.strokeStyle = '#6b5a44';
-  g.lineWidth = 1.2;
-  g.beginPath();
-  g.moveTo(-6, 0);
-  g.lineTo(0, 0);
-  g.stroke();
-  g.fillStyle = '#d83a35';
-  g.strokeStyle = '#8f1f1f';
-  g.lineWidth = 0.6;
-  g.beginPath();
-  g.moveTo(-9, -2.2);
-  g.lineTo(-4.5, -0.2);
-  g.lineTo(-4.5, 0.2);
-  g.lineTo(-9, 2.2);
-  g.closePath();
-  g.fill();
-  g.stroke();
-  g.restore();
+// What a unit leaves on the ground when it dies.
+export function dropMark(species, x, y) {
+  return {
+    spr: markSprite('drop-' + species, 44, 30, (g) => drawDrop(g, species)),
+    x: x + (Math.random() - 0.5) * 22 * UNIT,
+    y: y + (Math.random() - 0.5) * 8 * UNIT,
+    rot: (Math.random() - 0.5) * 1.7,
+    k: UNIT,
+    age: 0,
+  };
+}
+
+// An arrow that missed (or hit) stays stuck in the ground for a while.
+export function arrowMark(a) {
+  const spr = markSprite('arrow', 16, 8, (g) => {
+    g.translate(4.5, 0);
+    g.strokeStyle = '#6b5a44';
+    g.lineWidth = 1.2;
+    g.beginPath();
+    g.moveTo(-6, 0);
+    g.lineTo(0, 0);
+    g.stroke();
+    g.fillStyle = '#d83a35';
+    g.strokeStyle = '#8f1f1f';
+    g.lineWidth = 0.6;
+    g.beginPath();
+    g.moveTo(-9, -2.2);
+    g.lineTo(-4.5, -0.2);
+    g.lineTo(-4.5, 0.2);
+    g.lineTo(-9, 2.2);
+    g.closePath();
+    g.fill();
+    g.stroke();
+  });
+  const rot = Math.atan2(a.y1 - a.y0 + 4 * a.h, a.x1 - a.x0);
+  const k = K / 0.56;
+  return {
+    spr,
+    x: a.x1 - Math.cos(rot) * 4.5 * k,
+    y: a.y1 - Math.sin(rot) * 4.5 * k,
+    rot,
+    k,
+    age: 0,
+  };
+}
+
+export function stepMarks(marks, dt) {
+  let gone = false;
+  for (const m of marks) {
+    m.age += dt;
+    if (m.age >= MARK_LIFE) gone = true;
+  }
+  return gone ? marks.filter((m) => m.age < MARK_LIFE) : marks;
+}
+
+export function drawMarks(ctx, dpr, marks) {
+  for (const m of marks) {
+    const a = 0.92 * Math.min(1, (MARK_LIFE - m.age) / MARK_FADE);
+    if (a <= 0) continue;
+    ctx.globalAlpha = a;
+    ctx.setTransform(dpr * Math.cos(m.rot) * m.k, dpr * Math.sin(m.rot) * m.k, -dpr * Math.sin(m.rot) * m.k, dpr * Math.cos(m.rot) * m.k, m.x * dpr, m.y * dpr);
+    ctx.drawImage(m.spr.c, -m.spr.w / 2, -m.spr.h / 2, m.spr.w, m.spr.h);
+  }
+  ctx.globalAlpha = 1;
 }
 
 // ------------------------------------------------------------- palette icons

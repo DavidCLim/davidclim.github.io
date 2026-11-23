@@ -1,8 +1,8 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=12';
-import { World } from './world.js?v=12';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=12';
-import { buildUnitArt } from './art_units.js?v=12';
-import { drawUnit, drawFx, stampDrop, stampArrow, hasIcon, paintUnitIcon } from './draw_units.js?v=12';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=13';
+import { World } from './world.js?v=13';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=13';
+import { buildUnitArt } from './art_units.js?v=13';
+import { drawUnit, drawFx, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=13';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -37,10 +37,12 @@ let over = false;
 const ptr = { x: 0, y: 0, inside: false, down: false };
 
 // A fallen unit leaves its headgear on the ground (a cavalry just becomes
-// a knight); blasts throw it into the air first, arrows stay stuck in.
-world.onDeath = (u) => stampDrop(gctx, u.species, u.x, u.y + FEET - 4);
-world.onDebrisLand = (d) => stampDrop(gctx, d.species, d.x, d.y + FEET - 4);
-world.onArrowLand = (a) => stampArrow(gctx, a);
+// a knight); blasts throw it into the air first, arrows stay stuck in. All of
+// it fades away after a while.
+let marks = [];
+world.onDeath = (u) => marks.push(dropMark(u.species, u.x, u.y + FEET - 4));
+world.onDebrisLand = (d) => marks.push(dropMark(d.species, d.x, d.y + FEET - 4));
+world.onArrowLand = (a) => marks.push(arrowMark(a));
 
 function paintAny(canvas, id) {
   if (hasIcon(id)) paintUnitIcon(canvas, sprites, id);
@@ -254,6 +256,7 @@ palette.addEventListener('click', (e) => {
 // ---------- Controls ----------
 function reset() {
   world.clear();
+  marks = [];
   gctx.save();
   gctx.setTransform(1, 0, 0, 1, 0, 0);
   gctx.clearRect(0, 0, groundCanvas.width, groundCanvas.height);
@@ -535,6 +538,9 @@ function render() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, W, H);
 
+  drawMarks(ctx, dpr, marks);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
   const units = world.units;
   units.sort((a, b) => a.y - b.y);
   for (const u of units) {
@@ -656,6 +662,7 @@ function frame(now) {
     let steps = 0;
     while (acc >= STEP && steps < 4) {
       world.update(STEP);
+      marks = stepMarks(marks, STEP);
       acc -= STEP;
       steps++;
     }
