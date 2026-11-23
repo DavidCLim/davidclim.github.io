@@ -1,4 +1,4 @@
-import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=29';
+import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=30';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -219,7 +219,7 @@ export class World {
         f.snap = null;
         return true;
       }
-      const sp = Math.min(34, 5 + d * 1.6);
+      const sp = Math.min(40, 6 + d * 1.9);
       const m = Math.min(d, sp * dt);
       u.x += (dx / d) * m;
       u.y += (dy / d) * m;
