@@ -1,4 +1,4 @@
-import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=17';
+import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=18';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -73,6 +73,7 @@ export class World {
     this.arrows = []; // arrows in the air
     this.blasts = []; // explosions
     this.debris = []; // headgear thrown by blasts
+    this.corpses = []; // units knocked over, seeing stars, before the ghost takes over
     this.onArrowLand = null;
     this.time = 0; // seconds since the battle started
     this.stats = null; // team battle record, see beginBattle()
@@ -223,6 +224,7 @@ export class World {
     this.arrows = [];
     this.blasts = [];
     this.debris = [];
+    this.corpses = [];
     this.started = false;
     this.counts = {};
     this.speciesCounts = {};
@@ -400,6 +402,7 @@ export class World {
         });
       }
       this.ghosts.push({ x: u.x, y: u.y, age: 0, seed: Math.random(), species: u.species });
+      this.corpses.push({ u: { ...u, dead: false, moving: false, hit: 0, flash: 0 }, age: 0 });
       if (u.def.smoke) {
         for (let i = 0; i < 2; i++) {
           this.puffs.push({
@@ -1350,6 +1353,9 @@ export class World {
       f.vy *= 0.985;
     }
     if (this.flames.some((f) => f.age > f.life)) this.flames = this.flames.filter((f) => f.age <= f.life);
+
+    for (const c of this.corpses) c.age += dt;
+    if (this.corpses.some((c) => c.age > 1)) this.corpses = this.corpses.filter((c) => c.age <= 1);
 
     for (const b of this.blasts) b.age += dt;
     if (this.blasts.some((b) => b.age > b.life)) this.blasts = this.blasts.filter((b) => b.age <= b.life);

@@ -1,6 +1,6 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=17';
-import { drawLayer, OUT } from './sprites.js?v=17';
-import { drawDrop } from './art_units.js?v=17';
+import { TAU, K, UNIT, FEET } from './config.js?v=18';
+import { drawLayer, OUT } from './sprites.js?v=18';
+import { drawDrop } from './art_units.js?v=18';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -8,6 +8,17 @@ import { drawDrop } from './art_units.js?v=17';
 
 const GZ = [0, 1, 2, 0, 2]; // idle gaze 0..4 -> right / centre / left
 const lerp = (a, b, t) => a + (b - a) * t;
+
+// Puts the unit on the ground, facing the right way, and tips it over about
+// its feet by u.tilt (used while a unit falls).
+export function placeUnit(ctx, dpr, u, wobble = 0) {
+  ctx.setTransform(u.facing * dpr, 0, 0, dpr, (u.x + wobble) * dpr, u.y * dpr);
+  if (u.tilt) {
+    ctx.translate(0, FEET);
+    ctx.rotate(u.tilt);
+    ctx.translate(0, -FEET);
+  }
+}
 
 function drawHurtMarks(ctx, sprites, u) {
   if (u.hp >= u.def.hp * 0.65) return;
@@ -25,10 +36,9 @@ function burnGlow(ctx, u, rx, ry, cx = 0, cy = 0) {
 // Feet, body and face shared by every egg-shaped unit. Leaves the context
 // in the body's (bobbing) space so the caller can add weapons.
 function eggBase(ctx, dpr, sprites, A, u, before) {
-  const f = u.facing;
   const ph = (u.anim * Math.PI) / 2;
   const wobble = u.hit > 0 ? (Math.random() - 0.5) * 2 : 0;
-  ctx.setTransform(f * dpr, 0, 0, dpr, (u.x + wobble) * dpr, u.y * dpr);
+  placeUnit(ctx, dpr, u, wobble);
   drawLayer(ctx, A.feet[u.moving ? (u.anim | 0) & 3 : 0]);
   const pose = u.pose;
   if (u.moving) {
@@ -134,9 +144,9 @@ function drawNinja(ctx, dpr, sprites, u) {
   const A = sprites.ninja;
   eggBase(ctx, dpr, sprites, A, u);
   const pose = u.pose;
-  const px = lerp(5 * K, 10 * K, pose);
-  const py = lerp(14 * K, 10 * K, pose);
-  const rest = lerp(-2.2, -0.95, Math.min(1, pose * 2));
+  const px = lerp(16 * K, 14 * K, pose);
+  const py = lerp(12 * K, 10 * K, pose);
+  const rest = lerp(-1.3, -0.8, Math.min(1, pose * 2));
   let ang = rest;
   const slashing = u.atk > 0;
   const p = 1 - u.atk;
@@ -161,9 +171,8 @@ function drawNinja(ctx, dpr, sprites, u) {
 
 function drawCavalry(ctx, dpr, sprites, u) {
   const A = sprites.cavalry;
-  const f = u.facing;
   const wobble = u.hit > 0 ? (Math.random() - 0.5) * 2 : 0;
-  ctx.setTransform(f * dpr, 0, 0, dpr, (u.x + wobble) * dpr, u.y * dpr);
+  placeUnit(ctx, dpr, u, wobble);
   drawLayer(ctx, A.shadow);
   const gait = u.moving ? ((u.anim * 0.8) | 0) & 3 : 4;
   if (u.moving) {

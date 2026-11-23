@@ -1,8 +1,8 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=17';
-import { World } from './world.js?v=17';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=17';
-import { buildUnitArt } from './art_units.js?v=17';
-import { drawUnit, drawFx, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=17';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=18';
+import { World } from './world.js?v=18';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=18';
+import { buildUnitArt } from './art_units.js?v=18';
+import { drawUnit, drawFx, placeUnit, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=18';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -676,7 +676,7 @@ function drawSoldier(u) {
   const ph = (u.anim * Math.PI) / 2;
   const wobble = u.hit > 0 ? (Math.random() - 0.5) * 2 : 0;
 
-  ctx.setTransform(f * dpr, 0, 0, dpr, (u.x + wobble) * dpr, u.y * dpr);
+  placeUnit(ctx, dpr, u, wobble);
   drawLayer(ctx, S.feet[u.moving ? (u.anim | 0) & 3 : 0]);
 
   const pose = u.pose;
@@ -744,7 +744,7 @@ function drawSniper(u) {
 
   if (standA > 0.01) {
     ctx.globalAlpha = standA;
-    ctx.setTransform(f * dpr, 0, 0, dpr, (u.x + wobble) * dpr, u.y * dpr);
+    placeUnit(ctx, dpr, u, wobble);
     drawLayer(ctx, S.feet[u.moving ? (u.anim | 0) & 3 : 0]);
 
     const pose = u.pose;
@@ -800,7 +800,7 @@ function drawSniper(u) {
   if (proneA > 0.01) {
     // lying on his belly, the whole body pointed at the target
     ctx.globalAlpha = proneA;
-    ctx.setTransform(f * dpr, 0, 0, dpr, (u.x + wobble) * dpr, u.y * dpr);
+    placeUnit(ctx, dpr, u, wobble);
     ctx.translate(0, d.prone.cy);
     ctx.rotate(u.aim);
     const settle = 0.88 + 0.12 * smooth(0.5, 1, pr);
@@ -811,11 +811,50 @@ function drawSniper(u) {
   ctx.globalAlpha = 1;
 }
 
+function drawBody(u) {
+  if (u.species === 'sniper') drawSniper(u);
+  else if (u.species === 'soldier') drawSoldier(u);
+  else drawUnit(ctx, dpr, sprites, u);
+}
+
 function render() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, W, H);
 
   drawMarks(ctx, dpr, marks);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  for (const c of world.corpses) {
+    // knocked over backwards, dizzy stars circling, then fading as the ghost rises
+    const k = c.age;
+    const fall = 1 - (1 - Math.min(1, k / 0.2)) ** 2;
+    const a = k < 0.55 ? 1 : Math.max(0, 1 - (k - 0.55) / 0.4);
+    c.u.tilt = -1.45 * fall;
+    c.u.breath = 0;
+    ctx.globalAlpha = a;
+    drawBody(c.u);
+    ctx.globalAlpha = a;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = '#f7cd3a';
+    ctx.strokeStyle = '#e0902a';
+    ctx.lineWidth = 0.6;
+    for (let i = 0; i < 3; i++) {
+      const ang = k * 9 + (i / 3) * TAU;
+      const sx = c.u.x - c.u.facing * 9 * UNIT + Math.cos(ang) * 9 * UNIT;
+      const sy = c.u.y + FEET * 0.45 + Math.sin(ang) * 3.5 * UNIT;
+      ctx.beginPath();
+      for (let p = 0; p < 10; p++) {
+        const r = (p % 2 === 0 ? 2.8 : 1.2) * UNIT;
+        const q = (p / 10) * TAU - Math.PI / 2;
+        if (p === 0) ctx.moveTo(sx + Math.cos(q) * r, sy + Math.sin(q) * r);
+        else ctx.lineTo(sx + Math.cos(q) * r, sy + Math.sin(q) * r);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   const units = world.units;
@@ -826,9 +865,7 @@ function render() {
       if (u.species === 'cavalry') ctx.scale(1.7, 1.1);
       drawLayer(ctx, sprites.ring[u.team]);
     }
-    if (u.species === 'sniper') drawSniper(u);
-    else if (u.species === 'soldier') drawSoldier(u);
-    else drawUnit(ctx, dpr, sprites, u);
+    drawBody(u);
   }
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);

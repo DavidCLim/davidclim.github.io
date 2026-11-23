@@ -1,12 +1,12 @@
-import { TAU, K } from './config.js?v=17';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=17';
+import { TAU, K } from './config.js?v=18';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=18';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
 // down, facing right, feet about 25 below the centre.
 
 // Pupil offsets for the idle gaze variants: right, centre, left.
-export const GAZE3 = [[2.1, 0.6], [0, 0.6], [-2.1, 0.6]];
+export const GAZE3 = [[1.6, -2], [0, -2.5], [-1.6, -2]];
 
 function eggBody(g, top, bot, rx = 20.7, ry = 23) {
   const gr = g.createLinearGradient(0, -ry, 0, ry);
