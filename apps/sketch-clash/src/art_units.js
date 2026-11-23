@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=24';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=24';
+import { TAU, K } from './config.js?v=25';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=25';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -148,7 +148,7 @@ function drawNozzle(g, firing) {
 
 // ---------------------------------------------------------------- roman
 function drawRomanBody(g, front, gz, angry) {
-  eggBody(g, '#2fd3c0', '#179f90');
+  eggBody(g, '#d82f3f', '#b8222f');
   g.fillStyle = 'rgba(255, 255, 255, 0.2)';
   g.beginPath();
   g.ellipse(-11, -3, 2.6, 5.4, -0.15, 0, TAU);
@@ -159,15 +159,20 @@ function drawRomanBody(g, front, gz, angry) {
   for (const x of xs) {
     g.fillStyle = '#fbf1ee';
     g.strokeStyle = OUT;
-    g.lineWidth = 1.2;
+    g.lineWidth = 1.1;
     g.beginPath();
-    g.ellipse(x, 1.2, 4.9, 5.7, 0, 0, TAU);
+    g.ellipse(x, 1.6, 5.8, 4.8, 0, 0, TAU);
     g.fill();
     g.stroke();
     g.fillStyle = '#17100f';
     g.beginPath();
-    g.arc(x + gz[0] * 1.1, 1.8 + gz[1] * 0.9, 3, 0, TAU);
+    g.arc(x + gz[0] * 1.3, 1.4 + gz[1] * 0.6, 2.7, 0, TAU);
     g.fill();
+    g.strokeStyle = OUT;
+    g.lineWidth = 2;
+    g.beginPath();
+    g.ellipse(x, 1.6, 5.8, 4.8, 0, Math.PI * 1.05, Math.PI * 1.95);
+    g.stroke();
   }
   if (angry) {
     g.strokeStyle = OUT;
@@ -188,19 +193,19 @@ function drawRomanBody(g, front, gz, angry) {
 
   // the small red dome (with a shine), a diamond crest, and the visor
   const dg = g.createLinearGradient(0, -25, 0, -12);
-  dg.addColorStop(0, '#58e6d6');
-  dg.addColorStop(1, '#27b8a8');
+  dg.addColorStop(0, '#ec3b48');
+  dg.addColorStop(1, '#cc2a38');
   g.fillStyle = dg;
   g.strokeStyle = OUT;
   g.lineWidth = 1.5;
   g.beginPath();
-  g.ellipse(-1, -14.5, 14.5, 10.5, 0, Math.PI, TAU);
+  g.ellipse(-1, -14, 15.5, 13, 0, Math.PI, TAU);
   g.closePath();
   g.fill();
   g.stroke();
   g.fillStyle = 'rgba(255, 255, 255, 0.35)';
   g.beginPath();
-  g.ellipse(-4, -22, 5, 1.8, -0.1, 0, TAU);
+  g.ellipse(-4, -24, 5.5, 1.8, -0.1, 0, TAU);
   g.fill();
   g.strokeStyle = '#f7e9e6';
   g.lineWidth = 1.3;
@@ -215,18 +220,18 @@ function drawRomanBody(g, front, gz, angry) {
   g.strokeStyle = OUT;
   g.lineWidth = 1.6;
   g.beginPath();
-  g.moveTo(-18.5, -8.6);
-  g.quadraticCurveTo(-16, -20, 0, -20.5);
-  g.quadraticCurveTo(17, -20, 27, -7.4);
-  g.quadraticCurveTo(4, -3.2, -18.5, -8.6);
+  g.moveTo(-21, -8.4);
+  g.quadraticCurveTo(-20.5, -17.2, -2, -17.4);
+  g.quadraticCurveTo(17, -17.6, 22.5, -8.4);
+  g.quadraticCurveTo(1, -5.4, -21, -8.4);
   g.closePath();
   g.fill();
   g.stroke();
   g.fillStyle = 'rgba(255, 255, 255, 0.3)';
   g.beginPath();
-  g.moveTo(-14, -14.8);
-  g.quadraticCurveTo(-2, -18.4, 12, -14.8);
-  g.quadraticCurveTo(-2, -15.6, -14, -14.8);
+  g.moveTo(-14, -13.8);
+  g.quadraticCurveTo(-2, -16.2, 14, -13.8);
+  g.quadraticCurveTo(-2, -14.6, -14, -13.8);
   g.fill();
 }
 
@@ -234,22 +239,22 @@ function drawRomanBody(g, front, gz, angry) {
 function drawSpear(g) {
   g.lineCap = 'butt';
   g.strokeStyle = OUT;
-  g.lineWidth = 3.4;
+  g.lineWidth = 3.1;
   g.beginPath();
   g.moveTo(-10, 0);
   g.lineTo(44, 0);
   g.stroke();
   g.strokeStyle = '#d9a64a';
-  g.lineWidth = 2.1;
+  g.lineWidth = 1.9;
   g.beginPath();
   g.moveTo(-9.5, 0);
   g.lineTo(44, 0);
   g.stroke();
   // twisted-rope stripes along the shaft
-  g.strokeStyle = 'rgba(120, 78, 30, 0.9)';
-  g.lineWidth = 0.9;
+  g.strokeStyle = 'rgba(120, 78, 30, 0.6)';
+  g.lineWidth = 0.8;
   g.beginPath();
-  for (let x = -8; x < 42; x += 3.6) {
+  for (let x = -8; x < 42; x += 5) {
     g.moveTo(x, -1.5);
     g.lineTo(x + 2, 1.5);
   }
@@ -260,9 +265,9 @@ function drawSpear(g) {
   g.strokeStyle = OUT;
   g.lineWidth = 1.2;
   g.beginPath();
-  g.moveTo(42, -1.3);
-  g.quadraticCurveTo(46, -5, 56, 0);
-  g.quadraticCurveTo(46, 5, 42, 1.3);
+  g.moveTo(40, -1.2);
+  g.quadraticCurveTo(45, -4.4, 55, 0);
+  g.quadraticCurveTo(45, 4.4, 40, 1.2);
   g.closePath();
   g.fill();
   g.stroke();
@@ -892,7 +897,7 @@ export const DROPS = {
     }
   },
   roman(g) {
-    g.fillStyle = '#4cc9bd';
+    g.fillStyle = '#e8647a';
     g.strokeStyle = OUT;
     g.lineWidth = 1;
     g.beginPath();
@@ -966,8 +971,8 @@ export const DROPS = {
 // Light, tinted ghosts that keep the unit's headgear.
 const GHOSTS = {
   flamethrower: ['#f6efe9', '#d5cbc4', (g) => dome(g, '#2f2e36', 11, 8, -10)],
-  roman: ['#e6fbf8', '#a9d8d2', (g) => {
-    dome(g, '#3fd0c1', 11, 8, -10);
+  roman: ['#f9eded', '#d9c4c4', (g) => {
+    dome(g, '#d43234', 11, 8, -10);
     g.fillStyle = '#f0a53a';
     rr(g, -13.5, -12.5, 27, 4.6, 2.2);
     g.fill();
