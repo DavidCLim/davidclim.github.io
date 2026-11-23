@@ -1,4 +1,4 @@
-import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=21';
+import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=22';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -180,7 +180,8 @@ export class World {
     if (team === 'blue') ax = Math.max(ax, half + 10 + reach * 0.7);
     const g = { ax, ay, ux, uy, ang, members: units, engaged: false, anchor: { x: ax, y: ay, side: units[0].side, marchTarget: null } };
     units.forEach((u, i) => {
-      u.form = { g, lx: slots[i].lx, ly: slots[i].ly };
+      // a quick snap into place (about half a second), eased out
+      u.form = { g, lx: slots[i].lx, ly: slots[i].ly, snap: { t: 0, x: u.x, y: u.y } };
     });
     this.groups.push(g);
   }
@@ -199,11 +200,24 @@ export class World {
       return false;
     }
     const s = this.formSlot(u);
+    if (f.snap) {
+      f.snap.t += dt / 0.5;
+      const e = 1 - (1 - Math.min(1, f.snap.t)) ** 3;
+      const nx = f.snap.x + (s.x - f.snap.x) * e;
+      const ny = f.snap.y + (s.y - f.snap.y) * e;
+      if (Math.abs(nx - u.x) > 0.05) u.facing = nx > u.x ? 1 : -1;
+      u.x = nx;
+      u.y = ny;
+      u.moving = f.snap.t < 1;
+      if (f.snap.t >= 1) f.snap = null;
+      return true;
+    }
     const dx = s.x - u.x;
     const dy = s.y - u.y;
     const d = Math.hypot(dx, dy);
     if (d > 0.6) {
-      const m = Math.min(d, (this.live ? u.def.speed * 2.6 : u.def.speed * 1.4) * dt);
+      // the ranks follow their places with a little lag, so a turning block flexes
+      const m = Math.min(d, u.def.speed * 1.5 * dt);
       u.x += (dx / d) * m;
       u.y += (dy / d) * m;
       u.moving = true;

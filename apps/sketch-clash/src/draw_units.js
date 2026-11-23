@@ -1,6 +1,6 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=21';
-import { drawLayer, OUT } from './sprites.js?v=21';
-import { drawDrop } from './art_units.js?v=21';
+import { TAU, K, UNIT, FEET } from './config.js?v=22';
+import { drawLayer, OUT } from './sprites.js?v=22';
+import { drawDrop } from './art_units.js?v=22';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -84,12 +84,12 @@ function drawRoman(ctx, dpr, sprites, u) {
   // beside him; fighting, the spear levels out and jabs and the shield comes in.
   const p = 1 - u.atk;
   const thrust = u.atk > 0 ? Math.sin(p * Math.PI) * 16 * K : 0;
-  ctx.translate(lerp(8 * K, 6 * K, pose), lerp(12.5 * K, 2 * K, pose));
-  ctx.rotate(lerp(-1.32, u.aim - 0.04, pose));
+  ctx.translate(lerp(8 * K, 6 * K, pose), lerp(14 * K, 2 * K, pose));
+  ctx.rotate(lerp(-1.4, u.aim - 0.04, pose));
   ctx.translate(pose * thrust, 0);
   drawLayer(ctx, A.spear);
   ctx.setTransform(body);
-  ctx.translate(lerp(26.5 * K, 21 * K, pose), lerp(16 * K, 7 * K, pose));
+  ctx.translate(lerp(25 * K, 21 * K, pose), lerp(15 * K, 7 * K, pose));
   drawLayer(ctx, A.shield);
 }
 
@@ -460,11 +460,11 @@ const ICONS = {
   }],
   roman: [84, 32, 39, (g, S) => {
     g.save();
-    g.translate(26.5 * K, 16 * K);
+    g.translate(25 * K, 15 * K);
     drawLayer(g, S.shield);
     g.restore();
-    g.translate(8 * K, 12.5 * K);
-    g.rotate(-1.32);
+    g.translate(8 * K, 14 * K);
+    g.rotate(-1.4);
     drawLayer(g, S.spear);
   }],
   grenadier: [84, 32.3, 39, (g, S) => {

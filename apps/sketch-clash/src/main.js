@@ -1,8 +1,8 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=21';
-import { World } from './world.js?v=21';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=21';
-import { buildUnitArt } from './art_units.js?v=21';
-import { drawUnit, drawFx, placeUnit, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=21';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=22';
+import { World } from './world.js?v=22';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=22';
+import { buildUnitArt } from './art_units.js?v=22';
+import { drawUnit, drawFx, placeUnit, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=22';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -159,6 +159,19 @@ function dab(x, y) {
   }
   if (!stroke) startStroke(x, y);
   stroke.started = true;
+  if (stroke.sp === 'roman') {
+    // Romans go down thick and overlapping; they sort themselves into ranks when you let go
+    const team = teamAt(x);
+    const n = Math.max(2, Math.min(14, Math.round((brush * brush) / 150)));
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * TAU;
+      const r = Math.sqrt(Math.random()) * brush;
+      const px = x + Math.cos(a) * r;
+      const py = y + Math.sin(a) * r;
+      if (canPlace(px, py, team)) stroke.made.push(world.addUnit('roman', team, px, py));
+    }
+    return;
+  }
   const { ox, oy, occ, sp } = stroke;
   const [sx, sy, stag] = LATTICE[sp] || LATTICE.default;
   const team = teamAt(x);
@@ -270,6 +283,13 @@ stageCanvas.addEventListener('pointermove', (e) => {
     return;
   }
   if (!stroke) return;
+  if (stroke.sp === 'roman') {
+    stroke.started = true;
+    stroke.dragged = true;
+    paintSegment(lastPaint.x, lastPaint.y, ptr.x, ptr.y);
+    lastPaint = { x: ptr.x, y: ptr.y };
+    return;
+  }
   if (!stroke.dragged) {
     if (Math.hypot(ptr.x - stroke.ox, ptr.y - stroke.oy) < 5) return;
     stroke.dragged = true;
@@ -984,7 +1004,7 @@ function frame(now) {
   last = now;
   if (dt > 0.1) dt = 0.1;
 
-  if (ptr.down && ptr.inside && canPaint() && (erasing || (stroke && !stroke.dragged))) {
+  if (ptr.down && ptr.inside && canPaint() && (erasing || (stroke && (!stroke.dragged || stroke.sp === 'roman')))) {
     timeAcc += dt;
     while (timeAcc > 0.18) {
       timeAcc -= 0.18;

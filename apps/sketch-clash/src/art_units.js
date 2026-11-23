@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=21';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=21';
+import { TAU, K } from './config.js?v=22';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=22';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -149,89 +149,84 @@ function drawNozzle(g, firing) {
 // ---------------------------------------------------------------- roman
 function drawRomanBody(g, front, gz, angry) {
   eggBody(g, '#d92c30', '#bd2227');
-  g.fillStyle = 'rgba(255, 255, 255, 0.22)';
+  g.fillStyle = 'rgba(255, 255, 255, 0.2)';
   g.beginPath();
   g.ellipse(-11, -3, 2.6, 5.4, -0.15, 0, TAU);
   g.fill();
-  // a dotted, slightly darker belly like the original
-  g.fillStyle = 'rgba(0, 0, 0, 0.07)';
-  g.beginPath();
-  g.ellipse(2, 12, 15, 9, 0, 0, TAU);
-  g.fill();
 
-  const xs = front ? [-8, 8] : [-1.5, 11.5];
+  // big eyes under the visor; the far one is half hidden by the spear
+  const xs = front ? [-8, 8] : [-3, 10.5];
   for (const x of xs) {
-    g.fillStyle = '#fbf3ee';
+    g.fillStyle = '#fbf1ee';
     g.strokeStyle = OUT;
     g.lineWidth = 1.2;
     g.beginPath();
-    g.ellipse(x, 0.4, 4.3, 3.6, 0, 0, TAU);
+    g.ellipse(x, 1.2, 4.9, 5.7, 0, 0, TAU);
     g.fill();
     g.stroke();
     g.fillStyle = '#17100f';
     g.beginPath();
-    g.arc(x + gz[0] * 0.9, 0.9, 2.3, 0, TAU);
+    g.arc(x + gz[0] * 1.1, 1.8 + gz[1] * 0.9, 3, 0, TAU);
     g.fill();
   }
   if (angry) {
     g.strokeStyle = OUT;
-    g.lineWidth = 2;
+    g.lineWidth = 2.2;
     g.beginPath();
     for (const x of xs) {
-      g.moveTo(x - 5, -4.8);
-      g.lineTo(x + 5, -1.6);
+      g.moveTo(x - 6, -5.6);
+      g.lineTo(x + 6, -2);
     }
     g.stroke();
   }
-  if (front) {
-    g.strokeStyle = OUT;
-    g.lineWidth = 1.3;
-    g.beginPath();
-    g.arc(0, 6.6, 4, Math.PI * 0.15, Math.PI * 0.85);
-    g.stroke();
-  } else {
-    g.strokeStyle = OUT;
-    g.lineWidth = 1.5;
-    g.beginPath();
-    g.arc(8, 6.6, 3.2, Math.PI * 0.12, Math.PI * 0.8);
-    g.stroke();
-  }
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.3;
+  g.beginPath();
+  if (front) g.arc(0, 9, 3.4, Math.PI * 0.15, Math.PI * 0.85);
+  else g.arc(7.5, 9.4, 3, Math.PI * 0.12, Math.PI * 0.8);
+  g.stroke();
 
-  // the small red dome of the helmet, with a diamond crest at the back
-  g.fillStyle = '#d92c30';
+  // the small red dome (with a shine), a diamond crest, and the visor
+  const dg = g.createLinearGradient(0, -25, 0, -12);
+  dg.addColorStop(0, '#ee3a40');
+  dg.addColorStop(1, '#cf2a31');
+  g.fillStyle = dg;
   g.strokeStyle = OUT;
   g.lineWidth = 1.5;
   g.beginPath();
-  g.ellipse(-1, -14.5, 14.5, 9.5, 0, Math.PI, TAU);
+  g.ellipse(-1, -14.5, 14.5, 10.5, 0, Math.PI, TAU);
   g.closePath();
   g.fill();
   g.stroke();
+  g.fillStyle = 'rgba(255, 255, 255, 0.35)';
+  g.beginPath();
+  g.ellipse(-4, -22, 5, 1.8, -0.1, 0, TAU);
+  g.fill();
   g.strokeStyle = '#f7e9e6';
-  g.lineWidth = 1.5;
+  g.lineWidth = 1.3;
   g.beginPath();
-  g.moveTo(-12.5, -27);
-  g.lineTo(-9.2, -30.3);
-  g.lineTo(-5.9, -27);
-  g.lineTo(-9.2, -23.7);
+  g.moveTo(-12.5, -26);
+  g.lineTo(-9.8, -28.8);
+  g.lineTo(-7.1, -26);
+  g.lineTo(-9.8, -23.2);
   g.closePath();
   g.stroke();
-  // the big orange visor band across the forehead
-  g.fillStyle = '#f0a63c';
+  g.fillStyle = '#eda83f';
   g.strokeStyle = OUT;
-  g.lineWidth = 1.5;
+  g.lineWidth = 1.6;
   g.beginPath();
-  g.moveTo(-21, -9.5);
-  g.quadraticCurveTo(-18, -19, -1, -19.5);
-  g.quadraticCurveTo(15, -19, 22.5, -9.5);
-  g.quadraticCurveTo(3, -4.5, -21, -9.5);
+  g.moveTo(-21.5, -8.2);
+  g.quadraticCurveTo(-19, -20, -1, -20.5);
+  g.quadraticCurveTo(16, -20, 22.5, -8.2);
+  g.quadraticCurveTo(2, -3.4, -21.5, -8.2);
   g.closePath();
   g.fill();
   g.stroke();
-  g.fillStyle = 'rgba(255, 255, 255, 0.28)';
+  g.fillStyle = 'rgba(255, 255, 255, 0.3)';
   g.beginPath();
-  g.moveTo(-14, -14.5);
-  g.quadraticCurveTo(-2, -18, 12, -14.5);
-  g.quadraticCurveTo(-2, -15.5, -14, -14.5);
+  g.moveTo(-14, -14.8);
+  g.quadraticCurveTo(-2, -18.4, 12, -14.8);
+  g.quadraticCurveTo(-2, -15.6, -14, -14.8);
   g.fill();
 }
 
@@ -239,41 +234,37 @@ function drawRomanBody(g, front, gz, angry) {
 function drawSpear(g) {
   g.lineCap = 'butt';
   g.strokeStyle = OUT;
-  g.lineWidth = 3;
+  g.lineWidth = 3.4;
   g.beginPath();
-  g.moveTo(-14, 0);
-  g.lineTo(52, 0);
+  g.moveTo(-10, 0);
+  g.lineTo(44, 0);
   g.stroke();
   g.strokeStyle = '#d9a64a';
-  g.lineWidth = 1.7;
+  g.lineWidth = 2.1;
   g.beginPath();
-  g.moveTo(-13.5, 0);
-  g.lineTo(52, 0);
+  g.moveTo(-9.5, 0);
+  g.lineTo(44, 0);
   g.stroke();
+  // twisted-rope stripes along the shaft
+  g.strokeStyle = 'rgba(120, 78, 30, 0.9)';
+  g.lineWidth = 0.9;
+  g.beginPath();
+  for (let x = -8; x < 42; x += 3.6) {
+    g.moveTo(x, -1.5);
+    g.lineTo(x + 2, 1.5);
+  }
+  g.stroke();
+  // the broad grey leaf of the head
   g.lineCap = 'round';
   g.fillStyle = '#a9adb8';
   g.strokeStyle = OUT;
-  g.lineWidth = 1.1;
+  g.lineWidth = 1.2;
   g.beginPath();
-  g.moveTo(51, -1.6);
-  g.quadraticCurveTo(54, -4.6, 59, -3);
-  g.quadraticCurveTo(62, 0, 59, 3);
-  g.quadraticCurveTo(54, 4.6, 51, 1.6);
+  g.moveTo(42, -1.3);
+  g.quadraticCurveTo(46, -5, 56, 0);
+  g.quadraticCurveTo(46, 5, 42, 1.3);
   g.closePath();
   g.fill();
-  g.stroke();
-  g.fillStyle = '#6f7380';
-  g.beginPath();
-  g.arc(57.6, 0, 1.2, 0, TAU);
-  g.fill();
-  // the twisted-rope stripes along the shaft
-  g.strokeStyle = 'rgba(120, 78, 30, 0.85)';
-  g.lineWidth = 0.9;
-  g.beginPath();
-  for (let x = -10; x < 48; x += 4.2) {
-    g.moveTo(x, -1.4);
-    g.lineTo(x + 2.2, 1.4);
-  }
   g.stroke();
 }
 
@@ -282,16 +273,16 @@ function drawShield(g) {
   g.fillStyle = '#eaa534';
   g.strokeStyle = OUT;
   g.lineWidth = 1.4;
-  rr(g, -5.4, -15.5, 10.8, 31, 1.8);
+  rr(g, -4.6, -13.5, 9.2, 27, 1.6);
   g.fill();
   g.stroke();
   g.fillStyle = '#f6c564';
-  g.fillRect(-3.8, -13.5, 2, 27);
+  g.fillRect(-3.2, -11.8, 1.8, 23.6);
   g.fillStyle = '#aeb4c0';
   g.strokeStyle = '#4b4f5c';
   g.lineWidth = 1.1;
   g.beginPath();
-  g.arc(0, 0, 2.9, 0, TAU);
+  g.arc(0, 0, 2.6, 0, TAU);
   g.fill();
   g.stroke();
 }
