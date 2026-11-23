@@ -1,8 +1,8 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=19';
-import { World } from './world.js?v=19';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=19';
-import { buildUnitArt } from './art_units.js?v=19';
-import { drawUnit, drawFx, placeUnit, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=19';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=20';
+import { World } from './world.js?v=20';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=20';
+import { buildUnitArt } from './art_units.js?v=20';
+import { drawUnit, drawFx, placeUnit, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=20';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -497,7 +497,7 @@ function speciesRows(team, st) {
     .map((id) => {
       const icon = document.createElement('canvas');
       icon.width = 66;
-      icon.height = 48;
+      icon.height = 54;
       paintAny(icon, id);
       const row = document.createElement('div');
       row.className = 'tm-row';
@@ -553,7 +553,7 @@ function buildStats() {
     card.className = 'tm-card tm-first';
     const icon = document.createElement('canvas');
     icon.width = 132;
-    icon.height = 96;
+    icon.height = 108;
     paintAny(icon, first.killer);
     const t = document.createElement('div');
     t.innerHTML = `<h3>First blood</h3><p>A ${first.killerTeam} ${SPECIES[first.killer].label.toLowerCase()} took down a ${first.team} ${SPECIES[first.species].label.toLowerCase()} ${Math.max(1, Math.round(first.t))}s in</p>`;
@@ -577,7 +577,7 @@ function syncLegend() {
     if (!row) {
       const icon = document.createElement('canvas');
       icon.width = 104;
-      icon.height = 76;
+      icon.height = 85;
       paintAny(icon, id);
       const count = document.createElement('b');
       const label = document.createElement('span');
@@ -874,7 +874,7 @@ function render() {
   for (const u of units) {
     if (u.team) {
       ctx.setTransform(dpr, 0, 0, dpr, u.x * dpr, (u.y + FEET + 1) * dpr);
-      if (u.species === 'cavalry') ctx.scale(1.7, 1.1);
+      if (u.species === 'cavalry') ctx.scale(1.4, 1.1);
       drawLayer(ctx, sprites.ring[u.team]);
     }
     drawBody(u);

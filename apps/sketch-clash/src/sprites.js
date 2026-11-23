@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=19';
+import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=20';
 
 // Units are drawn from "art" coordinates matching the reference sprites
 // (origin at the body centre, y down) into small offscreen layers, then
@@ -500,7 +500,7 @@ export function drawLayer(ctx, layer) {
 // about 84:61 (soldier) or 96:61 (sniper) in art px; the unit fits it.
 const ICON = {
   soldier: { w: 84, ox: 32.3 },
-  sniper: { w: 88, ox: 34 },
+  sniper: { w: 84, ox: 34 },
 };
 export function paintIcon(canvas, sprites, species) {
   const cfg = ICON[species];
@@ -509,7 +509,7 @@ export function paintIcon(canvas, sprites, species) {
   const m = canvas.width / (cfg.w * K);
   g.clearRect(0, 0, canvas.width, canvas.height);
   g.save();
-  g.translate((cfg.ox * canvas.width) / cfg.w, (29 * canvas.width) / cfg.w);
+  g.translate((cfg.ox * canvas.width) / cfg.w, (39 * canvas.width) / cfg.w);
   g.scale(m, m);
   drawLayer(g, S.feet[0]);
   drawLayer(g, S.torso);

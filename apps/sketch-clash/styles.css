@@ -269,7 +269,7 @@ canvas {
 .legend-row canvas {
   position: static;
   width: 32px;
-  height: 23px;
+  height: 26px;
 }
 .legend-row b {
   min-width: 2.4ch;
@@ -342,7 +342,7 @@ canvas {
 .unit-btn canvas {
   position: static;
   width: clamp(32px, 3.6vw, 76px);
-  aspect-ratio: 132 / 96;
+  aspect-ratio: 132 / 108;
   height: auto;
 }
 
@@ -546,7 +546,7 @@ canvas {
 .tm-key .b { background: #3b6cf0; }
 .tm-teams { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .tm-row { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 8px; margin-top: 10px; }
-.tm-row canvas { position: static; width: 34px; height: 25px; }
+.tm-row canvas { position: static; width: 34px; height: 28px; }
 .tm-name { font-size: 1.05rem; }
 .tm-nums { display: inline-flex; align-items: center; gap: 8px; font-size: 1.05rem; }
 .tm-nums i { font-style: normal; color: #6d707c; }
@@ -558,7 +558,7 @@ canvas {
 .tm-badge { padding: 2px 11px; border-radius: 999px; background: #ffffff; color: #3b6cf0; font-size: 0.74rem; font-weight: 700; letter-spacing: 0.05em; }
 .tm-team.win.red .tm-badge { color: #ef4444; }
 .tm-first { display: grid; gap: 4px; }
-.tm-first canvas { position: static; width: 56px; height: 41px; }
+.tm-first canvas { position: static; width: 56px; height: 46px; }
 .tm-first h3 { margin-bottom: 2px; }
 .tm-first p { margin: 0; font-size: 1.1rem; color: #23262f; }
 @media (max-width: 640px) {

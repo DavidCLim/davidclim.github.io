@@ -1,6 +1,6 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=19';
-import { drawLayer, OUT } from './sprites.js?v=19';
-import { drawDrop } from './art_units.js?v=19';
+import { TAU, K, UNIT, FEET } from './config.js?v=20';
+import { drawLayer, OUT } from './sprites.js?v=20';
+import { drawDrop } from './art_units.js?v=20';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -184,15 +184,16 @@ function drawCavalry(ctx, dpr, sprites, u) {
   drawLayer(ctx, A.horse[gait]);
   burnGlow(ctx, u, 30 * K, 14 * K);
   ctx.save();
-  ctx.translate(-9 * K, -21 * K);
+  ctx.translate(-7 * K, -14 * K);
   drawLayer(ctx, A.rider);
   ctx.restore();
   // lance held out front; levels out when charging and jabs on a strike
   const p = 1 - u.atk;
   const thrust = u.atk > 0 ? Math.sin(p * Math.PI) * 20 * K : 0;
-  ctx.translate(-4 * K, -16 * K);
+  ctx.translate(-3 * K, -11 * K);
   ctx.rotate(lerp(-0.64, -0.22, Math.max(u.charge, u.atk)));
-  ctx.translate(thrust, 0);
+  ctx.scale(0.62, 0.62);
+  ctx.translate(thrust / 0.62, 0);
   drawLayer(ctx, A.lance);
 }
 
@@ -452,12 +453,12 @@ export function drawMarks(ctx, dpr, marks) {
 // ------------------------------------------------------------- palette icons
 // [canvas width in art px, body x, body y, drawing]
 const ICONS = {
-  flamethrower: [96, 32, 33, (g, S) => {
+  flamethrower: [84, 34, 39, (g, S) => {
     g.translate(8 * K, 11 * K);
     g.rotate(0.03);
     drawLayer(g, S.nozzle);
   }],
-  roman: [100, 50, 47, (g, S) => {
+  roman: [84, 32, 39, (g, S) => {
     g.save();
     g.translate(26.5 * K, 16 * K);
     drawLayer(g, S.shield);
@@ -466,24 +467,24 @@ const ICONS = {
     g.rotate(-1.32);
     drawLayer(g, S.spear);
   }],
-  grenadier: [84, 32.3, 29, (g, S) => {
+  grenadier: [84, 32.3, 39, (g, S) => {
     g.translate(17 * K, 12 * K);
     drawLayer(g, S.bombLit);
   }],
-  archer: [90, 34, 31, (g, S) => {
+  archer: [84, 30, 39, (g, S) => {
     g.translate(24 * K, 6 * K);
     drawLayer(g, S.bow);
     g.translate(-1 * K, 0);
     g.scale(0.85, 0.85);
     drawLayer(g, S.arrow);
   }],
-  cavalry: [124, 50, 64, null],
-  ninja: [100, 42, 40, (g, S) => {
-    g.translate(10 * K, 10 * K);
-    g.rotate(-0.95);
+  cavalry: [84, 38, 39, null],
+  ninja: [84, 32, 39, (g, S) => {
+    g.translate(14 * K, 10 * K);
+    g.rotate(-0.8);
     drawLayer(g, S.katana);
   }],
-  knight: [100, 36, 46, (g, S) => {
+  knight: [84, 34, 39, (g, S) => {
     g.translate(8 * K, 12 * K);
     g.rotate(-0.95);
     drawLayer(g, S.lance);
@@ -507,11 +508,12 @@ export function paintUnitIcon(canvas, sprites, species) {
     drawLayer(g, S.shadow);
     drawLayer(g, S.horse[4]);
     g.save();
-    g.translate(-9 * K, -21 * K);
+    g.translate(-7 * K, -14 * K);
     drawLayer(g, S.rider);
     g.restore();
-    g.translate(-4 * K, -16 * K);
+    g.translate(-3 * K, -11 * K);
     g.rotate(-0.64);
+    g.scale(0.62, 0.62);
     drawLayer(g, S.lance);
   } else {
     drawLayer(g, S.feet[0]);

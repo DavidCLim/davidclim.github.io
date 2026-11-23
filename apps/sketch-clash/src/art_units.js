@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=19';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=19';
+import { TAU, K } from './config.js?v=20';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=20';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -1065,13 +1065,17 @@ export function buildUnitArt() {
   };
 
   art.cavalry = {
-    horse: [0, 1, 2, 3, 4].map((gait) => makeLayer(-50, -40, 56, 32, (g) => drawHorse(g, gait))),
+    horse: [0, 1, 2, 3, 4].map((gait) => makeLayer(-50, -40, 56, 32, (g) => {
+      g.translate(0, 4.7);
+      g.scale(0.82, 0.82);
+      drawHorse(g, gait);
+    })),
     rider: makeLayer(-14, -18, 14, 14, drawRider),
     lance: makeLayer(-20, -6, 72, 6, drawLance),
     shadow: makeLayer(-46, 18, 50, 36, (g) => {
       g.save();
       g.translate(2, 27);
-      g.scale(1, 0.18);
+      g.scale(0.82, 0.16);
       const gr = g.createRadialGradient(0, 0, 4, 0, 0, 46);
       gr.addColorStop(0, 'rgba(0, 0, 0, 0.42)');
       gr.addColorStop(1, 'rgba(0, 0, 0, 0)');

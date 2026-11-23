@@ -2,7 +2,7 @@ export const TAU = Math.PI * 2;
 
 // Units are drawn from "art" coordinates (a ~92x82 reference sprite,
 // origin at the body centre) and scaled to the board by K.
-export const K = 0.42;
+export const K = 0.37;
 // Sizes below were tuned at K = 0.62; UNIT rescales them with the sprite.
 export const UNIT = K / 0.62;
 // Pixel distances below were tuned when units were bigger (K = 0.56).
@@ -160,8 +160,8 @@ export const ARCHER = {
 export const CAVALRY = {
   kind: 'cavalry',
   hp: 170,
-  radius: 17 * UNIT,
-  sep: 23 * UNIT,
+  radius: 13 * UNIT,
+  sep: 18 * UNIT,
   speed: 100,
   sight: 500,
   reach: 50 * R,

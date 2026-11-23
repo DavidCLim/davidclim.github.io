@@ -1,4 +1,4 @@
-import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=19';
+import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=20';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -166,7 +166,7 @@ export class World {
     const team = units[0].team;
     if (team === 'red') ax = Math.min(ax, half - 10 - reach * 0.7);
     if (team === 'blue') ax = Math.max(ax, half + 10 + reach * 0.7);
-    const g = { ax, ay, ux, uy, members: units, engaged: false, anchor: { x: ax, y: ay, side: units[0].side, marchTarget: null } };
+    const g = { ax, ay, ux, uy, ang, members: units, engaged: false, anchor: { x: ax, y: ay, side: units[0].side, marchTarget: null } };
     units.forEach((u, i) => {
       u.form = { g, lx: slots[i].lx, ly: slots[i].ly };
     });
@@ -191,7 +191,7 @@ export class World {
     const dy = s.y - u.y;
     const d = Math.hypot(dx, dy);
     if (d > 0.6) {
-      const m = Math.min(d, (this.live ? u.def.speed * 1.8 : 150) * dt);
+      const m = Math.min(d, (this.live ? u.def.speed * 2.6 : 150) * dt);
       u.x += (dx / d) * m;
       u.y += (dy / d) * m;
       u.moving = true;
@@ -200,26 +200,23 @@ export class World {
   }
 
   // Each block marches on the nearest enemy and dissolves when one gets close.
+  // A Roman block keeps its rectangle: it turns (slowly) so one side squares up
+  // to the enemy, marches on it as a single body, and its soldiers jab from
+  // their places. Only a soldier with an enemy right up against him leaves the
+  // ranks to fight.
   stepGroups(dt) {
     let any = false;
     for (const g of this.groups) {
       g.members = g.members.filter((m) => !m.dead && m.form && m.form.g === g);
-      if (!g.members.length || g.engaged) {
+      if (!g.members.length) {
         g.dead = true;
         any = true;
         continue;
       }
       if (!this.live) continue;
-      // only the front rank breaks off when an enemy gets close; the rest keep
-      // their slots and keep pushing forward
       for (const m of g.members) {
         const t = m.target;
-        // once the front has made contact the block stops, and the ranks behind
-        // peel off to join in as the enemy comes within reach
-        if (t && !t.dead && Math.hypot(t.x - m.x, t.y - m.y) < (g.halt ? 110 : 40)) {
-          m.form = null;
-          g.halt = true;
-        }
+        if (t && !t.dead && Math.hypot(t.x - m.x, t.y - m.y) < m.def.reach * 0.5) m.form = null;
       }
       g.members = g.members.filter((m) => m.form);
       if (!g.members.length) {
@@ -229,11 +226,23 @@ export class World {
       }
       g.anchor.x = g.ax;
       g.anchor.y = g.ay;
-      const mp = g.halt ? null : this.marchPoint(g.anchor);
+      const mp = this.marchPoint(g.anchor);
       if (mp) {
         const dx = mp.x - g.ax;
         const dy = mp.y - g.ay;
         const d = Math.hypot(dx, dy) || 1;
+        // turn the nearest of the block's four sides toward the enemy
+        const phi = Math.atan2(dy, dx);
+        let best = Infinity;
+        for (let k = 0; k < 4; k++) {
+          let diff = phi - (g.ang + (k * Math.PI) / 2);
+          while (diff > Math.PI) diff -= TAU;
+          while (diff < -Math.PI) diff += TAU;
+          if (Math.abs(diff) < Math.abs(best)) best = diff;
+        }
+        g.ang += clamp(best, -0.55 * dt, 0.55 * dt);
+        g.ux = Math.cos(g.ang);
+        g.uy = Math.sin(g.ang);
         const sp = g.members[0].def.speed * 0.9;
         g.ax += (dx / d) * sp * dt;
         g.ay += (dy / d) * sp * dt;
@@ -705,7 +714,18 @@ export class World {
     }
     if (u.form && this.formStep(u, dt)) {
       if (this.live) {
-        this.acquire(u, dt);
+        const t = this.acquire(u, dt);
+        this.meleeTick(u, dt);
+        if (t) {
+          const d = u.def;
+          const dist = Math.hypot(t.x - u.x, t.y - u.y);
+          this.aimAt(u, t, dt);
+          if (dist <= d.reach + t.def.radius * 0.5 && u.cdT <= 0 && u.atk <= 0) {
+            u.atk = 1;
+            u.atkHit = true;
+            u.cdT = d.cooldownMin + Math.random() * (d.cooldownMax - d.cooldownMin);
+          }
+        }
         u.pose = Math.min(1, u.pose + dt * 6);
         if (u.moving) u.anim += dt * 9;
       } else this.idleStep(u, dt);
@@ -978,10 +998,9 @@ export class World {
     });
   }
 
-  stepMelee(u, dt) {
+  // Swing timer, cooldown and the moment the blow lands (halfway through).
+  meleeTick(u, dt) {
     const d = u.def;
-    const t = this.acquire(u, dt);
-    const speed = d.speed * u.speedMul;
     u.atk = Math.max(0, u.atk - dt / d.atkTime);
     u.cdT -= dt;
     if (u.atkHit && u.atk <= 0.5) {
@@ -1005,6 +1024,13 @@ export class World {
         }
       }
     }
+  }
+
+  stepMelee(u, dt) {
+    const d = u.def;
+    const t = this.acquire(u, dt);
+    const speed = d.speed * u.speedMul;
+    this.meleeTick(u, dt);
     if (t) {
       const dx = t.x - u.x;
       const dy = t.y - u.y;
