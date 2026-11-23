@@ -1,6 +1,6 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=39';
-import { drawLayer, OUT } from './sprites.js?v=39';
-import { drawDrop } from './art_units.js?v=39';
+import { TAU, K, UNIT, FEET } from './config.js?v=40';
+import { drawLayer, OUT } from './sprites.js?v=40';
+import { drawDrop } from './art_units.js?v=40';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -122,7 +122,7 @@ function drawArcher(ctx, dpr, sprites, u) {
   if (u.reloadT <= 0) {
     ctx.save();
     ctx.translate(-10 * K * draw - 1 * K, 0);
-    ctx.scale(0.85, 0.85);
+    ctx.scale(1.0, 1.0);
     drawLayer(ctx, A.arrow);
     ctx.restore();
   }
@@ -363,7 +363,7 @@ export function drawFx(ctx, dpr, sprites, world) {
     ctx.save();
     ctx.translate(gx, gy - 4 * a.h * p * (1 - p));
     ctx.rotate(Math.atan2(slope, a.x1 - a.x0));
-    ctx.scale(0.66, 0.66);
+    ctx.scale(1.05, 1.05);
     ctx.translate(-16 * K, 0);
     drawLayer(ctx, arrow);
     ctx.restore();
@@ -445,7 +445,7 @@ export function arrowMark(a) {
     g.stroke();
   });
   const rot = Math.atan2(a.y1 - a.y0 + 4 * a.h, a.x1 - a.x0);
-  const k = K / 0.56;
+  const k = (K / 0.56) * 1.8;
   return {
     spr,
     x: a.x1 - Math.cos(rot) * 4.5 * k,
