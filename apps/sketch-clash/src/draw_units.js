@@ -1,6 +1,6 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=38';
-import { drawLayer, OUT } from './sprites.js?v=38';
-import { drawDrop } from './art_units.js?v=38';
+import { TAU, K, UNIT, FEET } from './config.js?v=39';
+import { drawLayer, OUT } from './sprites.js?v=39';
+import { drawDrop } from './art_units.js?v=39';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -53,7 +53,7 @@ function eggBase(ctx, dpr, sprites, A, u, before) {
     ctx.restore();
   }
   if (pose < 0.5) drawLayer(ctx, A.torsoSide[GZ[u.gaze]]);
-  else drawLayer(ctx, u.species === 'roman' && u.target ? A.torsoAngry : A.torso);
+  else drawLayer(ctx, (u.species === 'roman' && u.target) || (u.species === 'archer' && u.drawT > 0) ? A.torsoAngry : A.torso);
   drawHurtMarks(ctx, sprites, u);
   burnGlow(ctx, u, 20 * K, 23 * K);
   if (u.hit > 0) {
@@ -113,12 +113,13 @@ function drawArcher(ctx, dpr, sprites, u) {
   const d = u.def;
   eggBase(ctx, dpr, sprites, A, u);
   const pose = u.pose;
-  ctx.translate(lerp(24 * K, d.pivot.x, pose), lerp(6 * K, d.pivot.y, pose));
-  ctx.rotate(lerp(0, u.aim, pose));
+  // carried low with the arrow pointing down and forward, raised level to shoot
+  ctx.translate(lerp(21 * K, d.pivot.x, pose), lerp(13 * K, d.pivot.y, pose));
+  ctx.rotate(lerp(0.75, u.aim, pose));
   const draw = u.drawT > 0 ? Math.min(1, u.drawT / d.drawTime) : 0;
   ctx.translate(-u.recoil * 1.5, 0);
   drawLayer(ctx, draw > 0 ? A.bowDrawn : A.bow);
-  {
+  if (u.reloadT <= 0) {
     ctx.save();
     ctx.translate(-10 * K * draw - 1 * K, 0);
     ctx.scale(0.85, 0.85);
@@ -349,6 +350,16 @@ export function drawFx(ctx, dpr, sprites, world) {
     ctx.ellipse(gx, gy + FEET * 0.5, 4, 1.5, 0, 0, TAU);
     ctx.fill();
     const slope = a.y1 - a.y0 + 4 * a.h * (2 * p - 1);
+    if (a.age < 0.2) {
+      // a fresh arrow trails a pale speed streak
+      const ang0 = Math.atan2(slope, a.x1 - a.x0);
+      ctx.strokeStyle = `rgba(150, 152, 162, ${0.55 * (1 - a.age / 0.2)})`;
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(gx, gy - 4 * a.h * p * (1 - p));
+      ctx.lineTo(gx - Math.cos(ang0) * 16, gy - 4 * a.h * p * (1 - p) - Math.sin(ang0) * 16);
+      ctx.stroke();
+    }
     ctx.save();
     ctx.translate(gx, gy - 4 * a.h * p * (1 - p));
     ctx.rotate(Math.atan2(slope, a.x1 - a.x0));

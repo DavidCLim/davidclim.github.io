@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=38';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=38';
+import { TAU, K } from './config.js?v=39';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=39';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -21,9 +21,37 @@ function eggBody(g, top, bot, rx = 20.7, ry = 23) {
   g.stroke();
 }
 
-function bigEyes(g, xs, gz, y = -4.8, rx = 4.4, ry = 4.6, ring = 1.6, pr = 2.8) {
+function bigEyes(g, xs, gz, y = -4.8, rx = 4.4, ry = 4.6, ring = 1.6, pr = 2.8, squint = false) {
   // white discs in a dark ring, with big plain pupils sitting low and to the right
   for (const x of xs) {
+    if (squint) {
+      // eyelid pulled down: only a low crescent of white and pupil under a flat dark lid
+      g.save();
+      g.beginPath();
+      g.rect(x - rx - 2, y - 0.2, rx * 2 + 4, ry + 3);
+      g.clip();
+      g.fillStyle = '#fdfdf8';
+      g.beginPath();
+      g.ellipse(x, y, rx, ry, 0, 0, TAU);
+      g.fill();
+      g.fillStyle = '#0d0b10';
+      g.beginPath();
+      g.arc(x + rx - pr + 0.3 + gz[0] * 0.5, y + 0.9 + gz[1] * 0.4, pr, 0, TAU);
+      g.fill();
+      g.strokeStyle = OUT;
+      g.lineWidth = ring;
+      g.beginPath();
+      g.ellipse(x, y, rx, ry, 0, 0, TAU);
+      g.stroke();
+      g.restore();
+      g.strokeStyle = OUT;
+      g.lineWidth = ring + 1.1;
+      g.beginPath();
+      g.moveTo(x - rx - 0.6, y - 0.2);
+      g.lineTo(x + rx + 0.6, y - 0.2);
+      g.stroke();
+      continue;
+    }
     g.fillStyle = '#fdfdf8';
     g.strokeStyle = OUT;
     g.lineWidth = ring;
@@ -456,7 +484,7 @@ function drawBushHat(g) {
   }
 }
 
-function drawArcherBody(g, front, gz) {
+function drawArcherBody(g, front, gz, squint) {
   g.lineJoin = 'round';
   g.lineCap = 'round';
   eggBody(g, '#74834a', '#566339');
@@ -485,7 +513,7 @@ function drawArcherBody(g, front, gz) {
   g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
   g.stroke();
 
-  bigEyes(g, front ? [-8.4, 8.4] : [-2.2, 12.6], gz, -3.8, 4.5, 4.7, 1.1, 3);
+  bigEyes(g, front ? [-8.4, 8.4] : [-2.2, 12.6], gz, -3.8, 4.5, 4.7, 1.1, 3, !!squint);
   // black face-paint streaks across the cheek under each eye
   g.strokeStyle = '#17171b';
   g.lineWidth = 1.7;

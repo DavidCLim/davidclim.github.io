@@ -1,4 +1,4 @@
-import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=38';
+import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=39';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -397,6 +397,8 @@ export class World {
       swing: 1,
       strafeDir: 1,
       drawT: 0, // archer: time spent drawing the bow
+      reloadT: 0, // archer: the bow is empty until the next arrow is nocked
+      aimHold: 0, // archer: how long the bow stays raised after a shot
       starT: Math.random() * 1.2, // ninja: time to the next throwing star
       throwT: 0, // grenadier: throwing animation
       charge: 0, // cavalry: how fast it is galloping
@@ -1252,10 +1254,14 @@ export class World {
         u.y -= (dy / dist) * speed * 0.7 * dt;
         u.moving = true;
       }
+      u.reloadT = Math.max(0, u.reloadT - dt);
+      u.aimHold = Math.max(0, u.aimHold - dt);
       if (u.drawT > 0) {
+        u.aimHold = 0.7;
         u.drawT += dt;
         if (u.drawT >= d.drawTime) {
           this.loose(u, t);
+          u.reloadT = 0.3;
           u.drawT = 0;
           u.cdT = d.cooldownMin + Math.random() * (d.cooldownMax - d.cooldownMin);
         }
@@ -1265,10 +1271,14 @@ export class World {
       }
     } else {
       u.drawT = 0;
+      u.aimHold = 0;
       u.aim -= u.aim * Math.min(1, dt * 6);
       this.marchStep(u, dt, speed * 0.85);
     }
-    this.readyUp(u, dt);
+    // the bow is carried low while walking and only comes up for the shot
+    if (u.moving) u.anim += dt * 9;
+    if (u.aimHold > 0) u.pose = Math.min(1, u.pose + dt * 8);
+    else u.pose = Math.max(0, u.pose - dt * 5);
   }
 
   // An arrow flies along a straight ground path with a high arc, then lands
