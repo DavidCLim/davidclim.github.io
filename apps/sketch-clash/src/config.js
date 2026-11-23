@@ -26,6 +26,7 @@ export const TEAMS = {
 // A mid-range skirmisher: walks toward the enemy while firing short rifle
 // bursts, no setup delay. Distances are CSS pixels, times are seconds.
 export const SOLDIER = {
+  kind: 'rifle',
   hp: 100,
   radius: 11 * UNIT,
   sep: 15 * UNIT,
@@ -50,6 +51,7 @@ export const SOLDIER = {
 // punches through a second enemy. If someone gets close it stands up and
 // hip-fires instead.
 export const SNIPER = {
+  kind: 'sniper',
   hp: 100,
   radius: 11 * UNIT,
   sep: 15 * UNIT,
@@ -73,8 +75,146 @@ export const SNIPER = {
   prone: { cy: 12 * K, mx: 52 * K, my: 6.4 * K },
 };
 
+const BODY = { radius: 11 * UNIT, sep: 15 * UNIT };
+
+// Sprays a cone of fire at close range and sets whatever it touches alight.
+export const FLAMETHROWER = {
+  kind: 'flame',
+  hp: 130,
+  ...BODY,
+  speed: 42,
+  sight: 280,
+  range: 100,
+  holdDist: 64,
+  dps: 62,
+  cone: 0.36,
+  burnTime: 2.6,
+  burnDps: 9,
+  onTime: 1.7,
+  offTime: 0.7,
+  pivot: { x: 9 * K, y: 10 * K },
+  muzzleLen: 46 * K,
+};
+
+// Walks up to melee range, shield up (it blunts bullets and arrows), and
+// jabs with a long spear.
+export const ROMAN = {
+  kind: 'melee',
+  hp: 180,
+  ...BODY,
+  speed: 40,
+  sight: 320,
+  reach: 36,
+  damage: 30,
+  atkTime: 0.45,
+  cooldownMin: 0.7,
+  cooldownMax: 1.1,
+  armor: 0.5,
+  weapon: 'spear',
+  pivot: { x: 4 * K, y: 12 * K },
+};
+
+// Lobs bombs in a high arc; a blast knocks units back and sends the
+// helmets of the fallen flying.
+export const GRENADIER = {
+  kind: 'grenade',
+  hp: 95,
+  ...BODY,
+  speed: 34,
+  sight: 360,
+  range: 270,
+  minRange: 70,
+  holdDist: 150,
+  damage: 52,
+  blastRadius: 58,
+  cooldownMin: 2.1,
+  cooldownMax: 3.1,
+  throwTime: 0.4,
+  pivot: { x: 17 * K, y: 14 * K },
+};
+
+// Stays well back and shoots arcing arrows that stick in the ground.
+export const ARCHER = {
+  kind: 'archer',
+  hp: 75,
+  ...BODY,
+  speed: 38,
+  sight: 540,
+  range: 440,
+  minRange: 70,
+  holdDist: 260,
+  drawTime: 0.5,
+  cooldownMin: 0.6,
+  cooldownMax: 1.1,
+  damage: 27,
+  arrowSpeed: 380,
+  pivot: { x: 13 * K, y: 3 * K },
+  muzzleLen: 14 * K,
+};
+
+// Fast charge with a long lance; when the horse goes down the rider gets
+// up as a knight.
+export const CAVALRY = {
+  kind: 'cavalry',
+  hp: 170,
+  radius: 17 * UNIT,
+  sep: 26 * UNIT,
+  speed: 100,
+  sight: 500,
+  reach: 50,
+  damage: 36,
+  cooldown: 0.8,
+  retreat: 0.6,
+  becomes: 'knight',
+  pivot: { x: 8 * K, y: -15 * K },
+};
+
+export const KNIGHT = {
+  kind: 'melee',
+  faction: 'cavalry',
+  hp: 75,
+  ...BODY,
+  speed: 46,
+  sight: 320,
+  reach: 44,
+  damage: 20,
+  atkTime: 0.4,
+  cooldownMin: 0.7,
+  cooldownMax: 1,
+  weapon: 'lance',
+  pivot: { x: 4 * K, y: 12 * K },
+};
+
+// A blur of quick katana cuts.
+export const NINJA = {
+  kind: 'melee',
+  hp: 85,
+  ...BODY,
+  speed: 96,
+  sight: 400,
+  reach: 26,
+  damage: 12,
+  atkTime: 0.2,
+  cooldownMin: 0.2,
+  cooldownMax: 0.32,
+  strafe: 34,
+  weapon: 'katana',
+  pivot: { x: 4 * K, y: 12 * K },
+};
+
+// `faction` decides who fights whom in free-for-all (defaults to the
+// species itself); a knight is the same faction as the cavalry.
 export const SPECIES = {
   soldier: { id: 'soldier', label: 'Soldier', def: SOLDIER },
+  flamethrower: { id: 'flamethrower', label: 'Flamethrower', def: FLAMETHROWER },
   sniper: { id: 'sniper', label: 'Sniper', def: SNIPER },
+  roman: { id: 'roman', label: 'Roman', def: ROMAN },
+  grenadier: { id: 'grenadier', label: 'Grenadier', def: GRENADIER },
+  archer: { id: 'archer', label: 'Archer', def: ARCHER },
+  cavalry: { id: 'cavalry', label: 'Cavalry', def: CAVALRY },
+  ninja: { id: 'ninja', label: 'Ninja', def: NINJA },
+  knight: { id: 'knight', label: 'Knight', def: KNIGHT },
 };
-export const SPECIES_ORDER = ['soldier', 'sniper'];
+// The order of the palette (the knight only ever comes from a cavalry).
+export const PALETTE_ORDER = ['soldier', 'flamethrower', 'sniper', 'roman', 'grenadier', 'archer', 'cavalry', 'ninja'];
+export const SPECIES_ORDER = [...PALETTE_ORDER, 'knight'];

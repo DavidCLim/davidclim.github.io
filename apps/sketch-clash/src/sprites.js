@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=9';
+import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=10';
 
 // Units are drawn from "art" coordinates matching the reference sprites
 // (origin at the body centre, y down) into small offscreen layers, then
@@ -8,10 +8,10 @@ import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=9';
 //   rifle - swings about the pivot to aim at the target
 //   hat   - the sniper's hat, so it can be tipped
 export const SCALE = 3; // canvas pixels per board pixel
-const ART = SCALE * K; // canvas pixels per art pixel
-const OUT = '#1c1a22';
+export const ART = SCALE * K; // canvas pixels per art pixel
+export const OUT = '#1c1a22';
 
-function makeLayer(minX, minY, maxX, maxY, draw) {
+export function makeLayer(minX, minY, maxX, maxY, draw) {
   const c = document.createElement('canvas');
   c.width = Math.ceil((maxX - minX) * ART);
   c.height = Math.ceil((maxY - minY) * ART);
@@ -25,7 +25,7 @@ function makeLayer(minX, minY, maxX, maxY, draw) {
   return { canvas: c, x: minX * K, y: minY * K, w: (maxX - minX) * K, h: (maxY - minY) * K };
 }
 
-function rr(g, x, y, w, h, r) {
+export function rr(g, x, y, w, h, r) {
   g.beginPath();
   g.moveTo(x + r, y);
   g.lineTo(x + w - r, y);
@@ -39,7 +39,7 @@ function rr(g, x, y, w, h, r) {
   g.closePath();
 }
 
-function star(g, cx, cy, outer, inner) {
+export function star(g, cx, cy, outer, inner) {
   g.fillStyle = '#ffd23f';
   g.strokeStyle = '#e8812a';
   g.lineWidth = 1.2;
@@ -58,14 +58,14 @@ function star(g, cx, cy, outer, inner) {
 }
 
 // ---------- shared: feet, shadow ----------
-const FEET_POSES = [
+export const FEET_POSES = [
   [[-4.3, 24.8], [8.8, 24.8]],
   [[-1, 21.8], [8.8, 24.8]],
   [[-8, 24.8], [12, 24.8]],
   [[-4.3, 24.8], [12, 21.8]],
 ];
 
-function drawFeet(g, pose, big) {
+export function drawFeet(g, pose, big, color) {
   g.save();
   g.translate(1, 28);
   g.scale(1, 0.27);
@@ -79,7 +79,7 @@ function drawFeet(g, pose, big) {
   g.fill();
   g.restore();
 
-  g.fillStyle = '#25232e';
+  g.fillStyle = color || '#25232e';
   g.strokeStyle = OUT;
   g.lineWidth = 1.3;
   for (const [x, y] of pose) {

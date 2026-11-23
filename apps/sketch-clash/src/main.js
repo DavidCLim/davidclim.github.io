@@ -1,6 +1,8 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=9';
-import { World } from './world.js?v=9';
-import { buildSprites, drawLayer, paintIcon, stampHelmet, stampHat } from './sprites.js?v=9';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=10';
+import { World } from './world.js?v=10';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=10';
+import { buildUnitArt } from './art_units.js?v=10';
+import { drawUnit, drawFx, stampDrop, stampArrow, hasIcon, paintUnitIcon } from './draw_units.js?v=10';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -22,7 +24,7 @@ const brushInput = $('brush');
 const brushDot = $('brush-dot');
 const palette = $('palette');
 
-const sprites = buildSprites();
+const sprites = { ...buildSprites(), ...buildUnitArt() };
 const world = new World();
 
 let W = 1;
@@ -34,13 +36,22 @@ let erasing = false;
 let over = false;
 const ptr = { x: 0, y: 0, inside: false, down: false };
 
-world.onDeath = (u) => (u.species === 'sniper' ? stampHat : stampHelmet)(gctx, u.x, u.y + FEET - 4);
+// A fallen unit leaves its headgear on the ground (a cavalry just becomes
+// a knight); blasts throw it into the air first, arrows stay stuck in.
+world.onDeath = (u) => stampDrop(gctx, u.species, u.x, u.y + FEET - 4);
+world.onDebrisLand = (d) => stampDrop(gctx, d.species, d.x, d.y + FEET - 4);
+world.onArrowLand = (a) => stampArrow(gctx, a);
+
+function paintAny(canvas, id) {
+  if (hasIcon(id)) paintUnitIcon(canvas, sprites, id);
+  else paintIcon(canvas, sprites, id);
+}
 
 // The palette icons are the same art as on the field.
 let species = 'soldier';
 const unitButtons = [...document.querySelectorAll('.unit-btn')];
 for (const b of unitButtons) {
-  paintIcon(b.querySelector('canvas'), sprites, b.dataset.species);
+  paintAny(b.querySelector('canvas'), b.dataset.species);
   b.addEventListener('click', () => {
     species = b.dataset.species;
     for (const o of unitButtons) o.setAttribute('aria-pressed', String(o === b));
@@ -297,7 +308,7 @@ function syncLegend() {
       const icon = document.createElement('canvas');
       icon.width = 104;
       icon.height = 76;
-      paintIcon(icon, sprites, id);
+      paintAny(icon, id);
       const count = document.createElement('b');
       const label = document.createElement('span');
       label.textContent = SPECIES[id].label;
@@ -532,7 +543,8 @@ function render() {
       drawLayer(ctx, sprites.ring[u.team]);
     }
     if (u.species === 'sniper') drawSniper(u);
-    else drawSoldier(u);
+    else if (u.species === 'soldier') drawSoldier(u);
+    else drawUnit(ctx, dpr, sprites, u);
   }
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -583,7 +595,7 @@ function render() {
 
   for (const p of world.puffs) {
     const t = p.age / p.life;
-    ctx.fillStyle = `rgba(165, 167, 176, ${0.45 * (1 - t)})`;
+    ctx.fillStyle = p.white ? `rgba(250, 250, 252, ${0.75 * (1 - t)})` : `rgba(165, 167, 176, ${0.45 * (1 - t)})`;
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.size * (1 + 1.8 * t), 0, TAU);
     ctx.fill();
@@ -607,7 +619,9 @@ function render() {
     ctx.fill();
   }
 
-  // Ghosts drift up and fade where a unit fell (a sniper's keeps his hat).
+  drawFx(ctx, dpr, sprites, world);
+
+  // Ghosts drift up and fade where a unit fell, keeping their headgear.
   for (const g of world.ghosts) {
     const gl = sprites[g.species].ghost;
     const t = g.age / GHOST_LIFE;

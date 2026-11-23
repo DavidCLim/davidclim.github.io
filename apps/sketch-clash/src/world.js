@@ -1,4 +1,4 @@
-import { SPECIES, GAZE_WEIGHTS } from './config.js?v=9';
+import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=10';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -68,6 +68,13 @@ export class World {
     this.streaks = []; // sniper shot trails
     this.puffs = []; // gun smoke
     this.casings = []; // ejected shells
+    this.flames = []; // flamethrower stream
+    this.bombs = []; // grenades in the air
+    this.arrows = []; // arrows in the air
+    this.blasts = []; // explosions
+    this.debris = []; // headgear thrown by blasts
+    this.onArrowLand = null;
+    this.onDebrisLand = null;
     this.speciesCounts = {};
     this.mode = 'free'; // 'free' | 'team'
     this.started = false;
@@ -105,9 +112,9 @@ export class World {
   // `team` is only meaningful in team battle (null in free-for-all).
   addUnit(species, team, x, y) {
     const def = SPECIES[species].def;
-    const side = this.mode === 'team' ? team : species;
+    const side = this.mode === 'team' ? team : def.faction || species;
     if (!this.grids.has(side)) this.grids.set(side, this.makeCells());
-    this.units.push({
+    const u = {
       id: this.nextId++,
       species,
       def,
@@ -141,7 +148,24 @@ export class World {
       anim: Math.random() * 4,
       moving: false,
       dead: false,
-    });
+      firing: false, // flamethrower: spraying
+      burn: 0, // seconds left on fire
+      burnTick: 0,
+      kx: 0, // knockback velocity
+      ky: 0,
+      atk: 0, // melee swing / lance thrust, 1 -> 0
+      atkHit: false,
+      swing: 1,
+      strafeDir: 1,
+      drawT: 0, // archer: time spent drawing the bow
+      throwT: 0, // grenadier: throwing animation
+      charge: 0, // cavalry: how fast it is galloping
+      retreatT: 0,
+      dirx: 1,
+      diry: 0,
+    };
+    this.units.push(u);
+    return u;
   }
 
   clear() {
@@ -152,6 +176,11 @@ export class World {
     this.streaks = [];
     this.puffs = [];
     this.casings = [];
+    this.flames = [];
+    this.bombs = [];
+    this.arrows = [];
+    this.blasts = [];
+    this.debris = [];
     this.started = false;
     this.counts = {};
     this.speciesCounts = {};
@@ -302,21 +331,32 @@ export class World {
   }
 
   // Damage with a spark burst; kills leave a ghost (and the caller's
-  // onDeath drops the helmet / hat).
-  hurt(u, dmg, x, y) {
+  // onDeath drops the helmet / hat). `kind` is 'bullet' | 'arrow' | 'snipe'
+  // | 'burn' | 'blast' (or nothing for melee); armour only stops the first two.
+  hurt(u, dmg, x, y, kind) {
     if (u.dead) return;
+    if (u.def.armor && (kind === 'bullet' || kind === 'arrow')) dmg *= u.def.armor;
     u.hp -= dmg;
     u.hit = 0.12;
-    for (let i = 0; i < 3; i++) {
-      const a = Math.random() * Math.PI * 2;
-      const sp = 40 + Math.random() * 70;
-      this.sparks.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0.25 + Math.random() * 0.15, max: 0.4 });
+    if (kind !== 'burn') {
+      for (let i = 0; i < 3; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const sp = 40 + Math.random() * 70;
+        this.sparks.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0.25 + Math.random() * 0.15, max: 0.4 });
+      }
     }
     if (u.hp <= 0) {
       u.dead = true;
       this.anyDead = true;
       this.ghosts.push({ x: u.x, y: u.y, age: 0, seed: Math.random(), species: u.species });
-      if (this.onDeath) this.onDeath(u);
+      if (u.def.becomes) {
+        // the horse is gone; its rider gets up on foot
+        const k = this.addUnit(u.def.becomes, u.team, u.x, u.y);
+        k.facing = u.facing;
+        k.pose = 1;
+        k.cdT = 0.5;
+      } else if (kind === 'blast') this.launchDrop(u);
+      else if (this.onDeath) this.onDeath(u);
     }
   }
 
@@ -415,7 +455,7 @@ export class World {
     hits.sort((a, b) => a.dist - b.dist);
     const n = Math.min(pierce, hits.length);
     for (let i = 0; i < n; i++) {
-      this.hurt(hits[i].u, i === 0 ? damage : damage * 0.6, hits[i].x, hits[i].y);
+      this.hurt(hits[i].u, i === 0 ? damage : damage * 0.6, hits[i].x, hits[i].y, 'snipe');
     }
     if (hits.length >= pierce) end = { x: ox + c * hits[pierce - 1].dist, y: oy + s * hits[pierce - 1].dist };
     return end;
@@ -427,12 +467,49 @@ export class World {
     u.recoil = Math.max(0, u.recoil - dt * 5);
     u.moving = false;
     u.breath += dt;
+    if (u.kx || u.ky) {
+      u.x += u.kx * dt;
+      u.y += u.ky * dt;
+      const decay = Math.max(0, 1 - dt * 5);
+      u.kx *= decay;
+      u.ky *= decay;
+      if (Math.abs(u.kx) + Math.abs(u.ky) < 4) u.kx = u.ky = 0;
+    }
+    if (u.burn > 0) {
+      u.burn -= dt;
+      u.burnTick -= dt;
+      if (u.burnTick <= 0) {
+        u.burnTick = 0.25;
+        this.hurt(u, u.def.burnDps ? u.def.burnDps * 0.25 : 2.2, u.x, u.y, 'burn');
+        if (u.dead) return;
+      }
+      if (Math.random() < 0.25) {
+        this.flames.push({
+          x: u.x + (Math.random() - 0.5) * 12,
+          y: u.y - 4 - Math.random() * 12,
+          vx: (Math.random() - 0.5) * 14,
+          vy: -28 - Math.random() * 18,
+          age: 0,
+          life: 0.35 + Math.random() * 0.2,
+          size: 3 + Math.random() * 2,
+          dot: Math.random() < 0.4,
+          small: true,
+        });
+      }
+    }
     if (!this.live) {
       this.idleStep(u, dt);
       return;
     }
-    if (u.species === 'sniper') this.stepSniper(u, dt);
-    else this.stepSoldier(u, dt);
+    switch (u.def.kind) {
+      case 'sniper': this.stepSniper(u, dt); break;
+      case 'flame': this.stepFlame(u, dt); break;
+      case 'melee': this.stepMelee(u, dt); break;
+      case 'grenade': this.stepGrenade(u, dt); break;
+      case 'archer': this.stepArcher(u, dt); break;
+      case 'cavalry': this.stepCavalry(u, dt); break;
+      default: this.stepSoldier(u, dt);
+    }
   }
 
   stepSoldier(u, dt) {
@@ -569,6 +646,433 @@ export class World {
     else this.idleStep(u, dt);
   }
 
+  // The first (non-dead) enemy cells within r of a point, handed to fn.
+  eachEnemyNear(side, x, y, r, fn) {
+    const enemy = this.enemyGrids.get(side);
+    if (!enemy || !enemy.length) return;
+    const c0 = this.cellCol(x - r);
+    const c1 = this.cellCol(x + r);
+    const r0 = this.cellRow(y - r);
+    const r1 = this.cellRow(y + r);
+    for (let gy = r0; gy <= r1; gy++) {
+      for (let gx = c0; gx <= c1; gx++) {
+        for (let g = 0; g < enemy.length; g++) {
+          const cell = enemy[g][gy * this.cols + gx];
+          for (let i = 0; i < cell.length; i++) {
+            if (!cell[i].dead) fn(cell[i]);
+          }
+        }
+      }
+    }
+  }
+
+  acquire(u, dt) {
+    u.retargetT -= dt;
+    if (u.retargetT <= 0) {
+      u.retargetT = 0.25 + Math.random() * 0.2;
+      u.target = this.findTarget(u);
+    }
+    if (u.target && u.target.dead) u.target = null;
+    return u.target;
+  }
+
+  // Aims the held weapon at the target (angle in the unit's mirrored space).
+  aimAt(u, t, dt) {
+    const d = u.def;
+    const aimTo = Math.atan2(t.y - (u.y + d.pivot.y), (t.x - (u.x + u.facing * d.pivot.x)) * u.facing);
+    u.aim += (clamp(aimTo, -1.25, 1.25) - u.aim) * Math.min(1, dt * 14);
+  }
+
+  readyUp(u, dt) {
+    if (u.target || u.moving) u.pose = Math.min(1, u.pose + dt * 6);
+    else this.idleStep(u, dt);
+    if (u.moving) u.anim += dt * 9;
+  }
+
+  stepFlame(u, dt) {
+    const d = u.def;
+    const t = this.acquire(u, dt);
+    const speed = d.speed * u.speedMul;
+    u.firing = false;
+    if (t) {
+      const dx = t.x - u.x;
+      const dy = t.y - u.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      if (Math.abs(dx) > 3) u.facing = dx > 0 ? 1 : -1;
+      this.aimAt(u, t, dt);
+      if (dist > d.holdDist) {
+        const s = speed * (u.burstLeft > 0 ? 0.6 : 1);
+        u.x += (dx / dist) * s * dt;
+        u.y += (dy / dist) * s * dt;
+        u.moving = true;
+      }
+      u.burstT -= dt;
+      if (u.burstLeft > 0) {
+        if (dist <= d.range * 1.1) {
+          u.firing = true;
+          this.spray(u, dt);
+        }
+        if (u.burstT <= 0) {
+          u.burstLeft = 0;
+          u.burstT = d.offTime * (0.7 + Math.random() * 0.6);
+        }
+      } else if (u.burstT <= 0 && dist <= d.range) {
+        u.burstLeft = 1;
+        u.burstT = d.onTime * (0.8 + Math.random() * 0.4);
+      }
+    } else {
+      u.burstLeft = 0;
+      u.aim -= u.aim * Math.min(1, dt * 6);
+      this.marchStep(u, dt, speed * 0.85);
+    }
+    this.readyUp(u, dt);
+  }
+
+  // A stream of fire: visual particles plus a cone that burns everything in it.
+  spray(u, dt) {
+    const d = u.def;
+    const m = this.muzzleOf(u);
+    const ang = u.facing > 0 ? u.aim : Math.PI - u.aim;
+    for (let i = 0; i < 2; i++) {
+      const a = ang + (Math.random() - 0.5) * 0.28;
+      const sp = 190 + Math.random() * 80;
+      this.flames.push({
+        x: m.x,
+        y: m.y,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp,
+        age: 0,
+        life: 0.36 + Math.random() * 0.16,
+        size: 3 + Math.random() * 2,
+        dot: Math.random() < 0.5,
+      });
+    }
+    const cone = d.cone;
+    this.eachEnemyNear(u.side, m.x, m.y, d.range, (o) => {
+      const dx = o.x - m.x;
+      const dy = o.y - m.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > d.range + o.def.radius) return;
+      let da = Math.atan2(dy, dx) - ang;
+      while (da > Math.PI) da -= TAU;
+      while (da < -Math.PI) da += TAU;
+      if (Math.abs(da) > cone + (o.def.radius / Math.max(dist, 1)) * 0.9) return;
+      o.burn = d.burnTime;
+      this.hurt(o, d.dps * dt, o.x, o.y, 'burn');
+    });
+  }
+
+  stepMelee(u, dt) {
+    const d = u.def;
+    const t = this.acquire(u, dt);
+    const speed = d.speed * u.speedMul;
+    u.atk = Math.max(0, u.atk - dt / d.atkTime);
+    u.cdT -= dt;
+    if (u.atkHit && u.atk <= 0.5) {
+      u.atkHit = false;
+      const v = u.target;
+      if (v && !v.dead && Math.hypot(v.x - u.x, v.y - u.y) <= d.reach * 1.5 + v.def.radius) {
+        this.hurt(v, d.damage * (0.85 + Math.random() * 0.3), v.x, v.y);
+        if (d.weapon === 'katana') {
+          for (let i = 0; i < 2; i++) {
+            this.puffs.push({
+              x: v.x + (Math.random() - 0.5) * 12,
+              y: v.y + (Math.random() - 0.5) * 8,
+              vx: (Math.random() - 0.5) * 30,
+              vy: -10 - Math.random() * 20,
+              age: 0,
+              life: 0.45 + Math.random() * 0.25,
+              size: 4 + Math.random() * 3,
+              white: true,
+            });
+          }
+        }
+      }
+    }
+    if (t) {
+      const dx = t.x - u.x;
+      const dy = t.y - u.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      if (Math.abs(dx) > 3) u.facing = dx > 0 ? 1 : -1;
+      this.aimAt(u, t, dt);
+      const reach = d.reach + t.def.radius * 0.5;
+      if (dist > reach * 0.85) {
+        u.x += (dx / dist) * speed * dt;
+        u.y += (dy / dist) * speed * dt;
+        u.moving = true;
+      } else if (d.strafe) {
+        u.x += (-dy / dist) * u.strafeDir * d.strafe * dt;
+        u.y += (dx / dist) * u.strafeDir * d.strafe * dt;
+        u.moving = true;
+      }
+      if (dist <= reach && u.cdT <= 0 && u.atk <= 0) {
+        u.atk = 1;
+        u.atkHit = true;
+        u.swing = u.swing > 0 ? -1 : 1;
+        u.strafeDir = Math.random() < 0.5 ? 1 : -1;
+        u.cdT = d.cooldownMin + Math.random() * (d.cooldownMax - d.cooldownMin);
+      }
+    } else {
+      u.aim -= u.aim * Math.min(1, dt * 6);
+      this.marchStep(u, dt, speed * 0.85);
+    }
+    this.readyUp(u, dt);
+  }
+
+  stepCavalry(u, dt) {
+    const d = u.def;
+    const t = this.acquire(u, dt);
+    const speed = d.speed * u.speedMul;
+    u.atk = Math.max(0, u.atk - dt / 0.4);
+    u.cdT -= dt;
+    if (u.retreatT > 0) {
+      // carry on past the target, then wheel round for another pass
+      u.retreatT -= dt;
+      u.x += u.dirx * speed * 0.9 * dt;
+      u.y += u.diry * speed * 0.9 * dt;
+      if (Math.abs(u.dirx) > 0.05) u.facing = u.dirx > 0 ? 1 : -1;
+      u.moving = true;
+    } else if (t) {
+      const dx = t.x - u.x;
+      const dy = t.y - u.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      if (Math.abs(dx) > 3) u.facing = dx > 0 ? 1 : -1;
+      u.charge = Math.min(1, u.charge + dt * 1.6);
+      const s = speed * (0.5 + 0.5 * u.charge);
+      u.x += (dx / dist) * s * dt;
+      u.y += (dy / dist) * s * dt;
+      u.moving = true;
+      if (dist <= d.reach + t.def.radius && u.cdT <= 0) {
+        t.kx += (dx / dist) * 120;
+        t.ky += (dy / dist) * 120;
+        this.hurt(t, d.damage * (0.85 + Math.random() * 0.3), t.x, t.y);
+        u.atk = 1;
+        u.cdT = d.cooldown;
+        u.retreatT = d.retreat * (0.8 + Math.random() * 0.5);
+        const turn = (Math.random() - 0.5) * 0.9;
+        const c = Math.cos(turn);
+        const s2 = Math.sin(turn);
+        u.dirx = (dx / dist) * c - (dy / dist) * s2;
+        u.diry = (dx / dist) * s2 + (dy / dist) * c;
+        u.charge = 0.35;
+      }
+    } else {
+      u.charge = 0;
+      this.marchStep(u, dt, speed * 0.55);
+    }
+    if (u.moving) u.anim += dt * (6 + 8 * u.charge);
+    u.pose = u.moving || t ? Math.min(1, u.pose + dt * 6) : Math.max(0, u.pose - dt * 5);
+  }
+
+  stepGrenade(u, dt) {
+    const d = u.def;
+    const t = this.acquire(u, dt);
+    const speed = d.speed * u.speedMul;
+    u.throwT = Math.max(0, u.throwT - dt);
+    if (t) {
+      const dx = t.x - u.x;
+      const dy = t.y - u.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      if (Math.abs(dx) > 3) u.facing = dx > 0 ? 1 : -1;
+      if (dist > d.holdDist) {
+        u.x += (dx / dist) * speed * dt;
+        u.y += (dy / dist) * speed * dt;
+        u.moving = true;
+      } else if (dist < d.minRange) {
+        u.x -= (dx / dist) * speed * 0.7 * dt;
+        u.y -= (dy / dist) * speed * 0.7 * dt;
+        u.moving = true;
+      }
+      u.cdT -= dt;
+      if (u.cdT <= 0 && dist <= d.range && dist >= d.minRange * 0.8) {
+        const o = this.rifleOrigin(u);
+        const sp = dist * 0.07;
+        const tx = t.x + (Math.random() - 0.5) * sp * 2;
+        const ty = t.y + (Math.random() - 0.5) * sp * 2;
+        const flight = Math.hypot(tx - o.x, ty - o.y);
+        this.bombs.push({
+          x0: o.x,
+          y0: o.y,
+          x1: tx,
+          y1: ty,
+          age: 0,
+          dur: 0.5 + flight / 440,
+          h: 34 + flight * 0.24,
+          side: u.side,
+          damage: d.damage,
+          radius: d.blastRadius,
+          spin: (Math.random() < 0.5 ? -1 : 1) * (7 + Math.random() * 4),
+        });
+        u.throwT = d.throwTime;
+        u.cdT = d.cooldownMin + Math.random() * (d.cooldownMax - d.cooldownMin);
+      }
+    } else {
+      this.marchStep(u, dt, speed * 0.85);
+    }
+    this.readyUp(u, dt);
+  }
+
+  stepArcher(u, dt) {
+    const d = u.def;
+    const t = this.acquire(u, dt);
+    const speed = d.speed * u.speedMul;
+    if (t) {
+      const dx = t.x - u.x;
+      const dy = t.y - u.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      if (Math.abs(dx) > 3) u.facing = dx > 0 ? 1 : -1;
+      this.aimAt(u, t, dt);
+      if (u.drawT === 0 && dist > d.holdDist) {
+        u.x += (dx / dist) * speed * dt;
+        u.y += (dy / dist) * speed * dt;
+        u.moving = true;
+      } else if (u.drawT === 0 && dist < d.minRange) {
+        u.x -= (dx / dist) * speed * 0.7 * dt;
+        u.y -= (dy / dist) * speed * 0.7 * dt;
+        u.moving = true;
+      }
+      if (u.drawT > 0) {
+        u.drawT += dt;
+        if (u.drawT >= d.drawTime) {
+          this.loose(u, t);
+          u.drawT = 0;
+          u.cdT = d.cooldownMin + Math.random() * (d.cooldownMax - d.cooldownMin);
+        }
+      } else {
+        u.cdT -= dt;
+        if (u.cdT <= 0 && dist <= d.range && dist >= d.minRange * 0.6) u.drawT = 0.0001;
+      }
+    } else {
+      u.drawT = 0;
+      u.aim -= u.aim * Math.min(1, dt * 6);
+      this.marchStep(u, dt, speed * 0.85);
+    }
+    this.readyUp(u, dt);
+  }
+
+  // An arrow flies along a straight ground path with a high arc, then lands
+  // where the target was (and may hit whoever is standing there).
+  loose(u, t) {
+    const d = u.def;
+    const m = this.muzzleOf(u);
+    const dist = Math.hypot(t.x - m.x, t.y - m.y);
+    const sp = 6 + dist * 0.03;
+    this.arrows.push({
+      x0: m.x,
+      y0: m.y,
+      x1: t.x + (Math.random() - 0.5) * sp * 2,
+      y1: t.y + (Math.random() - 0.5) * sp * 2,
+      age: 0,
+      dur: 0.25 + dist / d.arrowSpeed,
+      h: 16 + dist * 0.2,
+      side: u.side,
+      damage: d.damage,
+    });
+    u.recoil = 1;
+  }
+
+  stepArrows(dt) {
+    let gone = false;
+    for (const a of this.arrows) {
+      a.age += dt;
+      if (a.age < a.dur) continue;
+      a.dead = true;
+      gone = true;
+      let hit = null;
+      let bestD2 = Infinity;
+      this.eachEnemyNear(a.side, a.x1, a.y1, 24, (o) => {
+        const dx = o.x - a.x1;
+        const dy = o.y - a.y1;
+        const d2 = dx * dx + dy * dy;
+        const r = o.def.radius + 3;
+        if (d2 <= r * r && d2 < bestD2) {
+          bestD2 = d2;
+          hit = o;
+        }
+      });
+      if (hit) this.hurt(hit, a.damage, a.x1, a.y1, 'arrow');
+      if (this.onArrowLand) this.onArrowLand(a);
+    }
+    if (gone) this.arrows = this.arrows.filter((a) => !a.dead);
+  }
+
+  stepBombs(dt) {
+    let gone = false;
+    for (const b of this.bombs) {
+      b.age += dt;
+      if (b.age < b.dur) continue;
+      b.dead = true;
+      gone = true;
+      this.explode(b);
+    }
+    if (gone) this.bombs = this.bombs.filter((b) => !b.dead);
+  }
+
+  // A grenade blast: damage with falloff, knockback, a fireball and smoke.
+  explode(b) {
+    const x = b.x1;
+    const y = b.y1;
+    this.blasts.push({ x, y, age: 0, life: 0.75, r: b.radius, seed: Math.random() });
+    for (let i = 0; i < 7; i++) {
+      const a = Math.random() * TAU;
+      const sp = 20 + Math.random() * 50;
+      this.puffs.push({
+        x: x + Math.cos(a) * 12,
+        y: y + Math.sin(a) * 8,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp - 16,
+        age: 0,
+        life: 1.1 + Math.random() * 0.8,
+        size: 11 + Math.random() * 9,
+      });
+    }
+    const reach = b.radius;
+    this.eachEnemyNear(b.side, x, y, reach + 14, (o) => {
+      const dx = o.x - x;
+      const dy = o.y - y;
+      const dist = Math.hypot(dx, dy) || 1;
+      if (dist > reach + o.def.radius) return;
+      const f = Math.max(0.25, 1 - dist / (reach + o.def.radius));
+      o.kx += (dx / dist) * 300 * f;
+      o.ky += (dy / dist) * 300 * f;
+      this.hurt(o, b.damage * f, o.x, o.y, 'blast');
+    });
+  }
+
+  // A killed unit's headgear is thrown high into the air.
+  launchDrop(u) {
+    this.debris.push({
+      x: u.x,
+      y: u.y,
+      z: 10,
+      vx: u.kx * 0.5 + (Math.random() - 0.5) * 60,
+      vy: u.ky * 0.5 + (Math.random() - 0.5) * 40,
+      vz: 250 + Math.random() * 130,
+      rot: Math.random() * 6,
+      spin: (Math.random() < 0.5 ? -1 : 1) * (6 + Math.random() * 8),
+      age: 0,
+      species: u.species,
+    });
+  }
+
+  stepDebris(dt) {
+    let gone = false;
+    for (const d of this.debris) {
+      d.age += dt;
+      d.x += d.vx * dt;
+      d.y += d.vy * dt;
+      d.vz -= 640 * dt;
+      d.z += d.vz * dt;
+      d.rot += d.spin * dt;
+      if (d.z <= 0) {
+        d.dead = true;
+        gone = true;
+        if (this.onDebrisLand) this.onDebrisLand(d);
+      }
+    }
+    if (gone) this.debris = this.debris.filter((d) => !d.dead);
+  }
+
   // Standing around. A soldier lowers readiness and lets the eyes wander;
   // the sniper runs his own routine (see SNIPER_IDLES).
   idleStep(u, dt) {
@@ -700,7 +1204,7 @@ export class World {
       if (hit) {
         b.dead = true;
         anyGone = true;
-        this.hurt(hit, b.damage, b.x, b.y);
+        this.hurt(hit, b.damage, b.x, b.y, 'bullet');
       }
     }
     if (anyGone) this.bullets = this.bullets.filter((b) => !b.dead);
@@ -737,6 +1241,18 @@ export class World {
       c.rot += c.spin * dt;
     }
     if (this.casings.some((c) => c.age > c.life)) this.casings = this.casings.filter((c) => c.age <= c.life);
+
+    for (const f of this.flames) {
+      f.age += dt;
+      f.x += f.vx * dt;
+      f.y += f.vy * dt;
+      f.vx *= 0.985;
+      f.vy *= 0.985;
+    }
+    if (this.flames.some((f) => f.age > f.life)) this.flames = this.flames.filter((f) => f.age <= f.life);
+
+    for (const b of this.blasts) b.age += dt;
+    if (this.blasts.some((b) => b.age > b.life)) this.blasts = this.blasts.filter((b) => b.age <= b.life);
   }
 
   // The eraser: removes units under the brush with no ghost or helmet.
@@ -768,6 +1284,9 @@ export class World {
     }
     this.separate();
     this.stepBullets(dt);
+    this.stepArrows(dt);
+    this.stepBombs(dt);
+    this.stepDebris(dt);
     this.stepEffects(dt);
     if (this.anyDead) {
       this.units = this.units.filter((u) => !u.dead);
