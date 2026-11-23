@@ -1,6 +1,6 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=33';
-import { drawLayer, OUT } from './sprites.js?v=33';
-import { drawDrop } from './art_units.js?v=33';
+import { TAU, K, UNIT, FEET } from './config.js?v=34';
+import { drawLayer, OUT } from './sprites.js?v=34';
+import { drawDrop } from './art_units.js?v=34';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -205,7 +205,7 @@ function drawCowboy(ctx, dpr, sprites, u) {
   const d = u.def;
   eggBase(ctx, dpr, sprites, A, u);
   const pose = u.pose;
-  ctx.translate(lerp(14 * K, d.pivot.x, pose) - u.recoil * 2.2 * K, lerp(12 * K, d.pivot.y, pose));
+  ctx.translate(lerp(14 * K, d.pivot.x, pose) - u.recoil * 2.2 * K, lerp(17 * K, d.pivot.y, pose));
   ctx.rotate(lerp(0.9, u.aim - u.recoil * 0.18, pose));
   ctx.scale(0.78, 0.78);
   drawLayer(ctx, u.flash > 0 ? A.pistolFire : A.pistol);
@@ -495,7 +495,7 @@ const ICONS = {
   }],
   cavalry: [84, 41, 39, null],
   cowboy: [84, 33, 39, (g, S) => {
-    g.translate(11 * K, 12 * K);
+    g.translate(11 * K, 16.5 * K);
     g.rotate(-0.05);
     g.scale(0.78, 0.78);
     drawLayer(g, S.pistol);

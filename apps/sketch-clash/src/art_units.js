@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=33';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=33';
+import { TAU, K } from './config.js?v=34';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=34';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -21,22 +21,19 @@ function eggBody(g, top, bot, rx = 20.7, ry = 23) {
   g.stroke();
 }
 
-function bigEyes(g, xs, gz, y = -4.8, rx = 5.2, ry = 5.8) {
+function bigEyes(g, xs, gz, y = -4.8, rx = 6.3, ry = 6.5) {
+  // white discs in a heavy dark ring, with big plain pupils
   for (const x of xs) {
-    g.fillStyle = '#fbfbf6';
+    g.fillStyle = '#fdfdf8';
     g.strokeStyle = OUT;
-    g.lineWidth = 1.4;
+    g.lineWidth = 2.1;
     g.beginPath();
     g.ellipse(x, y, rx, ry, 0, 0, TAU);
     g.fill();
     g.stroke();
-    g.fillStyle = '#121016';
+    g.fillStyle = '#100d12';
     g.beginPath();
-    g.arc(x + gz[0], y + gz[1], 3.3, 0, TAU);
-    g.fill();
-    g.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    g.beginPath();
-    g.arc(x + gz[0] - 1, y + gz[1] - 2, 0.95, 0, TAU);
+    g.arc(x + gz[0] * 1.15, y + gz[1] * 0.8 + 0.4, 3.7, 0, TAU);
     g.fill();
   }
 }
@@ -98,17 +95,13 @@ function drawFlameBody(g, front, gz) {
     g.beginPath();
     g.arc(x, -7, 5.9, 0, TAU);
     g.fill();
-    g.fillStyle = '#f2bf1f';
+    g.fillStyle = '#f7c317';
     g.beginPath();
-    g.arc(x, -7, 4.4, 0, TAU);
+    g.arc(x, -7, 4.6, 0, TAU);
     g.fill();
-    g.fillStyle = '#e58a14';
+    g.fillStyle = 'rgba(255, 255, 255, 0.9)';
     g.beginPath();
-    g.arc(x + 0.7 + gz[0] * 0.3, -6.5, 2.1, 0, TAU);
-    g.fill();
-    g.fillStyle = 'rgba(255, 255, 255, 0.85)';
-    g.beginPath();
-    g.arc(x - 1.5, -8.7, 1.1, 0, TAU);
+    g.arc(x - 1.7, -8.8, 1.5, 0, TAU);
     g.fill();
   }
   const fx = front ? 0 : 7;
@@ -126,14 +119,16 @@ function drawNozzle(g, firing) {
   g.fillStyle = '#e9a53a';
   g.strokeStyle = OUT;
   g.lineWidth = 1.1;
-  rr(g, 0, -2, 40, 4, 1.3);
+  rr(g, 0, -3.2, 40, 6.4, 1.4);
   g.fill();
   g.stroke();
-  g.fillStyle = '#fbd36a';
-  g.fillRect(1.5, -1.3, 36, 0.9);
-  g.fillStyle = firing ? '#fff2a8' : '#f2872a';
+  g.fillStyle = '#f6c866';
+  g.fillRect(1.5, -2.3, 36, 1.4);
+  g.fillStyle = '#c98a22';
+  g.fillRect(1.5, 1.2, 36, 1.3);
+  g.fillStyle = firing ? '#fff2a8' : '#f58a2c';
   g.beginPath();
-  g.arc(41.5, 0, 2.5, 0, TAU);
+  g.arc(41.5, 0, 3.5, 0, TAU);
   g.fill();
   if (firing) {
     const r = g.createRadialGradient(44, 0, 1, 44, 0, 9);
@@ -306,13 +301,13 @@ function drawGrenBody(g, front, gz) {
   g.clip();
   g.lineCap = 'butt';
   g.strokeStyle = OUT;
-  g.lineWidth = 6.2;
+  g.lineWidth = 8.2;
   g.beginPath();
   g.moveTo(-18, -16);
   g.lineTo(19, 15);
   g.stroke();
   g.strokeStyle = '#7d4b1f';
-  g.lineWidth = 4.4;
+  g.lineWidth = 6.4;
   g.beginPath();
   g.moveTo(-18, -16);
   g.lineTo(19, 15);
@@ -331,18 +326,9 @@ function drawGrenBody(g, front, gz) {
   g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
   g.stroke();
 
-  bigEyes(g, front ? [-8.4, 8.4] : [-1.8, 12.6], gz, -4.4);
-  if (!front) {
-    g.fillStyle = '#f2b22c';
-    g.strokeStyle = OUT;
-    g.lineWidth = 1;
-    g.beginPath();
-    g.ellipse(21.4, -2.6, 2.4, 1.5, 0, 0, TAU);
-    g.fill();
-    g.stroke();
-  }
-  if (front) smile(g, 0, 4, 4.2);
-  else smile(g, 6.6, 3.8, 3.6);
+  bigEyes(g, front ? [-8.4, 8.4] : [-2, 13.2], gz, -5.6);
+  if (front) smile(g, 0, 4.4, 4);
+  else smile(g, 5.2, 4.6, 3.4);
 
   dome(g, '#3c4a36', 18.8, 12, -12.7);
   g.strokeStyle = 'rgba(255, 255, 255, 0.14)';
@@ -351,7 +337,7 @@ function drawGrenBody(g, front, gz) {
   g.ellipse(0, -12.7, 15.5, 9.2, 0, Math.PI * 1.08, Math.PI * 1.42);
   g.stroke();
   g.fillStyle = '#1b1920';
-  rr(g, -23.5, -14.3, 49, 3.6, 1.8);
+  rr(g, -22, -14.3, 45.5, 3.6, 1.8);
   g.fill();
 }
 
@@ -365,21 +351,21 @@ function drawBomb(g, lit) {
   g.arc(0, 0, 6.6, 0, TAU);
   g.fill();
   g.stroke();
-  // the little pale highlight
-  g.fillStyle = '#9a9ba8';
+  // the small pale highlight
+  g.fillStyle = '#a4a6b2';
   g.beginPath();
-  g.arc(-0.6, -0.4, 1.7, 0, TAU);
+  g.arc(-2, -2.4, 1.6, 0, TAU);
   g.fill();
-  // a small yellow spark beside the fuse
-  g.fillStyle = '#ffd84a';
+  // a small yellow spark up by the fuse
+  g.fillStyle = '#ffd94a';
   g.strokeStyle = '#e8902a';
-  g.lineWidth = 0.7;
+  g.lineWidth = 0.6;
   g.beginPath();
   for (let i = 0; i < 8; i++) {
-    const r = i % 2 === 0 ? 3.4 : 1.2;
+    const r = i % 2 === 0 ? 3.1 : 1.1;
     const a = (i / 8) * TAU - Math.PI / 2;
-    const px = 6.6 + Math.cos(a) * r;
-    const py = -7.4 + Math.sin(a) * r;
+    const px = 5.2 + Math.cos(a) * r;
+    const py = -11 + Math.sin(a) * r;
     if (i === 0) g.moveTo(px, py);
     else g.lineTo(px, py);
   }
@@ -721,27 +707,35 @@ function drawRider(g) {
 function drawCowboyTorso(g, look, blink) {
   drawSniperBody(g);
   drawSniperEyes(g, [-1.5, 14.2], look, blink);
-  // handlebar mustache under the nose
+  // a big handlebar mustache under the nose
   g.fillStyle = '#3b2a1b';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1;
-  g.beginPath();
-  g.moveTo(0.4, 3.4);
-  g.quadraticCurveTo(1.2, 0.2, 4.8, 0.8);
-  g.quadraticCurveTo(6.9, 1.2, 7.2, 1.4);
-  g.quadraticCurveTo(7.6, 1.2, 9.6, 0.8);
-  g.quadraticCurveTo(13.2, 0.2, 14.2, 3.4);
-  g.quadraticCurveTo(12, 2.6, 9.4, 3.1);
-  g.quadraticCurveTo(7.2, 3.6, 5, 3.1);
-  g.quadraticCurveTo(2.4, 2.6, 0.4, 3.4);
-  g.closePath();
-  g.fill();
-  g.stroke();
-  // a small smile below it
   g.strokeStyle = OUT;
   g.lineWidth = 1.2;
   g.beginPath();
-  g.arc(6.9, 6.2, 3, Math.PI * 0.2, Math.PI * 0.8);
+  g.moveTo(-3.4, 6.2);
+  g.quadraticCurveTo(-3, 0.4, 3.4, 1.2);
+  g.quadraticCurveTo(6.2, 1.6, 7, 2.2);
+  g.quadraticCurveTo(7.8, 1.6, 10.6, 1.2);
+  g.quadraticCurveTo(17, 0.4, 17.4, 6.2);
+  g.quadraticCurveTo(14, 4.4, 10.4, 5.4);
+  g.quadraticCurveTo(7, 6.2, 3.6, 5.4);
+  g.quadraticCurveTo(0, 4.4, -3.4, 6.2);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+  g.lineWidth = 0.9;
+  g.beginPath();
+  g.moveTo(-1.6, 2.6);
+  g.quadraticCurveTo(2, 1.8, 5, 2.8);
+  g.moveTo(9, 2.8);
+  g.quadraticCurveTo(12, 1.8, 15.6, 2.6);
+  g.stroke();
+  // a small smile below it
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.3;
+  g.beginPath();
+  g.arc(7, 8.4, 2.8, Math.PI * 0.2, Math.PI * 0.8);
   g.stroke();
   // the wide hat
   g.save();
@@ -750,47 +744,48 @@ function drawCowboyTorso(g, look, blink) {
   g.restore();
 }
 
-// Origin: the hand on the grip. The barrel points along +x.
+// Origin: the hand on the grip. The barrel points along +x. Flat colours and thick
+// outlines, like the soldier's rifle: a tan wooden stock, a dark slab of a barrel.
 function drawFlintlock(g, firing) {
   g.lineCap = 'round';
-  // curved wooden grip
-  g.fillStyle = '#8a5a2c';
+  g.lineJoin = 'round';
   g.strokeStyle = OUT;
-  g.lineWidth = 1.2;
+  g.lineWidth = 1.5;
+  // the chunky curved grip
+  g.fillStyle = '#e0a458';
   g.beginPath();
-  g.moveTo(-1, -2.4);
-  g.quadraticCurveTo(-7.5, -1.5, -9.5, 6.5);
-  g.quadraticCurveTo(-6.5, 7.4, -4.2, 6.8);
-  g.quadraticCurveTo(-3.6, 2.4, 3.6, 1.6);
-  g.lineTo(3.6, -2.4);
+  g.moveTo(-2, 0);
+  g.lineTo(5, 0);
+  g.lineTo(2.4, 10);
+  g.lineTo(-5.6, 10);
   g.closePath();
   g.fill();
   g.stroke();
-  // the long steel barrel with brass bands
-  g.fillStyle = '#51545f';
-  rr(g, 3, -3.2, 27, 3.8, 0.9);
-  g.fill();
-  g.stroke();
-  g.fillStyle = '#c9a24a';
-  for (const x of [8, 16, 24]) g.fillRect(x, -3.3, 1.5, 4);
-  g.fillStyle = '#6b6f7c';
-  g.fillRect(4, -3.0, 24, 0.9);
-  // lock plate, flash pan and the curved cock (hammer)
-  g.fillStyle = '#a8aab4';
-  rr(g, -0.5, -5, 7.4, 4.6, 1);
-  g.fill();
-  g.stroke();
-  g.fillStyle = '#2f3038';
+  // stock block under the lock
   g.beginPath();
-  g.moveTo(1, -5);
-  g.quadraticCurveTo(-1.5, -8.8, 1.6, -9.6);
-  g.quadraticCurveTo(0.6, -7, 3.4, -5.4);
+  rr(g, -4, -3.4, 12, 5.6, 1);
+  g.fill();
+  g.stroke();
+  // barrel: a dark slab with a pale top edge
+  g.fillStyle = '#33353d';
+  rr(g, 6, -3.6, 25, 4.6, 0.8);
+  g.fill();
+  g.stroke();
+  g.fillStyle = 'rgba(150, 152, 162, 0.85)';
+  g.fillRect(8, -3, 22, 0.9);
+  // the lock and its curled hammer
+  g.fillStyle = '#26272e';
+  g.fillRect(2, -6.4, 6, 3);
+  g.strokeRect(2, -6.4, 6, 3);
+  g.beginPath();
+  g.moveTo(3, -6.4);
+  g.lineTo(0.2, -10.4);
+  g.lineTo(3.4, -9.2);
+  g.lineTo(5, -6.4);
   g.closePath();
   g.fill();
   g.stroke();
-  g.fillStyle = '#c9a24a';
-  g.fillRect(5, -5.4, 2.6, 1.4);
-  if (firing) star(g, 36, -1.6, 9, 3.6);
+  if (firing) star(g, 37, -1.4, 9, 3.6);
 }
 
 // ---------------------------------------------------------------- ninja

@@ -2,7 +2,7 @@ export const TAU = Math.PI * 2;
 
 // Units are drawn from "art" coordinates (a ~92x82 reference sprite,
 // origin at the body centre) and scaled to the board by K.
-export const K = 0.37;
+export const K = 0.31;
 // Sizes below were tuned at K = 0.62; UNIT rescales them with the sprite.
 export const UNIT = K / 0.62;
 // Pixel distances below were tuned when units were bigger (K = 0.56).
@@ -227,7 +227,7 @@ export const COWBOY = {
   bulletRange: 400,
   spread: 0.05,
   smoke: true,
-  pivot: { x: 11 * K, y: 12 * K },
+  pivot: { x: 11 * K, y: 16.5 * K },
   muzzleLen: 27 * K,
 };
 
