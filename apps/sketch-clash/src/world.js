@@ -1,4 +1,4 @@
-import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=20';
+import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=21';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -116,8 +116,6 @@ export class World {
     const units = list.filter((u) => !u.dead && !u.form);
     const n = units.length;
     if (n < 2) return;
-    const ux = Math.cos(ang);
-    const uy = Math.sin(ang);
     let cx = 0;
     let cy = 0;
     for (const u of units) {
@@ -126,6 +124,20 @@ export class World {
     }
     cx /= n;
     cy /= n;
+    let sxx = 0;
+    let syy = 0;
+    let sxy = 0;
+    for (const u of units) {
+      sxx += (u.x - cx) ** 2;
+      syy += (u.y - cy) ** 2;
+      sxy += (u.x - cx) * (u.y - cy);
+    }
+    const mid = (sxx + syy) / 2;
+    const dev = Math.sqrt(((sxx - syy) / 2) ** 2 + sxy * sxy);
+    const elong = Math.sqrt((mid + dev) / Math.max(mid - dev, 1e-6));
+    ang = elong > 1.7 ? 0.5 * Math.atan2(2 * sxy, sxx - syy) : 0;
+    const ux = Math.cos(ang);
+    const uy = Math.sin(ang);
     let minA = Infinity;
     let maxA = -Infinity;
     let minB = Infinity;
@@ -191,7 +203,7 @@ export class World {
     const dy = s.y - u.y;
     const d = Math.hypot(dx, dy);
     if (d > 0.6) {
-      const m = Math.min(d, (this.live ? u.def.speed * 2.6 : 150) * dt);
+      const m = Math.min(d, (this.live ? u.def.speed * 2.6 : u.def.speed * 1.4) * dt);
       u.x += (dx / d) * m;
       u.y += (dy / d) * m;
       u.moving = true;
@@ -216,7 +228,14 @@ export class World {
       if (!this.live) continue;
       for (const m of g.members) {
         const t = m.target;
-        if (t && !t.dead && Math.hypot(t.x - m.x, t.y - m.y) < m.def.reach * 0.5) m.form = null;
+        if (t && !t.dead && Math.hypot(t.x - m.x, t.y - m.y) < m.def.reach * 0.5) {
+          m.form = null;
+          if (g.dissolveT === undefined) g.dissolveT = 1.2;
+        }
+      }
+      if (g.dissolveT !== undefined) {
+        g.dissolveT -= dt;
+        if (g.dissolveT <= 0) for (const m of g.members) m.form = null;
       }
       g.members = g.members.filter((m) => m.form);
       if (!g.members.length) {
@@ -243,7 +262,7 @@ export class World {
         g.ang += clamp(best, -0.55 * dt, 0.55 * dt);
         g.ux = Math.cos(g.ang);
         g.uy = Math.sin(g.ang);
-        const sp = g.members[0].def.speed * 0.9;
+        const sp = g.members[0].def.speed * 0.65;
         g.ax += (dx / d) * sp * dt;
         g.ay += (dy / d) * sp * dt;
         for (const m of g.members) if (Math.abs(dx) > 4) m.facing = dx > 0 ? 1 : -1;
@@ -716,9 +735,11 @@ export class World {
       if (this.live) {
         const t = this.acquire(u, dt);
         this.meleeTick(u, dt);
+        let near = false;
         if (t) {
           const d = u.def;
           const dist = Math.hypot(t.x - u.x, t.y - u.y);
+          near = dist < 70;
           this.aimAt(u, t, dt);
           if (dist <= d.reach + t.def.radius * 0.5 && u.cdT <= 0 && u.atk <= 0) {
             u.atk = 1;
@@ -726,7 +747,8 @@ export class World {
             u.cdT = d.cooldownMin + Math.random() * (d.cooldownMax - d.cooldownMin);
           }
         }
-        u.pose = Math.min(1, u.pose + dt * 6);
+        // spears stay slanted over the shoulder until a fight is close
+        u.pose = near ? Math.min(1, u.pose + dt * 6) : Math.max(0, u.pose - dt * 5);
         if (u.moving) u.anim += dt * 9;
       } else this.idleStep(u, dt);
       return;

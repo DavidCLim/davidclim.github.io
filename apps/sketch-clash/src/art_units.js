@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=20';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=20';
+import { TAU, K } from './config.js?v=21';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=21';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -148,8 +148,11 @@ function drawNozzle(g, firing) {
 
 // ---------------------------------------------------------------- roman
 function drawRomanBody(g, front, gz, angry) {
-  gz = [-1.7, 0.7];
   eggBody(g, '#d92c30', '#bd2227');
+  g.fillStyle = 'rgba(255, 255, 255, 0.22)';
+  g.beginPath();
+  g.ellipse(-11, -3, 2.6, 5.4, -0.15, 0, TAU);
+  g.fill();
   // a dotted, slightly darker belly like the original
   g.fillStyle = 'rgba(0, 0, 0, 0.07)';
   g.beginPath();
@@ -1032,7 +1035,8 @@ export function buildUnitArt() {
 
   art.roman = {
     feet: feetSet('#6b4023'),
-    ...eggSet(drawRomanBody),
+    // the Romans' pupils drift up and to the sides, the first (used for the icon) looks down-left
+    ...eggSet(drawRomanBody, [[-1.7, 0.7], [0.6, -1.8], [1.7, -1.3]]),
     spear: makeLayer(-20, -6, 50, 6, drawSpear),
     shield: makeLayer(-8, -16, 8, 16, drawShield),
   };
