@@ -1,6 +1,6 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=40';
-import { drawLayer, OUT } from './sprites.js?v=40';
-import { drawDrop } from './art_units.js?v=40';
+import { TAU, K, UNIT, FEET } from './config.js?v=41';
+import { drawLayer, OUT } from './sprites.js?v=41';
+import { drawDrop } from './art_units.js?v=41';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -445,7 +445,8 @@ export function arrowMark(a) {
     g.stroke();
   });
   const rot = Math.atan2(a.y1 - a.y0 + 4 * a.h, a.x1 - a.x0);
-  const k = (K / 0.56) * 1.8;
+  // the video's stuck arrows are tiny red-tipped sticks that are gone in about five seconds
+  const k = K * 1.05;
   return {
     spr,
     x: a.x1 - Math.cos(rot) * 4.5 * k,
@@ -453,6 +454,8 @@ export function arrowMark(a) {
     rot,
     k,
     age: 0,
+    life: 5,
+    fade: 1.1,
   };
 }
 
@@ -460,14 +463,14 @@ export function stepMarks(marks, dt) {
   let gone = false;
   for (const m of marks) {
     m.age += dt;
-    if (m.age >= MARK_LIFE) gone = true;
+    if (m.age >= (m.life || MARK_LIFE)) gone = true;
   }
-  return gone ? marks.filter((m) => m.age < MARK_LIFE) : marks;
+  return gone ? marks.filter((m) => m.age < (m.life || MARK_LIFE)) : marks;
 }
 
 export function drawMarks(ctx, dpr, marks) {
   for (const m of marks) {
-    const a = 0.92 * Math.min(1, (MARK_LIFE - m.age) / MARK_FADE);
+    const a = 0.92 * Math.min(1, ((m.life || MARK_LIFE) - m.age) / (m.fade || MARK_FADE));
     if (a <= 0) continue;
     ctx.globalAlpha = a;
     ctx.setTransform(dpr * Math.cos(m.rot) * m.k, dpr * Math.sin(m.rot) * m.k, -dpr * Math.sin(m.rot) * m.k, dpr * Math.cos(m.rot) * m.k, m.x * dpr, m.y * dpr);
