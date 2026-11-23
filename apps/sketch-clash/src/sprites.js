@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=8';
+import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=9';
 
 // Units are drawn from "art" coordinates matching the reference sprites
 // (origin at the body centre, y down) into small offscreen layers, then
@@ -69,12 +69,13 @@ function drawFeet(g, pose, big) {
   g.save();
   g.translate(1, 28);
   g.scale(1, 0.27);
-  const gr = g.createRadialGradient(0, 0, 2, 0, 0, 27);
-  gr.addColorStop(0, 'rgba(0, 0, 0, 0.32)');
+  const sr = big ? 31 : 27;
+  const gr = g.createRadialGradient(0, 0, 2, 0, 0, sr);
+  gr.addColorStop(0, big ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.32)');
   gr.addColorStop(1, 'rgba(0, 0, 0, 0)');
   g.fillStyle = gr;
   g.beginPath();
-  g.arc(0, 0, 27, 0, TAU);
+  g.arc(0, 0, sr, 0, TAU);
   g.fill();
   g.restore();
 
@@ -235,9 +236,9 @@ function drawGhost(g, withHat) {
 
 // ---------- sniper ----------
 // Matched to the supplied pixel sprite: flat khaki body, flat olive hat,
-// big black pupils tucked under the brim, thick dark outlines.
-const TAN_TOP = '#c1ab7c';
-const TAN_BOT = '#b59d6a';
+// big black pupils tucked under the brim, a small smile, thick dark outlines.
+const TAN_TOP = '#bfa97a';
+const TAN_BOT = '#b69e6b';
 const HAT = '#5a4e32';
 const HAT_SHADE = '#463b25';
 const INK = '#1d1a22';
@@ -262,41 +263,63 @@ function drawSniperBody(g) {
 
 // Two eyes: a big black pupil with a sliver of white, hanging under the
 // brim. `look` slides the pupil (-1 left .. 1 right); `blink` shuts them.
-function drawSniperFace(g, ex, look, blink) {
+function drawSniperEyes(g, ex, look, blink) {
   for (const x of ex) {
     if (blink) {
       g.strokeStyle = INK;
       g.lineWidth = 1.8;
       g.beginPath();
-      g.moveTo(x - 4.6, -6.4);
-      g.quadraticCurveTo(x, -3.8, x + 4.6, -6.4);
+      g.moveTo(x - 4.8, -6.6);
+      g.quadraticCurveTo(x, -3.4, x + 4.8, -6.6);
       g.stroke();
       continue;
     }
     g.save();
     g.beginPath();
-    g.ellipse(x, -5.6, 5.5, 3.4, 0, 0, TAU);
+    g.ellipse(x, -4.9, 5.5, 3.2, 0, 0, TAU);
     g.clip();
     g.fillStyle = '#fbfbf6';
     g.fillRect(x - 6, -10, 12, 9);
     g.fillStyle = '#14121a';
     g.beginPath();
-    g.ellipse(x + 1.5 + look * 1.9, -5.3, 3.6, 3.9, 0, 0, TAU);
+    g.ellipse(x + 1.5 + look * 1.9, -4.6, 3.7, 4, 0, 0, TAU);
     g.fill();
     g.restore();
     g.strokeStyle = INK;
     g.lineWidth = 1.4;
     g.beginPath();
-    g.ellipse(x, -5.6, 5.5, 3.4, 0, 0, TAU);
+    g.ellipse(x, -4.9, 5.5, 3.2, 0, 0, TAU);
     g.stroke();
   }
+}
+
+// The small smile: a shallow U with a tiny tick at each corner.
+function drawSniperSmile(g, mx) {
+  g.strokeStyle = INK;
+  g.lineWidth = 1.5;
+  g.beginPath();
+  g.arc(mx, 2.85, 5.55, Math.PI / 2 - 1.01, Math.PI / 2 + 1.01);
+  g.stroke();
+  g.strokeStyle = 'rgba(29, 26, 34, 0.55)';
+  g.lineWidth = 1.1;
+  g.beginPath();
+  g.moveTo(mx - 4.7, 5.8);
+  g.lineTo(mx - 5, 4.3);
+  g.moveTo(mx + 4.7, 5.8);
+  g.lineTo(mx + 5, 4.3);
+  g.stroke();
 }
 
 // look: -1 left, 0 centre, 1 right. front: facing the viewer (idle).
 function drawSniperTorso(g, front, look, blink) {
   drawSniperBody(g);
-  if (front) drawSniperFace(g, [-8.4, 8.4], look, blink);
-  else drawSniperFace(g, [-1.2, 14.3], 1, false);
+  if (front) {
+    drawSniperEyes(g, [-8.4, 8.4], look, blink);
+    drawSniperSmile(g, 0);
+  } else {
+    drawSniperEyes(g, [-1.5, 14.2], 1, false);
+    drawSniperSmile(g, 6.85);
+  }
 }
 
 // Origin is the centre of the brim, so the hat can tip about it.
@@ -305,27 +328,28 @@ function drawSniperHat(g) {
   g.strokeStyle = INK;
   g.lineWidth = 1.6;
   g.beginPath();
-  g.moveTo(-13.3, -1.6);
-  g.bezierCurveTo(-13.3, -10.4, -7.5, -12.4, 0, -12.4);
-  g.bezierCurveTo(7.5, -12.4, 13.3, -10.4, 13.3, -1.6);
+  g.moveTo(-13, -2.6);
+  g.bezierCurveTo(-13, -9, -9.6, -11.9, -4, -11.9);
+  g.lineTo(4, -11.9);
+  g.bezierCurveTo(9.6, -11.9, 13, -9, 13, -2.6);
   g.closePath();
   g.fill();
   g.stroke();
   // the long, thin, pointed brim
   g.beginPath();
-  g.moveTo(-32.4, 0.2);
-  g.quadraticCurveTo(-16, -4.6, 0, -4.6);
-  g.quadraticCurveTo(16, -4.6, 32.4, 0.2);
-  g.quadraticCurveTo(16, 5, 0, 5);
-  g.quadraticCurveTo(-16, 5, -32.4, 0.2);
+  g.moveTo(-32.4, 0);
+  g.quadraticCurveTo(-16, -5.2, 0, -5.2);
+  g.quadraticCurveTo(16, -5.2, 32.4, 0);
+  g.quadraticCurveTo(16, 5.4, 0, 5.4);
+  g.quadraticCurveTo(-16, 5.4, -32.4, 0);
   g.closePath();
   g.fill();
   g.stroke();
   g.strokeStyle = HAT_SHADE;
   g.lineWidth = 1.2;
   g.beginPath();
-  g.moveTo(-24, 2.3);
-  g.quadraticCurveTo(0, 4.4, 24, 2.3);
+  g.moveTo(-24, 2.7);
+  g.quadraticCurveTo(0, 4.7, 24, 2.7);
   g.stroke();
 }
 
@@ -335,31 +359,31 @@ function drawSniperRifleParts(g, firing) {
   g.lineWidth = 1.2;
   // magazine / grip
   g.fillStyle = '#3d414c';
-  rr(g, 7.1, 1.4, 4, 5.2, 0.6);
+  rr(g, 8.3, 1.2, 4, 5.2, 0.6);
   g.fill();
   g.stroke();
   // barrel, with its pale top edge
   g.fillStyle = '#3d414c';
-  rr(g, 5.9, -2.65, 37, 4.1, 0.6);
+  rr(g, 5.5, -3.8, 39.5, 5, 0.6);
   g.fill();
   g.stroke();
   g.fillStyle = 'rgba(150, 152, 162, 0.85)';
-  g.fillRect(7, -3.9, 35, 1.1);
+  g.fillRect(7, -5, 37, 1.1);
   // scope: a flat dark block on a small mount
   g.fillStyle = '#26272e';
-  g.fillRect(4.2, -5.6, 3, 3);
-  g.strokeRect(4.2, -5.6, 3, 3);
-  rr(g, 9.1, -10.4, 16.7, 5.8, 0.8);
+  g.fillRect(5, -6, 3, 2.6);
+  g.strokeRect(5, -6, 3, 2.6);
+  rr(g, 12, -10.5, 17, 4.6, 0.8);
   g.fill();
   g.stroke();
   // receiver
-  g.fillStyle = '#d79c58';
-  rr(g, -5, -2.65, 10, 5.3, 0.6);
+  g.fillStyle = '#cc9957';
+  rr(g, -5.5, -2.8, 11, 6, 0.6);
   g.fill();
   g.stroke();
   g.fillStyle = '#5a3d28';
-  g.fillRect(-4.4, -2.1, 8.8, 1);
-  if (firing) star(g, 48, -0.6, 9, 3.6);
+  g.fillRect(-4.9, -2.2, 9.8, 1);
+  if (firing) star(g, 50, -1.4, 9, 3.6);
 }
 
 // Lying on his belly, head to the right, rifle out front. Origin is the
@@ -407,7 +431,8 @@ function drawSniperProne(g, firing) {
   drawSniperRifleParts(g, firing);
   g.restore();
 
-  drawSniperFace(g, [5, 15], 1, false);
+  drawSniperEyes(g, [5, 15], 1, false);
+  drawSniperSmile(g, 10.5);
 
   g.save();
   g.translate(13, -8);
@@ -486,7 +511,7 @@ export function paintIcon(canvas, sprites, species) {
   drawLayer(g, S.torso);
   if (species === 'sniper') {
     g.save();
-    g.translate(0, -12.7 * K);
+    g.translate(0, -11.6 * K);
     drawLayer(g, S.hat);
     g.restore();
     g.translate(SNIPER.pivot.x, SNIPER.pivot.y);

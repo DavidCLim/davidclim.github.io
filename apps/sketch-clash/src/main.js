@@ -1,6 +1,6 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=8';
-import { World } from './world.js?v=8';
-import { buildSprites, drawLayer, paintIcon, stampHelmet, stampHat } from './sprites.js?v=8';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=9';
+import { World } from './world.js?v=9';
+import { buildSprites, drawLayer, paintIcon, stampHelmet, stampHat } from './sprites.js?v=9';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -476,7 +476,7 @@ function drawSniper(u) {
     drawHurt(u);
 
     ctx.save();
-    ctx.translate(0, -12.7 * K);
+    ctx.translate(0, -11.6 * K);
     if (idle) ctx.rotate(idle.tip * (1 - pose));
     drawLayer(ctx, S.hat);
     ctx.restore();
