@@ -1,8 +1,8 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=18';
-import { World } from './world.js?v=18';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=18';
-import { buildUnitArt } from './art_units.js?v=18';
-import { drawUnit, drawFx, placeUnit, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=18';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=19';
+import { World } from './world.js?v=19';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=19';
+import { buildUnitArt } from './art_units.js?v=19';
+import { drawUnit, drawFx, placeUnit, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=19';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -137,6 +137,9 @@ function startStroke(x, y) {
     nextI: 0,
     lx: x,
     ly: y,
+    made: [],
+    ang: 0,
+    angSet: false,
   };
 }
 
@@ -169,7 +172,7 @@ function dab(x, y) {
       if (occ.has(key)) continue;
       if (!canPlace(px, py, team)) continue;
       occ.add(key);
-      world.addUnit(sp, team, px, py);
+      stroke.made.push(world.addUnit(sp, team, px, py));
     }
   }
 }
@@ -182,6 +185,10 @@ function layPath(x0, y0, x1, y1) {
   st.started = true;
   const ux = (x1 - x0) / d;
   const uy = (y1 - y0) / d;
+  if (!st.angSet) {
+    st.ang = Math.atan2(uy, ux);
+    st.angSet = true;
+  }
   const nx = -uy;
   const ny = ux;
   const [sx, sy, stag] = LATTICE[st.sp] || LATTICE.default;
@@ -201,7 +208,7 @@ function layPath(x0, y0, x1, y1) {
       const py = cy + ny * off;
       if (!canPlace(px, py, teamAt(px))) continue;
       st.occ.add(key);
-      world.addUnit(st.sp, teamAt(px), px, py);
+      st.made.push(world.addUnit(st.sp, teamAt(px), px, py));
     }
     st.nextI++;
   }
@@ -277,6 +284,11 @@ stageCanvas.addEventListener('pointermove', (e) => {
 function endPaint(e) {
   // a tap that never travelled still drops a patch
   if (ptr.down && stroke && !stroke.started && canPaint() && !erasing) dab(stroke.ox, stroke.oy);
+  // Romans snap into a rectangle, however they were painted
+  if (stroke && SPECIES[stroke.sp].def.formation) {
+    const [fx, fy] = LATTICE[stroke.sp] || LATTICE.default;
+    world.formRectangle(stroke.made, stroke.ang, fx, fy);
+  }
   ptr.down = false;
   stroke = null;
   if (e.pointerType !== 'mouse') ptr.inside = false;

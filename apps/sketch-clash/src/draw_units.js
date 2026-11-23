@@ -1,6 +1,6 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=18';
-import { drawLayer, OUT } from './sprites.js?v=18';
-import { drawDrop } from './art_units.js?v=18';
+import { TAU, K, UNIT, FEET } from './config.js?v=19';
+import { drawLayer, OUT } from './sprites.js?v=19';
+import { drawDrop } from './art_units.js?v=19';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -70,8 +70,8 @@ function drawFlamethrower(ctx, dpr, sprites, u) {
   const d = u.def;
   eggBase(ctx, dpr, sprites, A, u);
   const pose = u.pose;
-  ctx.translate(lerp(8 * K, d.pivot.x, pose), lerp(5 * K, d.pivot.y, pose));
-  ctx.rotate(lerp(0.14, u.aim, pose));
+  ctx.translate(lerp(8 * K, d.pivot.x, pose), lerp(11 * K, d.pivot.y, pose));
+  ctx.rotate(lerp(0.06, u.aim, pose));
   drawLayer(ctx, u.firing ? A.nozzleFire : A.nozzle);
 }
 
@@ -84,12 +84,12 @@ function drawRoman(ctx, dpr, sprites, u) {
   // beside him; fighting, the spear levels out and jabs and the shield comes in.
   const p = 1 - u.atk;
   const thrust = u.atk > 0 ? Math.sin(p * Math.PI) * 16 * K : 0;
-  ctx.translate(lerp(14 * K, 6 * K, pose), lerp(22 * K, 2 * K, pose));
-  ctx.rotate(lerp(-1.4, u.aim - 0.04, pose));
+  ctx.translate(lerp(8 * K, 6 * K, pose), lerp(12.5 * K, 2 * K, pose));
+  ctx.rotate(lerp(-1.32, u.aim - 0.04, pose));
   ctx.translate(pose * thrust, 0);
   drawLayer(ctx, A.spear);
   ctx.setTransform(body);
-  ctx.translate(lerp(29 * K, 21 * K, pose), lerp(10 * K, 7 * K, pose));
+  ctx.translate(lerp(26.5 * K, 21 * K, pose), lerp(16 * K, 7 * K, pose));
   drawLayer(ctx, A.shield);
 }
 
@@ -102,7 +102,7 @@ function drawGrenadier(ctx, dpr, sprites, u) {
   if (p > 0.65) return; // the bomb has left the hand
   // the arm lifts the bomb up and back for the throw
   const lift = Math.sin(Math.min(1, p / 0.65) * Math.PI * 0.5);
-  ctx.translate(lerp(22 * K, 8 * K, lift), lerp(13 * K, -17 * K, lift));
+  ctx.translate(lerp(17 * K, 8 * K, lift), lerp(12 * K, -17 * K, lift));
   ctx.rotate(lift * -0.6);
   const lit = u.pose > 0.5 && u.cdT < 0.9 && u.cdT > 0;
   drawLayer(ctx, lit ? A.bombLit : A.bomb);
@@ -113,7 +113,7 @@ function drawArcher(ctx, dpr, sprites, u) {
   const d = u.def;
   eggBase(ctx, dpr, sprites, A, u);
   const pose = u.pose;
-  ctx.translate(lerp(24 * K, d.pivot.x, pose), lerp(4 * K, d.pivot.y, pose));
+  ctx.translate(lerp(24 * K, d.pivot.x, pose), lerp(6 * K, d.pivot.y, pose));
   ctx.rotate(lerp(0, u.aim, pose));
   const draw = u.drawT > 0 ? Math.min(1, u.drawT / d.drawTime) : 0;
   ctx.translate(-u.recoil * 1.5, 0);
@@ -453,25 +453,25 @@ export function drawMarks(ctx, dpr, marks) {
 // [canvas width in art px, body x, body y, drawing]
 const ICONS = {
   flamethrower: [96, 32, 33, (g, S) => {
-    g.translate(8 * K, 5 * K);
-    g.rotate(0.08);
+    g.translate(8 * K, 11 * K);
+    g.rotate(0.03);
     drawLayer(g, S.nozzle);
   }],
   roman: [100, 50, 47, (g, S) => {
     g.save();
-    g.translate(29 * K, 10 * K);
+    g.translate(26.5 * K, 16 * K);
     drawLayer(g, S.shield);
     g.restore();
-    g.translate(14 * K, 22 * K);
-    g.rotate(-1.4);
+    g.translate(8 * K, 12.5 * K);
+    g.rotate(-1.32);
     drawLayer(g, S.spear);
   }],
   grenadier: [84, 32.3, 29, (g, S) => {
-    g.translate(22 * K, 13 * K);
+    g.translate(17 * K, 12 * K);
     drawLayer(g, S.bombLit);
   }],
   archer: [90, 34, 31, (g, S) => {
-    g.translate(22 * K, 4 * K);
+    g.translate(24 * K, 6 * K);
     drawLayer(g, S.bow);
     g.translate(-1 * K, 0);
     g.scale(0.85, 0.85);

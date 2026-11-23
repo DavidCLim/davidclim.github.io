@@ -1,4 +1,4 @@
-import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=18';
+import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=19';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -73,6 +73,7 @@ export class World {
     this.arrows = []; // arrows in the air
     this.blasts = []; // explosions
     this.debris = []; // headgear thrown by blasts
+    this.groups = []; // Roman blocks marching in formation
     this.corpses = []; // units knocked over, seeing stars, before the ghost takes over
     this.onArrowLand = null;
     this.time = 0; // seconds since the battle started
@@ -106,6 +107,140 @@ export class World {
     this.sepRows = Math.ceil(h / SEP_CELL) + 1;
     this.sepHead = new Int32Array(this.sepCols * this.sepRows);
     this.sepNext = new Int32Array(0);
+  }
+
+  // Arranges freshly painted units into a rectangular block: they glide into
+  // a tidy grid (cells sx by sy, rows running along `ang`) and later march
+  // together until the enemy gets close, then break off to fight.
+  formRectangle(list, ang, sx, sy) {
+    const units = list.filter((u) => !u.dead && !u.form);
+    const n = units.length;
+    if (n < 2) return;
+    const ux = Math.cos(ang);
+    const uy = Math.sin(ang);
+    let cx = 0;
+    let cy = 0;
+    for (const u of units) {
+      cx += u.x;
+      cy += u.y;
+    }
+    cx /= n;
+    cy /= n;
+    let minA = Infinity;
+    let maxA = -Infinity;
+    let minB = Infinity;
+    let maxB = -Infinity;
+    for (const u of units) {
+      const a = (u.x - cx) * ux + (u.y - cy) * uy;
+      const b = -(u.x - cx) * uy + (u.y - cy) * ux;
+      minA = Math.min(minA, a);
+      maxA = Math.max(maxA, a);
+      minB = Math.min(minB, b);
+      maxB = Math.max(maxB, b);
+    }
+    const aspect = clamp((maxA - minA + sx) / (maxB - minB + sy), 0.5, 8);
+    const cols = Math.max(1, Math.round(Math.sqrt(n * aspect * (sy / sx))));
+    const rows = Math.ceil(n / cols);
+    // slots in reading order, the last row possibly short
+    const slots = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols && slots.length < n; c++) {
+        slots.push({ lx: (c - (cols - 1) / 2) * sx, ly: (r - (rows - 1) / 2) * sy });
+      }
+    }
+    // keep neighbours together: sort both by (row band, along)
+    const proj = (u) => ({
+      a: (u.x - cx) * ux + (u.y - cy) * uy,
+      b: -(u.x - cx) * uy + (u.y - cy) * ux,
+    });
+    const byRow = (p, q) => (Math.abs(p.b - q.b) > sy * 0.5 ? p.b - q.b : p.a - q.a);
+    units.sort((p, q) => byRow(proj(p), proj(q)));
+    slots.sort((p, q) => (p.ly !== q.ly ? p.ly - q.ly : p.lx - q.lx));
+    // the block must sit inside the field (and on its own team's half)
+    const half = this.w / 2;
+    let ax = cx;
+    let ay = cy;
+    const reach = Math.hypot((cols * sx) / 2, (rows * sy) / 2);
+    ax = clamp(ax, 14 + reach * 0.7, this.w - 14 - reach * 0.7);
+    ay = clamp(ay, 24 + reach * 0.7, this.h - 24 - reach * 0.7);
+    const team = units[0].team;
+    if (team === 'red') ax = Math.min(ax, half - 10 - reach * 0.7);
+    if (team === 'blue') ax = Math.max(ax, half + 10 + reach * 0.7);
+    const g = { ax, ay, ux, uy, members: units, engaged: false, anchor: { x: ax, y: ay, side: units[0].side, marchTarget: null } };
+    units.forEach((u, i) => {
+      u.form = { g, lx: slots[i].lx, ly: slots[i].ly };
+    });
+    this.groups.push(g);
+  }
+
+  formSlot(u) {
+    const { g, lx, ly } = u.form;
+    return { x: g.ax + lx * g.ux - ly * g.uy, y: g.ay + lx * g.uy + ly * g.ux };
+  }
+
+  // Glide toward the slot. True while the unit is still holding formation.
+  formStep(u, dt) {
+    const f = u.form;
+    if (!f) return false;
+    if (f.g.engaged) {
+      u.form = null;
+      return false;
+    }
+    const s = this.formSlot(u);
+    const dx = s.x - u.x;
+    const dy = s.y - u.y;
+    const d = Math.hypot(dx, dy);
+    if (d > 0.6) {
+      const m = Math.min(d, (this.live ? u.def.speed * 1.8 : 150) * dt);
+      u.x += (dx / d) * m;
+      u.y += (dy / d) * m;
+      u.moving = true;
+    }
+    return true;
+  }
+
+  // Each block marches on the nearest enemy and dissolves when one gets close.
+  stepGroups(dt) {
+    let any = false;
+    for (const g of this.groups) {
+      g.members = g.members.filter((m) => !m.dead && m.form && m.form.g === g);
+      if (!g.members.length || g.engaged) {
+        g.dead = true;
+        any = true;
+        continue;
+      }
+      if (!this.live) continue;
+      // only the front rank breaks off when an enemy gets close; the rest keep
+      // their slots and keep pushing forward
+      for (const m of g.members) {
+        const t = m.target;
+        // once the front has made contact the block stops, and the ranks behind
+        // peel off to join in as the enemy comes within reach
+        if (t && !t.dead && Math.hypot(t.x - m.x, t.y - m.y) < (g.halt ? 110 : 40)) {
+          m.form = null;
+          g.halt = true;
+        }
+      }
+      g.members = g.members.filter((m) => m.form);
+      if (!g.members.length) {
+        g.dead = true;
+        any = true;
+        continue;
+      }
+      g.anchor.x = g.ax;
+      g.anchor.y = g.ay;
+      const mp = g.halt ? null : this.marchPoint(g.anchor);
+      if (mp) {
+        const dx = mp.x - g.ax;
+        const dy = mp.y - g.ay;
+        const d = Math.hypot(dx, dy) || 1;
+        const sp = g.members[0].def.speed * 0.9;
+        g.ax += (dx / d) * sp * dt;
+        g.ay += (dy / d) * sp * dt;
+        for (const m of g.members) if (Math.abs(dx) > 4) m.facing = dx > 0 ? 1 : -1;
+      }
+    }
+    if (any) this.groups = this.groups.filter((g) => !g.dead);
   }
 
   // Team battle: remember who is on the field, then time the fight.
@@ -188,6 +323,7 @@ export class World {
       anim: Math.random() * 4,
       moving: false,
       dead: false,
+      form: null, // formation slot, see formRectangle()
       firing: false, // flamethrower: spraying
       burn: 0, // seconds left on fire
       burnTick: 0,
@@ -225,6 +361,7 @@ export class World {
     this.blasts = [];
     this.debris = [];
     this.corpses = [];
+    this.groups = [];
     this.started = false;
     this.counts = {};
     this.speciesCounts = {};
@@ -565,6 +702,14 @@ export class World {
           small: true,
         });
       }
+    }
+    if (u.form && this.formStep(u, dt)) {
+      if (this.live) {
+        this.acquire(u, dt);
+        u.pose = Math.min(1, u.pose + dt * 6);
+        if (u.moving) u.anim += dt * 9;
+      } else this.idleStep(u, dt);
+      return;
     }
     if (!this.live) {
       this.idleStep(u, dt);
@@ -1385,6 +1530,7 @@ export class World {
       this.centroidT = 0.5;
       this.computeCentroids();
     }
+    this.stepGroups(dt);
     for (const u of this.units) {
       if (!u.dead) this.stepUnit(u, dt);
     }

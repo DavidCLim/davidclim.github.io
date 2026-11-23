@@ -94,7 +94,7 @@ export const FLAMETHROWER = {
   burnDps: 9,
   onTime: 1.7,
   offTime: 0.7,
-  pivot: { x: 8 * K, y: 5 * K },
+  pivot: { x: 8 * K, y: 11 * K },
   muzzleLen: 46 * K,
 };
 
@@ -112,6 +112,7 @@ export const ROMAN = {
   cooldownMin: 0.7,
   cooldownMax: 1.1,
   armor: 0.5,
+  formation: true, // painted Romans snap into a rectangular block and march as one
   weapon: 'spear',
   pivot: { x: 4 * K, y: 12 * K },
 };

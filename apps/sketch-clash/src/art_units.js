@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=18';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=18';
+import { TAU, K } from './config.js?v=19';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=19';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -65,14 +65,7 @@ function drawFlameBody(g, front, gz) {
   g.fillStyle = '#c63a2e';
   g.strokeStyle = OUT;
   g.lineWidth = 1.6;
-  rr(g, -31.5, -7, 14, 24, 3.2);
-  g.fill();
-  g.stroke();
-  g.fillStyle = '#9e2c23';
-  rr(g, -30, -5, 3.6, 20, 1.6);
-  g.fill();
-  g.fillStyle = '#55545c';
-  rr(g, -28.5, -11, 7, 4.5, 1.2);
+  rr(g, -27, -12, 10, 26, 2.4);
   g.fill();
   g.stroke();
 
@@ -82,18 +75,18 @@ function drawFlameBody(g, front, gz) {
   g.clip();
   const gr = g.createLinearGradient(0, -23, 0, 23);
   gr.addColorStop(0, '#2f2e36');
-  gr.addColorStop(0.54, '#27262d');
-  gr.addColorStop(0.55, '#dc4331');
-  gr.addColorStop(1, '#b93025');
+  gr.addColorStop(0.58, '#27262d');
+  gr.addColorStop(0.59, '#c8392c');
+  gr.addColorStop(1, '#b02f24');
   g.fillStyle = gr;
   g.fillRect(-22, -24, 44, 48);
   g.strokeStyle = OUT;
   g.lineWidth = 1.2;
-  g.beginPath();
-  g.moveTo(-22, 2.4);
-  g.lineTo(22, 2.4);
-  g.stroke();
   g.restore();
+  g.fillStyle = 'rgba(255, 255, 255, 0.13)';
+  g.beginPath();
+  g.ellipse(-11, -11, 3.4, 7, 0.4, 0, TAU);
+  g.fill();
   g.strokeStyle = OUT;
   g.lineWidth = 1.8;
   g.beginPath();
@@ -118,34 +111,29 @@ function drawFlameBody(g, front, gz) {
     g.arc(x - 1.5, -8.7, 1.1, 0, TAU);
     g.fill();
   }
-  const fx = front ? 0 : 8;
-  g.fillStyle = '#8f8f99';
+  const fx = front ? 0 : 7;
+  g.fillStyle = '#868892';
   g.strokeStyle = OUT;
-  g.lineWidth = 1.2;
+  g.lineWidth = 1.1;
   g.beginPath();
-  g.ellipse(fx, 0.9, 4.3, 3.3, 0, 0, TAU);
+  g.ellipse(fx, 4.4, 5.3, 4.3, 0, 0, TAU);
   g.fill();
   g.stroke();
-  g.fillStyle = '#3a3a42';
-  g.beginPath();
-  g.arc(fx - 1.5, 0.9, 0.8, 0, TAU);
-  g.arc(fx + 1.5, 0.9, 0.8, 0, TAU);
-  g.fill();
 }
 
 // Origin: where the nozzle leaves the hip. Points right.
 function drawNozzle(g, firing) {
   g.fillStyle = '#e9a53a';
   g.strokeStyle = OUT;
-  g.lineWidth = 1.2;
-  rr(g, 0, -1.9, 41, 3.8, 1.4);
+  g.lineWidth = 1.1;
+  rr(g, 0, -2, 40, 4, 1.3);
   g.fill();
   g.stroke();
   g.fillStyle = '#fbd36a';
-  g.fillRect(1.5, -1.2, 38, 0.9);
+  g.fillRect(1.5, -1.3, 36, 0.9);
   g.fillStyle = firing ? '#fff2a8' : '#f2872a';
   g.beginPath();
-  g.arc(42, 0, 2.3, 0, TAU);
+  g.arc(41.5, 0, 2.5, 0, TAU);
   g.fill();
   if (firing) {
     const r = g.createRadialGradient(44, 0, 1, 44, 0, 9);
@@ -160,6 +148,7 @@ function drawNozzle(g, firing) {
 
 // ---------------------------------------------------------------- roman
 function drawRomanBody(g, front, gz, angry) {
+  gz = [-1.7, 0.7];
   eggBody(g, '#d92c30', '#bd2227');
   // a dotted, slightly darker belly like the original
   g.fillStyle = 'rgba(0, 0, 0, 0.07)';
@@ -274,6 +263,15 @@ function drawSpear(g) {
   g.beginPath();
   g.arc(57.6, 0, 1.2, 0, TAU);
   g.fill();
+  // the twisted-rope stripes along the shaft
+  g.strokeStyle = 'rgba(120, 78, 30, 0.85)';
+  g.lineWidth = 0.9;
+  g.beginPath();
+  for (let x = -10; x < 48; x += 4.2) {
+    g.moveTo(x, -1.4);
+    g.lineTo(x + 2.2, 1.4);
+  }
+  g.stroke();
 }
 
 // Origin: the middle of the shield.
@@ -286,8 +284,8 @@ function drawShield(g) {
   g.stroke();
   g.fillStyle = '#f6c564';
   g.fillRect(-3.8, -13.5, 2, 27);
-  g.fillStyle = '#d4eef2';
-  g.strokeStyle = '#6a5322';
+  g.fillStyle = '#aeb4c0';
+  g.strokeStyle = '#4b4f5c';
   g.lineWidth = 1.1;
   g.beginPath();
   g.arc(0, 0, 2.9, 0, TAU);
@@ -304,13 +302,13 @@ function drawGrenBody(g, front, gz) {
   g.clip();
   g.lineCap = 'butt';
   g.strokeStyle = OUT;
-  g.lineWidth = 7.2;
+  g.lineWidth = 6.2;
   g.beginPath();
   g.moveTo(-18, -16);
   g.lineTo(19, 15);
   g.stroke();
-  g.strokeStyle = '#8c5a2e';
-  g.lineWidth = 5.2;
+  g.strokeStyle = '#7d4b1f';
+  g.lineWidth = 4.4;
   g.beginPath();
   g.moveTo(-18, -16);
   g.lineTo(19, 15);
@@ -356,25 +354,34 @@ function drawGrenBody(g, front, gz) {
 // Origin: the middle of the bomb.
 function drawBomb(g, lit) {
   g.scale(1.22, 1.22);
-  g.fillStyle = '#1e1d24';
+  g.fillStyle = '#1b1a20';
   g.strokeStyle = OUT;
-  g.lineWidth = 1.4;
+  g.lineWidth = 1.3;
   g.beginPath();
   g.arc(0, 0, 6.6, 0, TAU);
   g.fill();
   g.stroke();
-  g.strokeStyle = '#6b6b78';
-  g.lineWidth = 1.4;
+  // the little pale highlight
+  g.fillStyle = '#9a9ba8';
   g.beginPath();
-  g.arc(0, 0, 4.4, Math.PI * 1.1, Math.PI * 1.55);
-  g.stroke();
-  g.strokeStyle = '#9a7a4a';
-  g.lineWidth = 1.5;
+  g.arc(-0.6, -0.4, 1.7, 0, TAU);
+  g.fill();
+  // a small yellow spark beside the fuse
+  g.fillStyle = '#ffd84a';
+  g.strokeStyle = '#e8902a';
+  g.lineWidth = 0.7;
   g.beginPath();
-  g.moveTo(2, -6.2);
-  g.quadraticCurveTo(4, -9, 6, -9.4);
+  for (let i = 0; i < 8; i++) {
+    const r = i % 2 === 0 ? 3.4 : 1.2;
+    const a = (i / 8) * TAU - Math.PI / 2;
+    const px = 6.6 + Math.cos(a) * r;
+    const py = -7.4 + Math.sin(a) * r;
+    if (i === 0) g.moveTo(px, py);
+    else g.lineTo(px, py);
+  }
+  g.closePath();
+  g.fill();
   g.stroke();
-  if (lit) star(g, 6.4, -9.8, 4.4, 1.9);
 }
 
 // ---------------------------------------------------------------- archer
@@ -412,21 +419,19 @@ function drawArcherBody(g, front, gz) {
 function drawBow(g, drawn) {
   g.lineCap = 'round';
   g.strokeStyle = OUT;
-  g.lineWidth = 3.6;
+  g.lineWidth = 3.4;
   g.beginPath();
   g.moveTo(0, -19);
-  g.quadraticCurveTo(11.5, 0, 0, 19);
+  g.quadraticCurveTo(12, 0, 0, 19);
   g.stroke();
-  g.strokeStyle = '#cf9f4a';
+  g.strokeStyle = '#d49e4e';
   g.lineWidth = 2;
   g.beginPath();
   g.moveTo(0, -19);
-  g.quadraticCurveTo(11.5, 0, 0, 19);
+  g.quadraticCurveTo(12, 0, 0, 19);
   g.stroke();
-  g.fillStyle = '#6b4a22';
-  g.fillRect(4.4, -3, 2.2, 6);
-  g.strokeStyle = 'rgba(70, 58, 44, 0.95)';
-  g.lineWidth = 1;
+  g.strokeStyle = '#efe3c4';
+  g.lineWidth = 0.9;
   g.beginPath();
   g.moveTo(0, -19);
   if (drawn) g.lineTo(-10, 0);
@@ -436,34 +441,27 @@ function drawBow(g, drawn) {
 
 // Origin: the nock. Points right; used in hand and in flight.
 function drawArrow(g) {
-  g.strokeStyle = OUT;
-  g.lineWidth = 2.6;
-  g.beginPath();
-  g.moveTo(0, 0);
-  g.lineTo(30, 0);
-  g.stroke();
-  g.strokeStyle = '#8a6a3c';
+  g.strokeStyle = '#5a4030';
   g.lineWidth = 1.3;
   g.beginPath();
   g.moveTo(0, 0);
-  g.lineTo(30, 0);
+  g.lineTo(31, 0);
   g.stroke();
-  g.fillStyle = '#d83a35';
-  g.strokeStyle = OUT;
-  g.lineWidth = 0.9;
+  g.fillStyle = '#e03a35';
   g.beginPath();
-  g.moveTo(-3, -3.4);
-  g.lineTo(5, -0.3);
-  g.lineTo(5, 0.3);
-  g.lineTo(-3, 3.4);
+  g.moveTo(-3.5, -2.6);
+  g.lineTo(4.5, -0.2);
+  g.lineTo(4.5, 0.2);
+  g.lineTo(-3.5, 2.6);
   g.closePath();
   g.fill();
-  g.stroke();
-  g.fillStyle = '#b9bcc6';
+  g.fillStyle = '#9aa0ae';
+  g.strokeStyle = '#3a3c48';
+  g.lineWidth = 0.7;
   g.beginPath();
-  g.moveTo(29.5, -2.6);
-  g.lineTo(38, 0);
-  g.lineTo(29.5, 2.6);
+  g.moveTo(30, -2.4);
+  g.lineTo(37, 0);
+  g.lineTo(30, 2.4);
   g.closePath();
   g.fill();
   g.stroke();
@@ -651,9 +649,6 @@ function drawHorse(g, gait) {
   g.fillStyle = '#9a6e55';
   g.beginPath();
   g.ellipse(12, -5, 5.5, 3.4, 0.5, 0, TAU);
-  g.fill();
-  g.beginPath();
-  g.ellipse(-4, 6, 3.4, 2.2, 0.2, 0, TAU);
   g.fill();
   g.restore();
 
