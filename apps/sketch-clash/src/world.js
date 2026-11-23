@@ -1,4 +1,4 @@
-import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=28';
+import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=29';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -160,13 +160,22 @@ export class World {
         slots.push({ lx: (c - (cols - 1) / 2) * sx, ly: (r - (rows - 1) / 2) * sy });
       }
     }
-    // keep neighbours together: sort both by (row band, along)
+    // Fill the ranks so nobody has far to walk: order the Romans across the block,
+    // cut that into rows of `cols`, and order each row along the block.
     const proj = (u) => ({
       a: (u.x - cx) * ux + (u.y - cy) * uy,
       b: -(u.x - cx) * uy + (u.y - cy) * ux,
     });
-    const byRow = (p, q) => (Math.abs(p.b - q.b) > sy * 0.5 ? p.b - q.b : p.a - q.a);
-    units.sort((p, q) => byRow(proj(p), proj(q)));
+    const keyed = units.map((u) => ({ u, ...proj(u) }));
+    keyed.sort((p, q) => p.b - q.b);
+    const ordered = [];
+    for (let r = 0; r < rows; r++) {
+      const row = keyed.slice(r * cols, (r + 1) * cols);
+      row.sort((p, q) => p.a - q.a);
+      for (const k of row) ordered.push(k.u);
+    }
+    units.length = 0;
+    units.push(...ordered);
     slots.sort((p, q) => (p.ly !== q.ly ? p.ly - q.ly : p.lx - q.lx));
     // the block must sit inside the field (and on its own team's half)
     const half = this.w / 2;
@@ -201,15 +210,21 @@ export class World {
     }
     const s = this.formSlot(u);
     if (f.snap) {
-      f.snap.t += dt / 0.5;
-      const e = 1 - (1 - Math.min(1, f.snap.t)) ** 3;
-      const nx = f.snap.x + (s.x - f.snap.x) * e;
-      const ny = f.snap.y + (s.y - f.snap.y) * e;
-      if (Math.abs(nx - u.x) > 0.05) u.facing = nx > u.x ? 1 : -1;
-      u.x = nx;
-      u.y = ny;
-      u.moving = f.snap.t < 1;
-      if (f.snap.t >= 1) f.snap = null;
+      // walking into the ranks at a steady walk (the video takes about two seconds
+      // to turn a painted blob into a grid), easing off as each Roman arrives
+      const dx = s.x - u.x;
+      const dy = s.y - u.y;
+      const d = Math.hypot(dx, dy);
+      if (d <= 0.8) {
+        f.snap = null;
+        return true;
+      }
+      const sp = Math.min(34, 5 + d * 1.6);
+      const m = Math.min(d, sp * dt);
+      u.x += (dx / d) * m;
+      u.y += (dy / d) * m;
+      if (Math.abs(dx) > 0.3) u.facing = dx > 0 ? 1 : -1;
+      u.moving = d > 1.4;
       return true;
     }
     const dx = s.x - u.x;
