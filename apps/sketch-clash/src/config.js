@@ -13,8 +13,8 @@ export const FEET = 25 * K; // ground contact, below the body centre
 
 // Standing around, a soldier faces the viewer with the rifle held upright
 // at their side and their eyes wandering; it swings down to aim at a target.
-export const IDLE_PIVOT = { x: -9 * K, y: 13 * K };
-export const IDLE_AIM = -1.48;
+export const IDLE_PIVOT = { x: 12 * K, y: 12 * K };
+export const IDLE_AIM = -1.14;
 // How often each gaze is picked while idle: right, up, up-left, up-right, left.
 export const GAZE_WEIGHTS = [0.1, 0.4, 0.2, 0.2, 0.1];
 
@@ -128,7 +128,7 @@ export const GRENADIER = {
   minRange: 70 * R,
   holdDist: 150,
   damage: 52,
-  blastRadius: 58,
+  blastRadius: 36,
   cooldownMin: 2.1,
   cooldownMax: 3.1,
   throwTime: 0.4,
@@ -201,6 +201,9 @@ export const NINJA = {
   cooldownMax: 0.32,
   strafe: 34,
   weapon: 'katana',
+  // throws spinning stars while closing in, then cuts up close
+  star: { range: 170 * R, cooldownMin: 1.0, cooldownMax: 1.8, damage: 9, speed: 330 },
+  smoke: true,
   pivot: { x: 4 * K, y: 12 * K },
 };
 

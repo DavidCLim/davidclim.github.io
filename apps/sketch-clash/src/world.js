@@ -1,4 +1,4 @@
-import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=14';
+import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=15';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -158,6 +158,7 @@ export class World {
       swing: 1,
       strafeDir: 1,
       drawT: 0, // archer: time spent drawing the bow
+      starT: Math.random() * 1.2, // ninja: time to the next throwing star
       throwT: 0, // grenadier: throwing animation
       charge: 0, // cavalry: how fast it is galloping
       retreatT: 0,
@@ -349,6 +350,20 @@ export class World {
       u.dead = true;
       this.anyDead = true;
       this.ghosts.push({ x: u.x, y: u.y, age: 0, seed: Math.random(), species: u.species });
+      if (u.def.smoke) {
+        for (let i = 0; i < 2; i++) {
+          this.puffs.push({
+            x: u.x + (Math.random() - 0.5) * 8,
+            y: u.y + (Math.random() - 0.5) * 6,
+            vx: (Math.random() - 0.5) * 24,
+            vy: -8 - Math.random() * 14,
+            age: 0,
+            life: 1.1 + Math.random() * 0.6,
+            size: 10 + Math.random() * 8,
+            white: true,
+          });
+        }
+      }
       if (u.def.becomes) {
         // the horse is gone; its rider gets up on foot
         const k = this.addUnit(u.def.becomes, u.team, u.x, u.y);
@@ -775,15 +790,15 @@ export class World {
       if (v && !v.dead && Math.hypot(v.x - u.x, v.y - u.y) <= d.reach * 1.5 + v.def.radius) {
         this.hurt(v, d.damage * (0.85 + Math.random() * 0.3), v.x, v.y);
         if (d.weapon === 'katana') {
-          for (let i = 0; i < 3; i++) {
+          for (let i = 0; i < (Math.random() < 0.3 ? 1 : 0); i++) {
             this.puffs.push({
               x: v.x + (Math.random() - 0.5) * 14,
               y: v.y + (Math.random() - 0.5) * 8,
               vx: (Math.random() - 0.5) * 30,
               vy: -10 - Math.random() * 20,
               age: 0,
-              life: 0.45 + Math.random() * 0.25,
-              size: 6 + Math.random() * 6,
+              size: 9 + Math.random() * 9,
+              life: 1 + Math.random() * 0.6,
               white: true,
             });
           }
@@ -797,6 +812,13 @@ export class World {
       if (Math.abs(dx) > 3) u.facing = dx > 0 ? 1 : -1;
       this.aimAt(u, t, dt);
       const reach = d.reach + t.def.radius * 0.5;
+      if (d.star) {
+        u.starT -= dt;
+        if (u.starT <= 0 && dist > reach * 1.6 && dist <= d.star.range) {
+          this.throwStar(u, t);
+          u.starT = d.star.cooldownMin + Math.random() * (d.star.cooldownMax - d.star.cooldownMin);
+        }
+      }
       if (dist > reach * 0.85) {
         u.x += (dx / dist) * speed * dt;
         u.y += (dy / dist) * speed * dt;
@@ -972,6 +994,28 @@ export class World {
     u.recoil = 1;
   }
 
+  // A ninja's throwing star: a short, low arc to where the target stands.
+  throwStar(u, t) {
+    const d = u.def;
+    const o = this.rifleOrigin(u);
+    const dist = Math.hypot(t.x - o.x, t.y - o.y);
+    const sp = 4 + dist * 0.04;
+    this.arrows.push({
+      kind: 'star',
+      x0: o.x,
+      y0: o.y,
+      x1: t.x + (Math.random() - 0.5) * sp * 2,
+      y1: t.y + (Math.random() - 0.5) * sp * 2,
+      age: 0,
+      dur: 0.2 + dist / d.star.speed,
+      h: 6 + dist * 0.08,
+      side: u.side,
+      damage: d.star.damage,
+    });
+    u.atk = 1;
+    u.swing = u.swing > 0 ? -1 : 1;
+  }
+
   stepArrows(dt) {
     let gone = false;
     for (const a of this.arrows) {
@@ -991,8 +1035,8 @@ export class World {
           hit = o;
         }
       });
-      if (hit) this.hurt(hit, a.damage, a.x1, a.y1, 'arrow');
-      if (this.onArrowLand) this.onArrowLand(a);
+      if (hit) this.hurt(hit, a.damage, a.x1, a.y1, a.kind === 'star' ? undefined : 'arrow');
+      if (a.kind !== 'star' && this.onArrowLand) this.onArrowLand(a);
     }
     if (gone) this.arrows = this.arrows.filter((a) => !a.dead);
   }
@@ -1024,7 +1068,7 @@ export class World {
         vy: Math.sin(a) * sp - 16,
         age: 0,
         life: 1.1 + Math.random() * 0.8,
-        size: 11 + Math.random() * 9,
+        size: 7 + Math.random() * 6,
       });
     }
     const reach = b.radius;

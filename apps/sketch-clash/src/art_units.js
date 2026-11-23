@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=14';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=14';
+import { TAU, K } from './config.js?v=15';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=15';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -1018,7 +1018,6 @@ function eggSet(drawBody, gazes = GAZE3, extra = {}) {
   return {
     torso: makeLayer(-40, -34, 36, 26, (g) => drawBody(g, false, gazes[0], false)),
     torsoAngry: makeLayer(-40, -34, 36, 26, (g) => drawBody(g, false, gazes[0], true)),
-    torsoFront: gazes.map((gz) => makeLayer(-40, -34, 36, 26, (g) => drawBody(g, true, gz, false))),
     // standing around they face the same way as when fighting, eyes wandering
     torsoSide: gazes.map((gz) => makeLayer(-40, -34, 36, 26, (g) => drawBody(g, false, gz, false))),
     ...extra,

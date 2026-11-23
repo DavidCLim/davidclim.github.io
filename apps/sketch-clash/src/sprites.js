@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=14';
+import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=15';
 
 // Units are drawn from "art" coordinates matching the reference sprites
 // (origin at the body centre, y down) into small offscreen layers, then
@@ -317,7 +317,7 @@ function drawSniperTorso(g, front, look, blink) {
     drawSniperEyes(g, [-8.4, 8.4], look, blink);
     drawSniperSmile(g, 0);
   } else {
-    drawSniperEyes(g, [-1.5, 14.2], 1, false);
+    drawSniperEyes(g, [-1.5, 14.2], look, blink);
     drawSniperSmile(g, 6.85);
   }
 }
@@ -449,7 +449,8 @@ export function buildSprites() {
     soldier: {
       feet: soldierFeet,
       torso: makeLayer(-26, -27, 27, 23, (g) => drawSoldierTorso(g, false, GAZES[0])),
-      torsoFront: GAZES.map((gz) => makeLayer(-26, -27, 27, 23, (g) => drawSoldierTorso(g, true, gz))),
+      // standing around he faces sideways too, eyes wandering upward
+      torsoSide: GAZES.map((gz) => makeLayer(-26, -27, 27, 23, (g) => drawSoldierTorso(g, false, gz))),
       rifle: makeLayer(-9, -11, 51, 11, (g) => drawSoldierRifle(g, false)),
       rifleFire: makeLayer(-9, -11, 51, 11, (g) => drawSoldierRifle(g, true)),
       ghost: makeLayer(-18, -24, 18, 28, (g) => drawGhost(g, false)),
@@ -458,8 +459,8 @@ export function buildSprites() {
       feet: sniperFeet,
       torso: makeLayer(-26, -24, 27, 25, (g) => drawSniperTorso(g, false, 1, false)),
       // idle faces the viewer: look left, centre, right, then a blink
-      torsoFront: [-1, 0, 1].map((look) => makeLayer(-26, -24, 27, 25, (g) => drawSniperTorso(g, true, look, false)))
-        .concat([makeLayer(-26, -24, 27, 25, (g) => drawSniperTorso(g, true, 0, true))]),
+      torsoSide: [-1, 0, 1].map((look) => makeLayer(-26, -24, 27, 25, (g) => drawSniperTorso(g, false, look, false)))
+        .concat([makeLayer(-26, -24, 27, 25, (g) => drawSniperTorso(g, false, 1, true))]),
       hat: makeLayer(-36, -16, 36, 8, drawSniperHat),
       rifle: makeLayer(-9, -14, 54, 12, (g) => drawSniperRifleParts(g, false)),
       rifleFire: makeLayer(-9, -14, 60, 12, (g) => drawSniperRifleParts(g, true)),

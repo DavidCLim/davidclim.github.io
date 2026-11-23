@@ -1,6 +1,6 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=14';
-import { drawLayer, OUT } from './sprites.js?v=14';
-import { drawDrop } from './art_units.js?v=14';
+import { TAU, K, UNIT, FEET } from './config.js?v=15';
+import { drawLayer, OUT } from './sprites.js?v=15';
+import { drawDrop } from './art_units.js?v=15';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -46,6 +46,13 @@ function eggBase(ctx, dpr, sprites, A, u, before) {
   else drawLayer(ctx, u.species === 'roman' && u.target ? A.torsoAngry : A.torso);
   drawHurtMarks(ctx, sprites, u);
   burnGlow(ctx, u, 20 * K, 23 * K);
+  if (u.hit > 0) {
+    // a hit flashes the body white for a moment
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.72)';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 20.5 * K, 23 * K, 0, 0, TAU);
+    ctx.fill();
+  }
 }
 
 function drawFlamethrower(ctx, dpr, sprites, u) {
@@ -67,7 +74,7 @@ function drawRoman(ctx, dpr, sprites, u) {
   // beside him; fighting, the spear levels out and jabs and the shield comes in.
   const p = 1 - u.atk;
   const thrust = u.atk > 0 ? Math.sin(p * Math.PI) * 16 * K : 0;
-  ctx.translate(lerp(14 * K, 6 * K, pose), lerp(22 * K, 5 * K, pose));
+  ctx.translate(lerp(14 * K, 6 * K, pose), lerp(22 * K, 2 * K, pose));
   ctx.rotate(lerp(-1.4, u.aim - 0.04, pose));
   ctx.translate(pose * thrust, 0);
   drawLayer(ctx, A.spear);
@@ -201,10 +208,10 @@ function makeBlob() {
   c.width = c.height = 128;
   const g = c.getContext('2d');
   const gr = g.createRadialGradient(64, 64, 4, 64, 64, 64);
-  gr.addColorStop(0, 'rgba(255, 238, 150, 1)');
-  gr.addColorStop(0.35, 'rgba(255, 168, 48, 0.95)');
-  gr.addColorStop(0.75, 'rgba(240, 110, 25, 0.5)');
-  gr.addColorStop(1, 'rgba(240, 110, 25, 0)');
+  gr.addColorStop(0, 'rgba(255, 190, 70, 1)');
+  gr.addColorStop(0.55, 'rgba(250, 150, 45, 0.95)');
+  gr.addColorStop(0.85, 'rgba(235, 105, 25, 0.55)');
+  gr.addColorStop(1, 'rgba(235, 105, 25, 0)');
   g.fillStyle = gr;
   g.fillRect(0, 0, 128, 128);
   return c;
@@ -245,39 +252,37 @@ export function drawFx(ctx, dpr, sprites, world) {
     ctx.save();
     ctx.translate(gx, gy - 4 * b.h * p * (1 - p));
     ctx.rotate(b.age * b.spin);
+    ctx.scale(0.62, 0.62);
     drawLayer(ctx, bomb);
     ctx.restore();
   }
 
-  // explosions: soft fireballs, expanding rings, a white flash
+  // explosions: a soft orange fireball with a thin white ring and a flash
   for (const e of world.blasts) {
     const t = e.age / e.life;
-    const grow = 1 - (1 - Math.min(1, t * 2.2)) ** 2;
+    const grow = 1 - (1 - Math.min(1, t * 2.4)) ** 2;
     const fade = Math.max(0, 1 - t);
-    for (let i = 0; i < 5; i++) {
-      const a = (i / 5) * TAU + e.seed * 6;
-      const off = e.r * 0.34 * grow * (i === 0 ? 0 : 1);
-      const rad = e.r * (i === 0 ? 0.95 : 0.6) * (0.35 + 0.65 * grow);
-      ctx.globalAlpha = fade * fade * (i === 0 ? 0.95 : 0.8);
-      const bx = e.x + Math.cos(a) * off;
-      const by = e.y + Math.sin(a) * off * 0.8;
-      ctx.drawImage(blob, bx - rad, by - rad, rad * 2, rad * 2);
+    for (let i = 0; i < 3; i++) {
+      const a = (i / 3) * TAU + e.seed * 6;
+      const off = e.r * 0.3 * grow * (i === 0 ? 0 : 1);
+      const rad = e.r * (i === 0 ? 1 : 0.62) * (0.4 + 0.6 * grow);
+      ctx.globalAlpha = fade * (i === 0 ? 0.92 : 0.75);
+      ctx.drawImage(blob, e.x + Math.cos(a) * off - rad, e.y + Math.sin(a) * off * 0.85 - rad, rad * 2, rad * 2);
     }
-    for (const [delay, col] of [[0, '255, 214, 70'], [0.12, '255, 170, 50']]) {
-      const q = (t - delay) / (1 - delay);
-      if (q <= 0) continue;
-      ctx.globalAlpha = Math.max(0, 1 - q);
-      ctx.strokeStyle = `rgba(${col}, 1)`;
-      ctx.lineWidth = 3.4 * (1 - q) + 0.8;
+    const q = Math.min(1, t * 1.6);
+    if (q < 1) {
+      ctx.globalAlpha = (1 - q) * 0.95;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.6;
       ctx.beginPath();
-      ctx.ellipse(e.x, e.y, e.r * (0.25 + 0.95 * q), e.r * (0.25 + 0.95 * q) * 0.82, 0, 0, TAU);
+      ctx.arc(e.x, e.y, e.r * (0.35 + 0.8 * q), 0, TAU);
       ctx.stroke();
     }
-    if (t < 0.18) {
-      ctx.globalAlpha = (1 - t / 0.18) * 0.9;
-      ctx.fillStyle = '#fffbe0';
+    if (t < 0.12) {
+      ctx.globalAlpha = (1 - t / 0.12) * 0.85;
+      ctx.fillStyle = '#fff8d8';
       ctx.beginPath();
-      ctx.arc(e.x, e.y, e.r * 0.34, 0, TAU);
+      ctx.arc(e.x, e.y, e.r * 0.3, 0, TAU);
       ctx.fill();
     }
   }
@@ -289,6 +294,31 @@ export function drawFx(ctx, dpr, sprites, world) {
     const p = Math.min(1, a.age / a.dur);
     const gx = lerp(a.x0, a.x1, p);
     const gy = lerp(a.y0, a.y1, p);
+    if (a.kind === 'star') {
+      // a small grey throwing star, spinning, with a shadow on the ground
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.14)';
+      ctx.beginPath();
+      ctx.ellipse(gx, gy + FEET * 0.5, 2.6, 1, 0, 0, TAU);
+      ctx.fill();
+      ctx.save();
+      ctx.translate(gx, gy - 4 * a.h * p * (1 - p));
+      ctx.rotate(a.age * 22);
+      ctx.fillStyle = '#9a9ca8';
+      ctx.strokeStyle = '#3a3a44';
+      ctx.lineWidth = 0.7;
+      ctx.beginPath();
+      for (let i = 0; i < 8; i++) {
+        const r = i % 2 === 0 ? 3.6 : 1.2;
+        const ang = (i / 8) * TAU;
+        if (i === 0) ctx.moveTo(Math.cos(ang) * r, Math.sin(ang) * r);
+        else ctx.lineTo(Math.cos(ang) * r, Math.sin(ang) * r);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+      continue;
+    }
     ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
     ctx.beginPath();
     ctx.ellipse(gx, gy + FEET * 0.5, 4, 1.5, 0, 0, TAU);

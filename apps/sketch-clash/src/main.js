@@ -1,8 +1,8 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=14';
-import { World } from './world.js?v=14';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=14';
-import { buildUnitArt } from './art_units.js?v=14';
-import { drawUnit, drawFx, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=14';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=15';
+import { World } from './world.js?v=15';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=15';
+import { buildUnitArt } from './art_units.js?v=15';
+import { drawUnit, drawFx, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=15';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -393,6 +393,19 @@ function drawBrushRing() {
 
 const GHOST_LIFE = 1.7;
 
+const smokeSprite = (() => {
+  const c = document.createElement('canvas');
+  c.width = c.height = 96;
+  const g = c.getContext('2d');
+  const gr = g.createRadialGradient(48, 48, 6, 48, 48, 48);
+  gr.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+  gr.addColorStop(0.6, 'rgba(250, 250, 252, 0.8)');
+  gr.addColorStop(1, 'rgba(240, 242, 246, 0)');
+  g.fillStyle = gr;
+  g.fillRect(0, 0, 96, 96);
+  return c;
+})();
+
 function smooth(a, b, x) {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
@@ -423,7 +436,7 @@ function drawSoldier(u) {
   } else if (pose < 1) {
     ctx.translate(0, Math.sin(u.breath * 2.2) * 0.55 * (1 - pose));
   }
-  drawLayer(ctx, pose < 0.5 ? S.torsoFront[u.gaze] : S.torso);
+  drawLayer(ctx, pose < 0.5 ? S.torsoSide[u.gaze] : S.torso);
   drawHurt(u);
 
   // Standing around the rifle is held upright at the side; it swings
@@ -463,7 +476,7 @@ function sniperIdle(u) {
   return out;
 }
 
-const CANE = { x: 25 * K, y: 18 * K }; // rifle planted on the ground at his side
+const CANE = { x: 8 * K, y: 14 * K }; // rifle held across the body, barrel up and forward
 const PEEK = { x: 6 * K, y: 2 * K }; // rifle up at his eye
 const LENS = { x: 25.6 * K, y: -7.9 * K }; // scope lens, in rifle space
 
@@ -499,7 +512,7 @@ function drawSniper(u) {
     } else if (pose < 1) {
       ctx.translate(0, Math.sin(u.breath * 1.7) * 0.5 * (1 - pose));
     }
-    if (pose < 0.5) drawLayer(ctx, S.torsoFront[idle.blink ? 3 : idle.look]);
+    if (pose < 0.5) drawLayer(ctx, S.torsoSide[idle.blink ? 3 : idle.look]);
     else drawLayer(ctx, S.torso);
     drawHurt(u);
 
@@ -512,7 +525,7 @@ function drawSniper(u) {
     const lift = idle ? idle.lift : 0;
     const ix = lerp(CANE.x, PEEK.x, lift);
     const iy = lerp(CANE.y, PEEK.y, lift);
-    const ia = lerp(-1.5, -0.08, lift) + Math.sin(u.breath * 1.4) * 0.025;
+    const ia = lerp(-0.62, -0.08, lift) + Math.sin(u.breath * 1.4) * 0.025;
     ctx.translate(lerp(ix, d.pivot.x, pose), lerp(iy, d.pivot.y, pose));
     ctx.rotate(lerp(ia, u.aim, pose));
     drawLayer(ctx, u.flash > 0 ? S.rifleFire : S.rifle);
@@ -615,7 +628,15 @@ function render() {
 
   for (const p of world.puffs) {
     const t = p.age / p.life;
-    ctx.fillStyle = p.white ? `rgba(250, 250, 252, ${0.75 * (1 - t)})` : `rgba(165, 167, 176, ${(p.size > 10 ? 0.26 : 0.45) * (1 - t)})`;
+    if (p.white) {
+      // ninja smoke: a big soft white cloud
+      const r = p.size * (1.2 + 1.2 * Math.min(1, t * 2));
+      ctx.globalAlpha = 0.62 * (t < 0.5 ? 1 : 1 - (t - 0.5) / 0.5);
+      ctx.drawImage(smokeSprite, p.x - r, p.y - r, r * 2, r * 2);
+      ctx.globalAlpha = 1;
+      continue;
+    }
+    ctx.fillStyle = `rgba(165, 167, 176, ${(p.size > 10 ? 0.26 : 0.45) * (1 - t)})`;
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.size * (1 + 1.8 * t), 0, TAU);
     ctx.fill();
