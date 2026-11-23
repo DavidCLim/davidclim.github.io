@@ -1,6 +1,6 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=23';
-import { drawLayer, OUT } from './sprites.js?v=23';
-import { drawDrop } from './art_units.js?v=23';
+import { TAU, K, UNIT, FEET } from './config.js?v=24';
+import { drawLayer, OUT } from './sprites.js?v=24';
+import { drawDrop } from './art_units.js?v=24';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the

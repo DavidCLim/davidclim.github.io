@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=23';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=23';
+import { TAU, K } from './config.js?v=24';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=24';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -148,7 +148,7 @@ function drawNozzle(g, firing) {
 
 // ---------------------------------------------------------------- roman
 function drawRomanBody(g, front, gz, angry) {
-  eggBody(g, '#d92c30', '#bd2227');
+  eggBody(g, '#2fd3c0', '#179f90');
   g.fillStyle = 'rgba(255, 255, 255, 0.2)';
   g.beginPath();
   g.ellipse(-11, -3, 2.6, 5.4, -0.15, 0, TAU);
@@ -188,8 +188,8 @@ function drawRomanBody(g, front, gz, angry) {
 
   // the small red dome (with a shine), a diamond crest, and the visor
   const dg = g.createLinearGradient(0, -25, 0, -12);
-  dg.addColorStop(0, '#ee3a40');
-  dg.addColorStop(1, '#cf2a31');
+  dg.addColorStop(0, '#58e6d6');
+  dg.addColorStop(1, '#27b8a8');
   g.fillStyle = dg;
   g.strokeStyle = OUT;
   g.lineWidth = 1.5;
@@ -892,7 +892,7 @@ export const DROPS = {
     }
   },
   roman(g) {
-    g.fillStyle = '#e8647a';
+    g.fillStyle = '#4cc9bd';
     g.strokeStyle = OUT;
     g.lineWidth = 1;
     g.beginPath();
@@ -966,8 +966,8 @@ export const DROPS = {
 // Light, tinted ghosts that keep the unit's headgear.
 const GHOSTS = {
   flamethrower: ['#f6efe9', '#d5cbc4', (g) => dome(g, '#2f2e36', 11, 8, -10)],
-  roman: ['#f9eded', '#d9c4c4', (g) => {
-    dome(g, '#d43234', 11, 8, -10);
+  roman: ['#e6fbf8', '#a9d8d2', (g) => {
+    dome(g, '#3fd0c1', 11, 8, -10);
     g.fillStyle = '#f0a53a';
     rr(g, -13.5, -12.5, 27, 4.6, 2.2);
     g.fill();
