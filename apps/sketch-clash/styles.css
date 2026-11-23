@@ -297,7 +297,7 @@ canvas {
 .unit-btn[aria-pressed="true"] { border-color: #9db6ee; background: #eaf0ff; }
 .unit-btn canvas {
   position: static;
-  width: clamp(32px, 3.4vw, 58px);
+  width: clamp(32px, 3.6vw, 76px);
   aspect-ratio: 132 / 96;
   height: auto;
 }
@@ -400,4 +400,25 @@ canvas {
   .brush-box input { width: 96px; }
   .start-btn { bottom: 176px; font-size: 1.7rem; padding: 3px 32px 7px; }
   .team-label { top: 56px; font-size: 0.8rem; }
+}
+
+/* ---------- Paused pill, legend overflow ---------- */
+.paused-pill {
+  position: absolute;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 5px 16px 5px;
+  border-radius: 999px;
+  background: #1c1b22;
+  color: #ffffff;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+}
+.legend-more {
+  padding: 4px 0 2px 8px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1;
 }

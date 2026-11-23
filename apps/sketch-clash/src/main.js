@@ -1,8 +1,8 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=13';
-import { World } from './world.js?v=13';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=13';
-import { buildUnitArt } from './art_units.js?v=13';
-import { drawUnit, drawFx, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=13';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=14';
+import { World } from './world.js?v=14';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=14';
+import { buildUnitArt } from './art_units.js?v=14';
+import { drawUnit, drawFx, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=14';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -278,6 +278,7 @@ pauseBtn.addEventListener('click', () => {
   $('pause-icon').innerHTML = paused ? PLAY_ICON : PAUSE_ICON;
   pauseBtn.setAttribute('aria-label', paused ? 'Resume' : 'Pause');
   pauseBtn.title = paused ? 'Resume' : 'Pause';
+  $('paused').hidden = !paused;
 });
 
 function setMode(mode) {
@@ -302,6 +303,11 @@ startBtn.addEventListener('click', () => {
 
 // Bottom-left legend: how many of each unit are on the field.
 const legendRows = new Map();
+const LEGEND_MAX = 7;
+const legendMore = document.createElement('div');
+legendMore.className = 'legend-more';
+legendMore.hidden = true;
+legend.append(legendMore);
 function syncLegend() {
   const present = SPECIES_ORDER.filter((id) => world.speciesCounts[id] > 0).map((id) => [id, world.speciesCounts[id]]);
   legend.hidden = present.length === 0;
@@ -318,18 +324,26 @@ function syncLegend() {
       const el = document.createElement('div');
       el.className = 'legend-row';
       el.append(icon, count, label);
-      legend.append(el);
       row = { el, count, last: -1 };
       legendRows.set(id, row);
+      for (const sid of SPECIES_ORDER) {
+        const r = legendRows.get(sid);
+        if (r) legend.insertBefore(r.el, legendMore);
+      }
     }
     if (row.last !== n) {
       row.count.textContent = String(n);
       row.last = n;
     }
   }
+  let shown = 0;
   for (const [id, row] of legendRows) {
-    row.el.hidden = !(world.speciesCounts[id] > 0);
+    const here = world.speciesCounts[id] > 0;
+    row.el.hidden = !here || shown >= LEGEND_MAX;
+    if (here) shown++;
   }
+  legendMore.hidden = shown <= LEGEND_MAX;
+  if (shown > LEGEND_MAX) legendMore.textContent = `+${shown - LEGEND_MAX} more`;
 }
 
 // A thick dark outline plus a hard drop shadow, built from shadow copies

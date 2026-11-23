@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=13';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=13';
+import { TAU, K } from './config.js?v=14';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=14';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -135,31 +135,25 @@ function drawFlameBody(g, front, gz) {
 
 // Origin: where the nozzle leaves the hip. Points right.
 function drawNozzle(g, firing) {
-  g.fillStyle = '#4a4954';
+  g.fillStyle = '#e9a53a';
   g.strokeStyle = OUT;
-  g.lineWidth = 1.3;
-  rr(g, -5, -3.3, 8, 6.6, 1.4);
+  g.lineWidth = 1.2;
+  rr(g, 0, -1.9, 41, 3.8, 1.4);
   g.fill();
   g.stroke();
-  g.fillStyle = '#f0ad3c';
-  rr(g, 2, -2.6, 38, 5.2, 1.2);
+  g.fillStyle = '#fbd36a';
+  g.fillRect(1.5, -1.2, 38, 0.9);
+  g.fillStyle = firing ? '#fff2a8' : '#f2872a';
+  g.beginPath();
+  g.arc(42, 0, 2.3, 0, TAU);
   g.fill();
-  g.stroke();
-  g.fillStyle = '#c98421';
-  g.fillRect(3, 0.6, 36, 1.7);
-  g.fillStyle = '#ffe08a';
-  g.fillRect(3, -2, 36, 1);
-  g.fillStyle = '#ffd23a';
-  rr(g, 38.5, -3.5, 5, 7, 1.2);
-  g.fill();
-  g.stroke();
   if (firing) {
-    const r = g.createRadialGradient(46, 0, 1, 46, 0, 10);
-    r.addColorStop(0, 'rgba(255, 244, 170, 1)');
+    const r = g.createRadialGradient(44, 0, 1, 44, 0, 9);
+    r.addColorStop(0, 'rgba(255, 240, 160, 0.95)');
     r.addColorStop(1, 'rgba(255, 150, 30, 0)');
     g.fillStyle = r;
     g.beginPath();
-    g.arc(46, 0, 10, 0, TAU);
+    g.arc(44, 0, 9, 0, TAU);
     g.fill();
   }
 }
@@ -207,8 +201,7 @@ function drawRomanBody(g, front, gz, angry) {
     g.strokeStyle = OUT;
     g.lineWidth = 1.5;
     g.beginPath();
-    g.moveTo(4, 10);
-    g.lineTo(11, 10);
+    g.arc(8, 6.6, 3.2, Math.PI * 0.12, Math.PI * 0.8);
     g.stroke();
   }
 
@@ -311,13 +304,13 @@ function drawGrenBody(g, front, gz) {
   g.clip();
   g.lineCap = 'butt';
   g.strokeStyle = OUT;
-  g.lineWidth = 8.6;
+  g.lineWidth = 7.2;
   g.beginPath();
   g.moveTo(-18, -16);
   g.lineTo(19, 15);
   g.stroke();
   g.strokeStyle = '#8c5a2e';
-  g.lineWidth = 6.4;
+  g.lineWidth = 5.2;
   g.beginPath();
   g.moveTo(-18, -16);
   g.lineTo(19, 15);
@@ -419,25 +412,25 @@ function drawArcherBody(g, front, gz) {
 function drawBow(g, drawn) {
   g.lineCap = 'round';
   g.strokeStyle = OUT;
-  g.lineWidth = 4.8;
+  g.lineWidth = 3.6;
   g.beginPath();
-  g.moveTo(0, -23);
-  g.quadraticCurveTo(13, 0, 0, 23);
+  g.moveTo(0, -19);
+  g.quadraticCurveTo(11.5, 0, 0, 19);
   g.stroke();
-  g.strokeStyle = '#d6a13a';
-  g.lineWidth = 3;
+  g.strokeStyle = '#cf9f4a';
+  g.lineWidth = 2;
   g.beginPath();
-  g.moveTo(0, -23);
-  g.quadraticCurveTo(13, 0, 0, 23);
+  g.moveTo(0, -19);
+  g.quadraticCurveTo(11.5, 0, 0, 19);
   g.stroke();
   g.fillStyle = '#6b4a22';
-  g.fillRect(5.2, -3.2, 2.6, 6.4);
+  g.fillRect(4.4, -3, 2.2, 6);
   g.strokeStyle = 'rgba(70, 58, 44, 0.95)';
   g.lineWidth = 1;
   g.beginPath();
-  g.moveTo(0, -23);
+  g.moveTo(0, -19);
   if (drawn) g.lineTo(-10, 0);
-  g.lineTo(0, 23);
+  g.lineTo(0, 19);
   g.stroke();
 }
 
@@ -548,10 +541,10 @@ function drawLance(g) {
 // Thin grey legs that scissor as the horse gallops. Per gait pose:
 // [hip x, foot dx, knee bend].
 const LEGS = [
-  [17, [13, 3, -9, 2]],
-  [11, [8, 5, -4, 1]],
-  [-11, [-9, -2, 8, -1]],
-  [-17, [-14, -6, 4, -3]],
+  [17, [13, 3, -9, 2, 1]],
+  [11, [8, 5, -4, 1, 2]],
+  [-11, [-9, -2, 8, -1, -2]],
+  [-17, [-14, -6, 4, -3, -1]],
 ];
 
 function drawHorse(g, gait) {
@@ -744,7 +737,17 @@ function drawNinjaBody(g, front, gz) {
   g.fill();
   g.stroke();
 
-  eggBody(g, '#3d3b47', '#25242c');
+  eggBody(g, '#383742', '#2b2a33');
+  g.fillStyle = 'rgba(255, 255, 255, 0.07)';
+  g.beginPath();
+  g.ellipse(0, 11, 18, 11, 0, 0, TAU);
+  g.fill();
+  g.strokeStyle = 'rgba(10, 9, 14, 0.55)';
+  g.lineWidth = 1.2;
+  g.beginPath();
+  g.moveTo(-19.5, 4);
+  g.quadraticCurveTo(0, 9, 19.5, 4);
+  g.stroke();
   // the opening of the hood
   g.fillStyle = '#d9c5a2';
   g.strokeStyle = OUT;
@@ -1016,6 +1019,8 @@ function eggSet(drawBody, gazes = GAZE3, extra = {}) {
     torso: makeLayer(-40, -34, 36, 26, (g) => drawBody(g, false, gazes[0], false)),
     torsoAngry: makeLayer(-40, -34, 36, 26, (g) => drawBody(g, false, gazes[0], true)),
     torsoFront: gazes.map((gz) => makeLayer(-40, -34, 36, 26, (g) => drawBody(g, true, gz, false))),
+    // standing around they face the same way as when fighting, eyes wandering
+    torsoSide: gazes.map((gz) => makeLayer(-40, -34, 36, 26, (g) => drawBody(g, false, gz, false))),
     ...extra,
   };
 }
@@ -1066,7 +1071,7 @@ export function buildUnitArt() {
   };
 
   art.cavalry = {
-    horse: [0, 1, 2, 3].map((gait) => makeLayer(-50, -40, 56, 32, (g) => drawHorse(g, gait))),
+    horse: [0, 1, 2, 3, 4].map((gait) => makeLayer(-50, -40, 56, 32, (g) => drawHorse(g, gait))),
     rider: makeLayer(-14, -18, 14, 14, drawRider),
     lance: makeLayer(-20, -6, 72, 6, drawLance),
     shadow: makeLayer(-46, 18, 50, 36, (g) => {

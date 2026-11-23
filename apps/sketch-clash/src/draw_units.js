@@ -1,6 +1,6 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=13';
-import { drawLayer, OUT } from './sprites.js?v=13';
-import { drawDrop } from './art_units.js?v=13';
+import { TAU, K, UNIT, FEET } from './config.js?v=14';
+import { drawLayer, OUT } from './sprites.js?v=14';
+import { drawDrop } from './art_units.js?v=14';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -42,7 +42,7 @@ function eggBase(ctx, dpr, sprites, A, u, before) {
     before();
     ctx.restore();
   }
-  if (pose < 0.5) drawLayer(ctx, A.torsoFront[GZ[u.gaze]]);
+  if (pose < 0.5) drawLayer(ctx, A.torsoSide[GZ[u.gaze]]);
   else drawLayer(ctx, u.species === 'roman' && u.target ? A.torsoAngry : A.torso);
   drawHurtMarks(ctx, sprites, u);
   burnGlow(ctx, u, 20 * K, 23 * K);
@@ -53,37 +53,27 @@ function drawFlamethrower(ctx, dpr, sprites, u) {
   const d = u.def;
   eggBase(ctx, dpr, sprites, A, u);
   const pose = u.pose;
-  ctx.translate(lerp(14 * K, d.pivot.x, pose), lerp(5 * K, d.pivot.y, pose));
-  ctx.rotate(lerp(1.1, u.aim, pose));
+  ctx.translate(lerp(8 * K, d.pivot.x, pose), lerp(5 * K, d.pivot.y, pose));
+  ctx.rotate(lerp(0.14, u.aim, pose));
   drawLayer(ctx, u.firing ? A.nozzleFire : A.nozzle);
 }
 
 function drawRoman(ctx, dpr, sprites, u) {
   const A = sprites.roman;
   const pose = u.pose;
-  const fight = pose >= 0.5;
-  // walking, the shield stands behind and the spear leans back over the
-  // shoulder; fighting, the shield comes round to the front and the spear
-  // levels out and jabs.
-  eggBase(ctx, dpr, sprites, A, u, () => {
-    if (!fight) {
-      ctx.translate(lerp(-19 * K, -4 * K, pose * 2), 9 * K);
-      drawLayer(ctx, A.shield);
-    }
-  });
+  eggBase(ctx, dpr, sprites, A, u);
   const body = ctx.getTransform();
+  // Standing around the spear is held upright in front and the shield stands
+  // beside him; fighting, the spear levels out and jabs and the shield comes in.
   const p = 1 - u.atk;
   const thrust = u.atk > 0 ? Math.sin(p * Math.PI) * 16 * K : 0;
-  const ang = lerp(-2.0, u.aim - 0.04, pose);
-  ctx.translate(lerp(12 * K, 6 * K, pose), lerp(10 * K, 5 * K, pose));
-  ctx.rotate(ang);
+  ctx.translate(lerp(14 * K, 6 * K, pose), lerp(22 * K, 5 * K, pose));
+  ctx.rotate(lerp(-1.4, u.aim - 0.04, pose));
   ctx.translate(pose * thrust, 0);
   drawLayer(ctx, A.spear);
-  if (fight) {
-    ctx.setTransform(body);
-    ctx.translate(lerp(19 * K, 21 * K, Math.min(1, (pose - 0.5) * 2)), 7 * K);
-    drawLayer(ctx, A.shield);
-  }
+  ctx.setTransform(body);
+  ctx.translate(lerp(29 * K, 21 * K, pose), lerp(10 * K, 7 * K, pose));
+  drawLayer(ctx, A.shield);
 }
 
 function drawGrenadier(ctx, dpr, sprites, u) {
@@ -95,7 +85,7 @@ function drawGrenadier(ctx, dpr, sprites, u) {
   if (p > 0.65) return; // the bomb has left the hand
   // the arm lifts the bomb up and back for the throw
   const lift = Math.sin(Math.min(1, p / 0.65) * Math.PI * 0.5);
-  ctx.translate(lerp(19 * K, 8 * K, lift), lerp(14 * K, -17 * K, lift));
+  ctx.translate(lerp(22 * K, 8 * K, lift), lerp(13 * K, -17 * K, lift));
   ctx.rotate(lift * -0.6);
   const lit = u.pose > 0.5 && u.cdT < 0.9 && u.cdT > 0;
   drawLayer(ctx, lit ? A.bombLit : A.bomb);
@@ -111,7 +101,7 @@ function drawArcher(ctx, dpr, sprites, u) {
   const draw = u.drawT > 0 ? Math.min(1, u.drawT / d.drawTime) : 0;
   ctx.translate(-u.recoil * 1.5, 0);
   drawLayer(ctx, draw > 0 ? A.bowDrawn : A.bow);
-  if (pose > 0.5) {
+  {
     ctx.save();
     ctx.translate(-10 * K * draw - 1 * K, 0);
     ctx.scale(0.85, 0.85);
@@ -137,9 +127,9 @@ function drawNinja(ctx, dpr, sprites, u) {
   const A = sprites.ninja;
   eggBase(ctx, dpr, sprites, A, u);
   const pose = u.pose;
-  const px = lerp(15 * K, 10 * K, pose);
-  const py = lerp(11 * K, 10 * K, pose);
-  const rest = -0.95;
+  const px = lerp(5 * K, 10 * K, pose);
+  const py = lerp(14 * K, 10 * K, pose);
+  const rest = lerp(-2.2, -0.95, Math.min(1, pose * 2));
   let ang = rest;
   const slashing = u.atk > 0;
   const p = 1 - u.atk;
@@ -158,7 +148,7 @@ function drawNinja(ctx, dpr, sprites, u) {
     ctx.restore();
   }
   ctx.translate(px, py);
-  ctx.rotate(lerp(rest, ang, pose > 0.5 ? 1 : 0));
+  ctx.rotate(slashing ? ang : rest);
   drawLayer(ctx, A.katana);
 }
 
@@ -168,7 +158,7 @@ function drawCavalry(ctx, dpr, sprites, u) {
   const wobble = u.hit > 0 ? (Math.random() - 0.5) * 2 : 0;
   ctx.setTransform(f * dpr, 0, 0, dpr, (u.x + wobble) * dpr, u.y * dpr);
   drawLayer(ctx, A.shadow);
-  const gait = u.moving ? ((u.anim * 0.8) | 0) & 3 : 1;
+  const gait = u.moving ? ((u.anim * 0.8) | 0) & 3 : 4;
   if (u.moving) {
     ctx.translate(0, -Math.abs(Math.sin(u.anim * 0.8 * Math.PI * 0.5)) * 2.6);
     ctx.rotate(Math.sin(u.anim * 0.8 * Math.PI * 0.5) * 0.03);
@@ -178,15 +168,14 @@ function drawCavalry(ctx, dpr, sprites, u) {
   drawLayer(ctx, A.horse[gait]);
   burnGlow(ctx, u, 30 * K, 14 * K);
   ctx.save();
-  ctx.translate(-1 * K, -22 * K);
-  ctx.scale(1.2, 1.2);
+  ctx.translate(-9 * K, -21 * K);
   drawLayer(ctx, A.rider);
   ctx.restore();
   // lance held out front; levels out when charging and jabs on a strike
   const p = 1 - u.atk;
   const thrust = u.atk > 0 ? Math.sin(p * Math.PI) * 20 * K : 0;
-  ctx.translate(6 * K, -17 * K);
-  ctx.rotate(lerp(-0.62, -0.22, Math.max(u.charge, u.atk)));
+  ctx.translate(-4 * K, -16 * K);
+  ctx.rotate(lerp(-0.64, -0.22, Math.max(u.charge, u.atk)));
   ctx.translate(thrust, 0);
   drawLayer(ctx, A.lance);
 }
@@ -431,15 +420,15 @@ const ICONS = {
   }],
   roman: [100, 50, 47, (g, S) => {
     g.save();
-    g.translate(23 * K, 10 * K);
+    g.translate(29 * K, 10 * K);
     drawLayer(g, S.shield);
     g.restore();
-    g.translate(11 * K, 8 * K);
+    g.translate(14 * K, 22 * K);
     g.rotate(-1.4);
     drawLayer(g, S.spear);
   }],
   grenadier: [84, 32.3, 29, (g, S) => {
-    g.translate(19 * K, 14 * K);
+    g.translate(22 * K, 13 * K);
     drawLayer(g, S.bombLit);
   }],
   archer: [90, 34, 31, (g, S) => {
@@ -477,14 +466,13 @@ export function paintUnitIcon(canvas, sprites, species) {
   g.scale(m, m);
   if (species === 'cavalry') {
     drawLayer(g, S.shadow);
-    drawLayer(g, S.horse[1]);
+    drawLayer(g, S.horse[4]);
     g.save();
-    g.translate(-1 * K, -22 * K);
-    g.scale(1.2, 1.2);
+    g.translate(-9 * K, -21 * K);
     drawLayer(g, S.rider);
     g.restore();
-    g.translate(6 * K, -17 * K);
-    g.rotate(-0.62);
+    g.translate(-4 * K, -16 * K);
+    g.rotate(-0.64);
     drawLayer(g, S.lance);
   } else {
     drawLayer(g, S.feet[0]);
