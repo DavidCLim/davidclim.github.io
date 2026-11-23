@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=26';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=26';
+import { TAU, K } from './config.js?v=27';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=27';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -165,45 +165,45 @@ function drawRomanBody(g, front, gz, angry) {
   g.ellipse(-12, 2, 3.4, 8, 0.1, 0, TAU);
   g.fill();
 
-  // one big almond eye, the second tucked behind the spear
-  const eyes = front ? [[-8, -6], [8, -6]] : [[-2, -6], [12.6, -6.3]];
-  eyes.forEach(([x, y], i) => {
+  // The eyes, measured off the large icon: a white egg with a heavy outline and
+  // a big black pupil pushed against its right edge; the far eye is mostly behind
+  // the spear, its pupil jammed against the body's edge.
+  const eyes = front ? [[-8, -7.2, 5.3, 4.4, 1.4], [8, -7.2, 5.3, 4.4, 1.4]] : [[-2.4, -7, 6.1, 5.2, 2.3], [12.8, -7, 6.1, 5.2, 3.4]];
+  eyes.forEach(([x, y, rx, ry, px], i) => {
     g.save();
     g.translate(x, y);
-    g.rotate(i === 0 ? -0.12 : -0.05);
-    g.fillStyle = '#fbf3f0';
+    g.rotate(i === 0 ? -0.1 : 0.04);
+    g.fillStyle = '#fbf4f1';
     g.strokeStyle = OUT;
-    g.lineWidth = 1.5;
+    g.lineWidth = 1.8;
     g.beginPath();
-    g.ellipse(0, 0, i === 0 ? 5.9 : 4.6, 4.7, 0, 0, TAU);
+    g.ellipse(0, 0, rx, ry, 0, 0, TAU);
     g.fill();
     g.stroke();
-    g.fillStyle = '#100c0d';
+    g.fillStyle = '#0d0a0b';
     g.beginPath();
-    g.arc(1.6 + gz[0] * 0.9, 0.2 + gz[1] * 0.5, 3, 0, TAU);
-    g.fill();
-    g.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    g.beginPath();
-    g.arc(0.6 + gz[0] * 0.9, -1.2 + gz[1] * 0.5, 0.9, 0, TAU);
+    g.arc(px + gz[0] * 0.5, 0.1 + gz[1] * 0.4, 3.3, 0, TAU);
     g.fill();
     if (angry) {
       g.strokeStyle = OUT;
-      g.lineWidth = 2.4;
+      g.lineWidth = 2.6;
       g.beginPath();
-      g.moveTo(-6.5, -3.2);
-      g.lineTo(6, 0.4);
+      g.moveTo(-6.4, -3.6);
+      g.lineTo(6, 0.2);
       g.stroke();
     }
     g.restore();
   });
-  // a small curled smile
+  // the mouth: a short curl that starts with a little hook and sweeps right
   g.strokeStyle = OUT;
-  g.lineWidth = 1.4;
+  g.lineWidth = 1.9;
   g.beginPath();
-  if (front) g.arc(0, 6, 3.4, Math.PI * 0.15, Math.PI * 0.85);
-  else {
-    g.moveTo(3.6, 6.2);
-    g.quadraticCurveTo(5.4, 9, 9.2, 7.4);
+  if (front) {
+    g.arc(0, 4, 3.4, Math.PI * 0.15, Math.PI * 0.85);
+  } else {
+    g.moveTo(3.4, 3.6);
+    g.quadraticCurveTo(4, 5.8, 6.6, 5.8);
+    g.quadraticCurveTo(8.2, 5.9, 9.6, 7.2);
   }
   g.stroke();
 
