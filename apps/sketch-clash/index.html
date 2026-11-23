@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Lilita+One&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=15">
+    <link rel="stylesheet" href="styles.css?v=16">
   </head>
   <body>
     <div class="stage-wrap" id="stage-wrap">
@@ -31,10 +31,13 @@
         </button>
       </div>
 
-      <label class="brush-box" title="Brush size">
-        <span class="brush-dot" id="brush-dot" aria-hidden="true"></span>
-        <input type="range" id="brush" min="10" max="90" value="22" aria-label="Brush size">
-      </label>
+      <div class="drawer" id="drawer">
+        <button type="button" class="drawer-handle" id="drawer-handle" aria-label="Brush size" aria-expanded="false" title="Brush size"></button>
+        <div class="drawer-panel">
+          <span class="brush-dot" id="brush-dot" aria-hidden="true"></span>
+          <input type="range" id="brush" min="10" max="90" value="26" aria-label="Brush size">
+        </div>
+      </div>
 
       <div class="team-label red" id="label-red" hidden><i class="dot red"></i>Red team</div>
       <div class="team-label blue" id="label-blue" hidden><i class="dot blue"></i>Blue team</div>
@@ -89,6 +92,6 @@
       </div>
     </div>
 
-    <script type="module" src="src/main.js?v=15"></script>
+    <script type="module" src="src/main.js?v=16"></script>
   </body>
 </html>

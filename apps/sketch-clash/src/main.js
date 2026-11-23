@@ -1,8 +1,8 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=15';
-import { World } from './world.js?v=15';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=15';
-import { buildUnitArt } from './art_units.js?v=15';
-import { drawUnit, drawFx, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=15';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=16';
+import { World } from './world.js?v=16';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=16';
+import { buildUnitArt } from './art_units.js?v=16';
+import { drawUnit, drawFx, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=16';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -30,7 +30,7 @@ const world = new World();
 let W = 1;
 let H = 1;
 let dpr = 1;
-let brush = 22;
+let brush = 26;
 let paused = false;
 let erasing = false;
 let over = false;
@@ -97,21 +97,59 @@ function teamAt(x) {
   return world.mode === 'team' ? (x < W / 2 ? 'red' : 'blue') : null;
 }
 
+// Units go down on a lattice, rows running along the direction the stroke
+// is drawn, so a stroke fills out a neat block (a Roman phalanx, a column of
+// cavalry) instead of a scatter. Cell sizes are [along, across] in px.
+const LATTICE = { default: [15.5, 12.5], cavalry: [34, 22] };
+let stroke = null;
+
+function startStroke(x, y) {
+  stroke = { ox: x, oy: y, ux: 1, uy: 0, dirSet: false, started: false, occ: new Set(), sp: species };
+}
+
+// The first ~10px of travel decide which way the block is laid out.
+function setStrokeDir(x, y) {
+  if (!stroke || stroke.dirSet) return;
+  const dx = x - stroke.ox;
+  const dy = y - stroke.oy;
+  if (Math.hypot(dx, dy) < 10) return;
+  const a = Math.atan2(dy, dx);
+  stroke.ux = Math.cos(a);
+  stroke.uy = Math.sin(a);
+  stroke.dirSet = true;
+}
+
 function dab(x, y) {
   if (erasing) {
     world.eraseAt(x, y, brush);
     return;
   }
-  const n = Math.min(9, Math.max(1, Math.round(brush / 12)));
+  if (!stroke) startStroke(x, y);
+  stroke.started = true;
+  const { ox, oy, ux, uy, occ, sp } = stroke;
+  const [sx, sy] = LATTICE[sp] || LATTICE.default;
   const team = teamAt(x);
   const half = W / 2;
-  for (let i = 0; i < n; i++) {
-    const a = Math.random() * TAU;
-    const r = Math.sqrt(Math.random()) * brush;
-    let px = Math.min(W - 20, Math.max(20, x + Math.cos(a) * r));
-    const py = Math.min(H - 30, Math.max(30, y + Math.sin(a) * r));
-    if (team) px = team === 'red' ? Math.min(px, half - 14) : Math.max(px, half + 14);
-    world.addUnit(species, team, px, py);
+  const px0 = x - ox;
+  const py0 = y - oy;
+  const a = px0 * ux + py0 * uy; // position along / across the stroke
+  const b = -px0 * uy + py0 * ux;
+  for (let j = Math.floor((b - brush) / sy); j <= Math.ceil((b + brush) / sy); j++) {
+    const off = j & 1 ? 0.5 : 0;
+    for (let i = Math.floor((a - brush) / sx - off); i <= Math.ceil((a + brush) / sx - off); i++) {
+      const la = (i + off) * sx;
+      const lb = j * sy;
+      if ((la - a) ** 2 + (lb - b) ** 2 > brush * brush) continue;
+      const key = `${i},${j}`;
+      if (occ.has(key)) continue;
+      const px = ox + la * ux - lb * uy;
+      const py = oy + la * uy + lb * ux;
+      if (px < 20 || px > W - 20 || py < 30 || py > H - 30) continue;
+      if (team === 'red' && px > half - 14) continue;
+      if (team === 'blue' && px < half + 14) continue;
+      occ.add(key);
+      world.addUnit(sp, team, px, py);
+    }
   }
 }
 
@@ -152,20 +190,39 @@ stageCanvas.addEventListener('pointerdown', (e) => {
   distAcc = 0;
   timeAcc = 0;
   lastPaint = { x: ptr.x, y: ptr.y };
-  if (canPaint()) dab(ptr.x, ptr.y);
+  stroke = null;
+  if (erasing) {
+    if (canPaint()) dab(ptr.x, ptr.y);
+  } else if (canPaint()) {
+    startStroke(ptr.x, ptr.y);
+  }
 });
 
 stageCanvas.addEventListener('pointermove', (e) => {
   setPointer(e);
   ptr.inside = true;
-  if (ptr.down && canPaint() && lastPaint) {
+  if (!ptr.down || !canPaint() || !lastPaint) return;
+  if (erasing) {
     paintSegment(lastPaint.x, lastPaint.y, ptr.x, ptr.y);
     lastPaint = { x: ptr.x, y: ptr.y };
+    return;
   }
+  if (!stroke) return;
+  setStrokeDir(ptr.x, ptr.y);
+  if (!stroke.dirSet) return;
+  if (!stroke.started) {
+    dab(stroke.ox, stroke.oy);
+    lastPaint = { x: stroke.ox, y: stroke.oy };
+  }
+  paintSegment(lastPaint.x, lastPaint.y, ptr.x, ptr.y);
+  lastPaint = { x: ptr.x, y: ptr.y };
 });
 
 function endPaint(e) {
+  // a tap that never travelled still drops a block
+  if (ptr.down && stroke && !stroke.started && canPaint() && !erasing) dab(stroke.ox, stroke.oy);
   ptr.down = false;
+  stroke = null;
   if (e.pointerType !== 'mouse') ptr.inside = false;
 }
 stageCanvas.addEventListener('pointerup', endPaint);
@@ -174,6 +231,7 @@ stageCanvas.addEventListener('pointerleave', () => {
   if (!ptr.down) ptr.inside = false;
 });
 
+// The brush size lives in a drawer that slides out from the right edge.
 function setBrush(v) {
   brush = Math.min(90, Math.max(10, Math.round(v)));
   brushInput.value = String(brush);
@@ -181,13 +239,10 @@ function setBrush(v) {
 }
 brushInput.addEventListener('input', () => setBrush(Number(brushInput.value)));
 setBrush(brush);
-stageCanvas.addEventListener('wheel', (e) => {
-  e.preventDefault();
-  setBrush(brush - Math.sign(e.deltaY) * 3);
-}, { passive: false });
-document.addEventListener('keydown', (e) => {
-  if (e.key === '[') setBrush(brush - 4);
-  else if (e.key === ']') setBrush(brush + 4);
+const drawer = $('drawer');
+$('drawer-handle').addEventListener('click', () => {
+  const open = drawer.classList.toggle('open');
+  $('drawer-handle').setAttribute('aria-expanded', String(open));
 });
 
 // ---------- Draggable palette ----------
@@ -684,7 +739,7 @@ function frame(now) {
   last = now;
   if (dt > 0.1) dt = 0.1;
 
-  if (ptr.down && ptr.inside && canPaint()) {
+  if (ptr.down && ptr.inside && canPaint() && (erasing || stroke)) {
     timeAcc += dt;
     while (timeAcc > 0.18) {
       timeAcc -= 0.18;

@@ -1,6 +1,6 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=15';
-import { drawLayer, OUT } from './sprites.js?v=15';
-import { drawDrop } from './art_units.js?v=15';
+import { TAU, K, UNIT, FEET } from './config.js?v=16';
+import { drawLayer, OUT } from './sprites.js?v=16';
+import { drawDrop } from './art_units.js?v=16';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -352,8 +352,8 @@ export function drawFx(ctx, dpr, sprites, world) {
 // ------------------------------------------------------------- ground marks
 // Headgear and stuck arrows left on the ground. They are small pre-drawn
 // sprites that fade out and disappear after MARK_LIFE seconds.
-export const MARK_LIFE = 30;
-const MARK_FADE = 9;
+export const MARK_LIFE = 9;
+const MARK_FADE = 3;
 const markSprites = new Map();
 
 function markSprite(key, w, h, draw) {
