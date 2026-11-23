@@ -1,4 +1,4 @@
-import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=16';
+import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=17';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -74,6 +74,8 @@ export class World {
     this.blasts = []; // explosions
     this.debris = []; // headgear thrown by blasts
     this.onArrowLand = null;
+    this.time = 0; // seconds since the battle started
+    this.stats = null; // team battle record, see beginBattle()
     this.onDebrisLand = null;
     this.speciesCounts = {};
     this.mode = 'free'; // 'free' | 'team'
@@ -103,6 +105,43 @@ export class World {
     this.sepRows = Math.ceil(h / SEP_CELL) + 1;
     this.sepHead = new Int32Array(this.sepCols * this.sepRows);
     this.sepNext = new Int32Array(0);
+  }
+
+  // Team battle: remember who is on the field, then time the fight.
+  beginBattle() {
+    const initial = { red: {}, blue: {} };
+    for (const u of this.units) {
+      if (u.dead || !u.team) continue;
+      initial[u.team][u.species] = (initial[u.team][u.species] || 0) + 1;
+    }
+    this.time = 0;
+    this.stats = {
+      initial,
+      deaths: [],
+      samples: [[0, this.countTeam('red'), this.countTeam('blue')]],
+      sampleT: 0.25,
+      duration: 0,
+      final: null,
+    };
+  }
+
+  countTeam(team) {
+    let n = 0;
+    for (const u of this.units) if (!u.dead && u.team === team) n++;
+    return n;
+  }
+
+  endBattle() {
+    const st = this.stats;
+    if (!st || st.final) return;
+    st.duration = this.time;
+    st.samples.push([this.time, this.countTeam('red'), this.countTeam('blue')]);
+    const final = { red: {}, blue: {} };
+    for (const u of this.units) {
+      if (u.dead || !u.team) continue;
+      final[u.team][u.species] = (final[u.team][u.species] || 0) + 1;
+    }
+    st.final = final;
   }
 
   get live() {
@@ -170,6 +209,8 @@ export class World {
   }
 
   clear() {
+    this.stats = null;
+    this.time = 0;
     this.units = [];
     this.bullets = [];
     this.sparks = [];
@@ -334,7 +375,7 @@ export class World {
   // Damage with a spark burst; kills leave a ghost (and the caller's
   // onDeath drops the helmet / hat). `kind` is 'bullet' | 'arrow' | 'snipe'
   // | 'burn' | 'blast' (or nothing for melee); armour only stops the first two.
-  hurt(u, dmg, x, y, kind) {
+  hurt(u, dmg, x, y, kind, src) {
     if (u.dead) return;
     if (u.def.armor && (kind === 'bullet' || kind === 'arrow')) dmg *= u.def.armor;
     u.hp -= dmg;
@@ -349,6 +390,15 @@ export class World {
     if (u.hp <= 0) {
       u.dead = true;
       this.anyDead = true;
+      if (this.stats && u.team && !u.def.becomes) {
+        this.stats.deaths.push({
+          t: this.time,
+          team: u.team,
+          species: u.species,
+          killer: src ? src.species : null,
+          killerTeam: src ? src.team : null,
+        });
+      }
       this.ghosts.push({ x: u.x, y: u.y, age: 0, seed: Math.random(), species: u.species });
       if (u.def.smoke) {
         for (let i = 0; i < 2; i++) {
@@ -385,6 +435,7 @@ export class World {
       vx: Math.cos(a) * d.bulletSpeed,
       vy: Math.sin(a) * d.bulletSpeed,
       side: u.side,
+      owner: u,
       damage: d.damage,
       dist: 0,
       dead: false,
@@ -398,7 +449,7 @@ export class World {
     const d = u.def;
     const m = this.muzzleOf(u);
     const ang = Math.atan2(t.y - m.y, t.x - m.x) + (Math.random() - 0.5) * 2 * (hip ? 0.05 : d.spread);
-    const end = this.hitscan(u.side, m.x, m.y, ang, d.range * 1.3, hip ? d.hipDamage : d.damage, hip ? 1 : d.pierce);
+    const end = this.hitscan(u.side, m.x, m.y, ang, d.range * 1.3, hip ? d.hipDamage : d.damage, hip ? 1 : d.pierce, u);
     this.streaks.push({ x0: m.x, y0: m.y, x1: end.x, y1: end.y, age: 0, life: hip ? 0.18 : 0.45 });
     for (let i = 0; i < 4; i++) {
       this.puffs.push({
@@ -426,7 +477,7 @@ export class World {
     u.recoil = 1;
   }
 
-  hitscan(side, ox, oy, ang, range, damage, pierce) {
+  hitscan(side, ox, oy, ang, range, damage, pierce, owner) {
     const c = Math.cos(ang);
     const s = Math.sin(ang);
     let end = { x: ox + c * range, y: oy + s * range };
@@ -470,7 +521,7 @@ export class World {
     hits.sort((a, b) => a.dist - b.dist);
     const n = Math.min(pierce, hits.length);
     for (let i = 0; i < n; i++) {
-      this.hurt(hits[i].u, i === 0 ? damage : damage * 0.6, hits[i].x, hits[i].y, 'snipe');
+      this.hurt(hits[i].u, i === 0 ? damage : damage * 0.6, hits[i].x, hits[i].y, 'snipe', owner);
     }
     if (hits.length >= pierce) end = { x: ox + c * hits[pierce - 1].dist, y: oy + s * hits[pierce - 1].dist };
     return end;
@@ -495,7 +546,7 @@ export class World {
       u.burnTick -= dt;
       if (u.burnTick <= 0) {
         u.burnTick = 0.25;
-        this.hurt(u, u.def.burnDps ? u.def.burnDps * 0.25 : 2.2, u.x, u.y, 'burn');
+        this.hurt(u, u.def.burnDps ? u.def.burnDps * 0.25 : 2.2, u.x, u.y, 'burn', u.burnSrc);
         if (u.dead) return;
       }
       if (Math.random() < 0.25) {
@@ -774,7 +825,8 @@ export class World {
       while (da < -Math.PI) da += TAU;
       if (Math.abs(da) > cone + (o.def.radius / Math.max(dist, 1)) * 0.9) return;
       o.burn = d.burnTime;
-      this.hurt(o, d.dps * dt, o.x, o.y, 'burn');
+      o.burnSrc = u;
+      this.hurt(o, d.dps * dt, o.x, o.y, 'burn', u);
     });
   }
 
@@ -788,7 +840,7 @@ export class World {
       u.atkHit = false;
       const v = u.target;
       if (v && !v.dead && Math.hypot(v.x - u.x, v.y - u.y) <= d.reach * 1.5 + v.def.radius) {
-        this.hurt(v, d.damage * (0.85 + Math.random() * 0.3), v.x, v.y);
+        this.hurt(v, d.damage * (0.85 + Math.random() * 0.3), v.x, v.y, undefined, u);
         if (d.weapon === 'katana') {
           for (let i = 0; i < (Math.random() < 0.3 ? 1 : 0); i++) {
             this.puffs.push({
@@ -868,7 +920,7 @@ export class World {
       if (dist <= d.reach + t.def.radius && u.cdT <= 0) {
         t.kx += (dx / dist) * 120;
         t.ky += (dy / dist) * 120;
-        this.hurt(t, d.damage * (0.85 + Math.random() * 0.3), t.x, t.y);
+        this.hurt(t, d.damage * (0.85 + Math.random() * 0.3), t.x, t.y, undefined, u);
         u.atk = 1;
         u.cdT = d.cooldown;
         u.retreatT = d.retreat * (0.8 + Math.random() * 0.5);
@@ -922,6 +974,7 @@ export class World {
           dur: 0.5 + flight / 440,
           h: 34 + flight * 0.24,
           side: u.side,
+          owner: u,
           damage: d.damage,
           radius: d.blastRadius,
           spin: (Math.random() < 0.5 ? -1 : 1) * (7 + Math.random() * 4),
@@ -989,6 +1042,7 @@ export class World {
       dur: 0.25 + dist / d.arrowSpeed,
       h: 16 + dist * 0.2,
       side: u.side,
+      owner: u,
       damage: d.damage,
     });
     u.recoil = 1;
@@ -1002,6 +1056,7 @@ export class World {
     const sp = 4 + dist * 0.04;
     this.arrows.push({
       kind: 'star',
+      owner: u,
       x0: o.x,
       y0: o.y,
       x1: t.x + (Math.random() - 0.5) * sp * 2,
@@ -1035,7 +1090,7 @@ export class World {
           hit = o;
         }
       });
-      if (hit) this.hurt(hit, a.damage, a.x1, a.y1, a.kind === 'star' ? undefined : 'arrow');
+      if (hit) this.hurt(hit, a.damage, a.x1, a.y1, a.kind === 'star' ? undefined : 'arrow', a.owner);
       if (a.kind !== 'star' && this.onArrowLand) this.onArrowLand(a);
     }
     if (gone) this.arrows = this.arrows.filter((a) => !a.dead);
@@ -1080,7 +1135,7 @@ export class World {
       const f = Math.max(0.25, 1 - dist / (reach + o.def.radius));
       o.kx += (dx / dist) * 300 * f;
       o.ky += (dy / dist) * 300 * f;
-      this.hurt(o, b.damage * f, o.x, o.y, 'blast');
+      this.hurt(o, b.damage * f, o.x, o.y, 'blast', b.owner);
     });
   }
 
@@ -1249,7 +1304,7 @@ export class World {
       if (hit) {
         b.dead = true;
         anyGone = true;
-        this.hurt(hit, b.damage, b.x, b.y, 'bullet');
+        this.hurt(hit, b.damage, b.x, b.y, 'bullet', b.owner);
       }
     }
     if (anyGone) this.bullets = this.bullets.filter((b) => !b.dead);
@@ -1328,6 +1383,14 @@ export class World {
       if (!u.dead) this.stepUnit(u, dt);
     }
     this.separate();
+    if (this.stats && !this.stats.final) {
+      this.time += dt;
+      this.stats.sampleT -= dt;
+      if (this.stats.sampleT <= 0) {
+        this.stats.sampleT += 0.25;
+        this.stats.samples.push([this.time, this.countTeam('red'), this.countTeam('blue')]);
+      }
+    }
     this.stepBullets(dt);
     this.stepArrows(dt);
     this.stepBombs(dt);

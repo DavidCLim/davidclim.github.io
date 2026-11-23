@@ -1,14 +1,13 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=16';
-import { World } from './world.js?v=16';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=16';
-import { buildUnitArt } from './art_units.js?v=16';
-import { drawUnit, drawFx, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=16';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=17';
+import { World } from './world.js?v=17';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=17';
+import { buildUnitArt } from './art_units.js?v=17';
+import { drawUnit, drawFx, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=17';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
 const groundCanvas = $('ground');
 const stageCanvas = $('stage');
-const gctx = groundCanvas.getContext('2d');
 const ctx = stageCanvas.getContext('2d');
 const banner = $('banner');
 const midline = $('midline');
@@ -27,10 +26,17 @@ const palette = $('palette');
 const sprites = { ...buildSprites(), ...buildUnitArt() };
 const world = new World();
 
-let W = 1;
+// The battlefield is a fixed ~860 units wide whatever the screen: units, ranges
+// and speeds always keep the same size relative to the screen, as in the original.
+const LOGICAL_W = 860;
+let W = 1; // field size in world units
 let H = 1;
-let dpr = 1;
-let brush = 26;
+let Z = 1; // screen px per world unit
+let cssW = 0;
+let cssH = 0;
+let ratio = 1; // device pixels per screen px
+let dpr = 1; // device pixels per world unit
+let brush = 16;
 let paused = false;
 let erasing = false;
 let over = false;
@@ -52,37 +58,52 @@ function paintAny(canvas, id) {
 // The palette icons are the same art as on the field.
 let species = 'soldier';
 const unitButtons = [...document.querySelectorAll('.unit-btn')];
-for (const b of unitButtons) {
-  paintAny(b.querySelector('canvas'), b.dataset.species);
-  b.addEventListener('click', () => {
-    species = b.dataset.species;
-    for (const o of unitButtons) o.setAttribute('aria-pressed', String(o === b));
-  });
+const unitTip = $('unit-tip');
+function pickUnit(b) {
+  species = b.dataset.species;
+  for (const o of unitButtons) o.setAttribute('aria-pressed', String(o === b));
 }
+unitButtons.forEach((b, i) => {
+  paintAny(b.querySelector('canvas'), b.dataset.species);
+  b.addEventListener('click', () => pickUnit(b));
+  // hovering shows the name and the number key that picks it
+  b.addEventListener('pointerenter', () => {
+    unitTip.innerHTML = `<b>${SPECIES[b.dataset.species].label}</b> <i>${i + 1}</i>`;
+    unitTip.hidden = false;
+    const pr = palette.getBoundingClientRect();
+    const br = b.getBoundingClientRect();
+    unitTip.style.left = `${br.left - pr.left + br.width / 2}px`;
+    unitTip.style.bottom = `${pr.bottom - document.querySelector('.units').getBoundingClientRect().top + 3}px`;
+  });
+  b.addEventListener('pointerleave', () => {
+    unitTip.hidden = true;
+  });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const n = Number(e.key);
+  if (n >= 1 && n <= unitButtons.length) pickUnit(unitButtons[n - 1]);
+});
 
 // ---------- Layout ----------
 function resize() {
   const r = wrap.getBoundingClientRect();
   const w = Math.max(1, Math.floor(r.width));
   const h = Math.max(1, Math.floor(r.height));
-  const ratio = Math.min(window.devicePixelRatio || 1, 2);
-  if (w === W && h === H && ratio === dpr) return;
-
-  const old = document.createElement('canvas');
-  old.width = groundCanvas.width;
-  old.height = groundCanvas.height;
-  if (old.width && old.height) old.getContext('2d').drawImage(groundCanvas, 0, 0);
-
-  W = w;
-  H = h;
-  dpr = ratio;
+  const px = Math.min(window.devicePixelRatio || 1, 2);
+  if (w === cssW && h === cssH && px === ratio) return;
+  cssW = w;
+  cssH = h;
+  ratio = px;
+  Z = w / LOGICAL_W;
+  W = LOGICAL_W;
+  H = h / Z;
+  dpr = ratio * Z;
   for (const c of [groundCanvas, stageCanvas]) {
-    c.width = Math.floor(w * dpr);
-    c.height = Math.floor(h * dpr);
+    c.width = Math.floor(w * ratio);
+    c.height = Math.floor(h * ratio);
   }
-  gctx.drawImage(old, 0, 0);
-  gctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  world.resize(w, h);
+  world.resize(W, H);
 }
 new ResizeObserver(resize).observe(wrap);
 window.addEventListener('resize', resize);
@@ -97,28 +118,37 @@ function teamAt(x) {
   return world.mode === 'team' ? (x < W / 2 ? 'red' : 'blue') : null;
 }
 
-// Units go down on a lattice, rows running along the direction the stroke
-// is drawn, so a stroke fills out a neat block (a Roman phalanx, a column of
-// cavalry) instead of a scatter. Cell sizes are [along, across] in px.
-const LATTICE = { default: [15.5, 12.5], cavalry: [34, 22] };
+// Units go down on a lattice. A drag lays columns along the path of the stroke
+// (so curves bend the formation, as in the original); a tap fills a patch.
+// Romans stand in a square grid, everyone else in staggered rows.
+// Cells are [along, across, staggered].
+const LATTICE = { default: [15.5, 12.5, true], roman: [17.4, 17.6, false], cavalry: [34, 22, true] };
 let stroke = null;
 
 function startStroke(x, y) {
-  stroke = { ox: x, oy: y, ux: 1, uy: 0, dirSet: false, started: false, occ: new Set(), sp: species };
+  stroke = {
+    ox: x,
+    oy: y,
+    sp: species,
+    occ: new Set(),
+    started: false,
+    dragged: false,
+    s: 0,
+    nextI: 0,
+    lx: x,
+    ly: y,
+  };
 }
 
-// The first ~10px of travel decide which way the block is laid out.
-function setStrokeDir(x, y) {
-  if (!stroke || stroke.dirSet) return;
-  const dx = x - stroke.ox;
-  const dy = y - stroke.oy;
-  if (Math.hypot(dx, dy) < 10) return;
-  const a = Math.atan2(dy, dx);
-  stroke.ux = Math.cos(a);
-  stroke.uy = Math.sin(a);
-  stroke.dirSet = true;
+function canPlace(px, py, team) {
+  if (px < 14 || px > W - 14 || py < 24 || py > H - 24) return false;
+  const half = W / 2;
+  if (team === 'red' && px > half - 10) return false;
+  if (team === 'blue' && px < half + 10) return false;
+  return true;
 }
 
+// A tap or a held press: a patch of the lattice around the pointer.
 function dab(x, y) {
   if (erasing) {
     world.eraseAt(x, y, brush);
@@ -126,31 +156,56 @@ function dab(x, y) {
   }
   if (!stroke) startStroke(x, y);
   stroke.started = true;
-  const { ox, oy, ux, uy, occ, sp } = stroke;
-  const [sx, sy] = LATTICE[sp] || LATTICE.default;
+  const { ox, oy, occ, sp } = stroke;
+  const [sx, sy, stag] = LATTICE[sp] || LATTICE.default;
   const team = teamAt(x);
-  const half = W / 2;
-  const px0 = x - ox;
-  const py0 = y - oy;
-  const a = px0 * ux + py0 * uy; // position along / across the stroke
-  const b = -px0 * uy + py0 * ux;
-  for (let j = Math.floor((b - brush) / sy); j <= Math.ceil((b + brush) / sy); j++) {
-    const off = j & 1 ? 0.5 : 0;
-    for (let i = Math.floor((a - brush) / sx - off); i <= Math.ceil((a + brush) / sx - off); i++) {
-      const la = (i + off) * sx;
-      const lb = j * sy;
-      if ((la - a) ** 2 + (lb - b) ** 2 > brush * brush) continue;
-      const key = `${i},${j}`;
+  for (let j = Math.floor((y - oy - brush) / sy); j <= Math.ceil((y - oy + brush) / sy); j++) {
+    const off = stag && j & 1 ? 0.5 : 0;
+    for (let i = Math.floor((x - ox - brush) / sx - off); i <= Math.ceil((x - ox + brush) / sx - off); i++) {
+      const px = ox + (i + off) * sx;
+      const py = oy + j * sy;
+      if ((px - x) ** 2 + (py - y) ** 2 > brush * brush) continue;
+      const key = `t${i},${j}`;
       if (occ.has(key)) continue;
-      const px = ox + la * ux - lb * uy;
-      const py = oy + la * uy + lb * ux;
-      if (px < 20 || px > W - 20 || py < 30 || py > H - 30) continue;
-      if (team === 'red' && px > half - 14) continue;
-      if (team === 'blue' && px < half + 14) continue;
+      if (!canPlace(px, py, team)) continue;
       occ.add(key);
       world.addUnit(sp, team, px, py);
     }
   }
+}
+
+// A drag: columns every `sx` along the path, `brush` wide either side.
+function layPath(x0, y0, x1, y1) {
+  const st = stroke;
+  const d = Math.hypot(x1 - x0, y1 - y0);
+  if (!st || !d) return;
+  st.started = true;
+  const ux = (x1 - x0) / d;
+  const uy = (y1 - y0) / d;
+  const nx = -uy;
+  const ny = ux;
+  const [sx, sy, stag] = LATTICE[st.sp] || LATTICE.default;
+  const team = teamAt(x1);
+  const s1 = st.s + d;
+  while (st.nextI * sx <= s1) {
+    const t = st.nextI * sx - st.s;
+    const cx = x0 + ux * t;
+    const cy = y0 + uy * t;
+    const off0 = stag && st.nextI & 1 ? 0.5 : 0;
+    for (let j = -Math.ceil(brush / sy); j <= Math.ceil(brush / sy); j++) {
+      const off = (j + off0) * sy;
+      if (Math.abs(off) > brush) continue;
+      const key = `p${st.nextI},${j}`;
+      if (st.occ.has(key)) continue;
+      const px = cx + nx * off;
+      const py = cy + ny * off;
+      if (!canPlace(px, py, teamAt(px))) continue;
+      st.occ.add(key);
+      world.addUnit(st.sp, teamAt(px), px, py);
+    }
+    st.nextI++;
+  }
+  st.s = s1;
 }
 
 let distAcc = 0;
@@ -159,8 +214,8 @@ let lastPaint = null;
 
 function setPointer(e) {
   const r = wrap.getBoundingClientRect();
-  ptr.x = e.clientX - r.left;
-  ptr.y = e.clientY - r.top;
+  ptr.x = (e.clientX - r.left) / Z;
+  ptr.y = (e.clientY - r.top) / Z;
 }
 
 // Drops a dab every `step` pixels of travel, carrying the leftover
@@ -208,18 +263,19 @@ stageCanvas.addEventListener('pointermove', (e) => {
     return;
   }
   if (!stroke) return;
-  setStrokeDir(ptr.x, ptr.y);
-  if (!stroke.dirSet) return;
-  if (!stroke.started) {
-    dab(stroke.ox, stroke.oy);
-    lastPaint = { x: stroke.ox, y: stroke.oy };
+  if (!stroke.dragged) {
+    if (Math.hypot(ptr.x - stroke.ox, ptr.y - stroke.oy) < 5) return;
+    stroke.dragged = true;
+    stroke.lx = stroke.ox;
+    stroke.ly = stroke.oy;
   }
-  paintSegment(lastPaint.x, lastPaint.y, ptr.x, ptr.y);
-  lastPaint = { x: ptr.x, y: ptr.y };
+  layPath(stroke.lx, stroke.ly, ptr.x, ptr.y);
+  stroke.lx = ptr.x;
+  stroke.ly = ptr.y;
 });
 
 function endPaint(e) {
-  // a tap that never travelled still drops a block
+  // a tap that never travelled still drops a patch
   if (ptr.down && stroke && !stroke.started && canPaint() && !erasing) dab(stroke.ox, stroke.oy);
   ptr.down = false;
   stroke = null;
@@ -233,9 +289,9 @@ stageCanvas.addEventListener('pointerleave', () => {
 
 // The brush size lives in a drawer that slides out from the right edge.
 function setBrush(v) {
-  brush = Math.min(90, Math.max(10, Math.round(v)));
+  brush = Math.min(90, Math.max(8, Math.round(v)));
   brushInput.value = String(brush);
-  brushDot.style.setProperty('--dot', `${6 + ((brush - 10) / 80) * 14}px`);
+  brushDot.style.setProperty('--dot', `${6 + ((brush - 8) / 82) * 14}px`);
 }
 brushInput.addEventListener('input', () => setBrush(Number(brushInput.value)));
 setBrush(brush);
@@ -312,12 +368,9 @@ palette.addEventListener('click', (e) => {
 function reset() {
   world.clear();
   marks = [];
-  gctx.save();
-  gctx.setTransform(1, 0, 0, 1, 0, 0);
-  gctx.clearRect(0, 0, groundCanvas.width, groundCanvas.height);
-  gctx.restore();
   over = false;
-  banner.hidden = true;
+  result.hidden = true;
+  modal.hidden = true;
 }
 clearBtn.addEventListener('click', reset);
 
@@ -351,10 +404,151 @@ teamToggle.addEventListener('change', () => setMode(teamToggle.checked ? 'team' 
 
 startBtn.addEventListener('click', () => {
   if ((world.counts.red || 0) > 0 && (world.counts.blue || 0) > 0) {
+    world.beginBattle();
     world.started = true;
     startBtn.hidden = true;
   }
 });
+
+const result = $('result');
+const modal = $('modal');
+$('new-battle').addEventListener('click', () => {
+  reset();
+  startBtn.hidden = world.mode !== 'team';
+});
+$('stats-btn').addEventListener('click', () => {
+  buildStats();
+  modal.hidden = false;
+});
+function closeStats() {
+  modal.hidden = true;
+}
+$('modal-close').addEventListener('click', closeStats);
+modal.addEventListener('pointerdown', (e) => {
+  if (e.target === modal) closeStats();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeStats();
+});
+
+// The "units standing" step chart, red against blue.
+function niceStep(max, target) {
+  const raw = Math.max(1, max / target);
+  const pow = 10 ** Math.floor(Math.log10(raw));
+  for (const m of [1, 2, 5, 10]) if (m * pow >= raw) return m * pow;
+  return 10 * pow;
+}
+
+function chartSvg(st) {
+  const w = 770;
+  const h = 300;
+  const L = 52;
+  const R = 56;
+  const T = 24;
+  const Bm = 46;
+  const maxY = Math.max(1, ...st.samples.map((p) => Math.max(p[1], p[2])));
+  const stepY = maxY <= 5 ? 1 : niceStep(maxY, 3);
+  const topY = Math.ceil(maxY / stepY) * stepY;
+  const dur = Math.max(1, st.duration);
+  const stepX = dur <= 12 ? 2 : niceStep(dur, 5);
+  const X = (t) => L + ((w - L - R) * t) / dur;
+  const Y = (v) => T + (h - T - Bm) * (1 - v / topY);
+  let out = `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Units standing over time">`;
+  for (let v = 0; v <= topY; v += stepY) {
+    out += `<line x1="${L}" x2="${w - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${v === 0 ? '#cfd2db' : '#eef0f5'}" stroke-width="1.5"/>`;
+    out += `<text x="${L - 14}" y="${Y(v) + 5}" text-anchor="end" fill="#6d707c" font-size="15">${v}</text>`;
+  }
+  for (let t = 0; t <= dur + 0.001; t += stepX) {
+    out += `<text x="${X(t)}" y="${h - 14}" text-anchor="middle" fill="#6d707c" font-size="15">${t}s</text>`;
+  }
+  for (const [idx, color] of [[1, '#ef4444'], [2, '#3b6cf0']]) {
+    let d = '';
+    let prev = null;
+    for (const p of st.samples) {
+      const x = X(Math.min(p[0], dur));
+      if (prev === null) d += `M${x} ${Y(p[idx])}`;
+      else if (p[idx] !== prev) d += ` H${x} V${Y(p[idx])}`;
+      prev = p[idx];
+    }
+    d += ` H${X(dur)}`;
+    out += `<path d="${d}" fill="none" stroke="${color}" stroke-width="2.6" stroke-linejoin="round"/>`;
+    const end = st.samples[st.samples.length - 1][idx];
+    out += `<circle cx="${X(dur)}" cy="${Y(end)}" r="4.5" fill="${color}"/>`;
+    out += `<text x="${X(dur) + 14}" y="${Y(end) + 5}" fill="#23262f" font-size="16" font-weight="700">${end}</text>`;
+  }
+  return out + '</svg>';
+}
+
+function speciesRows(team, st) {
+  return Object.keys(st.initial[team])
+    .sort((a, b) => SPECIES_ORDER.indexOf(a) - SPECIES_ORDER.indexOf(b))
+    .map((id) => {
+      const icon = document.createElement('canvas');
+      icon.width = 66;
+      icon.height = 48;
+      paintAny(icon, id);
+      const row = document.createElement('div');
+      row.className = 'tm-row';
+      const name = document.createElement('span');
+      name.className = 'tm-name';
+      name.textContent = SPECIES[id].label;
+      const nums = document.createElement('span');
+      nums.className = 'tm-nums';
+      nums.innerHTML = `<i>${st.initial[team][id]}</i><em>\u2192</em><b>${st.final[team][id] || 0}</b>`;
+      row.append(icon, name, nums);
+      return row;
+    });
+}
+
+function buildStats() {
+  const st = world.stats;
+  const body = $('modal-body');
+  body.textContent = '';
+  if (!st || !st.final) return;
+  const red = Object.values(st.final.red).reduce((a, b) => a + b, 0);
+  const blue = Object.values(st.final.blue).reduce((a, b) => a + b, 0);
+  const winner = red > 0 ? 'red' : blue > 0 ? 'blue' : null;
+  const secs = Math.max(1, Math.round(st.duration));
+  const start = (t) => Object.values(st.initial[t]).reduce((a, b) => a + b, 0);
+  const left = winner ? (winner === 'red' ? red / start('red') : blue / start('blue')) : 0;
+  const title = $('modal-title');
+  title.className = `modal-title ${winner || ''}`;
+  title.textContent = winner ? `${TEAMS[winner].label} team wins` : 'Draw';
+  $('modal-sub').textContent = !winner
+    ? `Everyone fell in ${secs} seconds`
+    : `${left >= 0.5 ? 'Decisive' : left >= 0.2 ? 'Hard-fought' : 'Narrow'} victory in ${secs} seconds`;
+
+  const chart = document.createElement('section');
+  chart.className = 'tm-card';
+  chart.innerHTML = `<header><h3>Units standing</h3><span class="tm-key"><i class="r"></i>Red team<i class="b"></i>Blue team</span></header>${chartSvg(st)}`;
+  body.append(chart);
+
+  const teams = document.createElement('div');
+  teams.className = 'tm-teams';
+  for (const t of ['red', 'blue']) {
+    const card = document.createElement('section');
+    card.className = `tm-card tm-team ${t}${winner === t ? ' win' : ''}`;
+    const head = document.createElement('header');
+    head.innerHTML = `<h3>${TEAMS[t].label} team</h3>${winner === t ? '<span class="tm-badge">WINNER</span>' : ''}`;
+    card.append(head, ...speciesRows(t, st));
+    teams.append(card);
+  }
+  body.append(teams);
+
+  const first = st.deaths.find((d) => d.killer);
+  if (first) {
+    const card = document.createElement('section');
+    card.className = 'tm-card tm-first';
+    const icon = document.createElement('canvas');
+    icon.width = 132;
+    icon.height = 96;
+    paintAny(icon, first.killer);
+    const t = document.createElement('div');
+    t.innerHTML = `<h3>First blood</h3><p>A ${first.killerTeam} ${SPECIES[first.killer].label.toLowerCase()} took down a ${first.team} ${SPECIES[first.species].label.toLowerCase()} ${Math.max(1, Math.round(first.t))}s in</p>`;
+    card.append(icon, t);
+    body.append(card);
+  }
+}
 
 // Bottom-left legend: how many of each unit are on the field.
 const legendRows = new Map();
@@ -423,10 +617,11 @@ function syncUi() {
   startBtn.disabled = !(red > 0 && blue > 0);
   if (world.started && !over && (red === 0 || blue === 0)) {
     over = true;
+    world.endBattle();
     const winner = red > 0 ? 'red' : blue > 0 ? 'blue' : null;
     banner.className = `banner ${winner || ''}`;
     banner.textContent = winner ? `${TEAMS[winner].label} team wins!` : 'Draw!';
-    banner.hidden = false;
+    result.hidden = false;
   }
 }
 
@@ -628,6 +823,7 @@ function render() {
   for (const u of units) {
     if (u.team) {
       ctx.setTransform(dpr, 0, 0, dpr, u.x * dpr, (u.y + FEET + 1) * dpr);
+      if (u.species === 'cavalry') ctx.scale(1.7, 1.1);
       drawLayer(ctx, sprites.ring[u.team]);
     }
     if (u.species === 'sniper') drawSniper(u);
@@ -739,7 +935,7 @@ function frame(now) {
   last = now;
   if (dt > 0.1) dt = 0.1;
 
-  if (ptr.down && ptr.inside && canPaint() && (erasing || stroke)) {
+  if (ptr.down && ptr.inside && canPaint() && (erasing || (stroke && !stroke.dragged))) {
     timeAcc += dt;
     while (timeAcc > 0.18) {
       timeAcc -= 0.18;

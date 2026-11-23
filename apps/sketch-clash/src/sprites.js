@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=16';
+import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=17';
 
 // Units are drawn from "art" coordinates matching the reference sprites
 // (origin at the body centre, y down) into small offscreen layers, then
@@ -471,20 +471,23 @@ export function buildSprites() {
     hurt: [1, 2].map((level) => makeLayer(-26, -27, 27, 23, (g) => drawHurt(g, level))),
     ring: {},
   };
+  // Team battle: a thin coloured ring under the feet with a faint fill.
   for (const t of Object.values(TEAMS)) {
+    const w = 50 * K;
+    const h = 19 * K;
     const c = document.createElement('canvas');
-    c.width = Math.ceil(36 * UNIT * SCALE);
-    c.height = Math.ceil(14 * UNIT * SCALE);
+    c.width = Math.ceil(w * SCALE * 2);
+    c.height = Math.ceil(h * SCALE * 2);
     const g = c.getContext('2d');
-    g.scale(SCALE * UNIT, SCALE * UNIT);
-    g.fillStyle = t.ring;
-    g.strokeStyle = t.ringDark;
-    g.lineWidth = 1.3;
+    g.scale(c.width / w, c.height / h);
+    g.fillStyle = t.ring + '33';
+    g.strokeStyle = t.ring;
+    g.lineWidth = 1.1;
     g.beginPath();
-    g.ellipse(18, 7, 15, 5.4, 0, 0, TAU);
+    g.ellipse(w / 2, h / 2, w / 2 - 1, h / 2 - 1, 0, 0, TAU);
     g.fill();
     g.stroke();
-    sprites.ring[t.id] = { canvas: c, x: -18 * UNIT, y: -7 * UNIT, w: 36 * UNIT, h: 14 * UNIT };
+    sprites.ring[t.id] = { canvas: c, x: -w / 2, y: -h / 2, w, h };
   }
   return sprites;
 }
