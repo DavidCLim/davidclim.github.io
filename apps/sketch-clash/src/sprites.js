@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=31';
+import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=33';
 
 // Units are drawn from "art" coordinates matching the reference sprites
 // (origin at the body centre, y down) into small offscreen layers, then
@@ -243,7 +243,7 @@ const HAT = '#5a4e32';
 const HAT_SHADE = '#463b25';
 const INK = '#1d1a22';
 
-function drawSniperBody(g) {
+export function drawSniperBody(g) {
   const gr = g.createLinearGradient(0, -22, 0, 24);
   gr.addColorStop(0, TAN_TOP);
   gr.addColorStop(1, TAN_BOT);
@@ -263,7 +263,7 @@ function drawSniperBody(g) {
 
 // Two eyes: a big black pupil with a sliver of white, hanging under the
 // brim. `look` slides the pupil (-1 left .. 1 right); `blink` shuts them.
-function drawSniperEyes(g, ex, look, blink) {
+export function drawSniperEyes(g, ex, look, blink) {
   for (const x of ex) {
     if (blink) {
       g.strokeStyle = INK;
@@ -323,7 +323,7 @@ function drawSniperTorso(g, front, look, blink) {
 }
 
 // Origin is the centre of the brim, so the hat can tip about it.
-function drawSniperHat(g) {
+export function drawSniperHat(g) {
   g.fillStyle = HAT;
   g.strokeStyle = INK;
   g.lineWidth = 1.6;

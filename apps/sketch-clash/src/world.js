@@ -1,4 +1,4 @@
-import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=31';
+import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=33';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -644,6 +644,20 @@ export class World {
       dead: false,
     });
     u.flash = 0.07;
+    if (d.smoke) {
+      u.recoil = 1;
+      for (let i = 0; i < 3; i++) {
+        this.puffs.push({
+          x: m.x,
+          y: m.y,
+          vx: Math.cos(a) * (14 + Math.random() * 22) + (Math.random() - 0.5) * 14,
+          vy: Math.sin(a) * (14 + Math.random() * 22) - 6 - Math.random() * 10,
+          age: 0,
+          life: 0.9 + Math.random() * 0.5,
+          size: 4 + Math.random() * 4,
+        });
+      }
+    }
   }
 
   // A sniper round is a ray: it hits everything along the line, up to

@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=31';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=31';
+import { TAU, K } from './config.js?v=33';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=33';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -715,6 +715,84 @@ function drawRider(g) {
   g.stroke();
 }
 
+// ---------------------------------------------------------------- cowboy
+// The sniper's tan egg, half-lidded eyes and wide olive hat, plus a handlebar
+// mustache and a flintlock pistol.
+function drawCowboyTorso(g, look, blink) {
+  drawSniperBody(g);
+  drawSniperEyes(g, [-1.5, 14.2], look, blink);
+  // handlebar mustache under the nose
+  g.fillStyle = '#3b2a1b';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1;
+  g.beginPath();
+  g.moveTo(0.4, 3.4);
+  g.quadraticCurveTo(1.2, 0.2, 4.8, 0.8);
+  g.quadraticCurveTo(6.9, 1.2, 7.2, 1.4);
+  g.quadraticCurveTo(7.6, 1.2, 9.6, 0.8);
+  g.quadraticCurveTo(13.2, 0.2, 14.2, 3.4);
+  g.quadraticCurveTo(12, 2.6, 9.4, 3.1);
+  g.quadraticCurveTo(7.2, 3.6, 5, 3.1);
+  g.quadraticCurveTo(2.4, 2.6, 0.4, 3.4);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  // a small smile below it
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.2;
+  g.beginPath();
+  g.arc(6.9, 6.2, 3, Math.PI * 0.2, Math.PI * 0.8);
+  g.stroke();
+  // the wide hat
+  g.save();
+  g.translate(0, -11.6);
+  drawSniperHat(g);
+  g.restore();
+}
+
+// Origin: the hand on the grip. The barrel points along +x.
+function drawFlintlock(g, firing) {
+  g.lineCap = 'round';
+  // curved wooden grip
+  g.fillStyle = '#8a5a2c';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.2;
+  g.beginPath();
+  g.moveTo(-1, -2.4);
+  g.quadraticCurveTo(-7.5, -1.5, -9.5, 6.5);
+  g.quadraticCurveTo(-6.5, 7.4, -4.2, 6.8);
+  g.quadraticCurveTo(-3.6, 2.4, 3.6, 1.6);
+  g.lineTo(3.6, -2.4);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  // the long steel barrel with brass bands
+  g.fillStyle = '#51545f';
+  rr(g, 3, -3.2, 27, 3.8, 0.9);
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#c9a24a';
+  for (const x of [8, 16, 24]) g.fillRect(x, -3.3, 1.5, 4);
+  g.fillStyle = '#6b6f7c';
+  g.fillRect(4, -3.0, 24, 0.9);
+  // lock plate, flash pan and the curved cock (hammer)
+  g.fillStyle = '#a8aab4';
+  rr(g, -0.5, -5, 7.4, 4.6, 1);
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#2f3038';
+  g.beginPath();
+  g.moveTo(1, -5);
+  g.quadraticCurveTo(-1.5, -8.8, 1.6, -9.6);
+  g.quadraticCurveTo(0.6, -7, 3.4, -5.4);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#c9a24a';
+  g.fillRect(5, -5.4, 2.6, 1.4);
+  if (firing) star(g, 36, -1.6, 9, 3.6);
+}
+
 // ---------------------------------------------------------------- ninja
 function drawNinjaBody(g, front, gz) {
   // headband tails, behind the head
@@ -950,6 +1028,9 @@ export const DROPS = {
   cavalry(g) {
     DROPS.knight(g);
   },
+  cowboy(g) {
+    DROPS.sniper(g);
+  },
   knight(g) {
     g.fillStyle = '#a9aeb8';
     g.strokeStyle = OUT;
@@ -1006,6 +1087,20 @@ const GHOSTS = {
   }],
   knight: ['#f9f4dd', '#dad2ac', (g) => dome(g, '#a9aeb8', 11.5, 8, -10)],
   cavalry: ['#f5f1e6', '#d8d2c2', (g) => dome(g, '#a9aeb8', 11.5, 8, -10)],
+  cowboy: ['#f4eddb', '#d1c6a6', (g) => {
+    g.fillStyle = '#5a4e32';
+    g.strokeStyle = OUT;
+    g.lineWidth = 1.1;
+    g.beginPath();
+    g.ellipse(0, -10, 8, 6, 0, Math.PI, TAU);
+    g.closePath();
+    g.fill();
+    g.stroke();
+    g.beginPath();
+    g.ellipse(0, -9.4, 16, 2.4, 0, 0, TAU);
+    g.fill();
+    g.stroke();
+  }],
 };
 
 // ---------------------------------------------------------------- build
@@ -1067,6 +1162,14 @@ export function buildUnitArt() {
     feet: dark,
     ...eggSet(drawNinjaBody),
     katana: makeLayer(-12, -10, 58, 8, drawKatana),
+  };
+
+  art.cowboy = {
+    feet: [0, 1, 2, 3].map((i) => makeLayer(-30, 16, 32, 38, (g) => drawFeet(g, FEET_POSES[i], true, '#25232e'))),
+    torso: makeLayer(-36, -30, 36, 26, (g) => drawCowboyTorso(g, 1, false)),
+    torsoSide: [1, 0, -1].map((look) => makeLayer(-36, -30, 36, 26, (g) => drawCowboyTorso(g, look, false))),
+    pistol: makeLayer(-12, -12, 40, 10, (g) => drawFlintlock(g, false)),
+    pistolFire: makeLayer(-12, -12, 48, 10, (g) => drawFlintlock(g, true)),
   };
 
   art.cavalry = {

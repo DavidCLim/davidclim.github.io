@@ -1,6 +1,6 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=31';
-import { drawLayer, OUT } from './sprites.js?v=31';
-import { drawDrop } from './art_units.js?v=31';
+import { TAU, K, UNIT, FEET } from './config.js?v=33';
+import { drawLayer, OUT } from './sprites.js?v=33';
+import { drawDrop } from './art_units.js?v=33';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -198,6 +198,19 @@ function drawCavalry(ctx, dpr, sprites, u) {
   drawLayer(ctx, A.lance);
 }
 
+// The cowboy: the sniper's look with a flintlock held low at his side, raised to
+// aim and kicking back when it goes off.
+function drawCowboy(ctx, dpr, sprites, u) {
+  const A = sprites.cowboy;
+  const d = u.def;
+  eggBase(ctx, dpr, sprites, A, u);
+  const pose = u.pose;
+  ctx.translate(lerp(14 * K, d.pivot.x, pose) - u.recoil * 2.2 * K, lerp(12 * K, d.pivot.y, pose));
+  ctx.rotate(lerp(0.9, u.aim - u.recoil * 0.18, pose));
+  ctx.scale(0.78, 0.78);
+  drawLayer(ctx, u.flash > 0 ? A.pistolFire : A.pistol);
+}
+
 const DRAWERS = {
   flamethrower: drawFlamethrower,
   roman: drawRoman,
@@ -206,6 +219,7 @@ const DRAWERS = {
   knight: drawKnight,
   ninja: drawNinja,
   cavalry: drawCavalry,
+  cowboy: drawCowboy,
 };
 
 export function drawUnit(ctx, dpr, sprites, u) {
@@ -480,6 +494,12 @@ const ICONS = {
     drawLayer(g, S.arrow);
   }],
   cavalry: [84, 41, 39, null],
+  cowboy: [84, 33, 39, (g, S) => {
+    g.translate(11 * K, 12 * K);
+    g.rotate(-0.05);
+    g.scale(0.78, 0.78);
+    drawLayer(g, S.pistol);
+  }],
   ninja: [84, 32, 39, (g, S) => {
     g.translate(14 * K, 10 * K);
     g.rotate(-0.8);

@@ -208,6 +208,29 @@ export const NINJA = {
   pivot: { x: 4 * K, y: 12 * K },
 };
 
+// A cowboy: takes his time, then fires a single flintlock shot that hits hard
+// and leaves a puff of black-powder smoke.
+export const COWBOY = {
+  kind: 'rifle',
+  hp: 120,
+  ...BODY,
+  speed: 38,
+  sight: 380,
+  range: 300,
+  holdDist: 150,
+  burst: 1,
+  burstGap: 0.1,
+  cooldownMin: 1.1,
+  cooldownMax: 1.9,
+  damage: 58,
+  bulletSpeed: 560,
+  bulletRange: 400,
+  spread: 0.05,
+  smoke: true,
+  pivot: { x: 11 * K, y: 12 * K },
+  muzzleLen: 27 * K,
+};
+
 // `faction` decides who fights whom in free-for-all (defaults to the
 // species itself); a knight is the same faction as the cavalry.
 export const SPECIES = {
@@ -217,10 +240,9 @@ export const SPECIES = {
   roman: { id: 'roman', label: 'Roman', def: ROMAN },
   grenadier: { id: 'grenadier', label: 'Grenadier', def: GRENADIER },
   archer: { id: 'archer', label: 'Archer', def: ARCHER },
-  cavalry: { id: 'cavalry', label: 'Cavalry', def: CAVALRY },
+  cowboy: { id: 'cowboy', label: 'Cowboy', def: COWBOY },
   ninja: { id: 'ninja', label: 'Ninja', def: NINJA },
-  knight: { id: 'knight', label: 'Knight', def: KNIGHT },
 };
 // The order of the palette (the knight only ever comes from a cavalry).
-export const PALETTE_ORDER = ['soldier', 'flamethrower', 'sniper', 'roman', 'grenadier', 'archer', 'cavalry', 'ninja'];
-export const SPECIES_ORDER = [...PALETTE_ORDER, 'knight'];
+export const PALETTE_ORDER = ['soldier', 'flamethrower', 'sniper', 'roman', 'grenadier', 'archer', 'cowboy', 'ninja'];
+export const SPECIES_ORDER = [...PALETTE_ORDER];
