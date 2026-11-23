@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=25';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=25';
+import { TAU, K } from './config.js?v=26';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=26';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -148,90 +148,93 @@ function drawNozzle(g, firing) {
 
 // ---------------------------------------------------------------- roman
 function drawRomanBody(g, front, gz, angry) {
-  eggBody(g, '#d82f3f', '#b8222f');
-  g.fillStyle = 'rgba(255, 255, 255, 0.2)';
+  // egg: bright red, lit from the upper left
+  const gr = g.createLinearGradient(-14, -22, 16, 24);
+  gr.addColorStop(0, '#e23c3e');
+  gr.addColorStop(0.45, '#d3252d');
+  gr.addColorStop(1, '#b21c25');
+  g.fillStyle = gr;
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.9;
   g.beginPath();
-  g.ellipse(-11, -3, 2.6, 5.4, -0.15, 0, TAU);
+  g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
+  g.fill();
+  g.stroke();
+  g.fillStyle = 'rgba(255, 255, 255, 0.22)';
+  g.beginPath();
+  g.ellipse(-12, 2, 3.4, 8, 0.1, 0, TAU);
   g.fill();
 
-  // big eyes under the visor; the far one is half hidden by the spear
-  const xs = front ? [-8, 8] : [-3.5, 13.5];
-  for (const x of xs) {
-    g.fillStyle = '#fbf1ee';
+  // one big almond eye, the second tucked behind the spear
+  const eyes = front ? [[-8, -6], [8, -6]] : [[-2, -6], [12.6, -6.3]];
+  eyes.forEach(([x, y], i) => {
+    g.save();
+    g.translate(x, y);
+    g.rotate(i === 0 ? -0.12 : -0.05);
+    g.fillStyle = '#fbf3f0';
     g.strokeStyle = OUT;
-    g.lineWidth = 1.1;
+    g.lineWidth = 1.5;
     g.beginPath();
-    g.ellipse(x, 1.6, 5.8, 4.8, 0, 0, TAU);
+    g.ellipse(0, 0, i === 0 ? 5.9 : 4.6, 4.7, 0, 0, TAU);
     g.fill();
     g.stroke();
-    g.fillStyle = '#17100f';
+    g.fillStyle = '#100c0d';
     g.beginPath();
-    g.arc(x + gz[0] * 1.3, 1.4 + gz[1] * 0.6, 2.7, 0, TAU);
+    g.arc(1.6 + gz[0] * 0.9, 0.2 + gz[1] * 0.5, 3, 0, TAU);
     g.fill();
-    g.strokeStyle = OUT;
-    g.lineWidth = 2;
+    g.fillStyle = 'rgba(255, 255, 255, 0.9)';
     g.beginPath();
-    g.ellipse(x, 1.6, 5.8, 4.8, 0, Math.PI * 1.05, Math.PI * 1.95);
-    g.stroke();
-  }
-  if (angry) {
-    g.strokeStyle = OUT;
-    g.lineWidth = 2.2;
-    g.beginPath();
-    for (const x of xs) {
-      g.moveTo(x - 6, -5.6);
-      g.lineTo(x + 6, -2);
+    g.arc(0.6 + gz[0] * 0.9, -1.2 + gz[1] * 0.5, 0.9, 0, TAU);
+    g.fill();
+    if (angry) {
+      g.strokeStyle = OUT;
+      g.lineWidth = 2.4;
+      g.beginPath();
+      g.moveTo(-6.5, -3.2);
+      g.lineTo(6, 0.4);
+      g.stroke();
     }
-    g.stroke();
-  }
+    g.restore();
+  });
+  // a small curled smile
   g.strokeStyle = OUT;
-  g.lineWidth = 1.3;
+  g.lineWidth = 1.4;
   g.beginPath();
-  if (front) g.arc(0, 9, 3.4, Math.PI * 0.15, Math.PI * 0.85);
-  else g.arc(7.5, 9.4, 3, Math.PI * 0.12, Math.PI * 0.8);
+  if (front) g.arc(0, 6, 3.4, Math.PI * 0.15, Math.PI * 0.85);
+  else {
+    g.moveTo(3.6, 6.2);
+    g.quadraticCurveTo(5.4, 9, 9.2, 7.4);
+  }
   g.stroke();
 
-  // the small red dome (with a shine), a diamond crest, and the visor
-  const dg = g.createLinearGradient(0, -25, 0, -12);
-  dg.addColorStop(0, '#ec3b48');
-  dg.addColorStop(1, '#cc2a38');
+  // red dome of the helmet, a half-ellipse sitting on the visor
+  const dg = g.createLinearGradient(0, -32, 0, -20);
+  dg.addColorStop(0, '#f24545');
+  dg.addColorStop(1, '#cc2026');
   g.fillStyle = dg;
   g.strokeStyle = OUT;
-  g.lineWidth = 1.5;
+  g.lineWidth = 1.9;
   g.beginPath();
-  g.ellipse(-1, -14, 15.5, 13, 0, Math.PI, TAU);
+  g.ellipse(-1.6, -13, 16.2, 18.6, 0, Math.PI, TAU);
   g.closePath();
   g.fill();
   g.stroke();
-  g.fillStyle = 'rgba(255, 255, 255, 0.35)';
+  g.fillStyle = 'rgba(255, 255, 255, 0.4)';
   g.beginPath();
-  g.ellipse(-4, -24, 5.5, 1.8, -0.1, 0, TAU);
+  g.ellipse(-5, -28.2, 6.2, 1.6, -0.12, 0, TAU);
   g.fill();
-  g.strokeStyle = '#f7e9e6';
-  g.lineWidth = 1.3;
-  g.beginPath();
-  g.moveTo(-12.5, -26);
-  g.lineTo(-9.8, -28.8);
-  g.lineTo(-7.1, -26);
-  g.lineTo(-9.8, -23.2);
-  g.closePath();
-  g.stroke();
+  // the orange visor: a half-disc with a flat underside, as wide as the body
   g.fillStyle = '#eda83f';
   g.strokeStyle = OUT;
-  g.lineWidth = 1.6;
+  g.lineWidth = 1.9;
   g.beginPath();
-  g.moveTo(-21, -8.4);
-  g.quadraticCurveTo(-20.5, -17.2, -2, -17.4);
-  g.quadraticCurveTo(17, -17.6, 22.5, -8.4);
-  g.quadraticCurveTo(1, -5.4, -21, -8.4);
+  g.ellipse(0, -10.8, 20.6, 10.4, 0, Math.PI, TAU);
   g.closePath();
   g.fill();
   g.stroke();
-  g.fillStyle = 'rgba(255, 255, 255, 0.3)';
+  g.fillStyle = 'rgba(255, 255, 255, 0.28)';
   g.beginPath();
-  g.moveTo(-14, -13.8);
-  g.quadraticCurveTo(-2, -16.2, 14, -13.8);
-  g.quadraticCurveTo(-2, -14.6, -14, -13.8);
+  g.ellipse(-3, -16, 12, 1.5, 0, 0, TAU);
   g.fill();
 }
 
@@ -239,55 +242,57 @@ function drawRomanBody(g, front, gz, angry) {
 function drawSpear(g) {
   g.lineCap = 'butt';
   g.strokeStyle = OUT;
-  g.lineWidth = 3.1;
+  g.lineWidth = 3.6;
   g.beginPath();
-  g.moveTo(-10, 0);
-  g.lineTo(44, 0);
+  g.moveTo(0, 0);
+  g.lineTo(52, 0);
   g.stroke();
-  g.strokeStyle = '#d9a64a';
-  g.lineWidth = 1.9;
+  g.strokeStyle = '#e1a645';
+  g.lineWidth = 2.2;
   g.beginPath();
-  g.moveTo(-9.5, 0);
-  g.lineTo(44, 0);
+  g.moveTo(0.4, 0);
+  g.lineTo(52, 0);
   g.stroke();
-  // twisted-rope stripes along the shaft
-  g.strokeStyle = 'rgba(120, 78, 30, 0.6)';
-  g.lineWidth = 0.8;
+  g.strokeStyle = 'rgba(255, 224, 150, 0.8)';
+  g.lineWidth = 0.7;
   g.beginPath();
-  for (let x = -8; x < 42; x += 5) {
-    g.moveTo(x, -1.5);
-    g.lineTo(x + 2, 1.5);
-  }
+  g.moveTo(1, -0.4);
+  g.lineTo(52, -0.4);
   g.stroke();
-  // the broad grey leaf of the head
+  // the broad grey head
   g.lineCap = 'round';
-  g.fillStyle = '#a9adb8';
+  g.fillStyle = '#a3a8b4';
   g.strokeStyle = OUT;
-  g.lineWidth = 1.2;
+  g.lineWidth = 1.4;
   g.beginPath();
-  g.moveTo(40, -1.2);
-  g.quadraticCurveTo(45, -4.4, 55, 0);
-  g.quadraticCurveTo(45, 4.4, 40, 1.2);
-  g.closePath();
+  g.ellipse(55.5, 0, 7.4, 3.2, 0, 0, TAU);
   g.fill();
   g.stroke();
+  g.fillStyle = 'rgba(255, 255, 255, 0.45)';
+  g.beginPath();
+  g.ellipse(55, -0.8, 5, 1.3, 0, 0, TAU);
+  g.fill();
 }
 
 // Origin: the middle of the shield.
 function drawShield(g) {
-  g.fillStyle = '#eaa534';
+  g.fillStyle = '#eca83d';
   g.strokeStyle = OUT;
-  g.lineWidth = 1.4;
-  rr(g, -4.6, -13.5, 9.2, 27, 1.6);
+  g.lineWidth = 1.7;
+  rr(g, -5.65, -16.5, 11.3, 33, 1.5);
   g.fill();
   g.stroke();
-  g.fillStyle = '#f6c564';
-  g.fillRect(-3.2, -11.8, 1.8, 23.6);
-  g.fillStyle = '#aeb4c0';
+  g.fillStyle = '#f4b94d';
+  g.strokeStyle = 'rgba(120, 72, 12, 0.7)';
+  g.lineWidth = 0.8;
+  rr(g, -4, -15, 8, 30, 0.8);
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#a9afbb';
   g.strokeStyle = '#4b4f5c';
   g.lineWidth = 1.1;
   g.beginPath();
-  g.arc(0, 0, 2.6, 0, TAU);
+  g.arc(0, 0, 2.7, 0, TAU);
   g.fill();
   g.stroke();
 }
@@ -1030,11 +1035,11 @@ export function buildUnitArt() {
   };
 
   art.roman = {
-    feet: feetSet('#6b4023'),
+    feet: feetSet('#85501f'),
     // the Romans' pupils drift up and to the sides, the first (used for the icon) looks down-left
     ...eggSet(drawRomanBody, [[-1.7, 0.7], [0.6, -1.8], [1.7, -1.3]]),
-    spear: makeLayer(-20, -6, 50, 6, drawSpear),
-    shield: makeLayer(-8, -16, 8, 16, drawShield),
+    spear: makeLayer(-4, -6, 68, 6, drawSpear),
+    shield: makeLayer(-8, -18, 8, 18, drawShield),
   };
 
   art.grenadier = {
