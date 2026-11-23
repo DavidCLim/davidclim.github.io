@@ -1,6 +1,6 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=42';
-import { drawLayer, OUT } from './sprites.js?v=42';
-import { drawDrop } from './art_units.js?v=42';
+import { TAU, K, UNIT, FEET } from './config.js?v=43';
+import { drawLayer, OUT } from './sprites.js?v=43';
+import { drawDrop } from './art_units.js?v=43';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -121,7 +121,8 @@ function drawArcher(ctx, dpr, sprites, u) {
   ctx.translate(lerp(21 * K, d.pivot.x, pose), lerp(13 * K, d.pivot.y, pose));
   ctx.rotate(lerp(0.75, u.aim, pose));
   const draw = u.drawT > 0 ? Math.min(1, u.drawT / d.drawTime) : 0;
-  ctx.translate(-u.recoil * 1.5, 0);
+  // the bow jolts forward as the arrow leaves
+  ctx.translate(u.recoil * 2.2 * K, 0);
   drawLayer(ctx, draw > 0 ? A.bowDrawn : A.bow);
   if (u.reloadT <= 0) {
     ctx.save();
@@ -354,14 +355,14 @@ export function drawFx(ctx, dpr, sprites, world) {
     ctx.ellipse(gx, gy + FEET * 0.5, 4, 1.5, 0, 0, TAU);
     ctx.fill();
     const slope = a.y1 - a.y0 + 4 * a.h * (2 * p - 1);
-    if (a.age < 0.2) {
+    if (a.age < 0.28) {
       // a fresh arrow trails a pale speed streak
       const ang0 = Math.atan2(slope, a.x1 - a.x0);
-      ctx.strokeStyle = `rgba(150, 152, 162, ${0.55 * (1 - a.age / 0.2)})`;
-      ctx.lineWidth = 1.4;
+      ctx.strokeStyle = `rgba(150, 152, 162, ${0.6 * (1 - a.age / 0.28)})`;
+      ctx.lineWidth = 1.6;
       ctx.beginPath();
       ctx.moveTo(gx, gy - 4 * a.h * p * (1 - p));
-      ctx.lineTo(gx - Math.cos(ang0) * 16, gy - 4 * a.h * p * (1 - p) - Math.sin(ang0) * 16);
+      ctx.lineTo(gx - Math.cos(ang0) * 24, gy - 4 * a.h * p * (1 - p) - Math.sin(ang0) * 24);
       ctx.stroke();
     }
     ctx.save();

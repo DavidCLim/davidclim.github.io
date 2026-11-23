@@ -186,38 +186,20 @@ canvas {
   to { transform: scale(1); opacity: 1; }
 }
 
-/* ---------- Brush size drawer (slides out from the right edge) ---------- */
-.drawer {
+/* ---------- Brush size meter ---------- */
+.brush-box {
   position: absolute;
-  top: 36%;
-  right: 0;
+  top: 60px;
+  right: 16px;
   display: flex;
   align-items: center;
-  transform: translateX(calc(100% - 12px));
-  transition: transform 0.22s ease;
-}
-.drawer.open { transform: none; }
-.drawer-handle {
-  width: 12px;
-  height: 112px;
-  padding: 0;
-  border: 1px solid #c9cdd8;
-  border-right: 0;
-  border-radius: 12px 0 0 12px;
-  background: #ffffff;
-  cursor: pointer;
-}
-.drawer-panel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 12px;
+  gap: 10px;
+  padding: 6px 12px 6px 8px;
   border: 1px solid var(--line);
-  border-right: 0;
-  border-radius: 0 0 0 14px;
+  border-radius: 999px;
   background: #ffffff;
-  box-shadow: -2px 2px 8px rgba(20, 30, 60, 0.08);
+  box-shadow: 0 1px 4px rgba(20, 30, 60, 0.08);
+  cursor: pointer;
 }
 .brush-dot {
   flex: none;
@@ -228,17 +210,14 @@ canvas {
 }
 .brush-dot::after {
   content: '';
-  width: var(--dot, 10px);
-  height: var(--dot, 10px);
+  width: var(--dot, 4px);
+  height: var(--dot, 4px);
   border-radius: 50%;
   background: #e3e5ec;
   border: 1.5px solid #8b8e9a;
 }
-.drawer-panel input {
-  writing-mode: vertical-lr;
-  direction: rtl;
-  width: 22px;
-  height: 110px;
+.brush-box input {
+  width: 110px;
   margin: 0;
   accent-color: #6b6e7a;
   cursor: pointer;
@@ -442,6 +421,8 @@ canvas {
   .unit-btn canvas { width: 38px; }
   .start-btn { bottom: 176px; font-size: 1.7rem; padding: 3px 32px 7px; }
   .team-label { top: 56px; font-size: 0.8rem; }
+  .brush-box { top: 54px; right: 10px; }
+  .brush-box input { width: 96px; }
 }
 
 /* ---------- Paused pill, legend overflow ---------- */

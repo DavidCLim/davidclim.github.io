@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=42';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=42';
+import { TAU, K } from './config.js?v=43';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=43';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -405,8 +405,7 @@ function drawBomb(g, lit) {
 }
 
 // ---------------------------------------------------------------- archer
-// A camouflage bowhunter: a woodland-camo egg with streaks of face paint under
-// the eyes, a floppy bush hat with twigs stuck in the band, and a compound bow.
+// A bowhunter: a plain olive egg with streaks of face paint under the eyes, a floppy bush hat with twigs stuck in the band, and a compound bow.
 
 // Origin: the middle of the brim. Used on the head and for the dropped hat.
 function drawBushHat(g) {
@@ -487,26 +486,8 @@ function drawBushHat(g) {
 function drawArcherBody(g, front, gz, squint) {
   g.lineJoin = 'round';
   g.lineCap = 'round';
-  eggBody(g, '#74834a', '#566339');
-  // woodland camouflage: dark and tan blotches, clipped to the body
-  g.save();
-  g.beginPath();
-  g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
-  g.clip();
-  const blots = [
-    ['rgba(38, 50, 24, 0.7)', [[-13, 4, 6.4, 3.8, 0.5], [8, 12, 7, 3.4, -0.3], [14, -3, 4.8, 3, 0.9], [-4, 17, 5, 2.8, 0.2], [-17, 14, 3.6, 2.4, 0.4]]],
-    ['rgba(168, 150, 92, 0.65)', [[-6, 8, 4.6, 2.4, -0.4], [11, 4, 4, 2.2, 0.5], [-15, -1, 3.4, 2.1, 0.1], [3, 19, 4.6, 2, 0]]],
-    ['rgba(30, 36, 20, 0.5)', [[0, 11, 3, 2, 0.3], [-9, 14.4, 2.8, 1.8, -0.2], [17, 10, 2.6, 1.8, 0.2]]],
-  ];
-  for (const [col, list] of blots) {
-    g.fillStyle = col;
-    for (const [x, y, rx, ry, rot] of list) {
-      g.beginPath();
-      g.ellipse(x, y, rx, ry, rot, 0, TAU);
-      g.fill();
-    }
-  }
-  g.restore();
+  // a plain olive egg, like every other unit's bare body
+  eggBody(g, '#7d9150', '#5d7239');
   g.strokeStyle = OUT;
   g.lineWidth = 1.8;
   g.beginPath();

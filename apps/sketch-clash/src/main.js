@@ -1,8 +1,8 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=42';
-import { World } from './world.js?v=42';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=42';
-import { buildUnitArt } from './art_units.js?v=42';
-import { drawUnit, drawFx, placeUnit, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=42';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=43';
+import { World } from './world.js?v=43';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=43';
+import { buildUnitArt } from './art_units.js?v=43';
+import { drawUnit, drawFx, placeUnit, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=43';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -154,15 +154,16 @@ function canPlace(px, py, team) {
 // A tap or a held press: a patch of the lattice around the pointer.
 function dab(x, y) {
   if (erasing) {
-    world.eraseAt(x, y, brush);
+    world.eraseAt(x, y, Math.max(brush, 7));
     return;
   }
   if (!stroke) startStroke(x, y);
   stroke.started = true;
   if (stroke.sp === 'roman') {
+    if (brush < 6 && stroke.made.length && !stroke.dragged) return; // one click, one Roman
     // Romans go down thick and overlapping; they sort themselves into ranks when you let go
     const team = teamAt(x);
-    const n = Math.max(2, Math.min(14, Math.round((brush * brush) / 150)));
+    const n = brush < 6 ? 1 : Math.max(2, Math.min(14, Math.round((brush * brush) / 150)));
     for (let i = 0; i < n; i++) {
       const a = Math.random() * TAU;
       const r = Math.sqrt(Math.random()) * brush;
@@ -211,7 +212,7 @@ function layPath(x0, y0, x1, y1) {
     const t = st.nextI * sx - st.s;
     const cx = x0 + ux * t;
     const cy = y0 + uy * t;
-    const off0 = stag && st.nextI & 1 ? 0.5 : 0;
+    const off0 = stag && st.nextI & 1 && brush >= 6 ? 0.5 : 0;
     for (let j = -Math.ceil(brush / sy); j <= Math.ceil(brush / sy); j++) {
       const off = (j + off0) * sy;
       if (Math.abs(off) > brush) continue;
@@ -319,19 +320,14 @@ stageCanvas.addEventListener('pointerleave', () => {
   if (!ptr.down) ptr.inside = false;
 });
 
-// The brush size lives in a drawer that slides out from the right edge.
+// The brush size meter: all the way down is a single unit per click.
 function setBrush(v) {
-  brush = Math.min(90, Math.max(8, Math.round(v)));
+  brush = Math.min(90, Math.max(0, Math.round(v)));
   brushInput.value = String(brush);
-  brushDot.style.setProperty('--dot', `${6 + ((brush - 8) / 82) * 14}px`);
+  brushDot.style.setProperty('--dot', `${4 + (brush / 90) * 16}px`);
 }
 brushInput.addEventListener('input', () => setBrush(Number(brushInput.value)));
 setBrush(brush);
-const drawer = $('drawer');
-$('drawer-handle').addEventListener('click', () => {
-  const open = drawer.classList.toggle('open');
-  $('drawer-handle').setAttribute('aria-expanded', String(open));
-});
 
 // ---------- Draggable palette ----------
 // Press and hold anywhere on the palette and move it around the screen.
@@ -668,7 +664,7 @@ function drawBrushRing() {
   ctx.strokeStyle = canPaint() ? `rgba(${rgb}, 0.6)` : 'rgba(35, 38, 47, 0.25)';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.arc(ptr.x, ptr.y, brush, 0, TAU);
+  ctx.arc(ptr.x, ptr.y, Math.max(brush, 3), 0, TAU);
   ctx.fill();
   ctx.stroke();
 }

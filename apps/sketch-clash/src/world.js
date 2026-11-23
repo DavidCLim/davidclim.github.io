@@ -1,4 +1,4 @@
-import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=42';
+import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=43';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -77,6 +77,8 @@ export class World {
     this.corpses = []; // units knocked over, seeing stars, before the ghost takes over
     this.onArrowLand = null;
     this.time = 0; // seconds since the battle started
+    this.clock = 0; // always-running clock
+    this.volley = {}; // side -> when its archers last started a volley
     this.stats = null; // team battle record, see beginBattle()
     this.onDebrisLand = null;
     this.speciesCounts = {};
@@ -1261,13 +1263,18 @@ export class World {
         u.drawT += dt;
         if (u.drawT >= d.drawTime) {
           this.loose(u, t);
-          u.reloadT = 0.3;
+          u.reloadT = 0.16;
           u.drawT = 0;
           u.cdT = d.cooldownMin + Math.random() * (d.cooldownMax - d.cooldownMin);
         }
       } else {
         u.cdT -= dt;
-        if (u.cdT <= 0 && dist <= d.range && dist >= d.minRange * 0.6) u.drawT = 0.0001;
+        // archers loose together: once one starts to draw, the others nearly ready join in
+        const wave = this.volley[u.side] !== undefined && this.clock - this.volley[u.side] < 0.35 && u.cdT < 1.1;
+        if ((u.cdT <= 0 || wave) && dist <= d.range && dist >= d.minRange * 0.6) {
+          u.drawT = 0.0001;
+          if (!wave) this.volley[u.side] = this.clock;
+        }
       }
     } else {
       u.drawT = 0;
@@ -1295,7 +1302,7 @@ export class World {
       y1: t.y + (Math.random() - 0.5) * sp * 2,
       age: 0,
       dur: 0.25 + dist / d.arrowSpeed,
-      h: 16 + dist * 0.2,
+      h: 24 + dist * 0.3,
       side: u.side,
       owner: u,
       damage: d.damage,
@@ -1641,6 +1648,7 @@ export class World {
     for (const u of this.units) {
       if (!u.dead) this.stepUnit(u, dt);
     }
+    this.clock += dt;
     this.separate();
     if (this.stats && !this.stats.final) {
       this.time += dt;
