@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=10';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=10';
+import { TAU, K } from './config.js?v=11';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=11';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -812,16 +812,16 @@ export const DROPS = {
     }
   },
   roman(g) {
-    g.fillStyle = '#d43234';
+    g.fillStyle = '#f0a53a';
     g.strokeStyle = OUT;
     g.lineWidth = 1;
     g.beginPath();
-    g.ellipse(0, 0, 10.5, 8, 0, 0, Math.PI);
+    g.ellipse(0, 1, 12, 8.5, 0, Math.PI, TAU);
     g.closePath();
     g.fill();
     g.stroke();
-    g.fillStyle = '#f0a53a';
-    rr(g, -13, -4, 26, 4.6, 2.2);
+    g.fillStyle = '#e08a22';
+    rr(g, -13, 0.4, 26, 2.8, 1.4);
     g.fill();
     g.stroke();
   },
@@ -839,19 +839,16 @@ export const DROPS = {
     g.fill();
   },
   archer(g) {
+    // the cap comes off as a curled green crescent
     g.fillStyle = '#4d8a46';
     g.strokeStyle = OUT;
     g.lineWidth = 1;
     g.beginPath();
-    g.moveTo(-11, 2);
-    g.quadraticCurveTo(-12, -8, -4, -10);
-    g.quadraticCurveTo(7, -7, 11, 2);
+    g.moveTo(-12, 3);
+    g.bezierCurveTo(-13, -8, -4, -12, 6, -9);
+    g.bezierCurveTo(12, -7, 14, -1, 14, 3);
+    g.quadraticCurveTo(0, -3, -12, 3);
     g.closePath();
-    g.fill();
-    g.stroke();
-    g.fillStyle = '#3a6c36';
-    g.beginPath();
-    g.ellipse(0, 2, 12.5, 2.6, 0, 0, TAU);
     g.fill();
     g.stroke();
   },

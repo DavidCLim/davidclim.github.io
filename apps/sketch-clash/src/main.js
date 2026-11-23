@@ -1,8 +1,8 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=10';
-import { World } from './world.js?v=10';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=10';
-import { buildUnitArt } from './art_units.js?v=10';
-import { drawUnit, drawFx, stampDrop, stampArrow, hasIcon, paintUnitIcon } from './draw_units.js?v=10';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=11';
+import { World } from './world.js?v=11';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=11';
+import { buildUnitArt } from './art_units.js?v=11';
+import { drawUnit, drawFx, stampDrop, stampArrow, hasIcon, paintUnitIcon } from './draw_units.js?v=11';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -100,7 +100,7 @@ function dab(x, y) {
     world.eraseAt(x, y, brush);
     return;
   }
-  const n = Math.min(6, Math.max(1, Math.round(brush / 18)));
+  const n = Math.min(9, Math.max(1, Math.round(brush / 12)));
   const team = teamAt(x);
   const half = W / 2;
   for (let i = 0; i < n; i++) {
@@ -595,7 +595,7 @@ function render() {
 
   for (const p of world.puffs) {
     const t = p.age / p.life;
-    ctx.fillStyle = p.white ? `rgba(250, 250, 252, ${0.75 * (1 - t)})` : `rgba(165, 167, 176, ${0.45 * (1 - t)})`;
+    ctx.fillStyle = p.white ? `rgba(250, 250, 252, ${0.75 * (1 - t)})` : `rgba(165, 167, 176, ${(p.size > 10 ? 0.26 : 0.45) * (1 - t)})`;
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.size * (1 + 1.8 * t), 0, TAU);
     ctx.fill();

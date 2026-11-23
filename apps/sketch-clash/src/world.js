@@ -1,4 +1,4 @@
-import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=10';
+import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=11';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -734,7 +734,8 @@ export class World {
     const m = this.muzzleOf(u);
     const ang = u.facing > 0 ? u.aim : Math.PI - u.aim;
     for (let i = 0; i < 2; i++) {
-      const a = ang + (Math.random() - 0.5) * 0.28;
+      if (Math.random() < 0.3) continue;
+      const a = ang + (Math.random() - 0.5) * 0.3;
       const sp = 190 + Math.random() * 80;
       this.flames.push({
         x: m.x,
@@ -743,8 +744,8 @@ export class World {
         vy: Math.sin(a) * sp,
         age: 0,
         life: 0.36 + Math.random() * 0.16,
-        size: 3 + Math.random() * 2,
-        dot: Math.random() < 0.5,
+        size: 2 + Math.random() * 1.8,
+        dot: Math.random() < 0.55,
       });
     }
     const cone = d.cone;

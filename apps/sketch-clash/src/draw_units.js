@@ -1,6 +1,6 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=10';
-import { drawLayer, OUT } from './sprites.js?v=10';
-import { drawDrop } from './art_units.js?v=10';
+import { TAU, K, UNIT, FEET } from './config.js?v=11';
+import { drawLayer, OUT } from './sprites.js?v=11';
+import { drawDrop } from './art_units.js?v=11';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -219,15 +219,15 @@ export function drawFx(ctx, dpr, sprites, world) {
   for (const f of world.flames) {
     const t = f.age / f.life;
     const a = Math.max(0, 1 - t);
-    const r = f.size * (1 + (f.small ? 0.8 : 2.4) * t);
-    ctx.fillStyle = `rgba(${f.small ? '255, 150, 30' : '255, 130, 28'}, ${0.5 * a})`;
+    const r = f.size * (1 + (f.small ? 0.8 : 1.3) * t);
+    ctx.fillStyle = `rgba(${f.small ? '255, 150, 30' : '250, 118, 30'}, ${0.8 * a})`;
     ctx.beginPath();
     ctx.arc(f.x, f.y, r, 0, TAU);
     ctx.fill();
     if (f.dot || f.small) {
-      ctx.fillStyle = `rgba(255, 225, 90, ${0.85 * a})`;
+      ctx.fillStyle = `rgba(255, 215, 70, ${0.95 * a})`;
       ctx.beginPath();
-      ctx.arc(f.x + 1, f.y - 1, r * 0.4, 0, TAU);
+      ctx.arc(f.x + 1, f.y - 1, r * 0.55, 0, TAU);
       ctx.fill();
     }
   }
@@ -297,7 +297,7 @@ export function drawFx(ctx, dpr, sprites, world) {
     ctx.save();
     ctx.translate(gx, gy - 4 * a.h * p * (1 - p));
     ctx.rotate(Math.atan2(slope, a.x1 - a.x0));
-    ctx.scale(0.8, 0.8);
+    ctx.scale(0.66, 0.66);
     ctx.translate(-16 * K, 0);
     drawLayer(ctx, arrow);
     ctx.restore();
@@ -337,27 +337,25 @@ export function stampArrow(g, a) {
   g.save();
   g.translate(a.x1, a.y1);
   g.rotate(ang);
+  g.scale(K / 0.56, K / 0.56);
   g.lineCap = 'round';
-  g.strokeStyle = OUT;
-  g.lineWidth = 2.4;
-  g.beginPath();
-  g.moveTo(-11, 0);
-  g.lineTo(0, 0);
-  g.stroke();
-  g.strokeStyle = '#8a6a3c';
+  g.strokeStyle = '#6b5a44';
   g.lineWidth = 1.2;
   g.beginPath();
-  g.moveTo(-11, 0);
+  g.moveTo(-6, 0);
   g.lineTo(0, 0);
   g.stroke();
   g.fillStyle = '#d83a35';
+  g.strokeStyle = '#8f1f1f';
+  g.lineWidth = 0.6;
   g.beginPath();
-  g.moveTo(-13, -2.4);
-  g.lineTo(-8, -0.2);
-  g.lineTo(-8, 0.2);
-  g.lineTo(-13, 2.4);
+  g.moveTo(-9, -2.2);
+  g.lineTo(-4.5, -0.2);
+  g.lineTo(-4.5, 0.2);
+  g.lineTo(-9, 2.2);
   g.closePath();
   g.fill();
+  g.stroke();
   g.restore();
 }
 
