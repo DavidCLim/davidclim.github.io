@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=22';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=22';
+import { TAU, K } from './config.js?v=23';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=23';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -155,7 +155,7 @@ function drawRomanBody(g, front, gz, angry) {
   g.fill();
 
   // big eyes under the visor; the far one is half hidden by the spear
-  const xs = front ? [-8, 8] : [-3, 10.5];
+  const xs = front ? [-8, 8] : [-3.5, 13.5];
   for (const x of xs) {
     g.fillStyle = '#fbf1ee';
     g.strokeStyle = OUT;
@@ -215,10 +215,10 @@ function drawRomanBody(g, front, gz, angry) {
   g.strokeStyle = OUT;
   g.lineWidth = 1.6;
   g.beginPath();
-  g.moveTo(-21.5, -8.2);
-  g.quadraticCurveTo(-19, -20, -1, -20.5);
-  g.quadraticCurveTo(16, -20, 22.5, -8.2);
-  g.quadraticCurveTo(2, -3.4, -21.5, -8.2);
+  g.moveTo(-18.5, -8.6);
+  g.quadraticCurveTo(-16, -20, 0, -20.5);
+  g.quadraticCurveTo(17, -20, 27, -7.4);
+  g.quadraticCurveTo(4, -3.2, -18.5, -8.6);
   g.closePath();
   g.fill();
   g.stroke();

@@ -1,8 +1,8 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=22';
-import { World } from './world.js?v=22';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=22';
-import { buildUnitArt } from './art_units.js?v=22';
-import { drawUnit, drawFx, placeUnit, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=22';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=23';
+import { World } from './world.js?v=23';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=23';
+import { buildUnitArt } from './art_units.js?v=23';
+import { drawUnit, drawFx, placeUnit, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=23';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
