@@ -104,7 +104,7 @@ export const ROMAN = {
   kind: 'melee',
   hp: 180,
   ...BODY,
-  speed: 40,
+  speed: 44,
   sight: 320,
   reach: 36 * R,
   damage: 30,

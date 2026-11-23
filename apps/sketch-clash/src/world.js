@@ -1,4 +1,4 @@
-import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=27';
+import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=28';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -242,9 +242,11 @@ export class World {
       if (!this.live) continue;
       for (const m of g.members) {
         const t = m.target;
-        if (t && !t.dead && Math.hypot(t.x - m.x, t.y - m.y) < m.def.reach * 0.5) {
+        // an enemy within ~45 units and a Roman stops holding his place (the
+        // video's blocks start to come apart about a body-length before contact)
+        if (t && !t.dead && Math.hypot(t.x - m.x, t.y - m.y) < 45) {
           m.form = null;
-          if (g.dissolveT === undefined) g.dissolveT = 1.2;
+          if (g.dissolveT === undefined) g.dissolveT = 0.9;
         }
       }
       if (g.dissolveT !== undefined) {
@@ -273,10 +275,14 @@ export class World {
           while (diff < -Math.PI) diff += TAU;
           if (Math.abs(diff) < Math.abs(best)) best = diff;
         }
-        g.ang += clamp(best, -0.55 * dt, 0.55 * dt);
+        g.ang += clamp(best, -0.35 * dt, 0.35 * dt);
         g.ux = Math.cos(g.ang);
         g.uy = Math.sin(g.ang);
-        const sp = g.members[0].def.speed * 0.65;
+        // a slow, steady march (about 25 units a second) that quickens to a run
+        // of ~44 once the enemy is within ~100 units
+        const near = this.nearestEnemy(g.anchor);
+        const nd = near ? Math.hypot(near.x - g.ax, near.y - g.ay) : Infinity;
+        const sp = 25 + 19 * clamp((170 - nd) / 70, 0, 1);
         g.ax += (dx / d) * sp * dt;
         g.ay += (dy / d) * sp * dt;
         for (const m of g.members) if (Math.abs(dx) > 4) m.facing = dx > 0 ? 1 : -1;
