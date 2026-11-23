@@ -1,6 +1,6 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=11';
-import { drawLayer, OUT } from './sprites.js?v=11';
-import { drawDrop } from './art_units.js?v=11';
+import { TAU, K, UNIT, FEET } from './config.js?v=12';
+import { drawLayer, OUT } from './sprites.js?v=12';
+import { drawDrop } from './art_units.js?v=12';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -24,7 +24,7 @@ function burnGlow(ctx, u, rx, ry, cx = 0, cy = 0) {
 
 // Feet, body and face shared by every egg-shaped unit. Leaves the context
 // in the body's (bobbing) space so the caller can add weapons.
-function eggBase(ctx, dpr, sprites, A, u) {
+function eggBase(ctx, dpr, sprites, A, u, before) {
   const f = u.facing;
   const ph = (u.anim * Math.PI) / 2;
   const wobble = u.hit > 0 ? (Math.random() - 0.5) * 2 : 0;
@@ -37,6 +37,11 @@ function eggBase(ctx, dpr, sprites, A, u) {
   } else if (pose < 1) {
     ctx.translate(0, Math.sin(u.breath * 2.2) * 0.55 * (1 - pose));
   }
+  if (before) {
+    ctx.save();
+    before();
+    ctx.restore();
+  }
   if (pose < 0.5) drawLayer(ctx, A.torsoFront[GZ[u.gaze]]);
   else drawLayer(ctx, u.species === 'roman' && u.target ? A.torsoAngry : A.torso);
   drawHurtMarks(ctx, sprites, u);
@@ -48,32 +53,37 @@ function drawFlamethrower(ctx, dpr, sprites, u) {
   const d = u.def;
   eggBase(ctx, dpr, sprites, A, u);
   const pose = u.pose;
-  ctx.translate(lerp(15 * K, d.pivot.x, pose), lerp(6 * K, d.pivot.y, pose));
-  ctx.rotate(lerp(1.2, u.aim, pose));
+  ctx.translate(lerp(14 * K, d.pivot.x, pose), lerp(5 * K, d.pivot.y, pose));
+  ctx.rotate(lerp(1.1, u.aim, pose));
   drawLayer(ctx, u.firing ? A.nozzleFire : A.nozzle);
 }
 
 function drawRoman(ctx, dpr, sprites, u) {
   const A = sprites.roman;
-  eggBase(ctx, dpr, sprites, A, u);
   const pose = u.pose;
+  const fight = pose >= 0.5;
+  // walking, the shield stands behind and the spear leans back over the
+  // shoulder; fighting, the shield comes round to the front and the spear
+  // levels out and jabs.
+  eggBase(ctx, dpr, sprites, A, u, () => {
+    if (!fight) {
+      ctx.translate(lerp(-19 * K, -4 * K, pose * 2), 9 * K);
+      drawLayer(ctx, A.shield);
+    }
+  });
   const body = ctx.getTransform();
-
-  // shield on the front side
-  ctx.save();
-  ctx.translate(lerp(23 * K, 20 * K, pose), lerp(10 * K, 8 * K, pose));
-  drawLayer(ctx, A.shield);
-  ctx.restore();
-
-  // spear: upright at the side, levelled at the target when fighting
-  ctx.setTransform(body);
   const p = 1 - u.atk;
   const thrust = u.atk > 0 ? Math.sin(p * Math.PI) * 16 * K : 0;
-  const ang = lerp(-1.4, u.aim - 0.05, pose);
-  ctx.translate(lerp(11 * K, 9 * K, pose), lerp(8 * K, 9 * K, pose));
+  const ang = lerp(-2.0, u.aim - 0.04, pose);
+  ctx.translate(lerp(12 * K, 6 * K, pose), lerp(10 * K, 5 * K, pose));
   ctx.rotate(ang);
-  ctx.translate(thrust, 0);
+  ctx.translate(pose * thrust, 0);
   drawLayer(ctx, A.spear);
+  if (fight) {
+    ctx.setTransform(body);
+    ctx.translate(lerp(19 * K, 21 * K, Math.min(1, (pose - 0.5) * 2)), 7 * K);
+    drawLayer(ctx, A.shield);
+  }
 }
 
 function drawGrenadier(ctx, dpr, sprites, u) {
@@ -168,14 +178,15 @@ function drawCavalry(ctx, dpr, sprites, u) {
   drawLayer(ctx, A.horse[gait]);
   burnGlow(ctx, u, 30 * K, 14 * K);
   ctx.save();
-  ctx.translate(-2 * K, -24 * K);
+  ctx.translate(-1 * K, -22 * K);
+  ctx.scale(1.2, 1.2);
   drawLayer(ctx, A.rider);
   ctx.restore();
   // lance held out front; levels out when charging and jabs on a strike
   const p = 1 - u.atk;
   const thrust = u.atk > 0 ? Math.sin(p * Math.PI) * 20 * K : 0;
-  ctx.translate(8 * K, -16 * K);
-  ctx.rotate(lerp(-0.62, -0.2, Math.max(u.charge, u.atk)));
+  ctx.translate(6 * K, -17 * K);
+  ctx.rotate(lerp(-0.62, -0.22, Math.max(u.charge, u.atk)));
   ctx.translate(thrust, 0);
   drawLayer(ctx, A.lance);
 }
@@ -363,8 +374,8 @@ export function stampArrow(g, a) {
 // [canvas width in art px, body x, body y, drawing]
 const ICONS = {
   flamethrower: [96, 32, 33, (g, S) => {
-    g.translate(9 * K, 10 * K);
-    g.rotate(0.14);
+    g.translate(8 * K, 5 * K);
+    g.rotate(0.08);
     drawLayer(g, S.nozzle);
   }],
   roman: [100, 50, 47, (g, S) => {
@@ -417,10 +428,11 @@ export function paintUnitIcon(canvas, sprites, species) {
     drawLayer(g, S.shadow);
     drawLayer(g, S.horse[1]);
     g.save();
-    g.translate(-2 * K, -24 * K);
+    g.translate(-1 * K, -22 * K);
+    g.scale(1.2, 1.2);
     drawLayer(g, S.rider);
     g.restore();
-    g.translate(8 * K, -16 * K);
+    g.translate(6 * K, -17 * K);
     g.rotate(-0.62);
     drawLayer(g, S.lance);
   } else {

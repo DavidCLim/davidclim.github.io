@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=11';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=11';
+import { TAU, K } from './config.js?v=12';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT } from './sprites.js?v=12';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -166,103 +166,140 @@ function drawNozzle(g, firing) {
 
 // ---------------------------------------------------------------- roman
 function drawRomanBody(g, front, gz, angry) {
-  eggBody(g, '#d33336', '#b92529');
-  g.fillStyle = 'rgba(255, 255, 255, 0.22)';
+  eggBody(g, '#d92c30', '#bd2227');
+  // a dotted, slightly darker belly like the original
+  g.fillStyle = 'rgba(0, 0, 0, 0.07)';
   g.beginPath();
-  g.ellipse(-11, -3, 3, 4.6, -0.2, 0, TAU);
+  g.ellipse(2, 12, 15, 9, 0, 0, TAU);
   g.fill();
 
-  const xs = front ? [-8.4, 8.4] : [-1.5, 12.8];
-  bigEyes(g, xs, gz, -3.2, 4.8, 5);
+  const xs = front ? [-8, 8] : [-1.5, 11.5];
+  for (const x of xs) {
+    g.fillStyle = '#fbf3ee';
+    g.strokeStyle = OUT;
+    g.lineWidth = 1.2;
+    g.beginPath();
+    g.ellipse(x, 0.4, 4.3, 3.6, 0, 0, TAU);
+    g.fill();
+    g.stroke();
+    g.fillStyle = '#17100f';
+    g.beginPath();
+    g.arc(x + gz[0] * 0.9, 0.9, 2.3, 0, TAU);
+    g.fill();
+  }
   if (angry) {
     g.strokeStyle = OUT;
-    g.lineWidth = 1.6;
+    g.lineWidth = 2;
     g.beginPath();
     for (const x of xs) {
-      g.moveTo(x - 5.4, -9);
-      g.lineTo(x + 4.6, -6.2);
+      g.moveTo(x - 5, -4.8);
+      g.lineTo(x + 5, -1.6);
     }
     g.stroke();
   }
-  if (front) smile(g, 0, 5, 4.2);
-  else {
+  if (front) {
+    g.strokeStyle = OUT;
+    g.lineWidth = 1.3;
+    g.beginPath();
+    g.arc(0, 6.6, 4, Math.PI * 0.15, Math.PI * 0.85);
+    g.stroke();
+  } else {
     g.strokeStyle = OUT;
     g.lineWidth = 1.5;
     g.beginPath();
-    g.moveTo(3.5, 8);
-    g.lineTo(11, 8);
+    g.moveTo(4, 10);
+    g.lineTo(11, 10);
     g.stroke();
   }
 
-  dome(g, '#d43234', 18.8, 11.5, -13);
-  g.fillStyle = '#f0a53a';
+  // the small red dome of the helmet, with a diamond crest at the back
+  g.fillStyle = '#d92c30';
   g.strokeStyle = OUT;
   g.lineWidth = 1.5;
-  rr(g, -23, -15.3, 46, 7, 3.4);
-  g.fill();
-  g.stroke();
-  g.fillStyle = '#f8c968';
-  g.fillRect(-19, -14, 38, 1.4);
-  g.fillStyle = '#d6322f';
-  g.strokeStyle = '#f6efe6';
-  g.lineWidth = 1.4;
   g.beginPath();
-  g.ellipse(-8, -25.6, 4.2, 3, 0, 0, TAU);
-  g.fill();
-  g.stroke();
-}
-
-// Origin: where the spear is gripped. Shaft runs along +x.
-function drawSpear(g) {
-  g.strokeStyle = OUT;
-  g.lineWidth = 3.8;
-  g.lineCap = 'butt';
-  g.beginPath();
-  g.moveTo(-17, 0);
-  g.lineTo(36, 0);
-  g.stroke();
-  g.strokeStyle = '#c8923c';
-  g.lineWidth = 2.2;
-  g.beginPath();
-  g.moveTo(-16.5, 0);
-  g.lineTo(36, 0);
-  g.stroke();
-  g.lineCap = 'round';
-  g.fillStyle = '#8a5a2b';
-  g.fillRect(33, -2.2, 2.6, 4.4);
-  g.fillStyle = '#b9bcc6';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.1;
-  g.beginPath();
-  g.moveTo(35.5, -3.4);
-  g.lineTo(47, 0);
-  g.lineTo(35.5, 3.4);
+  g.ellipse(-1, -14.5, 14.5, 9.5, 0, Math.PI, TAU);
   g.closePath();
   g.fill();
   g.stroke();
+  g.strokeStyle = '#f7e9e6';
+  g.lineWidth = 1.5;
+  g.beginPath();
+  g.moveTo(-12.5, -27);
+  g.lineTo(-9.2, -30.3);
+  g.lineTo(-5.9, -27);
+  g.lineTo(-9.2, -23.7);
+  g.closePath();
+  g.stroke();
+  // the big orange visor band across the forehead
+  g.fillStyle = '#f0a63c';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.5;
+  g.beginPath();
+  g.moveTo(-21, -9.5);
+  g.quadraticCurveTo(-18, -19, -1, -19.5);
+  g.quadraticCurveTo(15, -19, 22.5, -9.5);
+  g.quadraticCurveTo(3, -4.5, -21, -9.5);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.fillStyle = 'rgba(255, 255, 255, 0.28)';
+  g.beginPath();
+  g.moveTo(-14, -14.5);
+  g.quadraticCurveTo(-2, -18, 12, -14.5);
+  g.quadraticCurveTo(-2, -15.5, -14, -14.5);
+  g.fill();
+}
+
+// Origin: the hand. A thin gold shaft with a round grey head.
+function drawSpear(g) {
+  g.lineCap = 'butt';
+  g.strokeStyle = OUT;
+  g.lineWidth = 3;
+  g.beginPath();
+  g.moveTo(-14, 0);
+  g.lineTo(52, 0);
+  g.stroke();
+  g.strokeStyle = '#d9a64a';
+  g.lineWidth = 1.7;
+  g.beginPath();
+  g.moveTo(-13.5, 0);
+  g.lineTo(52, 0);
+  g.stroke();
+  g.lineCap = 'round';
+  g.fillStyle = '#a9adb8';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.1;
+  g.beginPath();
+  g.moveTo(51, -1.6);
+  g.quadraticCurveTo(54, -4.6, 59, -3);
+  g.quadraticCurveTo(62, 0, 59, 3);
+  g.quadraticCurveTo(54, 4.6, 51, 1.6);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#6f7380';
+  g.beginPath();
+  g.arc(57.6, 0, 1.2, 0, TAU);
+  g.fill();
 }
 
 // Origin: the middle of the shield.
 function drawShield(g) {
-  g.fillStyle = '#e8a42c';
+  g.fillStyle = '#eaa534';
   g.strokeStyle = OUT;
-  g.lineWidth = 1.5;
-  rr(g, -5.2, -13.5, 10.4, 27, 2.2);
+  g.lineWidth = 1.4;
+  rr(g, -5.4, -15.5, 10.8, 31, 1.8);
   g.fill();
   g.stroke();
-  g.fillStyle = '#f5c35c';
-  g.fillRect(-3.4, -11.5, 2.2, 23);
-  g.fillStyle = '#f6e7b0';
-  g.strokeStyle = '#7b5a22';
-  g.lineWidth = 1.2;
+  g.fillStyle = '#f6c564';
+  g.fillRect(-3.8, -13.5, 2, 27);
+  g.fillStyle = '#d4eef2';
+  g.strokeStyle = '#6a5322';
+  g.lineWidth = 1.1;
   g.beginPath();
-  g.arc(0, 0, 3.4, 0, TAU);
+  g.arc(0, 0, 2.9, 0, TAU);
   g.fill();
   g.stroke();
-  g.fillStyle = '#b98a2c';
-  g.beginPath();
-  g.arc(0, 0, 1.3, 0, TAU);
-  g.fill();
 }
 
 // ---------------------------------------------------------------- grenadier
@@ -325,6 +362,7 @@ function drawGrenBody(g, front, gz) {
 
 // Origin: the middle of the bomb.
 function drawBomb(g, lit) {
+  g.scale(1.22, 1.22);
   g.fillStyle = '#1e1d24';
   g.strokeStyle = OUT;
   g.lineWidth = 1.4;
@@ -463,176 +501,226 @@ function drawKnightBody(g, front, gz) {
   drawRiderHead(g);
 }
 
-// Origin: the hand. The shaft runs along +x.
+// Origin: the hand. A long thin gold shaft with a gold-and-grey head.
 function drawLance(g) {
   g.lineCap = 'butt';
   g.strokeStyle = OUT;
-  g.lineWidth = 3.6;
+  g.lineWidth = 3;
   g.beginPath();
-  g.moveTo(-18, 0);
+  g.moveTo(-16, 0);
   g.lineTo(58, 0);
   g.stroke();
-  g.strokeStyle = '#c8923c';
-  g.lineWidth = 2;
+  g.strokeStyle = '#d9a64a';
+  g.lineWidth = 1.7;
   g.beginPath();
-  g.moveTo(-17.5, 0);
+  g.moveTo(-15.5, 0);
   g.lineTo(58, 0);
   g.stroke();
   g.lineCap = 'round';
-  g.fillStyle = '#b9bcc6';
+  g.fillStyle = '#f0cc4a';
   g.strokeStyle = OUT;
-  g.lineWidth = 1.1;
+  g.lineWidth = 1;
   g.beginPath();
-  g.moveTo(56, -3.2);
+  g.moveTo(56, -2.4);
+  g.lineTo(62, -3.6);
   g.lineTo(70, 0);
-  g.lineTo(56, 3.2);
+  g.lineTo(62, 3.6);
+  g.lineTo(56, 2.4);
   g.closePath();
   g.fill();
   g.stroke();
+  g.fillStyle = '#c9ccd6';
+  g.beginPath();
+  g.moveTo(62, -3.2);
+  g.lineTo(70, 0);
+  g.lineTo(62, 3.2);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  // the brown glove
+  g.fillStyle = '#6e4326';
+  g.beginPath();
+  g.arc(0, 0, 2.6, 0, TAU);
+  g.fill();
 }
 
 // ---------------------------------------------------------------- cavalry (the horse)
+// Thin grey legs that scissor as the horse gallops. Per gait pose:
+// [hip x, foot dx, knee bend].
 const LEGS = [
-  // [hipX, [foot dx per gait pose]]  gait: stretched, gathered, reversed, gathered
-  [21, [11, 2, -9, 3]],
-  [14, [14, 4, -5, 5]],
-  [-14, [-12, -3, 9, -2]],
-  [-21, [-15, -5, 7, -4]],
+  [17, [13, 3, -9, 2]],
+  [11, [8, 5, -4, 1]],
+  [-11, [-9, -2, 8, -1]],
+  [-17, [-14, -6, 4, -3]],
 ];
 
 function drawHorse(g, gait) {
-  // far legs first, then the body, then the near legs
   const leg = (hipX, dx, near) => {
+    const fx = hipX + dx;
     g.strokeStyle = OUT;
-    g.lineWidth = 4;
+    g.lineWidth = 3.4;
     g.beginPath();
-    g.moveTo(hipX, 8);
-    g.quadraticCurveTo(hipX + dx * 0.4, 18, hipX + dx, 26);
+    g.moveTo(hipX, 7);
+    g.lineTo(hipX + dx * 0.55 + 1.5, 17);
+    g.lineTo(fx, 26);
     g.stroke();
-    g.strokeStyle = near ? '#dcd6c6' : '#bdb8ab';
-    g.lineWidth = 2.4;
+    g.strokeStyle = near ? '#c9c4b8' : '#aaa598';
+    g.lineWidth = 1.9;
     g.beginPath();
-    g.moveTo(hipX, 8);
-    g.quadraticCurveTo(hipX + dx * 0.4, 18, hipX + dx, 26);
+    g.moveTo(hipX, 7);
+    g.lineTo(hipX + dx * 0.55 + 1.5, 17);
+    g.lineTo(fx, 26);
     g.stroke();
-    g.fillStyle = '#3a3a40';
+    g.fillStyle = '#4a4650';
     g.beginPath();
-    g.ellipse(hipX + dx + 0.6, 27, 2.6, 1.8, 0, 0, TAU);
+    g.ellipse(fx + 0.8, 26.6, 2.3, 1.5, 0, 0, TAU);
     g.fill();
   };
   leg(LEGS[1][0], LEGS[1][1][gait], false);
   leg(LEGS[3][0], LEGS[3][1][gait], false);
 
-  // tail
+  // tail, a dark brown sweep down and back
+  g.fillStyle = '#5d4339';
   g.strokeStyle = OUT;
-  g.lineWidth = 5.2;
+  g.lineWidth = 1.3;
   g.beginPath();
-  g.moveTo(-29, -5);
-  g.bezierCurveTo(-42, -6, -46, 6, -44, 14);
-  g.stroke();
-  g.strokeStyle = '#55494f';
-  g.lineWidth = 3.4;
-  g.beginPath();
-  g.moveTo(-29, -5);
-  g.bezierCurveTo(-42, -6, -46, 6, -44, 14);
+  g.moveTo(-23, -4);
+  g.bezierCurveTo(-34, -7, -41, 2, -43, 13);
+  g.bezierCurveTo(-37, 7, -31, 6, -22, 4);
+  g.closePath();
+  g.fill();
   g.stroke();
 
-  // neck, head
-  g.fillStyle = '#e7e0cf';
+  // neck and head
+  g.fillStyle = '#e6dfcf';
   g.strokeStyle = OUT;
-  g.lineWidth = 1.6;
+  g.lineWidth = 1.5;
   g.beginPath();
-  g.moveTo(16, -8);
-  g.lineTo(29, -27);
-  g.lineTo(38, -20);
-  g.lineTo(27, 2);
+  g.moveTo(12, -9);
+  g.lineTo(21, -27);
+  g.lineTo(30, -23);
+  g.lineTo(24, 0);
   g.closePath();
   g.fill();
   g.stroke();
   g.beginPath();
-  g.ellipse(39.5, -23.5, 10.5, 6, 0.55, 0, TAU);
-  g.fill();
-  g.stroke();
-  g.fillStyle = '#d7d0be';
-  g.beginPath();
-  g.ellipse(45, -20, 4.4, 3.4, 0.55, 0, TAU);
-  g.fill();
-  g.fillStyle = '#2a2830';
-  g.beginPath();
-  g.arc(38, -26, 1.2, 0, TAU);
-  g.arc(48, -20, 0.9, 0, TAU);
-  g.fill();
-  g.fillStyle = '#e7e0cf';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.2;
-  g.beginPath();
-  g.moveTo(31, -29);
-  g.lineTo(33, -36);
-  g.lineTo(36, -28);
+  g.moveTo(22, -29);
+  g.quadraticCurveTo(26, -34, 34, -31);
+  g.quadraticCurveTo(42, -26, 44, -17);
+  g.quadraticCurveTo(43, -12, 39, -13);
+  g.quadraticCurveTo(33, -17, 27, -19);
   g.closePath();
   g.fill();
   g.stroke();
-  // mane
-  g.strokeStyle = '#4a4350';
-  g.lineWidth = 3.2;
+  g.fillStyle = '#d5cdbb';
   g.beginPath();
-  g.moveTo(31, -31);
-  g.quadraticCurveTo(22, -22, 16, -12);
+  g.ellipse(41.5, -15.5, 3, 2.4, 0.5, 0, TAU);
+  g.fill();
+  g.fillStyle = '#26232b';
+  g.beginPath();
+  g.arc(32, -26, 1.1, 0, TAU);
+  g.arc(43, -15.8, 0.8, 0, TAU);
+  g.fill();
+  // ears
+  g.fillStyle = '#e6dfcf';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.1;
+  g.beginPath();
+  g.moveTo(24, -31);
+  g.lineTo(25, -38.5);
+  g.lineTo(29.5, -31.5);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  // dark mane along the neck
+  g.strokeStyle = '#5d4339';
+  g.lineWidth = 2.8;
+  g.beginPath();
+  g.moveTo(22, -30);
+  g.quadraticCurveTo(14, -22, 10, -11);
   g.stroke();
 
-  // body
-  const gr = g.createLinearGradient(0, -14, 0, 14);
-  gr.addColorStop(0, '#eee8d8');
-  gr.addColorStop(1, '#d9d2bf');
+  // body, with a brown patch up by the shoulder
+  const gr = g.createLinearGradient(0, -13, 0, 13);
+  gr.addColorStop(0, '#ece6d7');
+  gr.addColorStop(1, '#d7d0bd');
   g.fillStyle = gr;
   g.strokeStyle = OUT;
-  g.lineWidth = 1.8;
+  g.lineWidth = 1.7;
   g.beginPath();
-  g.ellipse(0, 0, 31, 13.6, 0, 0, TAU);
+  g.ellipse(0, 0, 27, 12.6, 0, 0, TAU);
   g.fill();
   g.stroke();
+  g.save();
+  g.beginPath();
+  g.ellipse(0, 0, 26, 11.8, 0, 0, TAU);
+  g.clip();
+  g.fillStyle = '#9a6e55';
+  g.beginPath();
+  g.ellipse(12, -5, 5.5, 3.4, 0.5, 0, TAU);
+  g.fill();
+  g.beginPath();
+  g.ellipse(-4, 6, 3.4, 2.2, 0.2, 0, TAU);
+  g.fill();
+  g.restore();
 
   leg(LEGS[0][0], LEGS[0][1][gait], true);
   leg(LEGS[2][0], LEGS[2][1][gait], true);
 }
 
-// Origin: the rider's body centre.
+// Origin: the rider's body centre. A yellow rounded block under a grey helmet.
 function drawRider(g) {
   const gr = g.createLinearGradient(0, -11, 0, 11);
-  gr.addColorStop(0, '#f6d04c');
-  gr.addColorStop(1, '#e0aa28');
+  gr.addColorStop(0, '#f8d84e');
+  gr.addColorStop(1, '#e3ac2a');
   g.fillStyle = gr;
   g.strokeStyle = OUT;
   g.lineWidth = 1.6;
-  g.beginPath();
-  g.ellipse(0, 0, 10, 11.5, 0, 0, TAU);
+  rr(g, -8.6, -9, 17.2, 20, 5);
   g.fill();
   g.stroke();
-  g.fillStyle = '#1b1920';
-  g.beginPath();
-  g.arc(2.6, -1, 1.3, 0, TAU);
-  g.arc(7.4, -1, 1.3, 0, TAU);
-  g.fill();
+  // the belt
+  g.fillStyle = '#7a4c2c';
+  g.fillRect(-8, 6, 16, 3.4);
+  // eyes and a little smile
+  for (const x of [1.4, 6.2]) {
+    g.fillStyle = '#fffdf4';
+    g.strokeStyle = OUT;
+    g.lineWidth = 0.9;
+    g.beginPath();
+    g.ellipse(x, -2.4, 2.1, 2.3, 0, 0, TAU);
+    g.fill();
+    g.stroke();
+    g.fillStyle = '#14121a';
+    g.beginPath();
+    g.arc(x + 0.7, -2.2, 1.15, 0, TAU);
+    g.fill();
+  }
   g.strokeStyle = OUT;
-  g.lineWidth = 1;
+  g.lineWidth = 0.9;
   g.beginPath();
-  g.arc(5, 3.2, 2.4, Math.PI * 0.15, Math.PI * 0.85);
+  g.arc(4, 2.2, 1.8, Math.PI * 0.15, Math.PI * 0.85);
   g.stroke();
-  g.fillStyle = '#a9aeb8';
+  // grey helmet with a gold spike
+  g.fillStyle = '#9fa5b6';
   g.strokeStyle = OUT;
-  g.lineWidth = 1.3;
+  g.lineWidth = 1.4;
   g.beginPath();
-  g.ellipse(0, -7, 9.2, 7, 0, Math.PI, TAU);
+  g.ellipse(0, -8.6, 9.2, 6.4, 0, Math.PI, TAU);
   g.closePath();
   g.fill();
   g.stroke();
-  g.fillStyle = '#3b3d46';
-  rr(g, -11, -7.6, 22, 2.8, 1.4);
+  g.fillStyle = '#4c5062';
+  rr(g, -10.4, -9.6, 20.8, 2.8, 1.4);
   g.fill();
-  g.fillStyle = '#d8c24a';
+  g.fillStyle = '#e9c13a';
   g.beginPath();
-  g.arc(0, -14.4, 1.6, 0, TAU);
+  g.moveTo(-1.4, -14.6);
+  g.lineTo(0, -18.2);
+  g.lineTo(1.4, -14.6);
+  g.closePath();
   g.fill();
+  g.stroke();
 }
 
 // ---------------------------------------------------------------- ninja
@@ -747,25 +835,25 @@ function drawKatana(g) {
 function ghostBody(g, tint, edge) {
   g.fillStyle = tint;
   g.strokeStyle = edge;
-  g.lineWidth = 1.6;
+  g.lineWidth = 1.2;
   g.beginPath();
-  g.moveTo(-15, 18);
-  g.lineTo(-15, -6);
-  g.bezierCurveTo(-15, -22, 15, -22, 15, -6);
-  g.lineTo(15, 18);
-  g.quadraticCurveTo(10, 11, 5, 18);
-  g.quadraticCurveTo(0, 25, -5, 18);
-  g.quadraticCurveTo(-10, 11, -15, 18);
+  g.moveTo(-15, 20);
+  g.lineTo(-15.5, -4);
+  g.bezierCurveTo(-16, -24, 16, -24, 15.5, -4);
+  g.lineTo(15, 20);
+  g.quadraticCurveTo(10, 14, 5, 20);
+  g.quadraticCurveTo(0, 14, -5, 20);
+  g.quadraticCurveTo(-10, 14, -15, 20);
   g.closePath();
   g.fill();
   g.stroke();
-  g.fillStyle = '#7a7c8a';
+  g.fillStyle = '#9b9ba6';
   g.beginPath();
-  g.ellipse(-5.5, -4, 2.2, 3, 0, 0, TAU);
-  g.ellipse(5.5, -4, 2.2, 3, 0, 0, TAU);
+  g.ellipse(-5.5, -4, 2.4, 3.4, 0, 0, TAU);
+  g.ellipse(5.5, -4, 2.4, 3.4, 0, 0, TAU);
   g.fill();
   g.beginPath();
-  g.ellipse(0, 6, 2.2, 3, 0, 0, TAU);
+  g.ellipse(0, 6, 1.9, 2.6, 0, 0, TAU);
   g.fill();
 }
 
@@ -812,16 +900,21 @@ export const DROPS = {
     }
   },
   roman(g) {
-    g.fillStyle = '#f0a53a';
+    g.fillStyle = '#e8647a';
     g.strokeStyle = OUT;
     g.lineWidth = 1;
     g.beginPath();
-    g.ellipse(0, 1, 12, 8.5, 0, Math.PI, TAU);
+    g.ellipse(0, 1, 10, 6.5, 0, 0, Math.PI);
     g.closePath();
     g.fill();
     g.stroke();
-    g.fillStyle = '#e08a22';
-    rr(g, -13, 0.4, 26, 2.8, 1.4);
+    g.fillStyle = '#f0a63c';
+    g.beginPath();
+    g.moveTo(-13, -4);
+    g.quadraticCurveTo(0, -6, 13, -4);
+    g.quadraticCurveTo(10, 2, 0, 2);
+    g.quadraticCurveTo(-10, 2, -13, -4);
+    g.closePath();
     g.fill();
     g.stroke();
   },
@@ -880,16 +973,16 @@ export const DROPS = {
 
 // Light, tinted ghosts that keep the unit's headgear.
 const GHOSTS = {
-  flamethrower: ['#f2dcd8', '#c9aaa6', (g) => dome(g, '#2f2e36', 11, 8, -10)],
-  roman: ['#f8d9dc', '#cfa7ac', (g) => {
+  flamethrower: ['#f6efe9', '#d5cbc4', (g) => dome(g, '#2f2e36', 11, 8, -10)],
+  roman: ['#f9eded', '#d9c4c4', (g) => {
     dome(g, '#d43234', 11, 8, -10);
     g.fillStyle = '#f0a53a';
     rr(g, -13.5, -12.5, 27, 4.6, 2.2);
     g.fill();
     g.stroke();
   }],
-  grenadier: ['#d6ecf0', '#a3c4ca', (g) => dome(g, '#3c4a36', 12, 8, -10)],
-  archer: ['#e6dcf2', '#b9aacd', (g) => {
+  grenadier: ['#ecf4f4', '#c4d3d3', (g) => dome(g, '#3c4a36', 12, 8, -10)],
+  archer: ['#f1ecf6', '#cfc6d8', (g) => {
     g.fillStyle = '#4d8a46';
     g.strokeStyle = OUT;
     g.lineWidth = 1.2;
@@ -901,7 +994,7 @@ const GHOSTS = {
     g.fill();
     g.stroke();
   }],
-  ninja: ['#dedee4', '#aeaeb8', (g) => {
+  ninja: ['#eeedf0', '#cbcad0', (g) => {
     g.fillStyle = '#d92b2f';
     g.strokeStyle = OUT;
     g.lineWidth = 1;
@@ -909,8 +1002,8 @@ const GHOSTS = {
     g.fill();
     g.stroke();
   }],
-  knight: ['#faf1cf', '#d6c78f', (g) => dome(g, '#a9aeb8', 11.5, 8, -10)],
-  cavalry: ['#f1ede2', '#c9c3b2', (g) => dome(g, '#a9aeb8', 11.5, 8, -10)],
+  knight: ['#f9f4dd', '#dad2ac', (g) => dome(g, '#a9aeb8', 11.5, 8, -10)],
+  cavalry: ['#f5f1e6', '#d8d2c2', (g) => dome(g, '#a9aeb8', 11.5, 8, -10)],
 };
 
 // ---------------------------------------------------------------- build
@@ -948,8 +1041,8 @@ export function buildUnitArt() {
   art.grenadier = {
     feet: dark,
     ...eggSet(drawGrenBody),
-    bomb: makeLayer(-10, -18, 12, 9, (g) => drawBomb(g, false)),
-    bombLit: makeLayer(-10, -18, 12, 9, (g) => drawBomb(g, true)),
+    bomb: makeLayer(-10, -18, 14, 10, (g) => drawBomb(g, false)),
+    bombLit: makeLayer(-10, -18, 14, 10, (g) => drawBomb(g, true)),
   };
 
   art.archer = {

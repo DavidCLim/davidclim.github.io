@@ -1,4 +1,4 @@
-import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=11';
+import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=12';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -775,15 +775,15 @@ export class World {
       if (v && !v.dead && Math.hypot(v.x - u.x, v.y - u.y) <= d.reach * 1.5 + v.def.radius) {
         this.hurt(v, d.damage * (0.85 + Math.random() * 0.3), v.x, v.y);
         if (d.weapon === 'katana') {
-          for (let i = 0; i < 2; i++) {
+          for (let i = 0; i < 3; i++) {
             this.puffs.push({
-              x: v.x + (Math.random() - 0.5) * 12,
+              x: v.x + (Math.random() - 0.5) * 14,
               y: v.y + (Math.random() - 0.5) * 8,
               vx: (Math.random() - 0.5) * 30,
               vy: -10 - Math.random() * 20,
               age: 0,
               life: 0.45 + Math.random() * 0.25,
-              size: 4 + Math.random() * 3,
+              size: 6 + Math.random() * 6,
               white: true,
             });
           }

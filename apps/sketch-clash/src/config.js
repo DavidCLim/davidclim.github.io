@@ -94,7 +94,7 @@ export const FLAMETHROWER = {
   burnDps: 9,
   onTime: 1.7,
   offTime: 0.7,
-  pivot: { x: 9 * K, y: 10 * K },
+  pivot: { x: 8 * K, y: 5 * K },
   muzzleLen: 46 * K,
 };
 
