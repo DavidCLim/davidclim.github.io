@@ -1,6 +1,6 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=30';
-import { drawLayer, OUT } from './sprites.js?v=30';
-import { drawDrop } from './art_units.js?v=30';
+import { TAU, K, UNIT, FEET } from './config.js?v=31';
+import { drawLayer, OUT } from './sprites.js?v=31';
+import { drawDrop } from './art_units.js?v=31';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -184,16 +184,17 @@ function drawCavalry(ctx, dpr, sprites, u) {
   drawLayer(ctx, A.horse[gait]);
   burnGlow(ctx, u, 30 * K, 14 * K);
   ctx.save();
-  ctx.translate(-7 * K, -14 * K);
+  ctx.translate(-8 * K, -18 * K);
+  ctx.scale(1.12, 1.12);
   drawLayer(ctx, A.rider);
   ctx.restore();
   // lance held out front; levels out when charging and jabs on a strike
   const p = 1 - u.atk;
   const thrust = u.atk > 0 ? Math.sin(p * Math.PI) * 20 * K : 0;
-  ctx.translate(-3 * K, -11 * K);
+  ctx.translate(-3 * K, -14 * K);
   ctx.rotate(lerp(-0.64, -0.22, Math.max(u.charge, u.atk)));
-  ctx.scale(0.62, 0.62);
-  ctx.translate(thrust / 0.62, 0);
+  ctx.scale(0.7, 0.7);
+  ctx.translate(thrust / 0.7, 0);
   drawLayer(ctx, A.lance);
 }
 
@@ -478,7 +479,7 @@ const ICONS = {
     g.scale(0.85, 0.85);
     drawLayer(g, S.arrow);
   }],
-  cavalry: [84, 38, 39, null],
+  cavalry: [84, 41, 39, null],
   ninja: [84, 32, 39, (g, S) => {
     g.translate(14 * K, 10 * K);
     g.rotate(-0.8);
@@ -508,12 +509,13 @@ export function paintUnitIcon(canvas, sprites, species) {
     drawLayer(g, S.shadow);
     drawLayer(g, S.horse[4]);
     g.save();
-    g.translate(-7 * K, -14 * K);
+    g.translate(-8 * K, -18 * K);
+    g.scale(1.12, 1.12);
     drawLayer(g, S.rider);
     g.restore();
-    g.translate(-3 * K, -11 * K);
+    g.translate(-3 * K, -14 * K);
     g.rotate(-0.64);
-    g.scale(0.62, 0.62);
+    g.scale(0.7, 0.7);
     drawLayer(g, S.lance);
   } else {
     drawLayer(g, S.feet[0]);

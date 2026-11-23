@@ -1,8 +1,8 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=30';
-import { World } from './world.js?v=30';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=30';
-import { buildUnitArt } from './art_units.js?v=30';
-import { drawUnit, drawFx, placeUnit, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=30';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=31';
+import { World } from './world.js?v=31';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=31';
+import { buildUnitArt } from './art_units.js?v=31';
+import { drawUnit, drawFx, placeUnit, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=31';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -894,7 +894,7 @@ function render() {
   for (const u of units) {
     if (u.team) {
       ctx.setTransform(dpr, 0, 0, dpr, u.x * dpr, (u.y + FEET + 1) * dpr);
-      if (u.species === 'cavalry') ctx.scale(1.4, 1.1);
+      if (u.species === 'cavalry') ctx.scale(1.55, 1.15);
       drawLayer(ctx, sprites.ring[u.team]);
     }
     drawBody(u);

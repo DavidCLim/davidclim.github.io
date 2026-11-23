@@ -160,8 +160,8 @@ export const ARCHER = {
 export const CAVALRY = {
   kind: 'cavalry',
   hp: 170,
-  radius: 13 * UNIT,
-  sep: 18 * UNIT,
+  radius: 15 * UNIT,
+  sep: 21 * UNIT,
   speed: 100,
   sight: 500,
   reach: 50 * R,

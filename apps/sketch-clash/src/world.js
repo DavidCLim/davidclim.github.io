@@ -1,4 +1,4 @@
-import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=30';
+import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=31';
 
 export const CELL = 32;
 const SEP_CELL = 20;
