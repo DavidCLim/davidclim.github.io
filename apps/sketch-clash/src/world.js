@@ -1,4 +1,4 @@
-import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=41';
+import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=42';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -800,7 +800,7 @@ export class World {
         }
         // spears stay slanted over the shoulder until a fight is close
         u.pose = near ? Math.min(1, u.pose + dt * 6) : Math.max(0, u.pose - dt * 5);
-        if (u.moving) u.anim += dt * 9;
+        if (u.moving) u.anim += dt * 7.3;
       } else this.idleStep(u, dt);
       return;
     }
@@ -865,7 +865,7 @@ export class World {
       u.aim -= u.aim * Math.min(1, dt * 6);
       this.marchStep(u, dt, speed * 0.85);
     }
-    if (u.moving) u.anim += dt * 9;
+    if (u.moving) u.anim += dt * 7.3;
     if (u.target || u.moving) u.pose = Math.min(1, u.pose + dt * 6);
     else this.idleStep(u, dt);
   }
@@ -948,7 +948,7 @@ export class World {
       }
     }
 
-    if (u.moving) u.anim += dt * 9;
+    if (u.moving) u.anim += dt * 7.3;
     if (t || u.moving || u.prone > 0) u.pose = Math.min(1, u.pose + dt * 6);
     else this.idleStep(u, dt);
   }
@@ -993,7 +993,7 @@ export class World {
   readyUp(u, dt) {
     if (u.target || u.moving) u.pose = Math.min(1, u.pose + dt * 6);
     else this.idleStep(u, dt);
-    if (u.moving) u.anim += dt * 9;
+    if (u.moving) u.anim += dt * 7.3;
   }
 
   stepFlame(u, dt) {
@@ -1257,7 +1257,7 @@ export class World {
       u.reloadT = Math.max(0, u.reloadT - dt);
       u.aimHold = Math.max(0, u.aimHold - dt);
       if (u.drawT > 0) {
-        u.aimHold = 0.7;
+        u.aimHold = 0.9;
         u.drawT += dt;
         if (u.drawT >= d.drawTime) {
           this.loose(u, t);
@@ -1276,7 +1276,7 @@ export class World {
       this.marchStep(u, dt, speed * 0.85);
     }
     // the bow is carried low while walking and only comes up for the shot
-    if (u.moving) u.anim += dt * 9;
+    if (u.moving) u.anim += dt * 7.3;
     if (u.aimHold > 0) u.pose = Math.min(1, u.pose + dt * 8);
     else u.pose = Math.max(0, u.pose - dt * 5);
   }

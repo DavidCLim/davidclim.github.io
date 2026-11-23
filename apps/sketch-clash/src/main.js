@@ -1,8 +1,8 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=41';
-import { World } from './world.js?v=41';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=41';
-import { buildUnitArt } from './art_units.js?v=41';
-import { drawUnit, drawFx, placeUnit, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=41';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=42';
+import { World } from './world.js?v=42';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=42';
+import { buildUnitArt } from './art_units.js?v=42';
+import { drawUnit, drawFx, placeUnit, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=42';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -713,8 +713,12 @@ function drawSoldier(u) {
 
   const pose = u.pose;
   if (u.moving) {
-    ctx.translate(0, -Math.abs(Math.sin(ph)) * 2.4);
-    ctx.rotate(Math.sin(ph) * 0.07);
+    // an upright waddle, as in the video: the body bobs a little and squashes
+    // down onto its feet as the legs spread
+    const wk = Math.abs(Math.sin(ph));
+    ctx.translate(0, FEET);
+    ctx.scale(1 + 0.045 * (1 - wk), 1 - 0.06 * (1 - wk));
+    ctx.translate(0, -FEET - wk * 1.5);
   } else if (pose < 1) {
     ctx.translate(0, Math.sin(u.breath * 2.2) * 0.55 * (1 - pose));
   }
@@ -789,8 +793,12 @@ function drawSniper(u) {
       ctx.scale(1, 1 - 0.45 * drop);
       ctx.translate(0, -FEET);
     } else if (u.moving) {
-      ctx.translate(0, -Math.abs(Math.sin(ph)) * 2.4);
-      ctx.rotate(Math.sin(ph) * 0.07);
+      // an upright waddle, as in the video: the body bobs a little and squashes
+      // down onto its feet as the legs spread
+      const wk = Math.abs(Math.sin(ph));
+      ctx.translate(0, FEET);
+      ctx.scale(1 + 0.045 * (1 - wk), 1 - 0.06 * (1 - wk));
+      ctx.translate(0, -FEET - wk * 1.5);
     } else if (pose < 1) {
       ctx.translate(0, Math.sin(u.breath * 1.7) * 0.5 * (1 - pose));
     }

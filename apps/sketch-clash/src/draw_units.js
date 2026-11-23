@@ -1,6 +1,6 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=41';
-import { drawLayer, OUT } from './sprites.js?v=41';
-import { drawDrop } from './art_units.js?v=41';
+import { TAU, K, UNIT, FEET } from './config.js?v=42';
+import { drawLayer, OUT } from './sprites.js?v=42';
+import { drawDrop } from './art_units.js?v=42';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -42,8 +42,12 @@ function eggBase(ctx, dpr, sprites, A, u, before) {
   drawLayer(ctx, A.feet[u.moving ? (u.anim | 0) & 3 : 0]);
   const pose = u.pose;
   if (u.moving) {
-    ctx.translate(0, -Math.abs(Math.sin(ph)) * 2.4);
-    ctx.rotate(Math.sin(ph) * 0.07);
+    // an upright waddle, as in the video: the body bobs a little and squashes
+    // down onto its feet as the legs spread
+    const wk = Math.abs(Math.sin(ph));
+    ctx.translate(0, FEET);
+    ctx.scale(1 + 0.045 * (1 - wk), 1 - 0.06 * (1 - wk));
+    ctx.translate(0, -FEET - wk * 1.5);
   } else if (pose < 1) {
     ctx.translate(0, Math.sin(u.breath * 2.2) * 0.55 * (1 - pose));
   }
@@ -53,7 +57,7 @@ function eggBase(ctx, dpr, sprites, A, u, before) {
     ctx.restore();
   }
   if (pose < 0.5) drawLayer(ctx, A.torsoSide[GZ[u.gaze]]);
-  else drawLayer(ctx, (u.species === 'roman' && u.target) || (u.species === 'archer' && u.drawT > 0) ? A.torsoAngry : A.torso);
+  else drawLayer(ctx, (u.species === 'roman' && u.target) || (u.species === 'archer' && u.drawT > u.def.drawTime - 0.55) ? A.torsoAngry : A.torso);
   drawHurtMarks(ctx, sprites, u);
   burnGlow(ctx, u, 20 * K, 23 * K);
   if (u.hit > 0) {
