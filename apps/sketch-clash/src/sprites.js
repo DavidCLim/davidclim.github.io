@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=34';
+import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=36';
 
 // Units are drawn from "art" coordinates matching the reference sprites
 // (origin at the body centre, y down) into small offscreen layers, then
@@ -137,31 +137,28 @@ function drawSoldierTorso(g, front, gaze) {
   g.ellipse(-10.5, -6, 3.4, 5.6, -0.25, 0, TAU);
   g.fill();
 
-  for (const ex of front ? [-8.4, 8.4] : [-2.5, 13.8]) {
+  // eyes: white ovals in a heavy navy ring, a big black pupil pushed to the
+  // upper right of each one
+  for (const ex of front ? [-8.4, 8.4] : [-3.3, 12.6]) {
     g.fillStyle = '#fbfbf6';
-    g.strokeStyle = OUT;
-    g.lineWidth = 1.4;
+    g.strokeStyle = '#13244a';
+    g.lineWidth = 2.3;
     g.beginPath();
-    g.ellipse(ex, -5.9, 5.2, 6, 0, 0, TAU);
+    g.ellipse(ex, -4.2, 4.4, 4.9, 0, 0, TAU);
     g.fill();
     g.stroke();
-    const px = ex + gaze[0];
-    const py = -5.9 + gaze[1];
-    g.fillStyle = '#121016';
+    g.fillStyle = '#0b0c12';
     g.beginPath();
-    g.arc(px, py, 3.4, 0, TAU);
-    g.fill();
-    g.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    g.beginPath();
-    g.arc(px - 1, py - 2, 0.95, 0, TAU);
+    g.arc(ex + 1.5 + gaze[0] * 0.5, -4.6 + gaze[1] * 0.5, 2.9, 0, TAU);
     g.fill();
   }
 
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.3;
+  // the smile: a thick navy bowl
+  g.strokeStyle = '#13244a';
+  g.lineWidth = 2;
   g.beginPath();
-  if (front) g.arc(0, 3.2, 5, Math.PI * 0.15, Math.PI * 0.85);
-  else g.arc(6.9, 3.6, 4, Math.PI * 0.15, Math.PI * 0.85);
+  if (front) g.arc(0, 2.8, 4.3, Math.PI * 0.12, Math.PI * 0.88);
+  else g.arc(6.5, 2.4, 4.2, Math.PI * 0.12, Math.PI * 0.88);
   g.stroke();
 
   g.fillStyle = '#2e4358';
@@ -183,23 +180,74 @@ function drawSoldierTorso(g, front, gaze) {
 }
 
 function drawSoldierRifle(g, firing) {
+  g.lineJoin = 'round';
   g.strokeStyle = OUT;
   g.lineWidth = 1.1;
+  // curved magazine under the receiver
   g.fillStyle = '#2a2b33';
-  rr(g, 7, 1.5, 4, 7.5, 1);
+  g.beginPath();
+  g.moveTo(7.6, 1.8);
+  g.lineTo(12, 1.8);
+  g.quadraticCurveTo(13.4, 6, 12.2, 10.4);
+  g.lineTo(8.2, 10.4);
+  g.quadraticCurveTo(8.6, 6, 7.6, 1.8);
+  g.closePath();
   g.fill();
   g.stroke();
+  // barrel with a front sight and a muzzle brake
+  g.fillStyle = '#4a4d5a';
+  rr(g, 24, -1.3, 14, 2.9, 0.8);
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#2a2b33';
+  rr(g, 36.2, -2.1, 4, 4.5, 0.8);
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#2a2b33';
+  g.fillRect(31, -3.6, 1.5, 2.4);
+  g.strokeRect(31, -3.6, 1.5, 2.4);
+  // receiver and a grooved handguard
   g.fillStyle = '#3b3d48';
-  rr(g, 3.5, -2.8, 33, 5.6, 1.2);
+  rr(g, 3.5, -3.4, 12, 6.4, 1.2);
   g.fill();
   g.stroke();
-  g.fillStyle = '#2b2c35';
-  g.fillRect(6, 0.5, 30, 1.7);
+  g.fillStyle = '#4a4d5a';
+  rr(g, 15, -2.9, 12, 5.4, 1);
+  g.fill();
+  g.stroke();
+  g.strokeStyle = 'rgba(20, 20, 28, 0.7)';
+  g.lineWidth = 0.8;
+  g.beginPath();
+  for (let x = 17.6; x < 26; x += 2.6) {
+    g.moveTo(x, -2.2);
+    g.lineTo(x, 1.8);
+  }
+  g.stroke();
+  // ejection port and a sliver of highlight
+  g.fillStyle = '#23242b';
+  g.fillRect(8.5, -2.4, 4, 1.4);
+  g.fillStyle = 'rgba(190, 192, 205, 0.55)';
+  g.fillRect(5, -3, 10, 0.8);
+  // wooden stock with a butt plate and grain
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.1;
   g.fillStyle = '#cf9b58';
-  rr(g, -7, -3.6, 11.5, 7.2, 1.4);
+  rr(g, -7.6, -3.8, 11.8, 7.6, 1.5);
   g.fill();
   g.stroke();
-  if (firing) star(g, 42, 0, 9, 3.6);
+  g.fillStyle = '#5b4a38';
+  g.fillRect(-7.6, -3.4, 1.8, 6.8);
+  g.strokeStyle = 'rgba(122, 82, 32, 0.8)';
+  g.lineWidth = 0.7;
+  g.beginPath();
+  g.moveTo(-4.4, -1.8);
+  g.lineTo(2.4, -1.8);
+  g.moveTo(-4.4, 0.4);
+  g.lineTo(2.8, 0.4);
+  g.moveTo(-4.4, 2.4);
+  g.lineTo(2.2, 2.4);
+  g.stroke();
+  if (firing) star(g, 46, 0, 9, 3.6);
 }
 
 function drawGhost(g, withHat) {
@@ -355,35 +403,98 @@ export function drawSniperHat(g) {
 
 // Receiver, barrel and scope; origin is the centre of the receiver.
 function drawSniperRifleParts(g, firing) {
+  g.lineJoin = 'round';
   g.strokeStyle = INK;
   g.lineWidth = 1.2;
   // magazine / grip
   g.fillStyle = '#3d414c';
-  rr(g, 8.3, 1.2, 4, 5.2, 0.6);
+  rr(g, 8.3, 1.2, 4, 5.4, 0.6);
   g.fill();
   g.stroke();
-  // barrel, with its pale top edge
+  // folded bipod legs under the barrel
+  g.strokeStyle = INK;
+  g.lineWidth = 1.5;
+  g.beginPath();
+  g.moveTo(30, 1);
+  g.lineTo(26.5, 6.4);
+  g.moveTo(31.5, 1);
+  g.lineTo(35, 6.2);
+  g.stroke();
+  g.strokeStyle = '#6b6f7c';
+  g.lineWidth = 0.8;
+  g.beginPath();
+  g.moveTo(30, 1);
+  g.lineTo(26.5, 6.4);
+  g.moveTo(31.5, 1);
+  g.lineTo(35, 6.2);
+  g.stroke();
+  // long barrel with its pale top edge, then a fat muzzle brake
+  g.strokeStyle = INK;
+  g.lineWidth = 1.2;
   g.fillStyle = '#3d414c';
-  rr(g, 5.5, -3.8, 39.5, 5, 0.6);
+  rr(g, 5.5, -3.8, 36, 5, 0.6);
   g.fill();
+  g.stroke();
+  g.fillStyle = '#2b2d35';
+  rr(g, 41, -4.6, 6, 6.6, 0.8);
+  g.fill();
+  g.stroke();
+  g.strokeStyle = 'rgba(190, 192, 205, 0.6)';
+  g.lineWidth = 0.7;
+  g.beginPath();
+  g.moveTo(43, -3.8);
+  g.lineTo(43, 1.2);
+  g.moveTo(45, -3.8);
+  g.lineTo(45, 1.2);
   g.stroke();
   g.fillStyle = 'rgba(150, 152, 162, 0.85)';
-  g.fillRect(7, -5, 37, 1.1);
-  // scope: a flat dark block on a small mount
+  g.fillRect(7, -5, 33, 1.1);
+  // scope: a tube on two mounts with lens rings at each end
+  g.strokeStyle = INK;
+  g.lineWidth = 1.2;
   g.fillStyle = '#26272e';
   g.fillRect(5, -6, 3, 2.6);
   g.strokeRect(5, -6, 3, 2.6);
-  rr(g, 12, -10.5, 17, 4.6, 0.8);
+  g.fillRect(24, -6, 3, 2.6);
+  g.strokeRect(24, -6, 3, 2.6);
+  rr(g, 12, -10.5, 17, 4.6, 1.4);
   g.fill();
   g.stroke();
-  // receiver
+  g.fillStyle = '#3d414c';
+  rr(g, 10.2, -11.2, 3.4, 6, 0.8);
+  g.fill();
+  g.stroke();
+  rr(g, 27.4, -11.6, 3.8, 7, 0.8);
+  g.fill();
+  g.stroke();
+  g.fillStyle = 'rgba(140, 190, 235, 0.8)';
+  g.fillRect(30.4, -10.4, 0.9, 4.6);
+  g.fillStyle = 'rgba(150, 152, 162, 0.8)';
+  g.fillRect(13.5, -10.1, 12, 0.8);
+  // bolt handle sticking out of the receiver
+  g.strokeStyle = INK;
+  g.lineWidth = 1.2;
+  g.fillStyle = '#3d414c';
+  g.beginPath();
+  g.moveTo(3, -2.6);
+  g.lineTo(0.6, -6.4);
+  g.stroke();
+  g.beginPath();
+  g.arc(0.2, -6.9, 1.5, 0, TAU);
+  g.fill();
+  g.stroke();
+  // receiver (walnut-and-brass look) and stock sliver
   g.fillStyle = '#cc9957';
   rr(g, -5.5, -2.8, 11, 6, 0.6);
   g.fill();
   g.stroke();
   g.fillStyle = '#5a3d28';
   g.fillRect(-4.9, -2.2, 9.8, 1);
-  if (firing) star(g, 50, -1.4, 9, 3.6);
+  g.fillStyle = '#a77836';
+  rr(g, -9.6, -2.2, 5, 5, 0.8);
+  g.fill();
+  g.stroke();
+  if (firing) star(g, 53, -1.4, 9, 3.6);
 }
 
 // Lying on his belly, head to the right, rifle out front. Origin is the
