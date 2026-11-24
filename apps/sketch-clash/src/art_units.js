@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=83';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=83';
+import { TAU, K } from './config.js?v=85';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=85';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -269,6 +269,26 @@ function drawRomanBody(g, front, gz, angry) {
   }
   g.stroke();
 
+  // a bristly red crest, a band that follows the top of the dome
+  g.fillStyle = '#b3171f';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.7;
+  g.beginPath();
+  g.ellipse(-1.6, -13, 16.8, 24.2, 0, Math.PI * 1.1, Math.PI * 1.9);
+  g.lineTo(-1.6 + 16.2 * Math.cos(Math.PI * 1.9), -13 + 18.6 * Math.sin(Math.PI * 1.9));
+  g.ellipse(-1.6, -13, 16.2, 18.6, 0, Math.PI * 1.9, Math.PI * 1.1, true);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.strokeStyle = 'rgba(255, 150, 150, 0.55)';
+  g.lineWidth = 0.8;
+  g.beginPath();
+  for (let i = 0; i < 9; i++) {
+    const t = Math.PI * (1.18 + i * 0.1);
+    g.moveTo(-1.6 + 16.4 * Math.cos(t), -13 + 19.4 * Math.sin(t));
+    g.lineTo(-1.6 + 16.8 * Math.cos(t), -13 + 23.4 * Math.sin(t));
+  }
+  g.stroke();
   // red dome of the helmet, a half-ellipse sitting on the visor
   const dg = g.createLinearGradient(0, -32, 0, -20);
   dg.addColorStop(0, '#f24545');
@@ -298,26 +318,6 @@ function drawRomanBody(g, front, gz, angry) {
   g.beginPath();
   g.ellipse(-3, -16, 12, 1.5, 0, 0, TAU);
   g.fill();
-  // a short red horsehair crest along the top of the helmet
-  g.fillStyle = '#c91f28';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.6;
-  g.beginPath();
-  g.moveTo(-13, -28);
-  g.quadraticCurveTo(-11, -37, -1, -37.4);
-  g.quadraticCurveTo(10, -37, 12, -28);
-  g.quadraticCurveTo(-1, -31.4, -13, -28);
-  g.closePath();
-  g.fill();
-  g.stroke();
-  g.strokeStyle = 'rgba(100, 8, 14, 0.7)';
-  g.lineWidth = 0.9;
-  g.beginPath();
-  for (let x = -9; x <= 8; x += 3.6) {
-    g.moveTo(x, -29.6);
-    g.lineTo(x + 0.4, -35.4 + Math.abs(x) * 0.12);
-  }
-  g.stroke();
 }
 
 // Origin: the hand. A thin gold shaft with a round grey head.
@@ -551,9 +551,9 @@ function drawBushHat(g) {
   g.strokeStyle = OUT;
   g.lineWidth = 1.1;
   g.beginPath();
-  g.moveTo(11, -1);
-  g.quadraticCurveTo(18, -7, 17, -19);
-  g.quadraticCurveTo(12, -12, 9, -1);
+  g.moveTo(10, -3);
+  g.quadraticCurveTo(15, -7, 15.4, -13);
+  g.quadraticCurveTo(11, -9.6, 8.4, -3);
   g.closePath();
   g.fill();
   g.stroke();
@@ -1048,36 +1048,23 @@ function drawCowboyTorso(g, look, blink) {
   g.beginPath();
   g.arc(7, 8.4, 2.8, Math.PI * 0.2, Math.PI * 0.8);
   g.stroke();
-  // a red bandana knotted at the neck and a sheriff's star
+  // a red bandana knotted at the neck
   g.fillStyle = '#c8302f';
   g.strokeStyle = OUT;
   g.lineWidth = 1.4;
   g.beginPath();
-  g.moveTo(-15, 11.4);
-  g.quadraticCurveTo(0, 15, 15, 11.4);
-  g.lineTo(0, 24.6);
+  g.moveTo(-12.4, 13);
+  g.quadraticCurveTo(0, 16.4, 12.4, 13);
+  g.lineTo(0, 22.4);
   g.closePath();
   g.fill();
   g.stroke();
-  g.fillStyle = 'rgba(255,255,255,0.8)';
-  for (const [x, y] of [[-7, 14], [-1, 17.4], [5, 14.6], [0, 13]]) {
+  g.fillStyle = 'rgba(255,255,255,0.85)';
+  for (const [x, y] of [[-6, 14.8], [0, 17.2], [6, 14.8]]) {
     g.beginPath();
     g.arc(x, y, 0.7, 0, TAU);
     g.fill();
   }
-  g.fillStyle = '#f2c94a';
-  g.strokeStyle = OUT;
-  g.lineWidth = 0.8;
-  g.beginPath();
-  for (let i = 0; i < 10; i++) {
-    const r = i % 2 === 0 ? 4.2 : 1.8;
-    const a = (i / 10) * TAU - Math.PI / 2;
-    if (i === 0) g.moveTo(-10 + Math.cos(a) * r, 4 + Math.sin(a) * r);
-    else g.lineTo(-10 + Math.cos(a) * r, 4 + Math.sin(a) * r);
-  }
-  g.closePath();
-  g.fill();
-  g.stroke();
   // the wide hat
   g.save();
   g.translate(0, -11.2);
@@ -1251,11 +1238,17 @@ function drawNinjaBody(g, front, gz) {
   g.fillStyle = '#e8c24e';
   g.lineWidth = 1.2;
   g.beginPath();
-  g.moveTo(-3, -25);
-  g.quadraticCurveTo(0, -37, 9, -35);
-  g.quadraticCurveTo(3, -32, 3, -25);
+  g.moveTo(1, -24.6);
+  g.quadraticCurveTo(4, -35, 15, -34);
+  g.quadraticCurveTo(8, -31.6, 8.4, -24);
   g.closePath();
   g.fill();
+  g.stroke();
+  g.strokeStyle = '#e8c24e';
+  g.lineWidth = 1.5;
+  g.beginPath();
+  g.moveTo(-19.6, -12.6);
+  g.quadraticCurveTo(0, -15.8, 19.6, -12.6);
   g.stroke();
 }
 

@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=83';
+import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=85';
 
 // Units are drawn from "art" coordinates matching the reference sprites
 // (origin at the body centre, y down) into small offscreen layers, then
@@ -419,12 +419,12 @@ export function drawSniperHat(g) {
   g.fillStyle = '#5f9a47';
   g.strokeStyle = INK;
   g.lineWidth = 0.9;
-  for (const [x, y, r] of [[-8, -11, -0.6], [-3, -12.4, -0.2], [4, -12, 0.4], [9, -10, 0.9]]) {
+  for (const [x, y, r] of [[-9.6, -8.6, -1.1], [10.2, -8.4, 1.1]]) {
     g.save();
     g.translate(x, y);
     g.rotate(r);
     g.beginPath();
-    g.ellipse(0, -2.4, 1.8, 3.6, 0, 0, TAU);
+    g.ellipse(0, -2.2, 1.6, 3.2, 0, 0, TAU);
     g.fill();
     g.stroke();
     g.restore();
