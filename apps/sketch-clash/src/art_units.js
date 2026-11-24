@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=91';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=91';
+import { TAU, K } from './config.js?v=95';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=95';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -369,21 +369,6 @@ function drawGrenBody(g, front, gz) {
   g.beginPath();
   g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
   g.stroke();
-  for (const [x, y] of [[-10.5, 3.6], [-1.6, 9.2]]) {
-    g.fillStyle = '#2a2c33';
-    g.strokeStyle = OUT;
-    g.lineWidth = 1.1;
-    g.beginPath();
-    g.arc(x, y, 3.3, 0, TAU);
-    g.fill();
-    g.stroke();
-    g.fillStyle = '#9aa0ad';
-    g.fillRect(x - 1.2, y - 5, 2.4, 2.2);
-    g.fillStyle = 'rgba(255,255,255,0.35)';
-    g.beginPath();
-    g.arc(x - 1, y - 1, 0.9, 0, TAU);
-    g.fill();
-  }
 
   bigEyes(g, front ? [-8.4, 8.4] : [-2.4, 11], gz, -2, 4.5, 4.6, 1.9, 2.7);
   if (front) smile(g, 0, 3.8, 3.4);
@@ -484,59 +469,11 @@ function drawBushHat(g) {
     g.lineTo(x, 2.2);
   }
   g.stroke();
-  // a red feather tucked in the cuff
-  g.fillStyle = '#d84a3a';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.1;
-  g.beginPath();
-  g.moveTo(10, -3);
-  g.quadraticCurveTo(15, -7, 15.4, -13);
-  g.quadraticCurveTo(11, -9.6, 8.4, -3);
-  g.closePath();
-  g.fill();
-  g.stroke();
 }
 
 function drawArcherBody(g, front, gz, squint) {
   g.lineJoin = 'round';
   g.lineCap = 'round';
-  // a quiver full of feathered arrows on his back
-  g.save();
-  g.translate(-23, 0);
-  g.rotate(-0.28);
-  for (const x of [-3, 0, 3]) {
-    g.strokeStyle = '#8a8f9a';
-    g.lineWidth = 1.2;
-    g.beginPath();
-    g.moveTo(x, -4);
-    g.lineTo(x * 1.4, -16);
-    g.stroke();
-    g.fillStyle = '#e24b3d';
-    g.strokeStyle = OUT;
-    g.lineWidth = 0.7;
-    g.beginPath();
-    g.moveTo(x * 1.4 - 1.5, -16);
-    g.lineTo(x * 1.4 + 1.5, -16);
-    g.lineTo(x * 1.4, -22);
-    g.closePath();
-    g.fill();
-    g.stroke();
-  }
-  g.fillStyle = '#7a4e2a';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.5;
-  rr(g, -5, -5, 10, 24, 3.4);
-  g.fill();
-  g.stroke();
-  g.strokeStyle = '#4e3017';
-  g.lineWidth = 1.3;
-  g.beginPath();
-  g.moveTo(-5, 3);
-  g.lineTo(5, 3);
-  g.moveTo(-5, 11);
-  g.lineTo(5, 11);
-  g.stroke();
-  g.restore();
   // a lavender egg
   eggBody(g, '#b49ad3', '#8d72b4');
   g.strokeStyle = OUT;

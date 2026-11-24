@@ -107,16 +107,16 @@ export const MINIGUNNER = {
 // jabs with a long spear.
 export const ROMAN = {
   kind: 'melee',
-  hp: 180,
+  hp: 90,
   ...BODY,
-  speed: 44,
+  speed: 36, // about 58 screen px a second, measured off the original
   sight: 320,
   reach: 36 * R,
-  damage: 30,
+  damage: 45,
   atkTime: 0.45,
   cooldownMin: 0.7,
   cooldownMax: 1.1,
-  armor: 0.5,
+  armor: 0.8,
   formation: true, // painted Romans snap into a rectangular block and march as one
   weapon: 'spear',
   pivot: { x: 4 * K, y: 12 * K },

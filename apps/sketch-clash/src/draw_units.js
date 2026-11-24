@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=91';
-import { drawLayer, OUT } from './sprites.js?v=91';
-import { drawDrop } from './art_units.js?v=91';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=91';
-import { EGG_DROPS } from './art_eggs.js?v=91';
+import { TAU, K, UNIT, FEET } from './config.js?v=95';
+import { drawLayer, OUT } from './sprites.js?v=95';
+import { drawDrop } from './art_units.js?v=95';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=95';
+import { EGG_DROPS } from './art_eggs.js?v=95';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -557,7 +557,7 @@ export function drawFx(ctx, dpr, sprites, world) {
     ctx.save();
     ctx.translate(gx, gy - 4 * a.h * p * (1 - p));
     ctx.rotate(Math.atan2(slope, a.x1 - a.x0));
-    ctx.scale(1.05, 1.05);
+    ctx.scale(1.6, 1.6); // the original's flying arrow is about 17px long
     ctx.translate(-16 * K, 0);
     drawLayer(ctx, arrow);
     ctx.restore();
