@@ -1,4 +1,4 @@
-import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=43';
+import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=44';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -777,9 +777,10 @@ export class World {
           vx: (Math.random() - 0.5) * 14,
           vy: -28 - Math.random() * 18,
           age: 0,
-          life: 0.35 + Math.random() * 0.2,
+          life: 0.5 + Math.random() * 0.3,
           size: 3 + Math.random() * 2,
-          dot: Math.random() < 0.4,
+          grow: 2.4,
+          dark: Math.random() < 0.2,
           small: true,
         });
       }
@@ -1042,19 +1043,20 @@ export class World {
     const d = u.def;
     const m = this.muzzleOf(u);
     const ang = u.facing > 0 ? u.aim : Math.PI - u.aim;
-    for (let i = 0; i < 2; i++) {
-      if (Math.random() < 0.3) continue;
-      const a = ang + (Math.random() - 0.5) * 0.3;
-      const sp = 190 + Math.random() * 80;
+    for (let i = 0; i < 3; i++) {
+      if (Math.random() < 0.25) continue;
+      const a = ang + (Math.random() - 0.5) * 0.34;
+      const sp = 130 + Math.random() * 90;
       this.flames.push({
         x: m.x,
         y: m.y,
         vx: Math.cos(a) * sp,
         vy: Math.sin(a) * sp,
         age: 0,
-        life: 0.36 + Math.random() * 0.16,
-        size: 2 + Math.random() * 1.8,
-        dot: Math.random() < 0.55,
+        life: 0.5 + Math.random() * 0.22,
+        size: 2.4 + Math.random() * 1.6,
+        grow: 3.2 + Math.random() * 2,
+        dark: Math.random() < 0.28,
       });
     }
     const cone = d.cone;
@@ -1608,8 +1610,8 @@ export class World {
       f.age += dt;
       f.x += f.vx * dt;
       f.y += f.vy * dt;
-      f.vx *= 0.985;
-      f.vy *= 0.985;
+      f.vx *= 0.975;
+      f.vy *= 0.975;
     }
     if (this.flames.some((f) => f.age > f.life)) this.flames = this.flames.filter((f) => f.age <= f.life);
 

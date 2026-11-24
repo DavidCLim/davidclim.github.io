@@ -1,6 +1,6 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=43';
-import { drawLayer, OUT } from './sprites.js?v=43';
-import { drawDrop } from './art_units.js?v=43';
+import { TAU, K, UNIT, FEET } from './config.js?v=44';
+import { drawLayer, OUT } from './sprites.js?v=44';
+import { drawDrop } from './art_units.js?v=44';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -25,12 +25,27 @@ function drawHurtMarks(ctx, sprites, u) {
   drawLayer(ctx, sprites.hurt[u.hp < u.def.hp * 0.3 ? 1 : 0]);
 }
 
-function burnGlow(ctx, u, rx, ry, cx = 0, cy = 0) {
+// A burning unit goes flat orange all over with a soft glow around it, as in the video.
+export function burnOverlay(ctx, u, rx, ry, cx = 0, cy = 0) {
   if (u.burn <= 0) return;
-  ctx.fillStyle = `rgba(255, 120, 20, ${0.28 + 0.12 * Math.sin(u.breath * 18)})`;
+  const t = Math.min(1, u.burn / 1.2);
+  ctx.save();
+  const gr = ctx.createRadialGradient(cx, cy, rx * 0.6, cx, cy, rx * 1.9);
+  gr.addColorStop(0, `rgba(255, 150, 50, ${0.32 * t})`);
+  gr.addColorStop(1, 'rgba(255, 150, 50, 0)');
+  ctx.fillStyle = gr;
+  ctx.beginPath();
+  ctx.arc(cx, cy, rx * 1.9, 0, TAU);
+  ctx.fill();
+  ctx.fillStyle = `rgba(247, 152, 58, ${(0.62 + 0.1 * Math.sin(u.breath * 16)) * t})`;
   ctx.beginPath();
   ctx.ellipse(cx, cy, rx, ry, 0, 0, TAU);
   ctx.fill();
+  ctx.restore();
+}
+
+function burnGlow(ctx, u, rx, ry, cx = 0, cy = 0) {
+  burnOverlay(ctx, u, rx, ry, cx, cy);
 }
 
 // Feet, body and face shared by every egg-shaped unit. Leaves the context
@@ -248,27 +263,36 @@ function makeBlob() {
   return c;
 }
 let blob = null;
+const blobs = (() => {
+  const mk = (rgb) => {
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const g = c.getContext('2d');
+    const gr = g.createRadialGradient(32, 32, 2, 32, 32, 32);
+    gr.addColorStop(0, `rgba(${rgb}, 1)`);
+    gr.addColorStop(0.55, `rgba(${rgb}, 0.8)`);
+    gr.addColorStop(1, `rgba(${rgb}, 0)`);
+    g.fillStyle = gr;
+    g.fillRect(0, 0, 64, 64);
+    return c;
+  };
+  return { yellow: mk('255, 226, 110'), orange: mk('247, 150, 62'), brown: mk('176, 104, 46') };
+})();
 
 export function drawFx(ctx, dpr, sprites, world) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   if (!blob) blob = makeBlob();
 
-  // flamethrower fire (and the flames on burning units)
+  // flamethrower fire (and the flames on burning units): soft blobs that begin as
+  // small pale-yellow dots, swell into orange smudges, and end up charred brown
   for (const f of world.flames) {
     const t = f.age / f.life;
-    const a = Math.max(0, 1 - t);
-    const r = f.size * (1 + (f.small ? 0.8 : 1.3) * t);
-    ctx.fillStyle = `rgba(${f.small ? '255, 150, 30' : '250, 118, 30'}, ${0.8 * a})`;
-    ctx.beginPath();
-    ctx.arc(f.x, f.y, r, 0, TAU);
-    ctx.fill();
-    if (f.dot || f.small) {
-      ctx.fillStyle = `rgba(255, 215, 70, ${0.95 * a})`;
-      ctx.beginPath();
-      ctx.arc(f.x + 1, f.y - 1, r * 0.55, 0, TAU);
-      ctx.fill();
-    }
+    const r = f.size + f.grow * t * 2.4;
+    const spr = t < 0.22 ? blobs.yellow : f.dark && t > 0.5 ? blobs.brown : blobs.orange;
+    ctx.globalAlpha = Math.max(0, (t < 0.12 ? 0.55 + t * 3 : 0.8) * (1 - t * t));
+    ctx.drawImage(spr, f.x - r, f.y - r, r * 2, r * 2);
   }
+  ctx.globalAlpha = 1;
 
   // bombs in the air
   const bomb = sprites.grenadier.bombLit;

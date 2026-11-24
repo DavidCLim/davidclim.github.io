@@ -1,8 +1,8 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=43';
-import { World } from './world.js?v=43';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=43';
-import { buildUnitArt } from './art_units.js?v=43';
-import { drawUnit, drawFx, placeUnit, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=43';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=44';
+import { World } from './world.js?v=44';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=44';
+import { buildUnitArt } from './art_units.js?v=44';
+import { drawUnit, drawFx, placeUnit, burnOverlay, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=44';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -720,6 +720,7 @@ function drawSoldier(u) {
   }
   drawLayer(ctx, pose < 0.5 ? S.torsoSide[u.gaze] : S.torso);
   drawHurt(u);
+  burnOverlay(ctx, u, 20.6 * K, 22 * K);
 
   // Standing around the rifle is held upright at the side; it swings
   // down to aim as the soldier readies up.
@@ -801,6 +802,7 @@ function drawSniper(u) {
     if (pose < 0.5) drawLayer(ctx, S.torsoSide[idle.blink ? 3 : idle.look]);
     else drawLayer(ctx, S.torso);
     drawHurt(u);
+    burnOverlay(ctx, u, 20.8 * K, 24 * K);
 
     ctx.save();
     ctx.translate(0, -11.6 * K);

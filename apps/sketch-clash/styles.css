@@ -302,7 +302,7 @@ canvas {
   background: transparent;
   color: #8e93a3;
   font: inherit;
-  font-size: 0.86rem;
+  font-size: clamp(0.7rem, 1.05vw, 1.2rem);
   cursor: pointer;
 }
 .tabs button[aria-selected="true"] { background: #ebeef7; color: var(--ink); }
@@ -320,7 +320,7 @@ canvas {
 .unit-btn[aria-pressed="true"] { border-color: #9db6ee; background: #eaf0ff; }
 .unit-btn canvas {
   position: static;
-  width: clamp(42px, 5vw, 104px);
+  width: clamp(30px, 3.4vw, 66px);
   aspect-ratio: 132 / 108;
   height: auto;
 }
@@ -418,7 +418,7 @@ canvas {
   .tabs button { padding: 4px 8px; font-size: 0.85rem; }
   .units { padding: 5px 5px; gap: 1px; }
   .unit-btn { padding: 2px 1px; }
-  .unit-btn canvas { width: 38px; }
+  .unit-btn canvas { width: 32px; }
   .start-btn { bottom: 176px; font-size: 1.7rem; padding: 3px 32px 7px; }
   .team-label { top: 56px; font-size: 0.8rem; }
   .brush-box { top: 54px; right: 10px; }

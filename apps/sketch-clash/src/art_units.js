@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=43';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=43';
+import { TAU, K } from './config.js?v=44';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=44';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
