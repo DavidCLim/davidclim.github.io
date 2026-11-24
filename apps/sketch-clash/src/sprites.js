@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=86';
+import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=91';
 
 // Units are drawn from "art" coordinates matching the reference sprites
 // (origin at the body centre, y down) into small offscreen layers, then
@@ -195,6 +195,17 @@ function drawSoldierTorso(g, front, gaze) {
   g.stroke();
 }
 
+// the muzzle flash: a small yellow disc with an orange rim
+function muzzleDisc(g, x, y, r) {
+  g.fillStyle = '#ffe45c';
+  g.strokeStyle = '#f29a2e';
+  g.lineWidth = 1.3;
+  g.beginPath();
+  g.arc(x, y, r, 0, TAU);
+  g.fill();
+  g.stroke();
+}
+
 function drawSoldierRifle(g, firing) {
   g.lineJoin = 'round';
   g.strokeStyle = OUT;
@@ -263,7 +274,7 @@ function drawSoldierRifle(g, firing) {
   g.moveTo(-4.4, 2.4);
   g.lineTo(2.2, 2.4);
   g.stroke();
-  if (firing) star(g, 46, 0, 9, 3.6);
+  if (firing) muzzleDisc(g, 48.5, 0, 4);
 }
 
 function drawGhost(g, withHat) {
@@ -524,7 +535,7 @@ function drawSniperRifleParts(g, firing) {
   rr(g, -9.6, -2.2, 5, 5, 0.8);
   g.fill();
   g.stroke();
-  if (firing) star(g, 53, -1.4, 9, 3.6);
+  if (firing) muzzleDisc(g, 55.5, -1.4, 4.4);
 }
 
 // Lying on his belly, head to the right, rifle out front. Origin is the

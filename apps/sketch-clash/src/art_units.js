@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=86';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=86';
+import { TAU, K } from './config.js?v=91';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=91';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -19,19 +19,6 @@ export function eggBody(g, top, bot, rx = 20.7, ry = 23) {
   g.ellipse(0, 0, rx, ry, 0, 0, TAU);
   g.fill();
   g.stroke();
-  g.save();
-  g.beginPath();
-  g.ellipse(0, 0, rx - 0.9, ry - 0.9, 0, 0, TAU);
-  g.clip();
-  g.fillStyle = 'rgba(0, 0, 0, 0.13)';
-  g.beginPath();
-  g.ellipse(7, 15, rx * 0.95, ry * 0.5, 0.2, 0, TAU);
-  g.fill();
-  g.fillStyle = 'rgba(255, 255, 255, 0.26)';
-  g.beginPath();
-  g.ellipse(-11, -8, 3.6, 8.4, 0.35, 0, TAU);
-  g.fill();
-  g.restore();
 }
 
 export function bigEyes(g, xs, gz, y = -4.8, rx = 4.4, ry = 4.6, ring = 1.6, pr = 2.8, squint = false) {
@@ -75,10 +62,6 @@ export function bigEyes(g, xs, gz, y = -4.8, rx = 4.4, ry = 4.6, ring = 1.6, pr 
     g.fillStyle = '#0d0b10';
     g.beginPath();
     g.arc(x + rx - pr + 0.3 + gz[0] * 0.5, y + 0.5 + gz[1] * 0.4, pr, 0, TAU);
-    g.fill();
-    g.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    g.beginPath();
-    g.arc(x + rx - pr + 0.3 + gz[0] * 0.5 - pr * 0.32, y + 0.5 + gz[1] * 0.4 - pr * 0.34, pr * 0.3, 0, TAU);
     g.fill();
   }
 }
@@ -269,26 +252,6 @@ function drawRomanBody(g, front, gz, angry) {
   }
   g.stroke();
 
-  // a bristly red crest, a band that follows the top of the dome
-  g.fillStyle = '#b3171f';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.7;
-  g.beginPath();
-  g.ellipse(-1.6, -13, 16.8, 24.2, 0, Math.PI * 1.1, Math.PI * 1.9);
-  g.lineTo(-1.6 + 16.2 * Math.cos(Math.PI * 1.9), -13 + 18.6 * Math.sin(Math.PI * 1.9));
-  g.ellipse(-1.6, -13, 16.2, 18.6, 0, Math.PI * 1.9, Math.PI * 1.1, true);
-  g.closePath();
-  g.fill();
-  g.stroke();
-  g.strokeStyle = 'rgba(255, 150, 150, 0.55)';
-  g.lineWidth = 0.8;
-  g.beginPath();
-  for (let i = 0; i < 9; i++) {
-    const t = Math.PI * (1.18 + i * 0.1);
-    g.moveTo(-1.6 + 16.4 * Math.cos(t), -13 + 19.4 * Math.sin(t));
-    g.lineTo(-1.6 + 16.8 * Math.cos(t), -13 + 23.4 * Math.sin(t));
-  }
-  g.stroke();
   // red dome of the helmet, a half-ellipse sitting on the visor
   const dg = g.createLinearGradient(0, -32, 0, -20);
   dg.addColorStop(0, '#f24545');
@@ -368,31 +331,6 @@ function drawShield(g) {
   g.strokeStyle = 'rgba(120, 72, 12, 0.7)';
   g.lineWidth = 0.8;
   rr(g, -4, -15, 8, 30, 0.8);
-  g.fill();
-  g.stroke();
-  // a red medallion with a gold star and a steel boss
-  g.fillStyle = '#c8272d';
-  g.strokeStyle = '#5a1a12';
-  g.lineWidth = 0.9;
-  g.beginPath();
-  g.arc(0, -8.5, 3.6, 0, TAU);
-  g.fill();
-  g.stroke();
-  g.fillStyle = '#f6cf5a';
-  g.beginPath();
-  for (let i = 0; i < 10; i++) {
-    const r = i % 2 === 0 ? 2.4 : 1;
-    const a = (i / 10) * TAU - Math.PI / 2;
-    if (i === 0) g.moveTo(Math.cos(a) * r, -8.5 + Math.sin(a) * r);
-    else g.lineTo(Math.cos(a) * r, -8.5 + Math.sin(a) * r);
-  }
-  g.closePath();
-  g.fill();
-  g.fillStyle = '#a9afbb';
-  g.strokeStyle = '#4b4f5c';
-  g.lineWidth = 1.1;
-  g.beginPath();
-  g.arc(0, 2, 2.7, 0, TAU);
   g.fill();
   g.stroke();
 }

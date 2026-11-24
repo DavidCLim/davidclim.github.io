@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=86';
-import { TerrainMap, WALL } from './terrain.js?v=86';
-import { installBeasts } from './beasts.js?v=86';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=91';
+import { TerrainMap, WALL } from './terrain.js?v=91';
+import { installBeasts } from './beasts.js?v=91';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -680,7 +680,7 @@ export class World {
     u.flash = 0.07;
     if (this.sfx) this.sfx('shot', m.x);
     // a small pale puff drifts away from the muzzle along the shot
-    this.puffs.push({ x: m.x, y: m.y, vx: Math.cos(a) * 16, vy: -2, age: 0, life: 0.65, size: 1.5 });
+    this.puffs.push({ x: m.x, y: m.y, vx: Math.cos(a) * 16, vy: -2, age: 0, life: 0.8, size: 1.0 });
     if (d.smoke) {
       u.recoil = 1;
       for (let i = 0; i < 3; i++) {
@@ -707,15 +707,15 @@ export class World {
     // a real, fast bullet: it flies down the line leaving a smoke trail, and the hits land as it passes them
     if (this.sfx) this.sfx('snipe', m.x);
     this.streaks.push({ x0: m.x, y0: m.y, ang, dist: 0, total: shot.len, hits: shot.hits, owner: u, trail: 0, age: 0 });
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 2; i++) {
       this.puffs.push({
-        x: m.x,
-        y: m.y,
-        vx: Math.cos(ang) * (20 + Math.random() * 30) + (Math.random() - 0.5) * 20,
-        vy: Math.sin(ang) * (20 + Math.random() * 30) - 8 - Math.random() * 14,
+        x: m.x - Math.cos(ang) * i * 2,
+        y: m.y - Math.sin(ang) * i * 2,
+        vx: Math.cos(ang) * (8 + Math.random() * 8) + (Math.random() - 0.5) * 6,
+        vy: -3 - Math.random() * 5,
         age: 0,
-        life: 0.9 + Math.random() * 0.5,
-        size: 2.6 + Math.random() * 2,
+        life: 1.2 + Math.random() * 0.4,
+        size: 1.1 + i * 0.3 + Math.random() * 0.3,
       });
     }
     const o = this.rifleOrigin(u);

@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=86';
-import { buildCreatureArt } from './creatures.js?v=86';
-import { buildEggArt } from './art_eggs.js?v=86';
-import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=86';
-import { Sfx } from './sfx.js?v=86';
-import { World } from './world.js?v=86';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=86';
-import { buildUnitArt } from './art_units.js?v=86';
-import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=86';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=91';
+import { buildCreatureArt } from './creatures.js?v=91';
+import { buildEggArt } from './art_eggs.js?v=91';
+import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=91';
+import { Sfx } from './sfx.js?v=91';
+import { World } from './world.js?v=91';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=91';
+import { buildUnitArt } from './art_units.js?v=91';
+import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=91';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -43,7 +43,7 @@ let cssW = 0;
 let cssH = 0;
 let ratio = 1; // device pixels per screen px
 let dpr = 1; // device pixels per world unit
-let brush = 16;
+let brush = 9; // the cursor ring is about 29px across on screen, like the original, and one tap drops one unit
 let paused = false;
 let groundDirty = true;
 let groundVer = -1;
@@ -303,10 +303,10 @@ function dab(x, y) {
   if (!stroke) startStroke(x, y);
   stroke.started = true;
   if (stroke.sp === 'roman') {
-    if (brush < 6 && stroke.made.length && !stroke.dragged) return; // one click, one Roman
+    if (brush < 12 && stroke.made.length && !stroke.dragged) return; // one click, one Roman
     // Romans go down thick and overlapping; they sort themselves into ranks when you let go
     const team = teamAt(x);
-    const n = brush < 6 ? 1 : Math.max(2, Math.min(14, Math.round((brush * brush) / 150)));
+    const n = brush < 12 ? 1 : Math.max(2, Math.min(14, Math.round((brush * brush) / 150)));
     for (let i = 0; i < n; i++) {
       const a = Math.random() * TAU;
       const r = Math.sqrt(Math.random()) * brush;
@@ -1225,9 +1225,36 @@ function render() {
       ctx.fill();
       continue;
     }
-    ctx.fillStyle = `rgba(165, 167, 176, ${(p.size > 10 ? 0.26 : 0.45) * (1 - t)})`;
+    if (p.flash) {
+      // the muzzle flash: a small yellow disc with an orange rim
+      ctx.fillStyle = '#ffe45c';
+      ctx.strokeStyle = '#f29a2e';
+      ctx.lineWidth = 0.7;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * (1 - 0.35 * t), 0, TAU);
+      ctx.fill();
+      ctx.stroke();
+      continue;
+    }
+    if (p.size > 10) {
+      ctx.fillStyle = `rgba(165, 167, 176, ${0.26 * (1 - t)})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * (1 + 1.8 * t), 0, TAU);
+      ctx.fill();
+      continue;
+    }
+    // gun smoke: a small ragged cloud of a few overlapping lumps that swells a little and thins out
+    const r = p.size * (0.9 + 0.6 * Math.min(1, t * 2.5));
+    const sd = ((p.life * 977) % 1) * TAU;
+    ctx.fillStyle = `rgba(172, 174, 183, ${0.5 * (1 - t * t)})`;
     ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size * (1 + 1.8 * t), 0, TAU);
+    for (let k = 0; k < 4; k++) {
+      const ang = sd + k * 1.7;
+      const ox = Math.cos(ang) * r * 0.55;
+      const oy = Math.sin(ang) * r * 0.55;
+      ctx.moveTo(p.x + ox + r * 0.62, p.y + oy);
+      ctx.arc(p.x + ox, p.y + oy, r * 0.62, 0, TAU);
+    }
     ctx.fill();
   }
 
