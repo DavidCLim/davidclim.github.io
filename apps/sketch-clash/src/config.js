@@ -68,7 +68,7 @@ export const SNIPER = {
   aimTime: 0.7,
   cooldownMin: 1.7,
   cooldownMax: 2.6,
-  damage: 100,
+  damage: 50, // four hits kill a Roman in the original
   pierce: 2,
   spread: 0.008,
   hipCooldown: 1.3,
@@ -107,16 +107,16 @@ export const MINIGUNNER = {
 // jabs with a long spear.
 export const ROMAN = {
   kind: 'melee',
-  hp: 90,
+  hp: 180, // about ten soldier bullets, counted in the original
   ...BODY,
   speed: 36, // about 58 screen px a second, measured off the original
   sight: 320,
   reach: 36 * R,
-  damage: 45,
+  damage: 30,
   atkTime: 0.45,
   cooldownMin: 0.7,
   cooldownMax: 1.1,
-  armor: 0.8,
+  armor: 0.5,
   formation: true, // painted Romans snap into a rectangular block and march as one
   weapon: 'spear',
   pivot: { x: 4 * K, y: 12 * K },
@@ -155,7 +155,7 @@ export const ARCHER = {
   drawTime: 1.8,
   cooldownMin: 0.25,
   cooldownMax: 0.6,
-  damage: 27,
+  damage: 45, // eight arrows kill a Roman in the original
   arrowSpeed: 380,
   pivot: { x: 13 * K, y: 3 * K },
   muzzleLen: 14 * K,
