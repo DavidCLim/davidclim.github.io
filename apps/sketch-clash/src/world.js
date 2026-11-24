@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=66';
-import { TerrainMap, WALL } from './terrain.js?v=66';
-import { installBeasts } from './beasts.js?v=66';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=67';
+import { TerrainMap, WALL } from './terrain.js?v=67';
+import { installBeasts } from './beasts.js?v=67';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -901,6 +901,11 @@ export class World {
         const s = speed * (u.burstLeft > 0 ? 0.55 : 1);
         u.x += (dx / dist) * s * dt;
         u.y += (dy / dist) * s * dt;
+        u.moving = true;
+      } else if (d.kite && dist < d.kite) {
+        // like the original's soldiers, back away from anything that closes in while still shooting
+        u.x -= (dx / dist) * speed * 0.85 * dt;
+        u.y -= (dy / dist) * speed * 0.85 * dt;
         u.moving = true;
       }
       if (u.burstLeft > 0) {

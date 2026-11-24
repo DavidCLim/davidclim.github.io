@@ -36,6 +36,7 @@ export const SOLDIER = {
   sight: 360,
   range: 290,
   holdDist: 120,
+  kite: 55,
   // one shot at a time, about every 1.7 seconds, as in the original
   burst: 1,
   burstGap: 0.1,
