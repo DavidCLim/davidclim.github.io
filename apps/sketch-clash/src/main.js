@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=108';
-import { buildCreatureArt } from './creatures.js?v=108';
-import { buildEggArt } from './art_eggs.js?v=108';
-import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=108';
-import { Sfx } from './sfx.js?v=108';
-import { World } from './world.js?v=108';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=108';
-import { buildUnitArt } from './art_units.js?v=108';
-import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=108';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=109';
+import { buildCreatureArt } from './creatures.js?v=109';
+import { buildEggArt } from './art_eggs.js?v=109';
+import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=109';
+import { Sfx } from './sfx.js?v=109';
+import { World } from './world.js?v=109';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=109';
+import { buildUnitArt } from './art_units.js?v=109';
+import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=109';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -558,7 +558,37 @@ eraserBtn.addEventListener('click', () => {
   eraserBtn.setAttribute('aria-pressed', String(erasing));
 });
 
-// the settings button does nothing for now
+// Settings: one switch, Lammy Mode. Off (the default) crowds shove apart hard like the original;
+// on brings back the old, softer crowd physics.
+const settingsPanel = $('settings-panel');
+const lammyToggle = $('lammy-toggle');
+function setLammy(on) {
+  world.lammy = on;
+  lammyToggle.checked = on;
+  try {
+    localStorage.setItem('sketch-clash-lammy', on ? '1' : '0');
+  } catch {
+    // storage may be blocked; the switch still works for this visit
+  }
+}
+try {
+  setLammy(localStorage.getItem('sketch-clash-lammy') === '1');
+} catch {
+  setLammy(false);
+}
+lammyToggle.addEventListener('change', () => setLammy(lammyToggle.checked));
+$('settings').addEventListener('click', () => {
+  settingsPanel.hidden = false;
+});
+$('settings-close').addEventListener('click', () => {
+  settingsPanel.hidden = true;
+});
+settingsPanel.addEventListener('pointerdown', (e) => {
+  if (e.target === settingsPanel) settingsPanel.hidden = true;
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') settingsPanel.hidden = true;
+});
 // browsers only start audio after a gesture
 document.addEventListener('pointerdown', () => sfx.ensure(), { once: true });
 
@@ -1145,7 +1175,7 @@ function render() {
   ctx.lineCap = 'round';
 
   ctx.lineWidth = 1.2;
-  ctx.strokeStyle = '#7d818d';
+  ctx.strokeStyle = '#5e616b';
   ctx.beginPath();
   for (const b of world.bullets) {
     ctx.moveTo(b.x - b.vx * 0.013, b.y - b.vy * 0.013);

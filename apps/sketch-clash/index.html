@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Lilita+One&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=108">
+    <link rel="stylesheet" href="styles.css?v=109">
   </head>
   <body>
     <div class="stage-wrap" id="stage-wrap">
@@ -69,6 +69,17 @@
       </div>
     </div>
 
+    <div class="settings" id="settings-panel" hidden>
+      <div class="settings-card" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+        <button type="button" class="modal-close" id="settings-close" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        <h2 class="settings-title" id="settings-title">Settings</h2>
+        <label class="setting-row">
+          <span class="setting-text"><b>Lammy Mode</b><small>Off: crowds shove apart like the original. On: the old, softer crowd physics.</small></span>
+          <span class="toggle big"><input type="checkbox" id="lammy-toggle" role="switch"><span class="track" aria-hidden="true"></span></span>
+        </label>
+      </div>
+    </div>
+
     <div class="modal" id="modal" hidden>
       <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <button type="button" class="modal-close" id="modal-close" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
@@ -78,6 +89,6 @@
       </div>
     </div>
 
-    <script type="module" src="src/main.js?v=108"></script>
+    <script type="module" src="src/main.js?v=109"></script>
   </body>
 </html>

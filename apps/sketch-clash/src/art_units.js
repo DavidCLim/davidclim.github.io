@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=108';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=108';
+import { TAU, K } from './config.js?v=109';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=109';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -1121,45 +1121,63 @@ function drawFlintlock(g, firing) {
 
 // ---------------------------------------------------------------- ninja
 function drawNinjaBody(g, front, gz) {
-  // the samurai: a plain red egg with a navy kabuto and one golden crest
-  eggBody(g, '#c23a31', '#912622');
-  neckScarf(g, front, '#2f3556');
+  // the samurai: an indigo egg, black hair in a topknot and a white headband with a red sun
+  eggBody(g, '#4c5da8', '#2f3c78');
+  neckScarf(g, front, '#e4e4ec');
   bigEyes(g, front ? [-7.4, 7.4] : [-1.8, 11.4], gz, -4.4, 4.2, 4.4, 1.4, 2.6);
   g.strokeStyle = OUT;
-  g.lineWidth = 1.6;
+  g.lineWidth = 1.8;
   g.beginPath();
   for (const x of front ? [-7.4, 7.4] : [-1.8, 11.4]) {
-    g.moveTo(x - 4.6, -10.6);
-    g.lineTo(x + 4.2, -8.8);
+    g.moveTo(x - 4.6, -9.4);
+    g.lineTo(x + 4.2, -7.4);
   }
   g.stroke();
   if (front) smile(g, 0, 8.4, 3);
   else smile(g, 6, 8.4, 2.6);
-  g.fillStyle = '#2c3150';
+  // the hair
+  g.fillStyle = '#201e2a';
   g.strokeStyle = OUT;
   g.lineWidth = 1.6;
   g.beginPath();
-  g.moveTo(-21, -12);
-  g.bezierCurveTo(-21, -29, 21, -29, 21, -12);
-  g.quadraticCurveTo(0, -15, -21, -12);
+  g.moveTo(-20, -11.5);
+  g.bezierCurveTo(-20, -28, 20, -28, 20, -11.5);
+  g.quadraticCurveTo(0, -14.5, -20, -11.5);
   g.closePath();
   g.fill();
   g.stroke();
-  g.fillStyle = '#e8c24e';
-  g.lineWidth = 1.2;
+  // the topknot
   g.beginPath();
-  g.moveTo(1, -24.6);
-  g.quadraticCurveTo(4, -35, 15, -34);
-  g.quadraticCurveTo(8, -31.6, 8.4, -24);
-  g.closePath();
+  g.ellipse(front ? 0 : 2, -28.4, 4.8, 3.8, 0, 0, TAU);
   g.fill();
   g.stroke();
-  g.strokeStyle = '#e8c24e';
+  g.fillStyle = '#e4e4ec';
+  g.fillRect((front ? 0 : 2) - 1.2, -26.2, 2.4, 2);
+  // the headband and its two tails
+  const bx = front ? 0 : 3;
+  g.fillStyle = '#f4f2ee';
+  g.strokeStyle = OUT;
   g.lineWidth = 1.5;
   g.beginPath();
-  g.moveTo(-19.6, -12.6);
-  g.quadraticCurveTo(0, -15.8, 19.6, -12.6);
+  g.moveTo(-20.4, -12.6);
+  g.quadraticCurveTo(0, -16.4, 20.4, -12.6);
+  g.lineTo(20.4, -8.6);
+  g.quadraticCurveTo(0, -12.4, -20.4, -8.6);
+  g.closePath();
+  g.fill();
   g.stroke();
+  g.beginPath();
+  g.moveTo(-19.4, -11.4);
+  g.quadraticCurveTo(-26, -11, -30, -4.4);
+  g.lineTo(-25.6, -5.6);
+  g.quadraticCurveTo(-22.4, -8.4, -19.4, -9.2);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#d93a32';
+  g.beginPath();
+  g.arc(bx, -11.2, 2.1, 0, TAU);
+  g.fill();
 }
 
 // Origin: the hilt. The blade runs along +x.

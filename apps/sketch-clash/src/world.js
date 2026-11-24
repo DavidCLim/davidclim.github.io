@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=108';
-import { TerrainMap, WALL } from './terrain.js?v=108';
-import { installBeasts } from './beasts.js?v=108';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=109';
+import { TerrainMap, WALL } from './terrain.js?v=109';
+import { installBeasts } from './beasts.js?v=109';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -65,6 +65,7 @@ const SNIPER_BULLET_SPEED = 1500; // world units per second
 
 export class World {
   constructor() {
+    this.lammy = false; // Lammy Mode on: the old, softer crowd physics
     this.units = [];
     this.bullets = [];
     this.sparks = [];
@@ -1579,6 +1580,9 @@ export class World {
     if (this.sepNext.length < units.length) this.sepNext = new Int32Array(units.length * 2);
     const head = this.sepHead;
     const next = this.sepNext;
+    // the original's crowds shove each other well apart; Lammy Mode keeps the old, tighter and softer pile
+    const sepScale = this.lammy ? 0.765 : 1.3;
+    const pushK = this.lammy ? 0.3 : 0.55;
     head.fill(-1);
     for (let i = 0; i < units.length; i++) {
       const u = units[i];
@@ -1604,7 +1608,7 @@ export class World {
           for (let j = head[gy * cols + gx]; j !== -1; j = next[j]) {
             if (j <= i) continue;
             const o = units[j];
-            const sep = (u.def.sep + o.def.sep) / 2;
+            const sep = ((u.def.sep + o.def.sep) / 2) * sepScale;
             let dx = o.x - u.x;
             let dy = o.y - u.y;
             let d2 = dx * dx + dy * dy;
@@ -1615,7 +1619,7 @@ export class World {
               d2 = dx * dx + dy * dy;
             }
             const d = Math.sqrt(d2);
-            const push = (sep - d) * 0.35;
+            const push = (sep - d) * pushK;
             const nx = dx / d;
             const ny = dy / d;
             u.x -= nx * push;

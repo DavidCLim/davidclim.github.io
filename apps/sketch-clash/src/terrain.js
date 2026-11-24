@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=108';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=108';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=108';
+import { TAU, K } from './config.js?v=109';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=109';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=109';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask
@@ -475,73 +475,92 @@ function drawTree(g) {
   }
 }
 
-// The tower: a round stone tower in the wall's greys with a bricked body, a little arched door, a slit window and a red cone roof.
+// The tower is a block of the wall: the same flagstone top and the same dark bricked front, standing tall.
 function drawTower(g) {
-  const w = 14;
-  const h = 36;
-  shadowEll(g, 24, 4.5, 2);
-  // the round body
+  const w = 15;
+  const h = 30;
+  shadowEll(g, 24, 4.5, 3);
+  // the bricked front
   g.beginPath();
   g.moveTo(-w, -h);
-  g.lineTo(-w, 0);
-  g.quadraticCurveTo(0, 6, w, 0);
+  g.lineTo(-w, -2);
+  g.quadraticCurveTo(-w, 2, -w + 4, 2);
+  g.lineTo(w - 4, 2);
+  g.quadraticCurveTo(w, 2, w, -2);
   g.lineTo(w, -h);
   g.closePath();
-  g.fillStyle = '#8e8c8d';
+  g.fillStyle = '#4b4b4f';
   g.fill();
   ink(g, 1.8);
   g.stroke();
-  // a darker side to make it round
-  g.save();
-  g.clip();
-  g.fillStyle = 'rgba(40, 38, 44, 0.22)';
-  g.fillRect(w * 0.35, -h, w, h + 8);
-  g.restore();
-  g.strokeStyle = 'rgba(70, 68, 70, 0.7)';
-  g.lineWidth = 0.9;
+  g.strokeStyle = 'rgba(128, 128, 134, 0.7)';
+  g.lineWidth = 0.7;
   g.beginPath();
   let row = 0;
-  for (let y = -h + 9; y < -2; y += 9, row++) {
+  for (let y = -h + 7; y < 1; y += 7, row++) {
     g.moveTo(-w + 0.8, y);
     g.lineTo(w - 0.8, y);
-    for (let x = -w + (row % 2 ? 7 : 14); x < w - 1; x += 14) {
-      g.moveTo(x, y - 9);
+    for (let x = -w + (row % 2 ? 5 : 10); x < w - 1; x += 10) {
+      g.moveTo(x, y - 7);
       g.lineTo(x, y);
     }
   }
   g.stroke();
-  // the arched door
+  // the flagstone top: a rounded slab like the top of the wall
+  const tx = -w - 1.5;
+  const ty = -h - 15;
+  const tw = w * 2 + 3;
+  const th = 18;
   g.beginPath();
-  g.moveTo(-4.5, 1);
-  g.lineTo(-4.5, -7);
-  g.quadraticCurveTo(0, -14, 4.5, -7);
-  g.lineTo(4.5, 1);
+  g.moveTo(tx + 8, ty);
+  g.lineTo(tx + tw - 8, ty);
+  g.quadraticCurveTo(tx + tw, ty, tx + tw, ty + 8);
+  g.lineTo(tx + tw, ty + th - 8);
+  g.quadraticCurveTo(tx + tw, ty + th, tx + tw - 8, ty + th);
+  g.lineTo(tx + 8, ty + th);
+  g.quadraticCurveTo(tx, ty + th, tx, ty + th - 8);
+  g.lineTo(tx, ty + 8);
+  g.quadraticCurveTo(tx, ty, tx + 8, ty);
   g.closePath();
-  g.fillStyle = '#4a3a2c';
+  g.fillStyle = '#7e7c7b';
   g.fill();
-  ink(g, 1.5);
-  g.stroke();
-  // a slit window
-  g.beginPath();
-  g.rect(-1.6, -27, 3.2, 8);
-  g.fillStyle = '#2b2a30';
-  g.fill();
-  // the red cone roof with an overhanging rim
-  g.beginPath();
-  g.moveTo(-w - 4, -h);
-  g.lineTo(0, -h - 27);
-  g.lineTo(w + 4, -h);
-  g.quadraticCurveTo(0, -h + 4, -w - 4, -h);
-  g.closePath();
-  g.fillStyle = '#d4503f';
-  g.fill();
+  g.save();
+  g.clip();
+  g.strokeStyle = 'rgba(84, 82, 82, 0.5)';
+  g.lineWidth = 0.75;
+  for (let j = 0; j < 3; j++) {
+    for (let i = 0; i < 4; i++) {
+      const cx = tx + 4 + i * 9.5 + (j & 1 ? 4.7 : 0);
+      const cy = ty + 3 + j * 7.5;
+      g.beginPath();
+      for (let k = 0; k < 6; k++) {
+        const a = (k / 6) * TAU + hash2(i + k, j) * 0.5;
+        const r = 5.4 + hash2(k, i * 3 + j) * 1.2;
+        const px = cx + Math.cos(a) * r;
+        const py = cy + Math.sin(a) * r;
+        if (k === 0) g.moveTo(px, py);
+        else g.lineTo(px, py);
+      }
+      g.closePath();
+      const v = 112 + Math.floor(hash2(i * 7 + 3, j * 5 + 1) * 22);
+      g.fillStyle = `rgb(${v}, ${v - 1}, ${v - 2})`;
+      g.fill();
+      g.stroke();
+    }
+  }
+  g.restore();
   ink(g, 1.8);
-  g.stroke();
   g.beginPath();
-  g.moveTo(-3, -h - 22);
-  g.lineTo(-8.5, -h - 1);
-  g.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-  g.lineWidth = 1.6;
+  g.moveTo(tx + 8, ty);
+  g.lineTo(tx + tw - 8, ty);
+  g.quadraticCurveTo(tx + tw, ty, tx + tw, ty + 8);
+  g.lineTo(tx + tw, ty + th - 8);
+  g.quadraticCurveTo(tx + tw, ty + th, tx + tw - 8, ty + th);
+  g.lineTo(tx + 8, ty + th);
+  g.quadraticCurveTo(tx, ty + th, tx, ty + th - 8);
+  g.lineTo(tx, ty + 8);
+  g.quadraticCurveTo(tx, ty, tx + 8, ty);
+  g.closePath();
   g.stroke();
 }
 
@@ -552,7 +571,7 @@ export function buildTerrainArt() {
     barrel: makeLayer(-26, -64, 26, 8, (g) => drawBarrel(g, false)),
     barrelHot: makeLayer(-26, -64, 26, 8, (g) => drawBarrel(g, true)),
     tree: makeLayer(-46, -106, 46, 8, drawTree),
-    tower: makeLayer(-26, -80, 26, 10, drawTower),
+    tower: makeLayer(-26, -62, 26, 10, drawTower),
   };
 }
 
@@ -669,7 +688,7 @@ const ICON_DRAW = {
   },
   mine: (g) => drawMine(g, false),
   tower: (g) => {
-    g.scale(0.66, 0.66);
+    g.scale(0.82, 0.82);
     drawTower(g);
   },
   barrel: (g) => {
