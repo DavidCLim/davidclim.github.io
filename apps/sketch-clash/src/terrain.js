@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=97';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=97';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=97';
+import { TAU, K } from './config.js?v=100';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=100';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=100';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask
@@ -459,44 +459,57 @@ function drawTree(g) {
   }
 }
 
-// A plain stone tower: flat grey, three merlons and a little door. An obstacle, nothing more.
+// The tower is a plain stone pillar built like the wall: a flagstone top and a bricked front, in the wall's greys.
 function drawTower(g) {
-  shadowEll(g, 26, 5, 2);
+  const w = 15;
+  const h = 34;
+  shadowEll(g, 24, 4.5, 2);
+  // the bricked front
   g.beginPath();
-  g.moveTo(-17, 0);
-  g.lineTo(-15, -62);
-  g.lineTo(15, -62);
-  g.lineTo(17, 0);
-  g.quadraticCurveTo(0, 6, -17, 0);
-  g.closePath();
-  const hg = g.createLinearGradient(-17, 0, 17, 0);
-  hg.addColorStop(0, '#a3a3ab');
-  hg.addColorStop(0.55, '#b3b3bb');
-  hg.addColorStop(1, '#8a8a93');
-  g.fillStyle = hg;
+  g.rect(-w, -h, w * 2, h);
+  g.fillStyle = '#8e8c8d';
   g.fill();
-  ink(g, 1.7);
+  ink(g, 1.8);
   g.stroke();
+  g.strokeStyle = 'rgba(70, 68, 70, 0.7)';
+  g.lineWidth = 0.9;
   g.beginPath();
-  g.ellipse(0, -62, 15, 4.6, 0, 0, TAU);
-  g.fillStyle = '#7b7b85';
-  g.fill();
-  g.stroke();
-  for (const x of [-10.5, 0, 10.5]) {
-    g.beginPath();
-    g.rect(x - 4, -70, 8, 9);
-    g.fillStyle = '#b3b3bb';
-    g.fill();
-    g.stroke();
+  let row = 0;
+  for (let y = -h + 8.5; y < -1; y += 8.5, row++) {
+    g.moveTo(-w + 0.8, y);
+    g.lineTo(w - 0.8, y);
+    for (let x = -w + (row % 2 ? 7.5 : 15); x < w - 1; x += 15) {
+      g.moveTo(x, y - 8.5);
+      g.lineTo(x, y);
+    }
   }
+  g.stroke();
+  // a little arched door
   g.beginPath();
-  g.moveTo(-5, -1);
-  g.lineTo(-5, -14);
-  g.quadraticCurveTo(0, -20, 5, -14);
-  g.lineTo(5, -1);
+  g.moveTo(-4.5, 0);
+  g.lineTo(-4.5, -8);
+  g.quadraticCurveTo(0, -14.5, 4.5, -8);
+  g.lineTo(4.5, 0);
   g.closePath();
-  g.fillStyle = '#4a3a2c';
+  g.fillStyle = '#3d3a3c';
   g.fill();
+  ink(g, 1.5);
+  g.stroke();
+  // the flagstone top, a little wider than the shaft
+  g.beginPath();
+  g.rect(-w - 2.5, -h - 15, w * 2 + 5, 15);
+  g.fillStyle = '#b3b1b2';
+  g.fill();
+  ink(g, 1.8);
+  g.stroke();
+  g.strokeStyle = 'rgba(70, 68, 70, 0.75)';
+  g.lineWidth = 0.9;
+  g.beginPath();
+  g.moveTo(-4, -h - 15);
+  g.lineTo(-6, -h - 8);
+  g.lineTo(-2, -h);
+  g.moveTo(7, -h - 15);
+  g.lineTo(9, -h - 7);
   g.stroke();
 }
 
@@ -507,7 +520,7 @@ export function buildTerrainArt() {
     barrel: makeLayer(-26, -64, 26, 8, (g) => drawBarrel(g, false)),
     barrelHot: makeLayer(-26, -64, 26, 8, (g) => drawBarrel(g, true)),
     tree: makeLayer(-46, -106, 46, 8, drawTree),
-    tower: makeLayer(-26, -78, 26, 10, drawTower),
+    tower: makeLayer(-26, -66, 26, 10, drawTower),
   };
 }
 
@@ -624,7 +637,7 @@ const ICON_DRAW = {
   },
   mine: (g) => drawMine(g, false),
   tower: (g) => {
-    g.scale(0.62, 0.62);
+    g.scale(0.78, 0.78);
     drawTower(g);
   },
   barrel: (g) => {
