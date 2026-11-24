@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=101';
-import { buildCreatureArt } from './creatures.js?v=101';
-import { buildEggArt } from './art_eggs.js?v=101';
-import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=101';
-import { Sfx } from './sfx.js?v=101';
-import { World } from './world.js?v=101';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=101';
-import { buildUnitArt } from './art_units.js?v=101';
-import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=101';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=107';
+import { buildCreatureArt } from './creatures.js?v=107';
+import { buildEggArt } from './art_eggs.js?v=107';
+import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=107';
+import { Sfx } from './sfx.js?v=107';
+import { World } from './world.js?v=107';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=107';
+import { buildUnitArt } from './art_units.js?v=107';
+import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=107';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -196,7 +196,7 @@ const LATTICE = {
 const TERRAIN_SET = new Set(['wall', 'water', 'ice', 'mine', 'tower', 'barrel', 'tree']);
 const DISCRETE = { mine: { gap: 84, off: 3 }, tower: { gap: 60, off: 20 }, barrel: { gap: 26, off: 10 }, tree: { gap: 50, off: 18 } };
 let tstroke = null;
-const STROKE_BASE = { wall: 14.5, water: 21, ice: 19 };
+const STROKE_BASE = { wall: 14.5, water: 24, ice: 21 };
 
 function brushWidth() {
   return 0.5 + brush / 32; // the default brush gives the normal width, the biggest about three times as wide
@@ -558,14 +558,7 @@ eraserBtn.addEventListener('click', () => {
   eraserBtn.setAttribute('aria-pressed', String(erasing));
 });
 
-const soundBtn = $('sound');
-const SOUND_ON = '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>';
-const SOUND_OFF = '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/>';
-soundBtn.addEventListener('click', () => {
-  sfx.setMuted(!sfx.muted);
-  $('sound-icon').innerHTML = sfx.muted ? SOUND_OFF : SOUND_ON;
-  soundBtn.setAttribute('aria-pressed', String(sfx.muted));
-});
+// the settings button does nothing for now
 // browsers only start audio after a gesture
 document.addEventListener('pointerdown', () => sfx.ensure(), { once: true });
 

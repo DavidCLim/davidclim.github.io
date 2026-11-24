@@ -31,7 +31,7 @@ export const SOLDIER = {
   kind: 'rifle',
   hp: 100,
   radius: 11 * UNIT,
-  sep: 13 * UNIT,
+  sep: 17 * UNIT,
   speed: 44,
   sight: 360,
   range: 290,
@@ -79,7 +79,7 @@ export const SNIPER = {
   prone: { cy: 12 * K, mx: 52 * K, my: 6.4 * K },
 };
 
-const BODY = { radius: 11 * UNIT, sep: 13 * UNIT };
+const BODY = { radius: 11 * UNIT, sep: 17 * UNIT }; // crowds spread to about 14 screen px between bodies, as in the original
 
 // A slow heavy gunner: stands his ground and hoses a long burst of small bullets from a minigun.
 export const MINIGUNNER = {

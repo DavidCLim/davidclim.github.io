@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=101';
-import { TerrainMap, WALL } from './terrain.js?v=101';
-import { installBeasts } from './beasts.js?v=101';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=107';
+import { TerrainMap, WALL } from './terrain.js?v=107';
+import { installBeasts } from './beasts.js?v=107';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -1615,7 +1615,7 @@ export class World {
               d2 = dx * dx + dy * dy;
             }
             const d = Math.sqrt(d2);
-            const push = (sep - d) * 0.3;
+            const push = (sep - d) * 0.35;
             const nx = dx / d;
             const ny = dy / d;
             u.x -= nx * push;

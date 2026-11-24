@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=101';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=101';
+import { TAU, K } from './config.js?v=107';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=107';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -447,6 +447,17 @@ function drawBushHat(g) {
   g.beginPath();
   g.ellipse(-8, -9, 5.6, 2.2, -0.75, 0, TAU);
   g.fill();
+  // a jaunty red feather in the band
+  g.fillStyle = '#d84a3a';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.1;
+  g.beginPath();
+  g.moveTo(11.5, -3);
+  g.quadraticCurveTo(21.5, -7, 18.6, -17);
+  g.quadraticCurveTo(14.4, -9.4, 8.6, -2.6);
+  g.closePath();
+  g.fill();
+  g.stroke();
 }
 
 function drawArcherBody(g, front, gz, squint) {
@@ -459,6 +470,7 @@ function drawArcherBody(g, front, gz, squint) {
   g.beginPath();
   g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
   g.stroke();
+  neckScarf(g, front, '#9a6232');
 
   bigEyes(g, front ? [-8.4, 8.4] : [-2.2, 12.6], gz, -3.8, 4.5, 4.7, 1.1, 3, !!squint);
   if (front) smile(g, 0, 6.6, 3.2);
@@ -1067,6 +1079,7 @@ function drawFlintlock(g, firing) {
 function drawNinjaBody(g, front, gz) {
   // the samurai: a plain red egg with a navy kabuto and one golden crest
   eggBody(g, '#c23a31', '#912622');
+  neckScarf(g, front, '#2f3556');
   bigEyes(g, front ? [-7.4, 7.4] : [-1.8, 11.4], gz, -4.4, 4.2, 4.4, 1.4, 2.6);
   g.strokeStyle = OUT;
   g.lineWidth = 1.6;

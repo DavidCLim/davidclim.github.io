@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=101';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=101';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=101';
+import { TAU, K } from './config.js?v=107';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=107';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=107';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask
@@ -8,7 +8,7 @@ import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=1
 export const WATER = 1;
 export const ICE = 2;
 export const WALL = 4;
-export const STROKE_W = { wall: 14.5, water: 21, ice: 19 };
+export const STROKE_W = { wall: 14.5, water: 24, ice: 21 };
 export const WALL_H = 5.2; // the front face of a wall hangs this far below its top
 
 export class TerrainMap {
@@ -142,14 +142,14 @@ export function renderGround(ctx, W, H, strokes, clock) {
     }
     for (const [x, y] of pts) {
       const n = Math.sin(x * 0.09 + y * 0.06) * 0.5 + Math.sin(x * 0.037 - y * 0.08 + 1.7) * 0.5;
-      const r = (s.w / 2) * (0.92 + 0.12 * n) + grow;
+      const r = (s.w / 2) * (0.9 + 0.2 * n) + grow;
       ctx.moveTo(x + r, y);
       ctx.arc(x, y, r, 0, TAU);
     }
   };
   for (const [kind, edge, fill] of [
-    ['water', '#62b4c8', '#92dae8'],
-    ['ice', '#b2d2e5', '#dff0fa'],
+    ['water', '#62bccb', '#9ce4ec'],
+    ['ice', '#b4d4e6', '#dff0fa'],
   ]) {
     const list = of(kind);
     if (!list.length) continue;
@@ -162,6 +162,22 @@ export function renderGround(ctx, W, H, strokes, clock) {
     for (const s of list) {
       blobPath(s, 0);
       ctx.fill();
+    }
+    // soft light and dark patches inside (ice gets pale sheen streaks)
+    for (const s of list) {
+      ctx.save();
+      blobPath(s, 0);
+      ctx.clip();
+      for (let i = 0; i < s.pts.length; i += 6) {
+        const [x, y] = s.pts[i];
+        const h = hash2(x * 0.7, y * 0.7);
+        ctx.fillStyle = kind === 'ice' ? `rgba(255, 255, 255, ${0.2 + h * 0.25})` : h > 0.5 ? 'rgba(190, 245, 250, 0.25)' : 'rgba(110, 200, 214, 0.14)';
+        ctx.beginPath();
+        if (kind === 'ice') ctx.ellipse(x, y, 2.5 + h * 3, s.w * 0.42, 0.35, 0, TAU);
+        else ctx.ellipse(x, y, 7 + h * 8, s.w * 0.2, 0, 0, TAU);
+        ctx.fill();
+      }
+      ctx.restore();
     }
   }
   const walls = of('wall');
@@ -194,7 +210,8 @@ export function renderGround(ctx, W, H, strokes, clock) {
     path(s, WALL_H);
     ctx.stroke();
   }
-  ctx.strokeStyle = 'rgba(150, 150, 156, 0.55)';
+  // two rows of bricks along the front
+  ctx.strokeStyle = 'rgba(128, 128, 134, 0.7)';
   ctx.lineWidth = 0.55;
   for (const s of walls) {
     ctx.setLineDash([4, 3]);
@@ -246,26 +263,30 @@ export function renderGround(ctx, W, H, strokes, clock) {
       y1 = Math.max(y1, y + s.w);
     }
   }
-  pg.strokeStyle = 'rgba(78, 76, 78, 0.6)';
-  pg.lineWidth = 0.6;
-  const cell = 11.5;
-  pg.beginPath();
+  pg.strokeStyle = 'rgba(84, 82, 82, 0.5)';
+  pg.lineWidth = 0.75;
+  const cell = 13.5;
   for (let j = Math.floor(y0 / cell) - 1; j <= Math.ceil(y1 / cell) + 1; j++) {
     for (let i = Math.floor(x0 / cell) - 1; i <= Math.ceil(x1 / cell) + 1; i++) {
       const cx = (i + (j & 1 ? 0.5 : 0)) * cell + (hash2(i, j) - 0.5) * 5;
       const cy = j * cell * 0.9 + (hash2(j, i + 9) - 0.5) * 5;
       for (let k = 0; k < 6; k++) {
         const a = (k / 6) * TAU + hash2(i + k, j) * 0.5;
-        const r = cell * (0.52 + hash2(k, i * 3 + j) * 0.12);
+        const r = cell * (0.52 + hash2(k, i * 3 + j) * 0.1);
         const px = cx + Math.cos(a) * r;
         const py = cy + Math.sin(a) * r;
-        if (k === 0) pg.moveTo(px, py);
-        else pg.lineTo(px, py);
+        if (k === 0) {
+          pg.beginPath();
+          pg.moveTo(px, py);
+        } else pg.lineTo(px, py);
       }
       pg.closePath();
+      const v = 112 + Math.floor(hash2(i * 7 + 3, j * 5 + 1) * 22);
+      pg.fillStyle = `rgb(${v}, ${v - 1}, ${v - 2})`;
+      pg.fill();
+      pg.stroke();
     }
   }
-  pg.stroke();
   pg.globalCompositeOperation = 'destination-in';
   pg.setTransform(1, 0, 0, 1, 0, 0);
   pg.drawImage(mask, 0, 0);
@@ -311,34 +332,29 @@ function ink(g, lw) {
 function drawMine(g, lit) {
   shadowEll(g, 30, 6, 3);
   ink(g, 1.7);
-  for (const [y, fill] of [[-4.5, '#37422a']]) {
-    g.beginPath();
-    g.ellipse(0, y, 22.5, 9.6, 0, 0, TAU);
-    g.fillStyle = fill;
-    g.fill();
-    g.stroke();
-  }
+  // the thick olive side
+  g.beginPath();
+  g.ellipse(0, -4.5, 22.5, 9.6, 0, 0, TAU);
+  g.fillStyle = '#4e5b35';
+  g.fill();
+  g.stroke();
+  // the lighter top with two rings and a dark red button
   g.beginPath();
   g.ellipse(0, -12, 22, 9.4, 0, 0, TAU);
-  g.fillStyle = vgrad(g, -22, -2, '#5d6f3a', '#4a5a30');
+  g.fillStyle = vgrad(g, -22, -2, '#808d58', '#6c794a');
   g.fill();
   g.stroke();
-  g.strokeStyle = 'rgba(30, 40, 20, 0.55)';
-  g.lineWidth = 1.3;
+  g.strokeStyle = 'rgba(38, 48, 26, 0.7)';
+  g.lineWidth = 1.2;
   g.beginPath();
-  g.ellipse(0, -12, 13.5, 5.6, 0, 0, TAU);
+  g.ellipse(0, -12, 15.5, 6.4, 0, 0, TAU);
   g.stroke();
-  g.fillStyle = lit ? 'rgba(255, 90, 60, 0.7)' : 'rgba(214, 74, 48, 0.55)';
   g.beginPath();
-  g.ellipse(0, -12, 7.4, 3.2, 0, 0, TAU);
-  g.fill();
-  g.fillStyle = lit ? '#ff6a4a' : '#e5311f';
+  g.ellipse(0, -12, 9.6, 4, 0, 0, TAU);
+  g.stroke();
+  g.fillStyle = lit ? '#ff4b2e' : '#7c2318';
   g.beginPath();
-  g.ellipse(0, -12, 3, 1.5, 0, 0, TAU);
-  g.fill();
-  g.fillStyle = 'rgba(255, 255, 255, 0.7)';
-  g.beginPath();
-  g.ellipse(-0.8, -12.6, 0.9, 0.5, 0, 0, TAU);
+  g.ellipse(0, -12, 3.8, 2, 0, 0, TAU);
   g.fill();
 }
 
@@ -459,57 +475,73 @@ function drawTree(g) {
   }
 }
 
-// The tower is a plain stone pillar built like the wall: a flagstone top and a bricked front, in the wall's greys.
+// The tower: a round stone tower in the wall's greys with a bricked body, a little arched door, a slit window and a red cone roof.
 function drawTower(g) {
-  const w = 15;
-  const h = 34;
+  const w = 14;
+  const h = 36;
   shadowEll(g, 24, 4.5, 2);
-  // the bricked front
+  // the round body
   g.beginPath();
-  g.rect(-w, -h, w * 2, h);
+  g.moveTo(-w, -h);
+  g.lineTo(-w, 0);
+  g.quadraticCurveTo(0, 6, w, 0);
+  g.lineTo(w, -h);
+  g.closePath();
   g.fillStyle = '#8e8c8d';
   g.fill();
   ink(g, 1.8);
   g.stroke();
+  // a darker side to make it round
+  g.save();
+  g.clip();
+  g.fillStyle = 'rgba(40, 38, 44, 0.22)';
+  g.fillRect(w * 0.35, -h, w, h + 8);
+  g.restore();
   g.strokeStyle = 'rgba(70, 68, 70, 0.7)';
   g.lineWidth = 0.9;
   g.beginPath();
   let row = 0;
-  for (let y = -h + 8.5; y < -1; y += 8.5, row++) {
+  for (let y = -h + 9; y < -2; y += 9, row++) {
     g.moveTo(-w + 0.8, y);
     g.lineTo(w - 0.8, y);
-    for (let x = -w + (row % 2 ? 7.5 : 15); x < w - 1; x += 15) {
-      g.moveTo(x, y - 8.5);
+    for (let x = -w + (row % 2 ? 7 : 14); x < w - 1; x += 14) {
+      g.moveTo(x, y - 9);
       g.lineTo(x, y);
     }
   }
   g.stroke();
-  // a little arched door
+  // the arched door
   g.beginPath();
-  g.moveTo(-4.5, 0);
-  g.lineTo(-4.5, -8);
-  g.quadraticCurveTo(0, -14.5, 4.5, -8);
-  g.lineTo(4.5, 0);
+  g.moveTo(-4.5, 1);
+  g.lineTo(-4.5, -7);
+  g.quadraticCurveTo(0, -14, 4.5, -7);
+  g.lineTo(4.5, 1);
   g.closePath();
-  g.fillStyle = '#3d3a3c';
+  g.fillStyle = '#4a3a2c';
   g.fill();
   ink(g, 1.5);
   g.stroke();
-  // the flagstone top, a little wider than the shaft
+  // a slit window
   g.beginPath();
-  g.rect(-w - 2.5, -h - 15, w * 2 + 5, 15);
-  g.fillStyle = '#b3b1b2';
+  g.rect(-1.6, -27, 3.2, 8);
+  g.fillStyle = '#2b2a30';
+  g.fill();
+  // the red cone roof with an overhanging rim
+  g.beginPath();
+  g.moveTo(-w - 4, -h);
+  g.lineTo(0, -h - 27);
+  g.lineTo(w + 4, -h);
+  g.quadraticCurveTo(0, -h + 4, -w - 4, -h);
+  g.closePath();
+  g.fillStyle = '#d4503f';
   g.fill();
   ink(g, 1.8);
   g.stroke();
-  g.strokeStyle = 'rgba(70, 68, 70, 0.75)';
-  g.lineWidth = 0.9;
   g.beginPath();
-  g.moveTo(-4, -h - 15);
-  g.lineTo(-6, -h - 8);
-  g.lineTo(-2, -h);
-  g.moveTo(7, -h - 15);
-  g.lineTo(9, -h - 7);
+  g.moveTo(-3, -h - 22);
+  g.lineTo(-8.5, -h - 1);
+  g.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+  g.lineWidth = 1.6;
   g.stroke();
 }
 
@@ -520,7 +552,7 @@ export function buildTerrainArt() {
     barrel: makeLayer(-26, -64, 26, 8, (g) => drawBarrel(g, false)),
     barrelHot: makeLayer(-26, -64, 26, 8, (g) => drawBarrel(g, true)),
     tree: makeLayer(-46, -106, 46, 8, drawTree),
-    tower: makeLayer(-26, -66, 26, 10, drawTower),
+    tower: makeLayer(-26, -80, 26, 10, drawTower),
   };
 }
 
@@ -637,7 +669,7 @@ const ICON_DRAW = {
   },
   mine: (g) => drawMine(g, false),
   tower: (g) => {
-    g.scale(0.78, 0.78);
+    g.scale(0.66, 0.66);
     drawTower(g);
   },
   barrel: (g) => {
