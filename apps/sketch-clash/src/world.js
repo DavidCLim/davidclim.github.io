@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=64';
-import { TerrainMap, WALL } from './terrain.js?v=64';
-import { installBeasts } from './beasts.js?v=64';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=65';
+import { TerrainMap, WALL } from './terrain.js?v=65';
+import { installBeasts } from './beasts.js?v=65';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -679,6 +679,8 @@ export class World {
     });
     u.flash = 0.07;
     if (this.sfx) this.sfx('shot', m.x);
+    // a small pale puff drifts away from the muzzle along the shot
+    this.puffs.push({ x: m.x, y: m.y, vx: Math.cos(a) * 16, vy: -2, age: 0, life: 0.65, size: 1.5 });
     if (d.smoke) {
       u.recoil = 1;
       for (let i = 0; i < 3; i++) {
