@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=81';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=81';
+import { TAU, K } from './config.js?v=83';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=83';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -19,6 +19,19 @@ export function eggBody(g, top, bot, rx = 20.7, ry = 23) {
   g.ellipse(0, 0, rx, ry, 0, 0, TAU);
   g.fill();
   g.stroke();
+  g.save();
+  g.beginPath();
+  g.ellipse(0, 0, rx - 0.9, ry - 0.9, 0, 0, TAU);
+  g.clip();
+  g.fillStyle = 'rgba(0, 0, 0, 0.13)';
+  g.beginPath();
+  g.ellipse(7, 15, rx * 0.95, ry * 0.5, 0.2, 0, TAU);
+  g.fill();
+  g.fillStyle = 'rgba(255, 255, 255, 0.26)';
+  g.beginPath();
+  g.ellipse(-11, -8, 3.6, 8.4, 0.35, 0, TAU);
+  g.fill();
+  g.restore();
 }
 
 export function bigEyes(g, xs, gz, y = -4.8, rx = 4.4, ry = 4.6, ring = 1.6, pr = 2.8, squint = false) {
@@ -62,6 +75,10 @@ export function bigEyes(g, xs, gz, y = -4.8, rx = 4.4, ry = 4.6, ring = 1.6, pr 
     g.fillStyle = '#0d0b10';
     g.beginPath();
     g.arc(x + rx - pr + 0.3 + gz[0] * 0.5, y + 0.5 + gz[1] * 0.4, pr, 0, TAU);
+    g.fill();
+    g.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    g.beginPath();
+    g.arc(x + rx - pr + 0.3 + gz[0] * 0.5 - pr * 0.32, y + 0.5 + gz[1] * 0.4 - pr * 0.34, pr * 0.3, 0, TAU);
     g.fill();
   }
 }
@@ -281,6 +298,26 @@ function drawRomanBody(g, front, gz, angry) {
   g.beginPath();
   g.ellipse(-3, -16, 12, 1.5, 0, 0, TAU);
   g.fill();
+  // a short red horsehair crest along the top of the helmet
+  g.fillStyle = '#c91f28';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.6;
+  g.beginPath();
+  g.moveTo(-13, -28);
+  g.quadraticCurveTo(-11, -37, -1, -37.4);
+  g.quadraticCurveTo(10, -37, 12, -28);
+  g.quadraticCurveTo(-1, -31.4, -13, -28);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.strokeStyle = 'rgba(100, 8, 14, 0.7)';
+  g.lineWidth = 0.9;
+  g.beginPath();
+  for (let x = -9; x <= 8; x += 3.6) {
+    g.moveTo(x, -29.6);
+    g.lineTo(x + 0.4, -35.4 + Math.abs(x) * 0.12);
+  }
+  g.stroke();
 }
 
 // Origin: the hand. A thin gold shaft with a round grey head.
@@ -333,11 +370,29 @@ function drawShield(g) {
   rr(g, -4, -15, 8, 30, 0.8);
   g.fill();
   g.stroke();
+  // a red medallion with a gold star and a steel boss
+  g.fillStyle = '#c8272d';
+  g.strokeStyle = '#5a1a12';
+  g.lineWidth = 0.9;
+  g.beginPath();
+  g.arc(0, -8.5, 3.6, 0, TAU);
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#f6cf5a';
+  g.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 === 0 ? 2.4 : 1;
+    const a = (i / 10) * TAU - Math.PI / 2;
+    if (i === 0) g.moveTo(Math.cos(a) * r, -8.5 + Math.sin(a) * r);
+    else g.lineTo(Math.cos(a) * r, -8.5 + Math.sin(a) * r);
+  }
+  g.closePath();
+  g.fill();
   g.fillStyle = '#a9afbb';
   g.strokeStyle = '#4b4f5c';
   g.lineWidth = 1.1;
   g.beginPath();
-  g.arc(0, 0, 2.7, 0, TAU);
+  g.arc(0, 2, 2.7, 0, TAU);
   g.fill();
   g.stroke();
 }
@@ -376,6 +431,21 @@ function drawGrenBody(g, front, gz) {
   g.beginPath();
   g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
   g.stroke();
+  for (const [x, y] of [[-10.5, 3.6], [-1.6, 9.2]]) {
+    g.fillStyle = '#2a2c33';
+    g.strokeStyle = OUT;
+    g.lineWidth = 1.1;
+    g.beginPath();
+    g.arc(x, y, 3.3, 0, TAU);
+    g.fill();
+    g.stroke();
+    g.fillStyle = '#9aa0ad';
+    g.fillRect(x - 1.2, y - 5, 2.4, 2.2);
+    g.fillStyle = 'rgba(255,255,255,0.35)';
+    g.beginPath();
+    g.arc(x - 1, y - 1, 0.9, 0, TAU);
+    g.fill();
+  }
 
   bigEyes(g, front ? [-8.4, 8.4] : [-2.4, 11], gz, -2, 4.5, 4.6, 1.9, 2.7);
   if (front) smile(g, 0, 3.8, 3.4);
@@ -476,11 +546,59 @@ function drawBushHat(g) {
     g.lineTo(x, 2.2);
   }
   g.stroke();
+  // a red feather tucked in the cuff
+  g.fillStyle = '#d84a3a';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.1;
+  g.beginPath();
+  g.moveTo(11, -1);
+  g.quadraticCurveTo(18, -7, 17, -19);
+  g.quadraticCurveTo(12, -12, 9, -1);
+  g.closePath();
+  g.fill();
+  g.stroke();
 }
 
 function drawArcherBody(g, front, gz, squint) {
   g.lineJoin = 'round';
   g.lineCap = 'round';
+  // a quiver full of feathered arrows on his back
+  g.save();
+  g.translate(-23, 0);
+  g.rotate(-0.28);
+  for (const x of [-3, 0, 3]) {
+    g.strokeStyle = '#8a8f9a';
+    g.lineWidth = 1.2;
+    g.beginPath();
+    g.moveTo(x, -4);
+    g.lineTo(x * 1.4, -16);
+    g.stroke();
+    g.fillStyle = '#e24b3d';
+    g.strokeStyle = OUT;
+    g.lineWidth = 0.7;
+    g.beginPath();
+    g.moveTo(x * 1.4 - 1.5, -16);
+    g.lineTo(x * 1.4 + 1.5, -16);
+    g.lineTo(x * 1.4, -22);
+    g.closePath();
+    g.fill();
+    g.stroke();
+  }
+  g.fillStyle = '#7a4e2a';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.5;
+  rr(g, -5, -5, 10, 24, 3.4);
+  g.fill();
+  g.stroke();
+  g.strokeStyle = '#4e3017';
+  g.lineWidth = 1.3;
+  g.beginPath();
+  g.moveTo(-5, 3);
+  g.lineTo(5, 3);
+  g.moveTo(-5, 11);
+  g.lineTo(5, 11);
+  g.stroke();
+  g.restore();
   // a lavender egg
   eggBody(g, '#b49ad3', '#8d72b4');
   g.strokeStyle = OUT;
@@ -929,6 +1047,36 @@ function drawCowboyTorso(g, look, blink) {
   g.lineWidth = 1.3;
   g.beginPath();
   g.arc(7, 8.4, 2.8, Math.PI * 0.2, Math.PI * 0.8);
+  g.stroke();
+  // a red bandana knotted at the neck and a sheriff's star
+  g.fillStyle = '#c8302f';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.4;
+  g.beginPath();
+  g.moveTo(-15, 11.4);
+  g.quadraticCurveTo(0, 15, 15, 11.4);
+  g.lineTo(0, 24.6);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.fillStyle = 'rgba(255,255,255,0.8)';
+  for (const [x, y] of [[-7, 14], [-1, 17.4], [5, 14.6], [0, 13]]) {
+    g.beginPath();
+    g.arc(x, y, 0.7, 0, TAU);
+    g.fill();
+  }
+  g.fillStyle = '#f2c94a';
+  g.strokeStyle = OUT;
+  g.lineWidth = 0.8;
+  g.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 === 0 ? 4.2 : 1.8;
+    const a = (i / 10) * TAU - Math.PI / 2;
+    if (i === 0) g.moveTo(-10 + Math.cos(a) * r, 4 + Math.sin(a) * r);
+    else g.lineTo(-10 + Math.cos(a) * r, 4 + Math.sin(a) * r);
+  }
+  g.closePath();
+  g.fill();
   g.stroke();
   // the wide hat
   g.save();

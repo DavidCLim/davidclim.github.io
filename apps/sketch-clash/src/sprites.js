@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=81';
+import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=83';
 
 // Units are drawn from "art" coordinates matching the reference sprites
 // (origin at the body centre, y down) into small offscreen layers, then
@@ -177,6 +177,22 @@ function drawSoldierTorso(g, front, gaze) {
   g.fillStyle = '#1b1920';
   rr(g, -23.5, -14.3, 49, 3.6, 1.8);
   g.fill();
+  // a red star on the front of the helmet
+  g.fillStyle = '#e24b3d';
+  g.strokeStyle = OUT;
+  g.lineWidth = 0.8;
+  g.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 === 0 ? 4 : 1.7;
+    const a = (i / 10) * TAU - Math.PI / 2;
+    const px = (front ? 0 : 7) + Math.cos(a) * r;
+    const py = -21 + Math.sin(a) * r;
+    if (i === 0) g.moveTo(px, py);
+    else g.lineTo(px, py);
+  }
+  g.closePath();
+  g.fill();
+  g.stroke();
 }
 
 function drawSoldierRifle(g, firing) {
@@ -399,6 +415,20 @@ export function drawSniperHat(g) {
   g.moveTo(-24, 2.7);
   g.quadraticCurveTo(0, 4.7, 24, 2.7);
   g.stroke();
+  // leaves and twigs stuck in the hat band
+  g.fillStyle = '#5f9a47';
+  g.strokeStyle = INK;
+  g.lineWidth = 0.9;
+  for (const [x, y, r] of [[-8, -11, -0.6], [-3, -12.4, -0.2], [4, -12, 0.4], [9, -10, 0.9]]) {
+    g.save();
+    g.translate(x, y);
+    g.rotate(r);
+    g.beginPath();
+    g.ellipse(0, -2.4, 1.8, 3.6, 0, 0, TAU);
+    g.fill();
+    g.stroke();
+    g.restore();
+  }
 }
 
 // Receiver, barrel and scope; origin is the centre of the receiver.
