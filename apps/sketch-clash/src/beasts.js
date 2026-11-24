@@ -1,5 +1,5 @@
-import { TAU, FEET, GAIT } from './config.js?v=75';
-import { WATER, ICE, WALL } from './terrain.js?v=75';
+import { TAU, FEET, GAIT } from './config.js?v=76';
+import { WATER, ICE, WALL } from './terrain.js?v=76';
 
 // Everything the Animals and Mythical tabs add to the world, plus the terrain physics:
 // the beast brain, the mage's bolts, the necromancer's skeletons, zombie infection,
@@ -156,7 +156,14 @@ export function installBeasts(World) {
             u.y += (ddy / dd) * (r - dd);
           }
         } else if (p.type === 'mine') {
-          if (fly || Math.hypot(ddx, ddy) > MINE_R) continue;
+          // units see a mine coming and walk around it
+          const md = Math.hypot(ddx, ddy);
+          if (!fly && md < 24 && md > MINE_R) {
+            const push = (1 - md / 24) * 1.1 * Math.hypot(dx, dy);
+            u.x += (ddx / md) * push + (-ddy / md) * push * 0.6;
+            u.y += (ddy / md) * push + (ddx / md) * push * 0.6;
+          }
+          if (fly || md > MINE_R) continue;
           p.dead = true;
           this.blastAt(p.x, p.y - 4, 26, 110, null);
         }
