@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=109';
-import { buildCreatureArt } from './creatures.js?v=109';
-import { buildEggArt } from './art_eggs.js?v=109';
-import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=109';
-import { Sfx } from './sfx.js?v=109';
-import { World } from './world.js?v=109';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=109';
-import { buildUnitArt } from './art_units.js?v=109';
-import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=109';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=111';
+import { buildCreatureArt } from './creatures.js?v=111';
+import { buildEggArt } from './art_eggs.js?v=111';
+import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=111';
+import { Sfx } from './sfx.js?v=111';
+import { World } from './world.js?v=111';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=111';
+import { buildUnitArt } from './art_units.js?v=111';
+import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=111';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -456,7 +456,7 @@ function endPaint(e) {
   // a tap that never travelled still drops a patch
   if (ptr.down && stroke && !stroke.started && canPaint() && !erasing) dab(stroke.ox, stroke.oy);
   // Romans snap into a rectangle, however they were painted
-  if (stroke && SPECIES[stroke.sp].def.formation) {
+  if (stroke && SPECIES[stroke.sp].def.formation && shieldWall) {
     const [fx, fy] = LATTICE[stroke.sp] || LATTICE.default;
     world.formRectangle(stroke.made, stroke.ang, fx, fy);
   }
@@ -478,6 +478,19 @@ function setBrush(v) {
   brushDot.style.setProperty('--dot', `${4 + (brush / 90) * 16}px`);
 }
 brushInput.addEventListener('input', () => setBrush(Number(brushInput.value)));
+// the slider is hidden (the original has none): the wheel and [ ] change the brush instead
+stageCanvas.addEventListener(
+  'wheel',
+  (e) => {
+    e.preventDefault();
+    setBrush(brush - Math.sign(e.deltaY) * 3);
+  },
+  { passive: false },
+);
+document.addEventListener('keydown', (e) => {
+  if (e.key === '[') setBrush(brush - 3);
+  else if (e.key === ']') setBrush(brush + 3);
+});
 setBrush(brush);
 
 // ---------- Draggable palette ----------
@@ -577,6 +590,23 @@ try {
   setLammy(false);
 }
 lammyToggle.addEventListener('change', () => setLammy(lammyToggle.checked));
+// Shield Wall: off (the default) knights stay as painted, on they snap into a square block
+const wallToggle = $('wall-toggle');
+let shieldWall = false;
+try {
+  shieldWall = localStorage.getItem('sketch-clash-wall') === '1';
+} catch {
+  shieldWall = false;
+}
+wallToggle.checked = shieldWall;
+wallToggle.addEventListener('change', () => {
+  shieldWall = wallToggle.checked;
+  try {
+    localStorage.setItem('sketch-clash-wall', shieldWall ? '1' : '0');
+  } catch {
+    // storage may be blocked; the switch still works for this visit
+  }
+});
 $('settings').addEventListener('click', () => {
   settingsPanel.hidden = false;
 });

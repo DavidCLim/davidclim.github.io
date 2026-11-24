@@ -51,34 +51,41 @@ canvas {
 }
 
 /* ---------- Top bar ---------- */
+/* a hand-lettered home link at the left, a chunky outlined title in the middle, round buttons at the right */
 .back {
   position: absolute;
-  top: 14px;
+  top: 8px;
   left: 14px;
-  color: var(--muted);
+  color: #111111;
   text-decoration: none;
-  font-size: 13px;
+  font-family: 'Patrick Hand', 'Comic Sans MS', 'Chalkboard SE', cursive;
+  font-size: 25px;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
   padding: 4px 2px;
 }
 .back:hover { color: var(--ink); }
 
 .logo {
   position: absolute;
-  top: 8px;
+  top: 6px;
   left: 50%;
   transform: translateX(-50%);
   margin: 0;
-  font-family: 'Patrick Hand', 'Comic Sans MS', 'Chalkboard SE', cursive;
+  font-family: 'Lilita One', 'Patrick Hand', 'Comic Sans MS', cursive;
   font-weight: 400;
-  font-size: 28px;
+  font-size: 31px;
   line-height: 1;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
   white-space: nowrap;
+  color: #ffffff;
+  -webkit-text-stroke: 5px #111111;
+  paint-order: stroke fill;
+  text-shadow: 2px 2px 0 #111111;
   pointer-events: none;
 }
-.logo span:nth-child(1), .logo span:nth-child(3), .logo span:nth-child(9) { color: #4a86c8; }
-.logo span:nth-child(2), .logo span:nth-child(7), .logo span:nth-child(8) { color: #e0573f; }
-.logo span:nth-child(4), .logo span:nth-child(10) { color: #d79a1e; }
-.logo span:nth-child(5), .logo span:nth-child(6), .logo span:nth-child(11), .logo span:nth-child(12) { color: #5f9f45; }
 
 .tools {
   position: absolute;
@@ -584,3 +591,8 @@ canvas {
 .toggle.big .track { width: 40px; height: 22px; }
 .toggle.big .track::after { top: 2px; left: 2px; width: 18px; height: 18px; }
 .toggle.big input:checked + .track::after { transform: translateX(18px); }
+
+.setting-row + .setting-row { margin-top: 16px; }
+
+/* the original has no brush slider on screen; the size is changed with the mouse wheel or [ and ] */
+.brush-box { display: none; }

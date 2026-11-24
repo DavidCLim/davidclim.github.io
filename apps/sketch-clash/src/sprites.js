@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=109';
+import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=111';
 
 // Units are drawn from "art" coordinates matching the reference sprites
 // (origin at the body centre, y down) into small offscreen layers, then
@@ -151,7 +151,6 @@ function drawSoldierTorso(g, front, gaze) {
   g.beginPath();
   g.ellipse(-10.5, -6, 3.4, 5.6, -0.25, 0, TAU);
   g.fill();
-  neckScarf(g, front, '#e9b43a');
 
   // eyes: white ovals in a heavy navy ring, a big black pupil pushed to the
   // upper right of each one
@@ -193,6 +192,26 @@ function drawSoldierTorso(g, front, gaze) {
   g.fillStyle = '#1b1920';
   rr(g, -23.5, -14.3, 49, 3.6, 1.8);
   g.fill();
+  helmetStar(g, front);
+}
+
+// the soldier's helmet badge
+function helmetStar(g, front) {
+  g.fillStyle = '#e24b3d';
+  g.strokeStyle = OUT;
+  g.lineWidth = 0.8;
+  g.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 === 0 ? 4 : 1.7;
+    const a = (i / 10) * TAU - Math.PI / 2;
+    const px = (front ? 0 : 7) + Math.cos(a) * r;
+    const py = -21 + Math.sin(a) * r;
+    if (i === 0) g.moveTo(px, py);
+    else g.lineTo(px, py);
+  }
+  g.closePath();
+  g.fill();
+  g.stroke();
 }
 
 // the muzzle flash: a small yellow disc with an orange rim
@@ -334,7 +353,6 @@ export function drawSniperBody(g) {
   g.beginPath();
   g.ellipse(-10.7, -5.4, 2.6, 2.3, 0, 0, TAU);
   g.fill();
-  neckScarf(g, false, '#4f7a3f');
 }
 
 // Two eyes: a big black pupil with a sliver of white, hanging under the
@@ -427,6 +445,20 @@ export function drawSniperHat(g) {
   g.moveTo(-24, 2.7);
   g.quadraticCurveTo(0, 4.7, 24, 2.7);
   g.stroke();
+  // two small leaves tucked in the hat band
+  g.fillStyle = '#5f9a47';
+  g.strokeStyle = INK;
+  g.lineWidth = 0.9;
+  for (const [x, y, r] of [[-9.6, -8.6, -1.1], [10.2, -8.4, 1.1]]) {
+    g.save();
+    g.translate(x, y);
+    g.rotate(r);
+    g.beginPath();
+    g.ellipse(0, -2.2, 1.6, 3.2, 0, 0, TAU);
+    g.fill();
+    g.stroke();
+    g.restore();
+  }
 }
 
 // Receiver, barrel and scope; origin is the centre of the receiver.

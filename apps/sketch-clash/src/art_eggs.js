@@ -1,6 +1,6 @@
-import { TAU } from './config.js?v=109';
-import { makeLayer, rr, OUT } from './sprites.js?v=109';
-import { eggBody, bigEyes, feetSet, eggSet, ghostBody } from './art_units.js?v=109';
+import { TAU } from './config.js?v=111';
+import { makeLayer, rr, OUT } from './sprites.js?v=111';
+import { eggBody, bigEyes, feetSet, eggSet, ghostBody } from './art_units.js?v=111';
 
 // The egg-shaped mythical units: zombie, mage, necromancer and the necromancer's skeletons.
 

@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=109';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=109';
+import { TAU, K } from './config.js?v=111';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=111';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -191,13 +191,13 @@ function drawMinigun(g, firing) {
   }
 }
 
-// ---------------------------------------------------------------- roman
+// ---------------------------------------------------------------- knight (the old Roman's mechanics)
 function drawRomanBody(g, front, gz, angry) {
-  // egg: bright red, lit from the upper left
+  // egg: steel blue, lit from the upper left
   const gr = g.createLinearGradient(-14, -22, 16, 24);
-  gr.addColorStop(0, '#e23c3e');
-  gr.addColorStop(0.45, '#d3252d');
-  gr.addColorStop(1, '#b21c25');
+  gr.addColorStop(0, '#9db2d6');
+  gr.addColorStop(0.45, '#7890ba');
+  gr.addColorStop(1, '#55698f');
   g.fillStyle = gr;
   g.strokeStyle = OUT;
   g.lineWidth = 1.9;
@@ -256,7 +256,7 @@ function drawRomanBody(g, front, gz, angry) {
   g.beginPath();
   g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
   g.clip();
-  g.fillStyle = '#e8b13f';
+  g.fillStyle = '#5b3d28';
   g.fillRect(-22, 11.6, 44, 4.2);
   g.strokeStyle = OUT;
   g.lineWidth = 1.2;
@@ -277,8 +277,8 @@ function drawRomanBody(g, front, gz, angry) {
 
   // red dome of the helmet, a half-ellipse sitting on the visor
   const dg = g.createLinearGradient(0, -32, 0, -20);
-  dg.addColorStop(0, '#f24545');
-  dg.addColorStop(1, '#cc2026');
+  dg.addColorStop(0, '#dfe4ee');
+  dg.addColorStop(1, '#a3acbd');
   g.fillStyle = dg;
   g.strokeStyle = OUT;
   g.lineWidth = 1.9;
@@ -292,7 +292,7 @@ function drawRomanBody(g, front, gz, angry) {
   g.ellipse(-5, -28.2, 6.2, 1.6, -0.12, 0, TAU);
   g.fill();
   // the orange visor: a half-disc with a flat underside, as wide as the body
-  g.fillStyle = '#eda83f';
+  g.fillStyle = '#434a5b';
   g.strokeStyle = OUT;
   g.lineWidth = 1.9;
   g.beginPath();
@@ -300,62 +300,83 @@ function drawRomanBody(g, front, gz, angry) {
   g.closePath();
   g.fill();
   g.stroke();
-  g.fillStyle = 'rgba(255, 255, 255, 0.28)';
+  g.fillStyle = 'rgba(255, 255, 255, 0.2)';
   g.beginPath();
   g.ellipse(-3, -16, 12, 1.5, 0, 0, TAU);
   g.fill();
+  // a red plume swept back over the top of the helmet
+  g.fillStyle = '#d63a3a';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.5;
+  g.beginPath();
+  g.moveTo(-5, -30.6);
+  g.quadraticCurveTo(-4, -37.5, 5.5, -36.8);
+  g.quadraticCurveTo(14, -36, 17, -28.5);
+  g.quadraticCurveTo(9, -33.4, 4, -30.6);
+  g.closePath();
+  g.fill();
+  g.stroke();
 }
 
-// Origin: the hand. A thin gold shaft with a round grey head.
+// Origin: the hand. A straight silver sword with a gold crossguard.
 function drawSpear(g) {
-  g.lineCap = 'butt';
+  g.lineJoin = 'round';
+  // the grip and pommel
+  g.fillStyle = '#6b4427';
   g.strokeStyle = OUT;
-  g.lineWidth = 3.6;
-  g.beginPath();
-  g.moveTo(0, 0);
-  g.lineTo(52, 0);
-  g.stroke();
-  g.strokeStyle = '#e1a645';
-  g.lineWidth = 2.2;
-  g.beginPath();
-  g.moveTo(0.4, 0);
-  g.lineTo(52, 0);
-  g.stroke();
-  g.strokeStyle = 'rgba(255, 224, 150, 0.8)';
-  g.lineWidth = 0.7;
-  g.beginPath();
-  g.moveTo(1, -0.4);
-  g.lineTo(52, -0.4);
-  g.stroke();
-  // the broad grey head
-  g.lineCap = 'round';
-  g.fillStyle = '#a3a8b4';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.4;
-  g.beginPath();
-  g.ellipse(55.5, 0, 7.4, 3.2, 0, 0, TAU);
+  g.lineWidth = 1.3;
+  rr(g, -9, -1.8, 10, 3.6, 1.2);
   g.fill();
   g.stroke();
-  g.fillStyle = 'rgba(255, 255, 255, 0.45)';
+  g.fillStyle = '#e8c24e';
   g.beginPath();
-  g.ellipse(55, -0.8, 5, 1.3, 0, 0, TAU);
+  g.arc(-10, 0, 2.4, 0, TAU);
   g.fill();
+  g.stroke();
+  // the blade
+  g.fillStyle = '#dde1ea';
+  g.beginPath();
+  g.moveTo(2, -2.6);
+  g.lineTo(46, -2.6);
+  g.lineTo(58, 0);
+  g.lineTo(46, 2.6);
+  g.lineTo(2, 2.6);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.strokeStyle = 'rgba(120, 128, 146, 0.8)';
+  g.lineWidth = 0.9;
+  g.beginPath();
+  g.moveTo(6, 0);
+  g.lineTo(50, 0);
+  g.stroke();
+  // the crossguard
+  g.fillStyle = '#e8c24e';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.3;
+  rr(g, 0, -6.8, 3.8, 13.6, 1.4);
+  g.fill();
+  g.stroke();
 }
 
 // Origin: the middle of the shield.
 function drawShield(g) {
-  g.fillStyle = '#eca83d';
+  g.lineJoin = 'round';
+  g.fillStyle = '#2f5fb8';
   g.strokeStyle = OUT;
   g.lineWidth = 1.7;
-  rr(g, -5.65, -16.5, 11.3, 33, 1.5);
+  g.beginPath();
+  g.moveTo(-6.4, -16.5);
+  g.lineTo(6.4, -16.5);
+  g.lineTo(6.4, 3);
+  g.quadraticCurveTo(5, 12, 0, 17);
+  g.quadraticCurveTo(-5, 12, -6.4, 3);
+  g.closePath();
   g.fill();
   g.stroke();
-  g.fillStyle = '#f4b94d';
-  g.strokeStyle = 'rgba(120, 72, 12, 0.7)';
-  g.lineWidth = 0.8;
-  rr(g, -4, -15, 8, 30, 0.8);
-  g.fill();
-  g.stroke();
+  g.fillStyle = '#f4f1ea';
+  g.fillRect(-1.3, -14, 2.6, 22);
+  g.fillRect(-4.8, -8.4, 9.6, 2.6);
 }
 
 // ---------------------------------------------------------------- grenadier
@@ -514,7 +535,6 @@ function drawArcherBody(g, front, gz, squint) {
   g.beginPath();
   g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
   g.stroke();
-  neckScarf(g, front, '#9a6232');
 
   bigEyes(g, front ? [-8.4, 8.4] : [-2.2, 12.6], gz, -3.8, 4.5, 4.7, 1.1, 3, !!squint);
   if (front) smile(g, 0, 6.6, 3.2);
@@ -1123,7 +1143,6 @@ function drawFlintlock(g, firing) {
 function drawNinjaBody(g, front, gz) {
   // the samurai: an indigo egg, black hair in a topknot and a white headband with a red sun
   eggBody(g, '#4c5da8', '#2f3c78');
-  neckScarf(g, front, '#e4e4ec');
   bigEyes(g, front ? [-7.4, 7.4] : [-1.8, 11.4], gz, -4.4, 4.2, 4.4, 1.4, 2.6);
   g.strokeStyle = OUT;
   g.lineWidth = 1.8;
@@ -1304,7 +1323,7 @@ export const DROPS = {
     }
   },
   roman(g) {
-    g.fillStyle = '#e8647a';
+    g.fillStyle = '#c3cad8';
     g.strokeStyle = OUT;
     g.lineWidth = 1;
     g.beginPath();
@@ -1312,7 +1331,7 @@ export const DROPS = {
     g.closePath();
     g.fill();
     g.stroke();
-    g.fillStyle = '#f0a63c';
+    g.fillStyle = '#434a5b';
     g.beginPath();
     g.moveTo(-13, -4);
     g.quadraticCurveTo(0, -6, 13, -4);
@@ -1393,8 +1412,8 @@ export const DROPS = {
 const GHOSTS = {
   minigunner: ['#eef0f5', '#c9cdd8', (g) => dome(g, '#2d313b', 11, 8, -10)],
   roman: ['#f9eded', '#d9c4c4', (g) => {
-    dome(g, '#d43234', 11, 8, -10);
-    g.fillStyle = '#f0a53a';
+    dome(g, '#a9aeb8', 11, 8, -10);
+    g.fillStyle = '#4a5060';
     rr(g, -13.5, -12.5, 27, 4.6, 2.2);
     g.fill();
     g.stroke();
