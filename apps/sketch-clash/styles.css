@@ -248,8 +248,9 @@ canvas {
 }
 .legend-row canvas {
   position: static;
-  width: 28px;
-  height: 18px;
+  width: 26px;
+  height: 21.2px;
+  margin: -2px 0;
 }
 .legend-row b {
   min-width: 20px;
@@ -315,7 +316,7 @@ canvas {
 .unit-btn {
   width: 46px;
   height: 42px;
-  padding: 5px 6px;
+  padding: 3px 2px;
   border: 0;
   border-radius: 8px;
   background: transparent;
@@ -327,8 +328,8 @@ canvas {
 .unit-btn[aria-pressed="true"] { background: #e9eef6; box-shadow: inset 0 0 0 1.5px #9db0cc; }
 .unit-btn canvas {
   position: static;
-  width: 34px;
-  height: 32px;
+  width: 42px;
+  height: 34.4px;
 }
 
 /* ---------- Team battle ---------- */

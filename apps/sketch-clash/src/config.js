@@ -81,21 +81,24 @@ export const SNIPER = {
 
 const BODY = { radius: 11 * UNIT, sep: 13 * UNIT };
 
-// Sprays a cone of fire at close range and sets whatever it touches alight.
-export const FLAMETHROWER = {
-  kind: 'flame',
-  hp: 130,
+// A slow heavy gunner: stands his ground and hoses a long burst of small bullets from a minigun.
+export const MINIGUNNER = {
+  kind: 'rifle',
+  hp: 150,
   ...BODY,
-  speed: 42,
-  sight: 280,
-  range: 30,
-  holdDist: 18,
-  dps: 62,
-  cone: 0.36,
-  burnTime: 2.6,
-  burnDps: 9,
-  onTime: 1.7,
-  offTime: 0.7,
+  speed: 30,
+  sight: 330,
+  range: 250,
+  holdDist: 120,
+  kite: 36,
+  burst: 16,
+  burstGap: 0.055,
+  cooldownMin: 1.6,
+  cooldownMax: 2.3,
+  damage: 7,
+  bulletSpeed: 620,
+  bulletRange: 330,
+  spread: 0.13,
   pivot: { x: 8 * K, y: 11 * K },
   muzzleLen: 46 * K,
 };
@@ -316,7 +319,7 @@ export const TERRAIN_IDS = ['wall', 'water', 'ice', 'mine', 'tower', 'barrel', '
 // species itself); a knight is the same faction as the cavalry.
 export const SPECIES = {
   soldier: { id: 'soldier', label: 'Soldier', def: SOLDIER },
-  flamethrower: { id: 'flamethrower', label: 'Flamethrower', def: FLAMETHROWER },
+  minigunner: { id: 'minigunner', label: 'Minigunner', def: MINIGUNNER },
   sniper: { id: 'sniper', label: 'Sniper', def: SNIPER },
   roman: { id: 'roman', label: 'Roman', def: ROMAN },
   grenadier: { id: 'grenadier', label: 'Grenadier', def: GRENADIER },
@@ -345,7 +348,7 @@ export const SPECIES = {
 };
 // The order of the palette (the knight only ever comes from a cavalry).
 export const TABS = [
-  { id: 'army', label: 'Army', items: ['soldier', 'flamethrower', 'sniper', 'roman', 'grenadier', 'archer', 'cowboy', 'ninja'] },
+  { id: 'army', label: 'Army', items: ['soldier', 'minigunner', 'sniper', 'roman', 'grenadier', 'archer', 'cowboy', 'ninja'] },
   { id: 'terrain', label: 'Terrain', items: ['wall', 'water', 'ice', 'mine', 'tower', 'barrel', 'tree'] },
 ];
 export const TERRAIN_LABELS = { wall: 'Wall', water: 'Water', ice: 'Ice', mine: 'Mines', tower: 'Tower', barrel: 'Barrel', tree: 'Tree' };

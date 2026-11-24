@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=79';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=79';
+import { TAU, K } from './config.js?v=81';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=81';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -85,86 +85,108 @@ function dome(g, color, rx, ry, cy) {
   g.stroke();
 }
 
-// ---------------------------------------------------------------- flamethrower
-function drawFlameBody(g, front, gz) {
-  g.fillStyle = '#c63a2e';
+// ---------------------------------------------------------------- minigunner
+// A steel-grey egg with a dark helmet, a diagonal belt of gold rounds and an ammo box on his back.
+function drawMiniBody(g, front, gz) {
+  g.fillStyle = '#5f6b3c';
   g.strokeStyle = OUT;
   g.lineWidth = 1.6;
-  rr(g, -27, -12, 10, 26, 2.4);
+  rr(g, -27, -9, 11, 22, 2.4);
   g.fill();
   g.stroke();
-
-  g.save();
+  g.strokeStyle = 'rgba(20, 28, 10, 0.5)';
+  g.lineWidth = 1;
   g.beginPath();
-  g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
-  g.clip();
-  const gr = g.createLinearGradient(0, -23, 0, 23);
-  gr.addColorStop(0, '#2f2e36');
-  gr.addColorStop(0.58, '#27262d');
-  gr.addColorStop(0.59, '#c8392c');
-  gr.addColorStop(1, '#b02f24');
-  g.fillStyle = gr;
-  g.fillRect(-22, -24, 44, 48);
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.2;
-  g.restore();
-  g.fillStyle = 'rgba(255, 255, 255, 0.13)';
-  g.beginPath();
-  g.ellipse(-11, -11, 3.4, 7, 0.4, 0, TAU);
-  g.fill();
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.8;
-  g.beginPath();
-  g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
+  g.moveTo(-26, 0);
+  g.lineTo(-17.5, 0);
   g.stroke();
 
-  for (const x of front ? [-8.6, 8.6] : [-1, 12.4]) {
-    g.fillStyle = '#15141a';
-    g.beginPath();
-    g.arc(x, -7, 5.9, 0, TAU);
-    g.fill();
-    g.fillStyle = '#f7c317';
-    g.beginPath();
-    g.arc(x, -7, 4.6, 0, TAU);
-    g.fill();
-    g.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    g.beginPath();
-    g.arc(x - 1.7, -8.8, 1.5, 0, TAU);
-    g.fill();
+  eggBody(g, '#6a7282', '#474d5a');
+  // the belt of rounds across the chest
+  g.strokeStyle = '#5a3f22';
+  g.lineWidth = 4.4;
+  g.beginPath();
+  g.moveTo(-17, -3);
+  g.quadraticCurveTo(0, 8, 17, 19);
+  g.stroke();
+  g.strokeStyle = '#e7bd45';
+  g.lineWidth = 2.4;
+  g.setLineDash([2.4, 1.8]);
+  g.beginPath();
+  g.moveTo(-17, -3);
+  g.quadraticCurveTo(0, 8, 17, 19);
+  g.stroke();
+  g.setLineDash([]);
+  bigEyes(g, front ? [-7.4, 7.4] : [-1.6, 11.4], gz, -4.6, 4.2, 4.4, 1.4, 2.6);
+  // a stern brow over each eye
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.6;
+  g.beginPath();
+  for (const x of front ? [-7.4, 7.4] : [-1.6, 11.4]) {
+    g.moveTo(x - 4.6, -10.8);
+    g.lineTo(x + 4.2, -9);
   }
-  const fx = front ? 0 : 7;
-  g.fillStyle = '#868892';
+  g.stroke();
+  if (front) smile(g, 0, 8.4, 3);
+  else smile(g, 6, 8.4, 2.6);
+  // the helmet
+  g.fillStyle = '#2d313b';
   g.strokeStyle = OUT;
-  g.lineWidth = 1.1;
+  g.lineWidth = 1.6;
   g.beginPath();
-  g.ellipse(fx, 4.4, 5.3, 4.3, 0, 0, TAU);
+  g.moveTo(-21, -12);
+  g.bezierCurveTo(-21, -29, 21, -29, 21, -12);
+  g.quadraticCurveTo(0, -15, -21, -12);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#c63a2e';
+  rr(g, -19, -15.4, 38, 3.6, 1.6);
   g.fill();
   g.stroke();
 }
 
-// Origin: where the nozzle leaves the hip. Points right.
-function drawNozzle(g, firing) {
-  g.fillStyle = '#e9a53a';
+// Origin: the grip. A fat cluster of barrels pointing right.
+function drawMinigun(g, firing) {
+  g.fillStyle = '#34373f';
   g.strokeStyle = OUT;
-  g.lineWidth = 1.1;
-  rr(g, 0, -3.2, 40, 6.4, 1.4);
+  g.lineWidth = 1.2;
+  rr(g, -8, -6.6, 15, 13.2, 2);
   g.fill();
   g.stroke();
-  g.fillStyle = '#f6c866';
-  g.fillRect(1.5, -2.3, 36, 1.4);
-  g.fillStyle = '#c98a22';
-  g.fillRect(1.5, 1.2, 36, 1.3);
-  g.fillStyle = firing ? '#fff2a8' : '#f58a2c';
-  g.beginPath();
-  g.arc(41.5, 0, 3.5, 0, TAU);
+  g.fillStyle = '#9aa0ad';
+  rr(g, 7, -5.4, 33, 10.8, 1.6);
   g.fill();
+  g.stroke();
+  g.strokeStyle = '#4a4e5a';
+  g.lineWidth = 1;
+  g.beginPath();
+  g.moveTo(8, -1.8);
+  g.lineTo(39, -1.8);
+  g.moveTo(8, 1.8);
+  g.lineTo(39, 1.8);
+  g.stroke();
+  g.fillStyle = '#4b4f5b';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.1;
+  rr(g, 18, -6.4, 3.4, 12.8, 1);
+  g.fill();
+  g.stroke();
+  rr(g, 38, -6.2, 5, 12.4, 1.2);
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#5a3f22';
+  rr(g, -4, 6, 5, 7, 1.2);
+  g.fill();
+  g.stroke();
   if (firing) {
-    const r = g.createRadialGradient(44, 0, 1, 44, 0, 9);
-    r.addColorStop(0, 'rgba(255, 240, 160, 0.95)');
+    const r = g.createRadialGradient(47, 0, 1, 47, 0, 11);
+    r.addColorStop(0, 'rgba(255, 244, 170, 0.98)');
+    r.addColorStop(0.5, 'rgba(255, 190, 60, 0.7)');
     r.addColorStop(1, 'rgba(255, 150, 30, 0)');
     g.fillStyle = r;
     g.beginPath();
-    g.arc(44, 0, 9, 0, TAU);
+    g.arc(47, 0, 11, 0, TAU);
     g.fill();
   }
 }
@@ -1055,122 +1077,36 @@ function drawFlintlock(g, firing) {
 
 // ---------------------------------------------------------------- ninja
 function drawNinjaBody(g, front, gz) {
-  // the samurai: crimson armour with gold lacing, navy shoulder plates, a kabuto helmet with golden horns
-  const cx = front ? 0 : 3;
-  // neck guard of the helmet, behind the head
-  g.fillStyle = '#2c3150';
+  // the samurai: a plain red egg with a navy kabuto and one golden crest
+  eggBody(g, '#c23a31', '#912622');
+  bigEyes(g, front ? [-7.4, 7.4] : [-1.8, 11.4], gz, -4.4, 4.2, 4.4, 1.4, 2.6);
   g.strokeStyle = OUT;
-  g.lineWidth = 1.3;
+  g.lineWidth = 1.6;
   g.beginPath();
-  g.moveTo(-17, -15);
-  g.lineTo(-26, -12);
-  g.lineTo(-25, -1);
-  g.lineTo(-18, -4);
-  g.closePath();
-  g.fill();
-  g.stroke();
-  g.strokeStyle = '#d8b04a';
-  g.lineWidth = 0.9;
-  g.beginPath();
-  g.moveTo(-24.5, -8);
-  g.lineTo(-18, -9);
-  g.moveTo(-24.8, -4.5);
-  g.lineTo(-18.4, -6);
-  g.stroke();
-
-  eggBody(g, '#bd3a32', '#8c2421');
-  // gold lacing across the armour
-  g.strokeStyle = '#e1b94b';
-  g.lineWidth = 1.3;
-  g.beginPath();
-  for (const y of [8, 13.5, 19]) {
-    g.moveTo(-19 + (y - 8) * 0.18, y);
-    g.quadraticCurveTo(0, y + 3.4, 19 - (y - 8) * 0.18, y);
+  for (const x of front ? [-7.4, 7.4] : [-1.8, 11.4]) {
+    g.moveTo(x - 4.6, -10.6);
+    g.lineTo(x + 4.2, -8.8);
   }
   g.stroke();
-  g.strokeStyle = 'rgba(40, 14, 14, 0.55)';
-  g.lineWidth = 1;
-  g.beginPath();
-  g.moveTo(0, 7);
-  g.lineTo(0, 22);
-  g.stroke();
-  // shoulder plates
-  g.fillStyle = '#2c3150';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.4;
-  rr(g, -22.5, -1, 9, 9, 3);
-  g.fill();
-  g.stroke();
-  rr(g, 13.5, -1, 9, 9, 3);
-  g.fill();
-  g.stroke();
-  g.strokeStyle = '#e1b94b';
-  g.lineWidth = 1;
-  g.beginPath();
-  g.moveTo(-21, 3.4);
-  g.lineTo(-15, 3.4);
-  g.moveTo(15, 3.4);
-  g.lineTo(21, 3.4);
-  g.stroke();
-  // face
-  g.fillStyle = '#ecc9a0';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.5;
-  rr(g, front ? -15 : -9.4, -11.6, front ? 30 : 24, 10.4, 3.2);
-  g.fill();
-  g.stroke();
-  const xs = front ? [-6.8, 6.8] : [-3.4, 9.2];
-  for (const x of xs) {
-    g.fillStyle = '#fdfdf8';
-    g.strokeStyle = OUT;
-    g.lineWidth = 1.5;
-    g.beginPath();
-    g.ellipse(x, -6.2, 3.8, 3, 0, 0, TAU);
-    g.fill();
-    g.stroke();
-    g.fillStyle = '#0d0b10';
-    g.beginPath();
-    g.arc(x + 1.2 + gz[0] * 0.4, -6, 2.2, 0, TAU);
-    g.fill();
-    // stern brow
-    g.strokeStyle = OUT;
-    g.lineWidth = 1.5;
-    g.beginPath();
-    g.moveTo(x - 4.4, -10.6);
-    g.lineTo(x + 3.8, -9);
-    g.stroke();
-  }
-  // kabuto: navy dome, a gold rim and two golden horns
+  if (front) smile(g, 0, 8.4, 3);
+  else smile(g, 6, 8.4, 2.6);
   g.fillStyle = '#2c3150';
   g.strokeStyle = OUT;
   g.lineWidth = 1.6;
   g.beginPath();
-  g.moveTo(-20, -11.4);
-  g.bezierCurveTo(-21, -27, 21, -27, 20, -11.4);
-  g.quadraticCurveTo(0, -14.4, -20, -11.4);
+  g.moveTo(-21, -12);
+  g.bezierCurveTo(-21, -29, 21, -29, 21, -12);
+  g.quadraticCurveTo(0, -15, -21, -12);
   g.closePath();
   g.fill();
   g.stroke();
-  g.strokeStyle = '#e1b94b';
-  g.lineWidth = 1.5;
-  g.beginPath();
-  g.moveTo(-19.4, -12.4);
-  g.quadraticCurveTo(0, -15.6, 19.4, -12.4);
-  g.stroke();
   g.fillStyle = '#e8c24e';
-  g.strokeStyle = OUT;
   g.lineWidth = 1.2;
-  for (const sg of [-1, 1]) {
-    g.beginPath();
-    g.moveTo(sg * 3, -22);
-    g.quadraticCurveTo(sg * 6, -30, sg * 13, -33);
-    g.quadraticCurveTo(sg * 8, -27, sg * 7.4, -21);
-    g.closePath();
-    g.fill();
-    g.stroke();
-  }
   g.beginPath();
-  g.arc(0, -19.6, 2.1, 0, TAU);
+  g.moveTo(-3, -25);
+  g.quadraticCurveTo(0, -37, 9, -35);
+  g.quadraticCurveTo(3, -32, 3, -25);
+  g.closePath();
   g.fill();
   g.stroke();
 }
@@ -1272,7 +1208,21 @@ export const DROPS = {
     g.fill();
     g.stroke();
   },
-  flamethrower(g) {
+  minigunner(g) {
+    g.fillStyle = '#2d313b';
+    g.strokeStyle = OUT;
+    g.lineWidth = 1;
+    g.beginPath();
+    g.ellipse(0, 0, 11, 7.5, 0, Math.PI, TAU);
+    g.closePath();
+    g.fill();
+    g.stroke();
+    g.fillStyle = '#c63a2e';
+    rr(g, -11, -2, 22, 3, 1.4);
+    g.fill();
+    g.stroke();
+  },
+  oldflamethrower(g) {
     for (const x of [-5.5, 5.5]) {
       g.fillStyle = '#15141a';
       g.beginPath();
@@ -1372,7 +1322,7 @@ export const DROPS = {
 
 // Light, tinted ghosts that keep the unit's headgear.
 const GHOSTS = {
-  flamethrower: ['#f6efe9', '#d5cbc4', (g) => dome(g, '#2f2e36', 11, 8, -10)],
+  minigunner: ['#eef0f5', '#c9cdd8', (g) => dome(g, '#2d313b', 11, 8, -10)],
   roman: ['#f9eded', '#d9c4c4', (g) => {
     dome(g, '#d43234', 11, 8, -10);
     g.fillStyle = '#f0a53a';
@@ -1442,11 +1392,11 @@ export function buildUnitArt() {
   const dark = feetSet('#25232e');
   const art = {};
 
-  art.flamethrower = {
+  art.minigunner = {
     feet: dark,
-    ...eggSet(drawFlameBody),
-    nozzle: makeLayer(-8, -14, 58, 14, (g) => drawNozzle(g, false)),
-    nozzleFire: makeLayer(-8, -14, 58, 14, (g) => drawNozzle(g, true)),
+    ...eggSet(drawMiniBody),
+    gun: makeLayer(-10, -14, 60, 16, (g) => drawMinigun(g, false)),
+    gunFire: makeLayer(-10, -14, 60, 16, (g) => drawMinigun(g, true)),
   };
 
   art.roman = {
