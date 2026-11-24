@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=58';
-import { TerrainMap, WALL } from './terrain.js?v=58';
-import { installBeasts } from './beasts.js?v=58';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=61';
+import { TerrainMap, WALL } from './terrain.js?v=61';
+import { installBeasts } from './beasts.js?v=61';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -80,7 +80,7 @@ export class World {
     this.groups = []; // Roman blocks marching in formation
     this.corpses = []; // units knocked over, seeing stars, before the ghost takes over
     this.terrain = new TerrainMap(); // painted wall / water / ice
-    this.props = []; // mines, banana peels, barrels, trees
+    this.props = []; // mines, barrels, trees, towers
     this.orbs = []; // the mage's frost bolts
     this.rises = []; // the fallen getting back up as zombies
     this.sfx = null; // sound hook: (name, x)
@@ -481,7 +481,7 @@ export class World {
       this.counts[u.side] = (this.counts[u.side] || 0) + 1;
     }
     for (const p of this.props) {
-      if (!p.dead && (p.type === 'barrel' || p.type === 'tree')) this.speciesCounts[p.type] = (this.speciesCounts[p.type] || 0) + 1;
+      if (!p.dead && (p.type === 'barrel' || p.type === 'tree' || p.type === 'tower')) this.speciesCounts[p.type] = (this.speciesCounts[p.type] || 0) + 1;
     }
     this.enemyGrids.clear();
     for (const side of this.grids.keys()) {

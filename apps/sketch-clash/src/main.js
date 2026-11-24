@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=58';
-import { buildCreatureArt } from './creatures.js?v=58';
-import { buildEggArt } from './art_eggs.js?v=58';
-import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=58';
-import { Sfx } from './sfx.js?v=58';
-import { World } from './world.js?v=58';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=58';
-import { buildUnitArt } from './art_units.js?v=58';
-import { drawUnit, drawFx, placeUnit, burnOverlay, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=58';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=61';
+import { buildCreatureArt } from './creatures.js?v=61';
+import { buildEggArt } from './art_eggs.js?v=61';
+import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=61';
+import { Sfx } from './sfx.js?v=61';
+import { World } from './world.js?v=61';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=61';
+import { buildUnitArt } from './art_units.js?v=61';
+import { drawUnit, drawFx, placeUnit, burnOverlay, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=61';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -193,8 +193,8 @@ const LATTICE = {
 };
 
 // Terrain: walls, water and ice are painted as strokes; the rest are dropped along the drag.
-const TERRAIN_SET = new Set(['wall', 'water', 'ice', 'mine', 'banana', 'barrel', 'tree']);
-const DISCRETE = { mine: { gap: 84, off: 3 }, banana: { gap: 36, off: 6 }, barrel: { gap: 26, off: 10 }, tree: { gap: 50, off: 18 } };
+const TERRAIN_SET = new Set(['wall', 'water', 'ice', 'mine', 'tower', 'barrel', 'tree']);
+const DISCRETE = { mine: { gap: 84, off: 3 }, tower: { gap: 60, off: 20 }, barrel: { gap: 26, off: 10 }, tree: { gap: 50, off: 18 } };
 let tstroke = null;
 
 function terrainDown(x, y) {
@@ -1004,12 +1004,12 @@ function drawBody(u) {
   else drawUnit(ctx, dpr, sprites, u);
 }
 
-const PROP_SCALE = { tree: 1.25, barrel: 1.4, mine: 1.35, banana: 1.12 };
+const PROP_SCALE = { tree: 1.25, barrel: 1.4, mine: 1.6, tower: 1.15 };
 function drawProp(p) {
   const k = PROP_SCALE[p.type];
   ctx.setTransform(dpr * k, 0, 0, dpr * k, p.x * dpr, p.y * dpr);
-  if (p.type === 'tree') {
-    drawLayer(ctx, terrainArt.tree);
+  if (p.type === 'tree' || p.type === 'tower') {
+    drawLayer(ctx, terrainArt[p.type]);
     return;
   }
   // a barrel about to go off rattles and glows
@@ -1041,10 +1041,10 @@ function render() {
   }
   const blink = ((world.clock * 1.6) | 0) & 1;
   for (const p of world.props) {
-    if (p.type !== 'mine' && p.type !== 'banana') continue;
+    if (p.type !== 'mine') continue;
     const k = PROP_SCALE[p.type];
     ctx.setTransform(dpr * k, 0, 0, dpr * k, p.x * dpr, p.y * dpr);
-    drawLayer(ctx, p.type === 'banana' ? terrainArt.banana : blink ? terrainArt.mineLit : terrainArt.mine);
+    drawLayer(ctx, blink ? terrainArt.mineLit : terrainArt.mine);
   }
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
@@ -1091,7 +1091,7 @@ function render() {
     drawList.push(u);
   }
   for (const p of world.props) {
-    if (p.type !== 'barrel' && p.type !== 'tree') continue;
+    if (p.type !== 'barrel' && p.type !== 'tree' && p.type !== 'tower') continue;
     p.sk = p.y - FEET;
     drawList.push(p);
   }

@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=58';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=58';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=58';
+import { TAU, K } from './config.js?v=61';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=61';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=61';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask
@@ -217,228 +217,397 @@ export function renderGround(ctx, W, H, strokes, clock) {
 }
 
 // ------------------------------------------------------------------ single props
+// Drawn like the original's icons: bold black outlines, flat colours, one soft shadow.
+const INK = '#17141a';
+
+function shadowEll(g, rx, ry = 5, y = 2) {
+  g.save();
+  g.translate(0, y);
+  g.scale(1, ry / rx);
+  const gr = g.createRadialGradient(0, 0, rx * 0.2, 0, 0, rx);
+  gr.addColorStop(0, 'rgba(40, 42, 54, 0.30)');
+  gr.addColorStop(1, 'rgba(40, 42, 54, 0)');
+  g.fillStyle = gr;
+  g.beginPath();
+  g.arc(0, 0, rx, 0, TAU);
+  g.fill();
+  g.restore();
+}
+
+function ink(g, lw) {
+  g.strokeStyle = INK;
+  g.lineWidth = lw;
+  g.lineJoin = 'round';
+  g.lineCap = 'round';
+}
+
+// A land mine: a squat olive disc, rings on top and a red button in the middle.
 function drawMine(g, lit) {
-  g.fillStyle = 'rgba(30,30,40,0.2)';
+  shadowEll(g, 30, 6, 3);
+  ink(g, 1.7);
+  for (const [y, fill] of [[-4.5, '#37422a']]) {
+    g.beginPath();
+    g.ellipse(0, y, 22.5, 9.6, 0, 0, TAU);
+    g.fillStyle = fill;
+    g.fill();
+    g.stroke();
+  }
   g.beginPath();
-  g.ellipse(0, 1, 26, 6, 0, 0, TAU);
+  g.ellipse(0, -12, 22, 9.4, 0, 0, TAU);
+  g.fillStyle = vgrad(g, -22, -2, '#5d6f3a', '#4a5a30');
   g.fill();
-  ell(g, 0, -3, 22, 9, '#333c22', 1.9);
-  ell(g, 0, -7, 22, 9, vgrad(g, -16, 2, '#667443', '#4b5830'), 1.9);
-  ell(g, 0, -11.5, 21, 8.6, vgrad(g, -20, -3, '#7a8a50', '#5f6e3b'), 1.9);
-  ell(g, 0, -11.5, 11, 4.6, '#4a5731', 1.3);
-  if (lit) {
-    const gr = g.createRadialGradient(0, -11.5, 1, 0, -11.5, 14);
-    gr.addColorStop(0, 'rgba(255,90,60,0.85)');
-    gr.addColorStop(1, 'rgba(255,90,60,0)');
-    g.fillStyle = gr;
-    g.beginPath();
-    g.arc(0, -11.5, 14, 0, TAU);
-    g.fill();
-  }
-  ell(g, 0, -11.5, 4.6, 2.4, lit ? '#ff8c6a' : '#d83a26', 1.1);
-  g.fillStyle = '#2e3620';
-  for (const x of [-15, 15]) {
-    g.beginPath();
-    g.arc(x, -11, 1.2, 0, TAU);
-    g.fill();
-  }
+  g.stroke();
+  g.strokeStyle = 'rgba(30, 40, 20, 0.55)';
+  g.lineWidth = 1.3;
+  g.beginPath();
+  g.ellipse(0, -12, 13.5, 5.6, 0, 0, TAU);
+  g.stroke();
+  g.fillStyle = lit ? 'rgba(255, 90, 60, 0.7)' : 'rgba(214, 74, 48, 0.55)';
+  g.beginPath();
+  g.ellipse(0, -12, 7.4, 3.2, 0, 0, TAU);
+  g.fill();
+  g.fillStyle = lit ? '#ff6a4a' : '#e5311f';
+  g.beginPath();
+  g.ellipse(0, -12, 3, 1.5, 0, 0, TAU);
+  g.fill();
+  g.fillStyle = 'rgba(255, 255, 255, 0.7)';
+  g.beginPath();
+  g.ellipse(-0.8, -12.6, 0.9, 0.5, 0, 0, TAU);
+  g.fill();
 }
 
-function drawBanana(g) {
-  g.fillStyle = 'rgba(30,30,40,0.18)';
-  g.beginPath();
-  g.ellipse(2, 1, 34, 5, 0, 0, TAU);
-  g.fill();
-  const y = (a, b) => vgrad(g, a, b, '#fbe44a', '#e7b822');
-  blob(g, [[3, -8], [18, -12], [38, -7], [44, -2], [22, -1], [3, -2]], y(-12, 0), 1.8);
-  blob(g, [[-3, -8], [-18, -12], [-31, -5], [-37, -1], [-16, -1], [-3, -2]], y(-12, 0), 1.8);
-  blob(g, [[-2, -4], [-8, -17], [-3, -27], [5, -19], [3, -4]], '#e4b520', 1.7);
-  blob(g, [[-5.5, -3], [-5, -22], [-2, -34], [3.5, -32], [4, -20], [5.5, -3]], y(-34, -2), 1.9);
-  g.fillStyle = '#17141a';
-  g.beginPath();
-  g.arc(-1.5, -35.5, 2.3, 0, TAU);
-  g.fill();
-  g.fillStyle = 'rgba(120, 80, 20, 0.5)';
-  for (const [x, yy] of [[26, -6], [-22, -5], [0, -16]]) {
-    g.beginPath();
-    g.arc(x, yy, 1, 0, TAU);
-    g.fill();
-  }
-}
-
+// An oil drum: red, banded, with a yellow warning diamond.
 function drawBarrel(g, glow) {
-  g.fillStyle = 'rgba(30,30,40,0.22)';
-  g.beginPath();
-  g.ellipse(0, 1, 22, 5, 0, 0, TAU);
-  g.fill();
+  shadowEll(g, 26, 5, 2);
   const body = () => {
     g.beginPath();
-    g.moveTo(-16, -50);
-    g.quadraticCurveTo(-22, -26, -16, -4);
-    g.quadraticCurveTo(0, 2, 16, -4);
-    g.quadraticCurveTo(22, -26, 16, -50);
+    g.moveTo(-17, -54);
+    g.quadraticCurveTo(-21.5, -28, -17, -3);
+    g.quadraticCurveTo(0, 3, 17, -3);
+    g.quadraticCurveTo(21.5, -28, 17, -54);
     g.closePath();
   };
   const hg = g.createLinearGradient(-20, 0, 20, 0);
-  hg.addColorStop(0, '#9a1c1c');
-  hg.addColorStop(0.3, '#e23a30');
-  hg.addColorStop(0.55, '#e84a3c');
-  hg.addColorStop(1, '#a21e1e');
+  hg.addColorStop(0, '#b32d28');
+  hg.addColorStop(0.22, '#e04a3e');
+  hg.addColorStop(0.5, '#d83c33');
+  hg.addColorStop(1, '#a62624');
   body();
-  fs(g, hg, 2);
-  g.strokeStyle = '#6e1010';
-  g.lineWidth = 2.6;
-  for (const yy of [-38, -14]) {
+  g.fillStyle = hg;
+  g.fill();
+  ink(g, 1.7);
+  g.stroke();
+  g.save();
+  body();
+  g.clip();
+  g.strokeStyle = '#8f211f';
+  g.lineWidth = 1.8;
+  for (const yy of [-41, -13]) {
     g.beginPath();
-    g.moveTo(-19.6, yy);
-    g.quadraticCurveTo(0, yy + 4.4, 19.6, yy);
+    g.moveTo(-24, yy);
+    g.quadraticCurveTo(0, yy + 4.6, 24, yy);
     g.stroke();
   }
-  ell(g, 0, -50, 16, 5.4, vgrad(g, -55, -45, '#cf3a30', '#a82424'), 1.8);
-  ell(g, 0, -50, 10.5, 3.4, '#b82a28', 1.1);
-  // warning diamond
-  poly(g, [[0, -34], [8, -26], [0, -18], [-8, -26]], glow ? '#fff08a' : '#f6c935', 1.5);
-  g.fillStyle = '#17141a';
-  g.fillRect(-0.9, -31, 1.8, 5.6);
+  g.restore();
+  g.strokeStyle = 'rgba(255, 190, 170, 0.45)';
+  g.lineWidth = 1.6;
   g.beginPath();
-  g.arc(0, -22.2, 1.1, 0, TAU);
+  g.moveTo(-13, -48);
+  g.quadraticCurveTo(-16.5, -28, -13, -9);
+  g.stroke();
+  g.beginPath();
+  g.ellipse(0, -54, 17, 5.8, 0, 0, TAU);
+  g.fillStyle = vgrad(g, -60, -48, '#cf3a31', '#aa2b27');
+  g.fill();
+  ink(g, 1.7);
+  g.stroke();
+  g.fillStyle = INK;
+  g.beginPath();
+  g.ellipse(7, -54.3, 2.4, 1.2, 0, 0, TAU);
+  g.fill();
+  g.beginPath();
+  g.moveTo(0, -37);
+  g.lineTo(9.5, -28);
+  g.lineTo(0, -19);
+  g.lineTo(-9.5, -28);
+  g.closePath();
+  g.fillStyle = glow ? '#fff08a' : '#f6c935';
+  g.fill();
+  ink(g, 1.6);
+  g.stroke();
+  g.fillStyle = INK;
+  g.fillRect(-1, -33, 2, 6.6);
+  g.beginPath();
+  g.arc(0, -23.2, 1.2, 0, TAU);
   g.fill();
 }
 
+// A tree: one lumpy green crown on a slim brown trunk with flared roots.
 function drawTree(g) {
-  g.fillStyle = 'rgba(30,30,40,0.2)';
+  shadowEll(g, 26, 5, 1);
   g.beginPath();
-  g.ellipse(0, 1, 28, 6, 0, 0, TAU);
-  g.fill();
-  // trunk with a flared base
-  g.beginPath();
-  g.moveTo(-11, 0);
-  g.quadraticCurveTo(-5, -4, -5.5, -14);
-  g.lineTo(-4.4, -52);
-  g.lineTo(5, -52);
-  g.lineTo(5.6, -14);
-  g.quadraticCurveTo(6, -4, 12, 0);
+  g.moveTo(-12, 1);
+  g.quadraticCurveTo(-5, -3, -5, -12);
+  g.lineTo(-4.2, -42);
+  g.lineTo(4.4, -42);
+  g.lineTo(5.2, -12);
+  g.quadraticCurveTo(5.5, -3, 12, 1);
+  g.quadraticCurveTo(0, 4, -12, 1);
   g.closePath();
-  fs(g, vgrad(g, -52, 0, '#855a34', '#5e3d22'), 2);
-  g.strokeStyle = 'rgba(40, 22, 10, 0.5)';
+  g.fillStyle = vgrad(g, -42, 2, '#86592f', '#5f3c1e');
+  g.fill();
+  ink(g, 2);
+  g.stroke();
+  g.strokeStyle = 'rgba(40, 20, 8, 0.45)';
   g.lineWidth = 1;
   g.beginPath();
-  g.moveTo(-1.6, -48);
-  g.lineTo(-2.4, -10);
-  g.moveTo(2.4, -44);
-  g.lineTo(2.8, -6);
+  g.moveTo(-1.4, -38);
+  g.lineTo(-2, -8);
   g.stroke();
-  // leafy crown: a cluster of round blobs
-  const crown = [[0, -78, 27], [-22, -66, 20], [22, -66, 20], [-12, -94, 20], [14, -92, 21], [0, -62, 22]];
-  g.strokeStyle = OUT;
-  g.lineWidth = 4;
+  const crown = [[0, -66, 25], [-21, -58, 17], [21, -58, 17], [-13, -80, 17], [13, -79, 18], [0, -48, 19]];
+  ink(g, 4.4);
   for (const [x, y, r] of crown) {
     g.beginPath();
     g.arc(x, y, r, 0, TAU);
     g.stroke();
   }
   for (const [x, y, r] of crown) {
-    g.fillStyle = vgrad(g, y - r, y + r, '#4f9c45', '#357a34');
+    g.fillStyle = vgrad(g, y - r, y + r, '#62ab50', '#4a8d3c');
     g.beginPath();
     g.arc(x, y, r, 0, TAU);
     g.fill();
   }
-  // lighter leaf clumps catch the sun
-  g.fillStyle = 'rgba(160, 225, 110, 0.5)';
-  for (const [x, y, r] of [[-8, -98, 9], [-20, -72, 7], [14, -94, 8], [4, -80, 7], [-2, -60, 6]]) {
+  // leaf clumps
+  g.strokeStyle = 'rgba(46, 96, 40, 0.85)';
+  g.lineWidth = 1.7;
+  for (const [x, y, r, a0] of [[-8, -72, 7, 3.4], [10, -66, 7, 3.6], [-18, -55, 6, 3.3], [8, -50, 7, 3.5], [0, -86, 6, 3.4], [18, -76, 6, 3.7]]) {
+    g.beginPath();
+    g.arc(x, y, r, a0, a0 + 2.6);
+    g.stroke();
+  }
+  g.fillStyle = 'rgba(150, 215, 110, 0.5)';
+  for (const [x, y, r] of [[-8, -84, 7], [-18, -64, 5], [12, -86, 5]]) {
     g.beginPath();
     g.arc(x, y, r, 0, TAU);
     g.fill();
   }
-  g.fillStyle = 'rgba(20, 70, 30, 0.28)';
-  for (const [x, y, r] of [[18, -62, 8], [-6, -68, 6], [10, -76, 5]]) {
+}
+
+// A stone tower with battlements, a door and an arrow slit. An obstacle, nothing more.
+function drawTower(g) {
+  g.scale(1.3, 0.9);
+  shadowEll(g, 30, 6, 2);
+  const lower = (x) => x; // the walls lean in a touch toward the top
+  g.beginPath();
+  g.moveTo(-19, 0);
+  g.lineTo(-16.5, -82);
+  g.lineTo(16.5, -82);
+  g.lineTo(19, 0);
+  g.quadraticCurveTo(0, 7, -19, 0);
+  g.closePath();
+  const hg = g.createLinearGradient(-19, 0, 19, 0);
+  hg.addColorStop(0, '#a9a9b2');
+  hg.addColorStop(0.45, '#b9b9c1');
+  hg.addColorStop(1, '#85858f');
+  g.fillStyle = hg;
+  g.fill();
+  ink(g, 1.9);
+  g.stroke();
+  // stone courses
+  g.save();
+  g.clip();
+  g.strokeStyle = 'rgba(70, 70, 82, 0.55)';
+  g.lineWidth = 1;
+  for (let i = 0, y = -8; y > -80; y -= 9.5, i++) {
     g.beginPath();
-    g.arc(x, y, r, 0, TAU);
-    g.fill();
+    g.moveTo(-20, y);
+    g.quadraticCurveTo(0, y + 3.4, 20, y);
+    g.stroke();
+    for (let x = -14 + (i % 2) * 6; x < 18; x += 12) {
+      g.beginPath();
+      g.moveTo(x, y + 1.4);
+      g.lineTo(x, y - 8);
+      g.stroke();
+    }
   }
+  g.restore();
+  // the top ring and its merlons
+  g.beginPath();
+  g.moveTo(-19.5, -82);
+  g.lineTo(-19.5, -92);
+  g.lineTo(19.5, -92);
+  g.lineTo(19.5, -82);
+  g.quadraticCurveTo(0, -77, -19.5, -82);
+  g.closePath();
+  g.fillStyle = hg;
+  g.fill();
+  g.stroke();
+  g.beginPath();
+  g.ellipse(0, -92, 19.5, 5.4, 0, 0, TAU);
+  g.fillStyle = '#6b6b76';
+  g.fill();
+  g.stroke();
+  for (const x of [-15.5, -5.2, 5.2, 15.5]) {
+    g.beginPath();
+    g.rect(x - 3.6, -99.5, 7.2, 9);
+    g.fillStyle = '#b4b4bd';
+    g.fill();
+    g.stroke();
+  }
+  // door and arrow slit
+  g.beginPath();
+  g.moveTo(-6, -1);
+  g.lineTo(-6, -17);
+  g.quadraticCurveTo(0, -25, 6, -17);
+  g.lineTo(6, -1);
+  g.closePath();
+  g.fillStyle = '#4a3322';
+  g.fill();
+  g.stroke();
+  g.beginPath();
+  g.rect(-1.8, -58, 3.6, 11);
+  g.fillStyle = '#2b2b36';
+  g.fill();
+  g.stroke();
 }
 
 export function buildTerrainArt() {
   return {
-    mine: makeLayer(-28, -24, 28, 6, (g) => drawMine(g, false)),
-    mineLit: makeLayer(-28, -26, 28, 6, (g) => drawMine(g, true)),
-    banana: makeLayer(-40, -40, 48, 6, drawBanana),
-    barrel: makeLayer(-26, -58, 26, 6, (g) => drawBarrel(g, false)),
-    barrelHot: makeLayer(-26, -58, 26, 6, (g) => drawBarrel(g, true)),
-    tree: makeLayer(-50, -122, 50, 6, drawTree),
+    mine: makeLayer(-30, -26, 30, 8, (g) => drawMine(g, false)),
+    mineLit: makeLayer(-30, -28, 30, 8, (g) => drawMine(g, true)),
+    barrel: makeLayer(-26, -64, 26, 8, (g) => drawBarrel(g, false)),
+    barrelHot: makeLayer(-26, -64, 26, 8, (g) => drawBarrel(g, true)),
+    tree: makeLayer(-46, -106, 46, 8, drawTree),
+    tower: makeLayer(-46, -108, 46, 10, drawTower),
   };
 }
 
 // ------------------------------------------------------------------ palette icons
 function iconWall(g) {
-  g.fillStyle = 'rgba(30,30,40,0.22)';
-  g.beginPath();
-  g.ellipse(0, 2, 30, 5, 0, 0, TAU);
+  shadowEll(g, 34, 5, 1);
+  const slab = (x, y, w, h, c) => {
+    g.beginPath();
+    g.moveTo(x + c, y);
+    g.lineTo(x + w - c, y);
+    g.lineTo(x + w, y + c);
+    g.lineTo(x + w, y + h - c);
+    g.lineTo(x + w - c, y + h);
+    g.lineTo(x + c, y + h);
+    g.lineTo(x, y + h - c);
+    g.lineTo(x, y + c);
+    g.closePath();
+  };
+  slab(-28, -26, 56, 27, 6);
+  g.fillStyle = '#4b4b4d';
   g.fill();
-  poly(g, [[-26, -17], [-19, -25], [19, -25], [26, -17], [26, -5], [19, 3], [-19, 3], [-26, -5]], vgrad(g, -25, 3, '#6a6a6a', '#454545'), 3);
-  g.fillStyle = 'rgba(255,255,255,0.18)';
-  rrect(g, -19, -21, 38, 4, 2, 'rgba(255,255,255,0.18)', 0);
-  g.strokeStyle = 'rgba(0,0,0,0.25)';
+  ink(g, 3);
+  g.stroke();
+  slab(-23, -21.5, 46, 18, 4);
+  g.fillStyle = vgrad(g, -22, -3, '#70707a', '#5a5a62');
+  g.fill();
+  g.strokeStyle = '#2f2f33';
+  g.lineWidth = 1.4;
+  g.stroke();
+  g.strokeStyle = 'rgba(255, 255, 255, 0.35)';
   g.lineWidth = 1.6;
   g.beginPath();
-  g.moveTo(-23, -8);
-  g.lineTo(23, -8);
+  g.moveTo(-17, -18.5);
+  g.lineTo(17, -18.5);
   g.stroke();
 }
 
 function iconWater(g) {
-  g.fillStyle = 'rgba(30,30,40,0.0)';
+  shadowEll(g, 0.01, 1, 0);
   g.beginPath();
-  g.moveTo(0, -42);
-  g.bezierCurveTo(5, -30, 20, -20, 20, -9);
-  g.bezierCurveTo(20, 0, 10, 4, 0, 4);
-  g.bezierCurveTo(-10, 4, -20, 0, -20, -9);
-  g.bezierCurveTo(-20, -20, -5, -30, 0, -42);
+  g.moveTo(0, -46);
+  g.bezierCurveTo(5, -36, 21, -23, 21, -10);
+  g.bezierCurveTo(21, 0, 12, 5, 0, 5);
+  g.bezierCurveTo(-12, 5, -21, 0, -21, -10);
+  g.bezierCurveTo(-21, -23, -5, -36, 0, -46);
   g.closePath();
-  fs(g, vgrad(g, -42, 4, '#6cc0ec', '#3a8fca'), 3);
-  g.strokeStyle = 'rgba(255,255,255,0.7)';
-  g.lineWidth = 2.6;
+  g.fillStyle = vgrad(g, -46, 5, '#4aa2dc', '#63b8ee');
+  g.fill();
+  ink(g, 3.2);
+  g.stroke();
+  g.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+  g.lineWidth = 2.2;
   g.beginPath();
-  g.arc(-3, -9, 11, Math.PI * 0.62, Math.PI * 0.95);
+  g.arc(-3, -9, 12.5, Math.PI * 0.64, Math.PI * 0.98);
   g.stroke();
 }
 
 function iconIce(g) {
-  g.fillStyle = 'rgba(30,30,40,0.22)';
+  shadowEll(g, 28, 5, 2);
+  const face = (pts, fill) => {
+    g.beginPath();
+    g.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]);
+    g.closePath();
+    g.fillStyle = fill;
+    g.fill();
+  };
+  face([[0, -46], [24, -34], [0, -22], [-24, -34]], '#e6f6fd');
+  face([[-24, -34], [0, -22], [0, 4], [-24, -10]], '#bde1f6');
+  face([[24, -34], [0, -22], [0, 4], [24, -10]], '#a3cfec');
+  ink(g, 3);
   g.beginPath();
-  g.ellipse(0, 2, 26, 5, 0, 0, TAU);
-  g.fill();
-  poly(g, [[0, -42], [23, -30], [0, -18], [-23, -30]], '#e4f5fd', 2.6);
-  poly(g, [[-23, -30], [0, -18], [0, 3], [-23, -10]], '#b9ddf7', 2.6);
-  poly(g, [[23, -30], [0, -18], [0, 3], [23, -10]], '#a3cfef', 2.6);
-  g.strokeStyle = 'rgba(80, 130, 175, 0.8)';
+  g.moveTo(0, -46);
+  g.lineTo(24, -34);
+  g.lineTo(24, -10);
+  g.lineTo(0, 4);
+  g.lineTo(-24, -10);
+  g.lineTo(-24, -34);
+  g.closePath();
+  g.stroke();
+  g.lineWidth = 2;
+  g.beginPath();
+  g.moveTo(-24, -34);
+  g.lineTo(0, -22);
+  g.lineTo(24, -34);
+  g.moveTo(0, -22);
+  g.lineTo(0, 4);
+  g.stroke();
+  g.strokeStyle = '#86b1d3';
   g.lineWidth = 1.6;
   g.beginPath();
-  g.moveTo(-10, -33);
-  g.lineTo(-2, -28);
-  g.lineTo(6, -34);
+  g.moveTo(-13, -35);
+  g.lineTo(-3, -31);
+  g.lineTo(5, -38);
+  g.lineTo(13, -33);
+  g.stroke();
+  g.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+  g.lineWidth = 2.2;
+  g.beginPath();
+  g.moveTo(-18, -22);
+  g.lineTo(-18, -10);
   g.stroke();
 }
 
 const ICON_DRAW = {
   wall: iconWall,
-  water: iconWater,
-  ice: iconIce,
+  water: (g) => {
+    g.scale(0.84, 0.84);
+    iconWater(g);
+  },
+  ice: (g) => {
+    g.scale(0.86, 0.86);
+    iconIce(g);
+  },
   mine: (g) => drawMine(g, false),
-  banana: (g) => {
-    g.scale(0.92, 0.92);
-    drawBanana(g);
+  tower: (g) => {
+    g.scale(0.46, 0.46);
+    drawTower(g);
   },
   barrel: (g) => {
-    g.scale(0.7, 0.7);
+    g.scale(0.72, 0.72);
     drawBarrel(g, false);
   },
   tree: (g) => {
-    g.scale(0.4, 0.4);
+    g.scale(0.44, 0.44);
     drawTree(g);
   },
 };
-const ICON_BASE = { wall: 0.82, water: 0.86, ice: 0.86, mine: 0.76, banana: 0.8, barrel: 0.9, tree: 0.94 };
+const ICON_BASE = { wall: 0.82, water: 0.86, ice: 0.84, mine: 0.78, tower: 0.95, barrel: 0.9, tree: 0.94 };
 
 export function hasTerrainIcon(id) {
   return id in ICON_DRAW;

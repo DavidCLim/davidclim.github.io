@@ -1,9 +1,9 @@
-import { TAU, FEET, GAIT } from './config.js?v=58';
-import { WATER, ICE, WALL } from './terrain.js?v=58';
+import { TAU, FEET, GAIT } from './config.js?v=61';
+import { WATER, ICE, WALL } from './terrain.js?v=61';
 
 // Everything the Animals and Mythical tabs add to the world, plus the terrain physics:
 // the beast brain, the mage's bolts, the necromancer's skeletons, zombie infection,
-// and how water, ice, walls, banana peels, mines, barrels and trees affect everyone.
+// and how water, ice, walls, mines, barrels, trees and towers affect everyone.
 const rand = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
@@ -11,7 +11,7 @@ const BARREL_HP = 28;
 const TREE_R = 5.6;
 const BARREL_R = 7;
 const MINE_R = 10;
-const BANANA_R = 7.5;
+const TOWER_R = 8.5;
 
 export function installBeasts(World) {
   const P = World.prototype;
@@ -147,29 +147,14 @@ export function installBeasts(World) {
         const ddx = fx - p.x;
         const ddy = fy - p.y;
         if (ddx > 24 || ddx < -24 || ddy > 24 || ddy < -24) continue;
-        if (p.type === 'tree' || p.type === 'barrel') {
+        if (p.type === 'tree' || p.type === 'barrel' || p.type === 'tower') {
           if (fly) continue;
-          const r = (p.type === 'tree' ? TREE_R : BARREL_R) + 3;
+          const r = (p.type === 'tree' ? TREE_R : p.type === 'tower' ? TOWER_R : BARREL_R) + 3;
           const dd = Math.hypot(ddx, ddy) || 0.01;
           if (dd < r) {
             u.x += (ddx / dd) * (r - dd);
             u.y += (ddy / dd) * (r - dd);
           }
-        } else if (p.type === 'banana') {
-          if (fly || Math.hypot(ddx, ddy) > BANANA_R) continue;
-          p.dead = true;
-          const L = Math.hypot(dx, dy);
-          let vx = L > 0.01 ? dx / L : Math.random() - 0.5;
-          let vy = L > 0.01 ? dy / L : Math.random() - 0.5;
-          const m = Math.hypot(vx, vy) || 1;
-          vx /= m;
-          vy /= m;
-          u.slip = 1.15;
-          u.slipV = [vx * 150, vy * 150];
-          u.atk = 0;
-          u.drawT = 0;
-          u.firing = false;
-          if (this.sfx) this.sfx('slip', u.x);
         } else if (p.type === 'mine') {
           if (fly || Math.hypot(ddx, ddy) > MINE_R) continue;
           p.dead = true;
@@ -230,10 +215,10 @@ export function installBeasts(World) {
   P.shotBlocked = function (x, y, dmg) {
     if (this.terrain.at(x, y + 4) & WALL) return true;
     for (const p of this.props) {
-      if (p.dead || (p.type !== 'tree' && p.type !== 'barrel')) continue;
-      const cy = p.type === 'tree' ? p.y - 8 : p.y - 10;
-      const r = p.type === 'tree' ? 5 : 7.2;
-      if (Math.abs(x - p.x) > 7 || Math.abs(y - cy) > 12) continue;
+      if (p.dead || (p.type !== 'tree' && p.type !== 'barrel' && p.type !== 'tower')) continue;
+      const cy = p.type === 'tree' ? p.y - 8 : p.type === 'tower' ? p.y - 14 : p.y - 10;
+      const r = p.type === 'tree' ? 5 : p.type === 'tower' ? 8.5 : 7.2;
+      if (Math.abs(x - p.x) > 10 || Math.abs(y - cy) > 20) continue;
       if (Math.hypot(x - p.x, (y - cy) * 0.55) <= r) {
         if (p.type === 'barrel') this.damageProp(p, dmg);
         return true;
