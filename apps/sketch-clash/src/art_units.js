@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=95';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=95';
+import { TAU, K } from './config.js?v=97';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=97';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -422,53 +422,31 @@ function drawBomb(g, lit) {
 // ---------------------------------------------------------------- archer
 // The archer: a lavender egg in a green knit beanie with a folded cuff, and a wooden bow.
 
-// Origin: the middle of the cuff. Used on the head and for the dropped hat.
+// Origin: the bottom edge of the cap. Used on the head and for the dropped hat.
+// The original's cap is a soft green hood with a bent-over point.
 function drawBushHat(g) {
   g.lineJoin = 'round';
   g.lineCap = 'round';
-  const knit = g.createLinearGradient(0, -15, 0, 3);
-  knit.addColorStop(0, '#3f8a45');
-  knit.addColorStop(1, '#245c2c');
-  g.fillStyle = knit;
+  const gr = g.createLinearGradient(-10, -24, 10, 2);
+  gr.addColorStop(0, '#62a463');
+  gr.addColorStop(1, '#3d7a45');
+  g.fillStyle = gr;
   g.strokeStyle = OUT;
-  g.lineWidth = 1.7;
-  // soft round crown
+  g.lineWidth = 1.8;
   g.beginPath();
-  g.moveTo(-16.6, -1);
-  g.bezierCurveTo(-18, -13, -8, -15.4, 0, -15.4);
-  g.bezierCurveTo(8, -15.4, 18, -13, 16.6, -1);
+  g.moveTo(-18.6, 1.6);
+  g.bezierCurveTo(-19.6, -8, -9, -13.6, 3, -17.6);
+  g.quadraticCurveTo(10, -23, 16.2, -18.8);
+  g.bezierCurveTo(14.8, -16, 19.4, -11, 18.8, -5.2);
+  g.bezierCurveTo(18.6, -2, 19.6, 0.4, 17.4, 2);
+  g.quadraticCurveTo(0, 5, -18.6, 1.6);
   g.closePath();
   g.fill();
   g.stroke();
-  // knit ribbing up the crown
-  g.strokeStyle = 'rgba(10, 50, 20, 0.45)';
-  g.lineWidth = 0.9;
+  g.fillStyle = 'rgba(255, 255, 255, 0.16)';
   g.beginPath();
-  for (let x = -12; x <= 12; x += 4) {
-    g.moveTo(x * 0.95, -3);
-    g.lineTo(x * 0.62, -13.6 + Math.abs(x) * 0.18);
-  }
-  g.stroke();
-  // a soft highlight
-  g.fillStyle = 'rgba(255, 255, 255, 0.2)';
-  g.beginPath();
-  g.ellipse(-6, -10, 4.4, 2, -0.5, 0, TAU);
+  g.ellipse(-8, -9, 5.6, 2.2, -0.75, 0, TAU);
   g.fill();
-  // the turned-up cuff
-  g.fillStyle = '#397d3f';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.7;
-  rr(g, -18.4, -3.4, 36.8, 6.6, 3.2);
-  g.fill();
-  g.stroke();
-  g.strokeStyle = 'rgba(30, 90, 40, 0.4)';
-  g.lineWidth = 0.9;
-  g.beginPath();
-  for (let x = -15; x <= 15; x += 3.4) {
-    g.moveTo(x, -2.4);
-    g.lineTo(x, 2.2);
-  }
-  g.stroke();
 }
 
 function drawArcherBody(g, front, gz, squint) {
