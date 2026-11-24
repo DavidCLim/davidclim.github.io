@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=71';
-import { buildCreatureArt } from './creatures.js?v=71';
-import { buildEggArt } from './art_eggs.js?v=71';
-import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=71';
-import { Sfx } from './sfx.js?v=71';
-import { World } from './world.js?v=71';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=71';
-import { buildUnitArt } from './art_units.js?v=71';
-import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=71';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=75';
+import { buildCreatureArt } from './creatures.js?v=75';
+import { buildEggArt } from './art_eggs.js?v=75';
+import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=75';
+import { Sfx } from './sfx.js?v=75';
+import { World } from './world.js?v=75';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=75';
+import { buildUnitArt } from './art_units.js?v=75';
+import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=75';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -936,7 +936,7 @@ function sniperIdle(u) {
   return out;
 }
 
-const CANE = { x: 8 * K, y: 14 * K }; // rifle held across the body, barrel up and forward
+const CANE = { x: 0, y: 10 * K }; // standing around the rifle is carried level, pointing back
 const PEEK = { x: 6 * K, y: 2 * K }; // rifle up at his eye
 const LENS = { x: 25.6 * K, y: -7.9 * K }; // scope lens, in rifle space
 
@@ -993,7 +993,11 @@ function drawSniper(u) {
     const iy = lerp(CANE.y, PEEK.y, lift);
     const ia = lerp(-0.62, -0.08, lift) + Math.sin(u.breath * 1.4) * 0.025;
     ctx.translate(lerp(ix, d.pivot.x, pose), lerp(iy, d.pivot.y, pose));
-    ctx.rotate(lerp(ia, u.aim, pose));
+    if (pose < 0.5 && lift < 0.3) {
+      // level and pointing backwards, scope on top
+      ctx.scale(-1, 1);
+      ctx.rotate(-0.05 + Math.sin(u.breath * 1.4) * 0.02);
+    } else ctx.rotate(lerp(ia, u.aim, pose));
     drawLayer(ctx, u.flash > 0 ? S.rifleFire : S.rifle);
     if (idle && lift > 0.85 && pose < 0.3) {
       // sun glint off the scope

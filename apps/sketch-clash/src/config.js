@@ -13,8 +13,8 @@ export const FEET = 25 * K; // ground contact, below the body centre
 
 // Standing around, a soldier faces the viewer with the rifle held upright
 // at their side and their eyes wandering; it swings down to aim at a target.
-export const IDLE_PIVOT = { x: 12 * K, y: 12 * K };
-export const IDLE_AIM = -1.14;
+export const IDLE_PIVOT = { x: -19 * K, y: 14 * K };
+export const IDLE_AIM = -1.9; // standing around the rifle is held upright against the back, barrel leaning away
 // How often each gaze is picked while idle: right, up, up-left, up-right, left.
 export const GAZE_WEIGHTS = [0.1, 0.4, 0.2, 0.2, 0.1];
 

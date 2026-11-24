@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=71';
-import { drawLayer, OUT } from './sprites.js?v=71';
-import { drawDrop } from './art_units.js?v=71';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=71';
-import { EGG_DROPS } from './art_eggs.js?v=71';
+import { TAU, K, UNIT, FEET } from './config.js?v=75';
+import { drawLayer, OUT } from './sprites.js?v=75';
+import { drawDrop } from './art_units.js?v=75';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=75';
+import { EGG_DROPS } from './art_eggs.js?v=75';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -198,8 +198,8 @@ function drawArcher(ctx, dpr, sprites, u) {
   eggBase(ctx, dpr, sprites, A, u);
   const pose = u.pose;
   // carried low with the arrow pointing down and forward, raised level to shoot
-  ctx.translate(lerp(21 * K, d.pivot.x, pose), lerp(13 * K, d.pivot.y, pose));
-  ctx.rotate(lerp(0.75, u.aim, pose));
+  ctx.translate(lerp(24 * K, d.pivot.x, pose), lerp(10 * K, d.pivot.y, pose));
+  ctx.rotate(lerp(0, u.aim, pose));
   const draw = u.drawT > 0 ? Math.min(1, u.drawT / d.drawTime) : 0;
   // the bow jolts forward as the arrow leaves
   ctx.translate(u.recoil * 2.2 * K, 0);
@@ -230,9 +230,9 @@ function drawNinja(ctx, dpr, sprites, u) {
   const A = sprites.ninja;
   eggBase(ctx, dpr, sprites, A, u);
   const pose = u.pose;
-  const px = lerp(16 * K, 14 * K, pose);
+  const px = lerp(9 * K, 14 * K, pose);
   const py = lerp(12 * K, 10 * K, pose);
-  const rest = lerp(-1.3, -0.8, Math.min(1, pose * 2));
+  const rest = lerp(-2.5, -0.8, Math.min(1, pose * 2)); // idle: blade held up and back
   let ang = rest;
   const slashing = u.atk > 0;
   const p = 1 - u.atk;
@@ -240,15 +240,6 @@ function drawNinja(ctx, dpr, sprites, u) {
     const a0 = u.swing > 0 ? -1.6 : 0.9;
     const a1 = u.swing > 0 ? 0.9 : -1.6;
     ang = lerp(a0, a1, Math.min(1, p * 1.25));
-    // the white crescent the blade leaves behind
-    ctx.save();
-    ctx.translate(px, py);
-    ctx.strokeStyle = `rgba(255, 255, 255, ${0.8 * u.atk})`;
-    ctx.lineWidth = 3.2 * (0.5 + u.atk);
-    ctx.beginPath();
-    ctx.arc(0, 0, 40 * K, Math.min(a0, ang) - 0.05, Math.max(a0, ang) + 0.05);
-    ctx.stroke();
-    ctx.restore();
   }
   ctx.translate(px, py);
   ctx.rotate(slashing ? ang : rest);
