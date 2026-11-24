@@ -231,6 +231,82 @@ export const COWBOY = {
   muzzleLen: 27 * K,
 };
 
+
+// ------------------------------------------------------------------ the Animals tab
+// Beasts all share the `beast` brain (chase, bite, special tricks). `body` is the
+// size of the unit's hit-flash / fire overlay in art units; `ring` scales the team ring.
+const BEAST = { kind: 'beast', sight: 380, atkTime: 0.28 };
+
+export const BOAR = {
+  ...BEAST, hp: 130, radius: 7, sep: 8.5, speed: 58, reach: 11, damage: 24, cooldownMin: 0.9, cooldownMax: 1.3,
+  charge: { range: 150, mul: 2.1, knock: 190 }, creature: true, body: [28, 17, 5], ring: 1.35,
+};
+export const RAT = {
+  ...BEAST, hp: 28, radius: 4, sep: 5, speed: 76, reach: 7, damage: 6, cooldownMin: 0.42, cooldownMax: 0.66, atkTime: 0.2,
+  creature: true, body: [19, 11, 16], ring: 0.9,
+};
+export const ANT = {
+  ...BEAST, hp: 20, radius: 3.4, sep: 4.4, speed: 94, reach: 6, damage: 5, cooldownMin: 0.34, cooldownMax: 0.5, atkTime: 0.16,
+  creature: true, body: [26, 10, 13], ring: 0.85,
+};
+export const APE = {
+  ...BEAST, hp: 280, radius: 8, sep: 10, speed: 38, reach: 15, damage: 40, cooldownMin: 1.3, cooldownMax: 1.8, atkTime: 0.7,
+  knock: 160, creature: true, body: [24, 24, 0], ring: 1.2,
+};
+export const ALLIGATOR = {
+  ...BEAST, hp: 200, radius: 8, sep: 11, speed: 32, swim: 2.6, reach: 17, damage: 46, cooldownMin: 1.4, cooldownMax: 2, atkTime: 0.4,
+  creature: true, body: [34, 11, 16], ring: 1.6,
+};
+export const PIRANHA = {
+  ...BEAST, hp: 45, radius: 5.5, sep: 7, speed: 104, reach: 8, damage: 11, cooldownMin: 0.36, cooldownMax: 0.5, atkTime: 0.18,
+  waterOnly: true, creature: true, body: [24, 17, 9], ring: 1, flop: true,
+};
+export const SNAKE = {
+  ...BEAST, hp: 48, radius: 5, sep: 6.5, speed: 54, reach: 10, damage: 5, cooldownMin: 0.8, cooldownMax: 1.1, atkTime: 0.22,
+  poison: { dps: 4.5, time: 5 }, creature: true, body: [30, 8, 19], ring: 1.2,
+};
+export const CHEETAH = {
+  ...BEAST, hp: 85, radius: 7, sep: 8.5, speed: 112, reach: 11, damage: 24, cooldownMin: 0.7, cooldownMax: 1, atkTime: 0.2,
+  creature: true, body: [28, 12, 4], ring: 1.4,
+};
+
+// ------------------------------------------------------------------ the Mythical tab
+export const ZOMBIE = {
+  ...BEAST, hp: 105, ...BODY, speed: 27, reach: 11, damage: 13, cooldownMin: 0.8, cooldownMax: 1.1, atkTime: 0.3,
+  infects: true, noDrop: true, egg: true,
+};
+export const SLIME = {
+  ...BEAST, hp: 150, radius: 7.5, sep: 9, speed: 30, reach: 11, damage: 11, cooldownMin: 0.9, cooldownMax: 1.3,
+  split: true, creature: true, body: [25, 17, 12], ring: 1.3,
+};
+export const MAGE = {
+  kind: 'mage', hp: 72, ...BODY, speed: 33, sight: 400, range: 240, holdDist: 150,
+  damage: 20, orbSpeed: 250, slow: 1.8, cooldownMin: 1.4, cooldownMax: 2, castTime: 0.45, egg: true,
+};
+export const GIANT = {
+  ...BEAST, hp: 560, radius: 15, sep: 17, speed: 24, reach: 26, damage: 68, cooldownMin: 1.9, cooldownMax: 2.5, atkTime: 0.95,
+  slam: { radius: 40, knock: 260 }, creature: true, body: [28, 34, -12], ring: 2.1,
+};
+export const DRAGON = {
+  kind: 'flame', hp: 400, radius: 14, sep: 16, speed: 44, sight: 340, range: 150, holdDist: 110,
+  dps: 38, cone: 0.3, burnTime: 3, burnDps: 11, onTime: 1.8, offTime: 1, flying: true,
+  pivot: { x: 38 * K, y: -17 * K }, muzzleLen: 24 * K, creature: true, body: [36, 20, 8], ring: 2, noKnock: true,
+};
+export const NECROMANCER = {
+  kind: 'necro', hp: 95, ...BODY, speed: 29, sight: 420, range: 260, holdDist: 200,
+  summonMin: 3.8, summonMax: 5, maxMinions: 6, castTime: 0.7, egg: true, noDrop: true,
+};
+export const SKELETON = {
+  ...BEAST, faction: 'necromancer', hp: 42, ...BODY, speed: 52, reach: 14, damage: 11, cooldownMin: 0.65, cooldownMax: 0.95,
+  weapon: 'sword', egg: true, noDrop: true, pivot: { x: 4 * K, y: 12 * K },
+};
+
+// How fast each creature's legs cycle (frames per second of its 8-frame walk).
+export const GAIT = { boar: 8, rat: 15, ant: 15, ape: 7, alligator: 7, piranha: 11, snake: 7, cheetah: 13, slime: 6, giant: 5, dragon: 7, zombie: 4.5, skeleton: 8 };
+
+// ------------------------------------------------------------------ terrain items
+export const TERRAIN_IDS = ['wall', 'water', 'ice', 'mine', 'banana', 'barrel', 'tree'];
+
 // `faction` decides who fights whom in free-for-all (defaults to the
 // species itself); a knight is the same faction as the cavalry.
 export const SPECIES = {
@@ -242,7 +318,32 @@ export const SPECIES = {
   archer: { id: 'archer', label: 'Archer', def: ARCHER },
   cowboy: { id: 'cowboy', label: 'Cowboy', def: COWBOY },
   ninja: { id: 'ninja', label: 'Ninja', def: NINJA },
+  boar: { id: 'boar', label: 'Boar', def: BOAR },
+  rat: { id: 'rat', label: 'Rat', def: RAT },
+  ant: { id: 'ant', label: 'Ant', def: ANT },
+  ape: { id: 'ape', label: 'Ape', def: APE },
+  alligator: { id: 'alligator', label: 'Alligator', def: ALLIGATOR },
+  piranha: { id: 'piranha', label: 'Piranha', def: PIRANHA },
+  snake: { id: 'snake', label: 'Snake', def: SNAKE },
+  cheetah: { id: 'cheetah', label: 'Cheetah', def: CHEETAH },
+  zombie: { id: 'zombie', label: 'Zombie', def: ZOMBIE },
+  slime: { id: 'slime', label: 'Slime', def: SLIME },
+  mage: { id: 'mage', label: 'Mage', def: MAGE },
+  giant: { id: 'giant', label: 'Giant', def: GIANT },
+  dragon: { id: 'dragon', label: 'Dragon', def: DRAGON },
+  necromancer: { id: 'necromancer', label: 'Necromancer', def: NECROMANCER },
+  skeleton: { id: 'skeleton', label: 'Skeleton', def: SKELETON },
+  // terrain items that appear in the legend
+  barrel: { id: 'barrel', label: 'Barrel', def: { prop: true } },
+  tree: { id: 'tree', label: 'Tree', def: { prop: true } },
 };
 // The order of the palette (the knight only ever comes from a cavalry).
-export const PALETTE_ORDER = ['soldier', 'flamethrower', 'sniper', 'roman', 'grenadier', 'archer', 'cowboy', 'ninja'];
-export const SPECIES_ORDER = [...PALETTE_ORDER];
+export const TABS = [
+  { id: 'army', label: 'Army', items: ['soldier', 'flamethrower', 'sniper', 'roman', 'grenadier', 'archer', 'cowboy', 'ninja'] },
+  { id: 'animals', label: 'Animals', items: ['boar', 'rat', 'ant', 'ape', 'alligator', 'piranha', 'snake', 'cheetah'] },
+  { id: 'mythical', label: 'Mythical', items: ['zombie', 'slime', 'mage', 'giant', 'dragon', 'necromancer'] },
+  { id: 'terrain', label: 'Terrain', items: ['wall', 'water', 'ice', 'mine', 'banana', 'barrel', 'tree'] },
+];
+export const TERRAIN_LABELS = { wall: 'Wall', water: 'Water', ice: 'Ice', mine: 'Mines', banana: 'Banana Peel', barrel: 'Barrel', tree: 'Tree' };
+export const PALETTE_ORDER = TABS[0].items;
+export const SPECIES_ORDER = [...TABS[0].items, ...TABS[1].items, ...TABS[2].items, 'skeleton', 'barrel', 'tree'];

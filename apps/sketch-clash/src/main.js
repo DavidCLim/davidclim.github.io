@@ -1,8 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER } from './config.js?v=44';
-import { World } from './world.js?v=44';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=44';
-import { buildUnitArt } from './art_units.js?v=44';
-import { drawUnit, drawFx, placeUnit, burnOverlay, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=44';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=53';
+import { buildCreatureArt } from './creatures.js?v=53';
+import { buildEggArt } from './art_eggs.js?v=53';
+import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=53';
+import { Sfx } from './sfx.js?v=53';
+import { World } from './world.js?v=53';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=53';
+import { buildUnitArt } from './art_units.js?v=53';
+import { drawUnit, drawFx, placeUnit, burnOverlay, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=53';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -23,8 +27,11 @@ const brushInput = $('brush');
 const brushDot = $('brush-dot');
 const palette = $('palette');
 
-const sprites = { ...buildSprites(), ...buildUnitArt() };
+const sprites = { ...buildSprites(), ...buildUnitArt(), ...buildCreatureArt(), ...buildEggArt() };
+const terrainArt = buildTerrainArt();
 const world = new World();
+const sfx = new Sfx();
+world.sfx = (name, x) => sfx.play(name, x, W);
 
 // The battlefield is a fixed ~860 units wide whatever the screen: units, ranges
 // and speeds always keep the same size relative to the screen, as in the original.
@@ -38,6 +45,10 @@ let ratio = 1; // device pixels per screen px
 let dpr = 1; // device pixels per world unit
 let brush = 16;
 let paused = false;
+let groundDirty = true;
+let groundVer = -1;
+const gctx = groundCanvas.getContext('2d');
+const drawList = [];
 let erasing = false;
 let over = false;
 const ptr = { x: 0, y: 0, inside: false, down: false };
@@ -46,39 +57,79 @@ const ptr = { x: 0, y: 0, inside: false, down: false };
 // a knight); blasts throw it into the air first, arrows stay stuck in. All of
 // it fades away after a while.
 let marks = [];
-world.onDeath = (u) => marks.push(dropMark(u.species, u.x, u.y + FEET - 4));
+world.onDeath = (u) => {
+  if (!u.def.creature && !u.def.noDrop) marks.push(dropMark(u.species, u.x, u.y + FEET - 4));
+};
 world.onDebrisLand = (d) => marks.push(dropMark(d.species, d.x, d.y + FEET - 4));
 world.onArrowLand = (a) => marks.push(arrowMark(a));
 
 function paintAny(canvas, id) {
-  if (hasIcon(id)) paintUnitIcon(canvas, sprites, id);
+  if (hasTerrainIcon(id)) paintTerrainIcon(canvas, id);
+  else if (hasIcon(id)) paintUnitIcon(canvas, sprites, id);
   else paintIcon(canvas, sprites, id);
 }
 
-// The palette icons are the same art as on the field.
+// The palette: four tabs (Army, Animals, Mythical, Terrain), each with its own units.
+// The icons are the same art as on the field.
 let species = 'soldier';
-const unitButtons = [...document.querySelectorAll('.unit-btn')];
+let tabIndex = 0;
+let unitButtons = [];
 const unitTip = $('unit-tip');
+const unitsEl = $('units');
+const tabsEl = $('tabs');
+const labelOf = (id) => TERRAIN_LABELS[id] || SPECIES[id].label;
 function pickUnit(b) {
   species = b.dataset.species;
   for (const o of unitButtons) o.setAttribute('aria-pressed', String(o === b));
 }
-unitButtons.forEach((b, i) => {
-  paintAny(b.querySelector('canvas'), b.dataset.species);
-  b.addEventListener('click', () => pickUnit(b));
-  // hovering shows the name and the number key that picks it
-  b.addEventListener('pointerenter', () => {
-    unitTip.innerHTML = `<b>${SPECIES[b.dataset.species].label}</b> <i>${i + 1}</i>`;
-    unitTip.hidden = false;
-    const pr = palette.getBoundingClientRect();
-    const br = b.getBoundingClientRect();
-    unitTip.style.left = `${br.left - pr.left + br.width / 2}px`;
-    unitTip.style.bottom = `${pr.bottom - document.querySelector('.units').getBoundingClientRect().top + 3}px`;
+function buildUnits() {
+  unitsEl.textContent = '';
+  unitButtons = [];
+  unitTip.hidden = true;
+  TABS[tabIndex].items.forEach((id, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'unit-btn';
+    b.dataset.species = id;
+    b.setAttribute('aria-pressed', String(id === species));
+    b.setAttribute('aria-label', labelOf(id));
+    const c = document.createElement('canvas');
+    c.width = 132;
+    c.height = 108;
+    b.append(c);
+    unitsEl.append(b);
+    paintAny(c, id);
+    b.addEventListener('click', () => pickUnit(b));
+    // hovering shows the name and the number key that picks it
+    b.addEventListener('pointerenter', () => {
+      unitTip.innerHTML = `<b>${labelOf(id)}</b> <i>${i + 1}</i>`;
+      unitTip.hidden = false;
+      const pr = palette.getBoundingClientRect();
+      const br = b.getBoundingClientRect();
+      unitTip.style.left = `${br.left - pr.left + br.width / 2}px`;
+      unitTip.style.bottom = `${pr.bottom - unitsEl.getBoundingClientRect().top + 3}px`;
+    });
+    b.addEventListener('pointerleave', () => {
+      unitTip.hidden = true;
+    });
+    unitButtons.push(b);
   });
-  b.addEventListener('pointerleave', () => {
-    unitTip.hidden = true;
-  });
+}
+function pickTab(i) {
+  tabIndex = i;
+  species = TABS[i].items[0];
+  [...tabsEl.children].forEach((t, j) => t.setAttribute('aria-selected', String(j === i)));
+  buildUnits();
+}
+TABS.forEach((t, i) => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.setAttribute('role', 'tab');
+  b.textContent = t.label;
+  b.addEventListener('click', () => pickTab(i));
+  tabsEl.append(b);
 });
+pickTab(0);
 document.addEventListener('keydown', (e) => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   const n = Number(e.key);
@@ -104,6 +155,7 @@ function resize() {
     c.height = Math.floor(h * ratio);
   }
   world.resize(W, H);
+  groundDirty = true;
 }
 new ResizeObserver(resize).observe(wrap);
 window.addEventListener('resize', resize);
@@ -122,7 +174,62 @@ function teamAt(x) {
 // (so curves bend the formation, as in the original); a tap fills a patch.
 // Romans stand in a square grid, everyone else in staggered rows.
 // Cells are [along, across, staggered].
-const LATTICE = { default: [15.5, 12.5, true], roman: [17.4, 17.6, false], cavalry: [34, 22, true] };
+const LATTICE = {
+  default: [15.5, 12.5, true],
+  roman: [17.4, 17.6, false],
+  cavalry: [34, 22, true],
+  boar: [22, 15, true],
+  rat: [12, 9, true],
+  ant: [11, 8, true],
+  ape: [21, 18, true],
+  alligator: [30, 16, true],
+  piranha: [16, 12, true],
+  snake: [20, 12, true],
+  cheetah: [27, 15, true],
+  slime: [20, 15, true],
+  giant: [42, 36, true],
+  dragon: [48, 30, true],
+  mage: [16, 13, true],
+};
+
+// Terrain: walls, water and ice are painted as strokes; the rest are dropped along the drag.
+const TERRAIN_SET = new Set(['wall', 'water', 'ice', 'mine', 'banana', 'barrel', 'tree']);
+const DISCRETE = { mine: { gap: 84, off: 3 }, banana: { gap: 36, off: 6 }, barrel: { gap: 26, off: 10 }, tree: { gap: 50, off: 18 } };
+let tstroke = null;
+
+function terrainDown(x, y) {
+  const kind = species;
+  x = Math.min(W - 8, Math.max(8, x));
+  y = Math.min(H - 12, Math.max(12, y));
+  if (DISCRETE[kind]) {
+    world.addProp(kind, x, y + DISCRETE[kind].off);
+    tstroke = { kind, lx: x, ly: y };
+  } else tstroke = { kind, st: world.terrain.begin(kind, x, y), lx: x, ly: y };
+}
+
+function terrainMove(x, y) {
+  if (!tstroke) return;
+  x = Math.min(W - 8, Math.max(8, x));
+  y = Math.min(H - 12, Math.max(12, y));
+  const t = tstroke;
+  if (t.st) {
+    const d = Math.hypot(x - t.lx, y - t.ly);
+    const n = Math.max(1, Math.ceil(d / 3));
+    for (let i = 1; i <= n; i++) world.terrain.extend(t.st, t.lx + ((x - t.lx) * i) / n, t.ly + ((y - t.ly) * i) / n);
+    t.lx = x;
+    t.ly = y;
+    return;
+  }
+  const { gap, off } = DISCRETE[t.kind];
+  let d = Math.hypot(x - t.lx, y - t.ly);
+  while (d >= gap) {
+    const k = gap / d;
+    t.lx += (x - t.lx) * k;
+    t.ly += (y - t.ly) * k;
+    world.addProp(t.kind, t.lx, t.ly + off);
+    d = Math.hypot(x - t.lx, y - t.ly);
+  }
+}
 let stroke = null;
 
 function startStroke(x, y) {
@@ -267,8 +374,11 @@ stageCanvas.addEventListener('pointerdown', (e) => {
   timeAcc = 0;
   lastPaint = { x: ptr.x, y: ptr.y };
   stroke = null;
+  tstroke = null;
   if (erasing) {
     if (canPaint()) dab(ptr.x, ptr.y);
+  } else if (TERRAIN_SET.has(species)) {
+    if (canPaint()) terrainDown(ptr.x, ptr.y);
   } else if (canPaint()) {
     startStroke(ptr.x, ptr.y);
   }
@@ -277,6 +387,10 @@ stageCanvas.addEventListener('pointerdown', (e) => {
 stageCanvas.addEventListener('pointermove', (e) => {
   setPointer(e);
   ptr.inside = true;
+  if (ptr.down && tstroke && canPaint()) {
+    terrainMove(ptr.x, ptr.y);
+    return;
+  }
   if (!ptr.down || !canPaint() || !lastPaint) return;
   if (erasing) {
     paintSegment(lastPaint.x, lastPaint.y, ptr.x, ptr.y);
@@ -312,6 +426,7 @@ function endPaint(e) {
   }
   ptr.down = false;
   stroke = null;
+  tstroke = null;
   if (e.pointerType !== 'mouse') ptr.inside = false;
 }
 stageCanvas.addEventListener('pointerup', endPaint);
@@ -406,6 +521,17 @@ eraserBtn.addEventListener('click', () => {
   erasing = !erasing;
   eraserBtn.setAttribute('aria-pressed', String(erasing));
 });
+
+const soundBtn = $('sound');
+const SOUND_ON = '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>';
+const SOUND_OFF = '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/>';
+soundBtn.addEventListener('click', () => {
+  sfx.setMuted(!sfx.muted);
+  $('sound-icon').innerHTML = sfx.muted ? SOUND_OFF : SOUND_ON;
+  soundBtn.setAttribute('aria-pressed', String(sfx.muted));
+});
+// browsers only start audio after a gesture
+document.addEventListener('pointerdown', () => sfx.ensure(), { once: true });
 
 const PAUSE_ICON = '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>';
 const PLAY_ICON = '<path d="M8 5v14l11-7z"/>';
@@ -671,6 +797,20 @@ function drawBrushRing() {
 
 const GHOST_LIFE = 1.7;
 
+const orbSprite = (() => {
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const g = c.getContext('2d');
+  const gr = g.createRadialGradient(32, 32, 2, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(235, 255, 255, 1)');
+  gr.addColorStop(0.28, 'rgba(150, 232, 250, 0.95)');
+  gr.addColorStop(0.6, 'rgba(100, 200, 240, 0.4)');
+  gr.addColorStop(1, 'rgba(100, 200, 240, 0)');
+  g.fillStyle = gr;
+  g.fillRect(0, 0, 64, 64);
+  return c;
+})();
+
 const smokeSprite = (() => {
   const c = document.createElement('canvas');
   c.width = c.height = 96;
@@ -855,9 +995,49 @@ function drawBody(u) {
   else drawUnit(ctx, dpr, sprites, u);
 }
 
+const PROP_SCALE = { tree: 1.25, barrel: 1.4, mine: 1.35, banana: 1.12 };
+function drawProp(p) {
+  const k = PROP_SCALE[p.type];
+  ctx.setTransform(dpr * k, 0, 0, dpr * k, p.x * dpr, p.y * dpr);
+  if (p.type === 'tree') {
+    drawLayer(ctx, terrainArt.tree);
+    return;
+  }
+  // a barrel about to go off rattles and glows
+  const shake = p.fuse !== undefined ? (Math.random() - 0.5) * 1.6 : 0;
+  if (shake) ctx.translate(shake, 0);
+  drawLayer(ctx, p.hot > 0 || p.fuse !== undefined ? terrainArt.barrelHot : terrainArt.barrel);
+}
+
 function render() {
+  if (groundDirty || groundVer !== world.terrain.version) {
+    gctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    gctx.clearRect(0, 0, W, H);
+    renderGround(gctx, W, H, world.terrain.strokes);
+    groundDirty = false;
+    groundVer = world.terrain.version;
+  }
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, W, H);
+
+  // ripples where units wade, mines and peels flat on the ground
+  for (const u of world.units) {
+    if (!u.inWater || u.def.flying || u.dead) continue;
+    const w = 5 + (u.def.radius || 6) * 0.5 + Math.sin(u.breath * 5) * 1.2;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    ctx.ellipse(u.x, u.y + FEET - 0.5, w, w * 0.34, 0, 0, TAU);
+    ctx.stroke();
+  }
+  const blink = ((world.clock * 1.6) | 0) & 1;
+  for (const p of world.props) {
+    if (p.type !== 'mine' && p.type !== 'banana') continue;
+    const k = PROP_SCALE[p.type];
+    ctx.setTransform(dpr * k, 0, 0, dpr * k, p.x * dpr, p.y * dpr);
+    drawLayer(ctx, p.type === 'banana' ? terrainArt.banana : blink ? terrainArt.mineLit : terrainArt.mine);
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   drawMarks(ctx, dpr, marks);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -896,11 +1076,26 @@ function render() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   const units = world.units;
-  units.sort((a, b) => a.y - b.y);
+  drawList.length = 0;
   for (const u of units) {
+    u.sk = u.y;
+    drawList.push(u);
+  }
+  for (const p of world.props) {
+    if (p.type !== 'barrel' && p.type !== 'tree') continue;
+    p.sk = p.y - FEET;
+    drawList.push(p);
+  }
+  drawList.sort((a, b) => a.sk - b.sk);
+  for (const u of drawList) {
+    if (u.type) {
+      drawProp(u);
+      continue;
+    }
     if (u.team) {
       ctx.setTransform(dpr, 0, 0, dpr, u.x * dpr, (u.y + FEET + 1) * dpr);
-      if (u.species === 'cavalry') ctx.scale(1.55, 1.15);
+      const rs = u.def.ring || 1;
+      if (rs !== 1) ctx.scale(rs, rs * 0.85);
       drawLayer(ctx, sprites.ring[u.team]);
     }
     drawBody(u);
@@ -908,29 +1103,6 @@ function render() {
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.lineCap = 'round';
-
-  // red laser sights on whatever a lying-down sniper is lining up
-  ctx.lineWidth = 1.2;
-  ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
-  ctx.beginPath();
-  for (const u of units) {
-    if (!u.laser || !u.target || u.target.dead) continue;
-    const m = world.muzzleOf(u);
-    const t = u.target;
-    const dx = t.x - m.x;
-    const dy = t.y - m.y;
-    const len = Math.hypot(dx, dy) || 1;
-    ctx.moveTo(m.x, m.y);
-    ctx.lineTo(t.x + (dx / len) * 70, t.y + (dy / len) * 70);
-  }
-  ctx.stroke();
-  ctx.fillStyle = 'rgba(239, 68, 68, 0.85)';
-  for (const u of units) {
-    if (!u.laser || !u.target || u.target.dead) continue;
-    ctx.beginPath();
-    ctx.arc(u.target.x, u.target.y, 2.2, 0, TAU);
-    ctx.fill();
-  }
 
   ctx.lineWidth = 1.8;
   ctx.strokeStyle = '#3a3a44';
@@ -941,14 +1113,29 @@ function render() {
   }
   ctx.stroke();
 
-  // sniper shots leave a long streak that fades
+  // the mage's frost bolts: a glowing cyan orb
+  for (const o of world.orbs) {
+    ctx.drawImage(orbSprite, o.x - 9, o.y - 9, 18, 18);
+  }
+
+  // sniper rounds in flight: a small dark bullet with a hot tip (the smoke trail is drawn with the puffs)
   for (const sk of world.streaks) {
-    const a = 1 - sk.age / sk.life;
-    ctx.strokeStyle = `rgba(88, 92, 104, ${0.75 * a})`;
-    ctx.lineWidth = 0.7 + 2 * a;
+    const c = Math.cos(sk.ang);
+    const sn = Math.sin(sk.ang);
+    const x = sk.x0 + c * sk.dist;
+    const y = sk.y0 + sn * sk.dist;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#3a3a44';
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(sk.x0, sk.y0);
-    ctx.lineTo(sk.x1, sk.y1);
+    ctx.moveTo(x - c * 3.5, y - sn * 3.5);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.strokeStyle = '#f2c44b';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x - c * 1, y - sn * 1);
+    ctx.lineTo(x, y);
     ctx.stroke();
   }
 
@@ -960,6 +1147,13 @@ function render() {
       ctx.globalAlpha = 0.62 * (t < 0.5 ? 1 : 1 - (t - 0.5) / 0.5);
       ctx.drawImage(smokeSprite, p.x - r, p.y - r, r * 2, r * 2);
       ctx.globalAlpha = 1;
+      continue;
+    }
+    if (p.trail) {
+      ctx.fillStyle = `rgba(190, 192, 200, ${0.55 * (1 - t) * (1 - t * 0.5)})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * (1 + 2.6 * t), 0, TAU);
+      ctx.fill();
       continue;
     }
     ctx.fillStyle = `rgba(165, 167, 176, ${(p.size > 10 ? 0.26 : 0.45) * (1 - t)})`;
@@ -978,8 +1172,8 @@ function render() {
   ctx.globalAlpha = 1;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  ctx.fillStyle = '#23262f';
   for (const s of world.sparks) {
+    ctx.fillStyle = s.cyan ? '#7fdcf5' : '#23262f';
     ctx.globalAlpha = Math.max(0, s.life / s.max);
     ctx.beginPath();
     ctx.arc(s.x, s.y, 1.5, 0, TAU);

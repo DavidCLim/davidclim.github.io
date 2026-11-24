@@ -1,4 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU } from './config.js?v=44';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=53';
+import { TerrainMap, WALL } from './terrain.js?v=53';
+import { installBeasts } from './beasts.js?v=53';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -59,6 +61,8 @@ function clamp(v, lo, hi) {
 // Unit positions are the body centre; sprites are drawn with their feet
 // FEET pixels below it. `aim` is the rifle angle in the unit's own
 // (facing-mirrored) space.
+const SNIPER_BULLET_SPEED = 1500; // world units per second
+
 export class World {
   constructor() {
     this.units = [];
@@ -75,6 +79,11 @@ export class World {
     this.debris = []; // headgear thrown by blasts
     this.groups = []; // Roman blocks marching in formation
     this.corpses = []; // units knocked over, seeing stars, before the ghost takes over
+    this.terrain = new TerrainMap(); // painted wall / water / ice
+    this.props = []; // mines, banana peels, barrels, trees
+    this.orbs = []; // the mage's frost bolts
+    this.rises = []; // the fallen getting back up as zombies
+    this.sfx = null; // sound hook: (name, x)
     this.onArrowLand = null;
     this.time = 0; // seconds since the battle started
     this.clock = 0; // always-running clock
@@ -109,6 +118,7 @@ export class World {
     this.sepRows = Math.ceil(h / SEP_CELL) + 1;
     this.sepHead = new Int32Array(this.sepCols * this.sepRows);
     this.sepNext = new Int32Array(0);
+    this.terrain.resize(w, h);
   }
 
   // Arranges freshly painted units into a rectangular block: they glide into
@@ -407,6 +417,15 @@ export class World {
       retreatT: 0,
       dirx: 1,
       diry: 0,
+      inWater: true,
+      castT: 0, // mage / necromancer casting
+      stun: 0,
+      slip: 0, // slipping on a banana peel
+      poison: 0,
+      slow: 0, // frozen by a frost bolt
+      iv: null, // sliding velocity on ice
+      owner: null, // a skeleton's necromancer
+      small: false,
     };
     this.units.push(u);
     return u;
@@ -428,6 +447,10 @@ export class World {
     this.blasts = [];
     this.debris = [];
     this.corpses = [];
+    this.props = [];
+    this.orbs = [];
+    this.rises = [];
+    this.terrain.clear();
     this.groups = [];
     this.started = false;
     this.counts = {};
@@ -456,6 +479,9 @@ export class World {
       this.speciesCounts[u.species] = (this.speciesCounts[u.species] || 0) + 1;
       this.grids.get(u.side)[this.cellRow(u.y) * this.cols + this.cellCol(u.x)].push(u);
       this.counts[u.side] = (this.counts[u.side] || 0) + 1;
+    }
+    for (const p of this.props) {
+      if (!p.dead && (p.type === 'barrel' || p.type === 'tree')) this.speciesCounts[p.type] = (this.speciesCounts[p.type] || 0) + 1;
     }
     this.enemyGrids.clear();
     for (const side of this.grids.keys()) {
@@ -586,7 +612,7 @@ export class World {
     if (u.def.armor && (kind === 'bullet' || kind === 'arrow')) dmg *= u.def.armor;
     u.hp -= dmg;
     u.hit = 0.12;
-    if (kind !== 'burn') {
+    if (kind !== 'burn' && kind !== 'poison' && kind !== 'drown') {
       for (let i = 0; i < 3; i++) {
         const a = Math.random() * Math.PI * 2;
         const sp = 40 + Math.random() * 70;
@@ -627,8 +653,9 @@ export class World {
         k.facing = u.facing;
         k.pose = 1;
         k.cdT = 0.5;
-      } else if (kind === 'blast') this.launchDrop(u);
+      } else if (kind === 'blast' && !u.def.noDrop && !u.def.creature) this.launchDrop(u);
       else if (this.onDeath) this.onDeath(u);
+      this.afterDeath(u, kind, src);
     }
   }
 
@@ -648,6 +675,7 @@ export class World {
       dead: false,
     });
     u.flash = 0.07;
+    if (this.sfx) this.sfx('shot', m.x);
     if (d.smoke) {
       u.recoil = 1;
       for (let i = 0; i < 3; i++) {
@@ -670,8 +698,10 @@ export class World {
     const d = u.def;
     const m = this.muzzleOf(u);
     const ang = Math.atan2(t.y - m.y, t.x - m.x) + (Math.random() - 0.5) * 2 * (hip ? 0.05 : d.spread);
-    const end = this.hitscan(u.side, m.x, m.y, ang, d.range * 1.3, hip ? d.hipDamage : d.damage, hip ? 1 : d.pierce, u);
-    this.streaks.push({ x0: m.x, y0: m.y, x1: end.x, y1: end.y, age: 0, life: hip ? 0.18 : 0.45 });
+    const shot = this.hitscan(u.side, m.x, m.y, ang, d.range * 1.3, hip ? d.hipDamage : d.damage, hip ? 1 : d.pierce, u);
+    // a real, fast bullet: it flies down the line leaving a smoke trail, and the hits land as it passes them
+    if (this.sfx) this.sfx('snipe', m.x);
+    this.streaks.push({ x0: m.x, y0: m.y, ang, dist: 0, total: shot.len, hits: shot.hits, owner: u, trail: 0, age: 0 });
     for (let i = 0; i < 4; i++) {
       this.puffs.push({
         x: m.x,
@@ -702,8 +732,18 @@ export class World {
     const c = Math.cos(ang);
     const s = Math.sin(ang);
     let end = { x: ox + c * range, y: oy + s * range };
+    // a wall, tree or barrel stops the round
+    for (let dist = 10; dist <= range; dist += 10) {
+      const x = ox + c * dist;
+      const y = oy + s * dist;
+      if (this.shotBlocked(x, y, damage)) {
+        end = { x, y };
+        range = dist;
+        break;
+      }
+    }
     const enemy = this.enemyGrids.get(side);
-    if (!enemy || !enemy.length) return end;
+    if (!enemy || !enemy.length) return { len: Math.hypot(end.x - ox, end.y - oy), hits: [] };
     const hits = [];
     const seen = new Set();
     let px = ox;
@@ -741,14 +781,13 @@ export class World {
     }
     hits.sort((a, b) => a.dist - b.dist);
     const n = Math.min(pierce, hits.length);
-    for (let i = 0; i < n; i++) {
-      this.hurt(hits[i].u, i === 0 ? damage : damage * 0.6, hits[i].x, hits[i].y, 'snipe', owner);
-    }
+    const out = [];
+    for (let i = 0; i < n; i++) out.push({ u: hits[i].u, dist: hits[i].dist, dmg: i === 0 ? damage : damage * 0.6 });
     if (hits.length >= pierce) end = { x: ox + c * hits[pierce - 1].dist, y: oy + s * hits[pierce - 1].dist };
-    return end;
+    return { len: Math.hypot(end.x - ox, end.y - oy), hits: out };
   }
 
-  stepUnit(u, dt) {
+  stepUnitCore(u, dt) {
     u.flash = Math.max(0, u.flash - dt);
     u.hit = Math.max(0, u.hit - dt);
     u.recoil = Math.max(0, u.recoil - dt * 5);
@@ -785,6 +824,16 @@ export class World {
         });
       }
     }
+    if (u.poison > 0) {
+      u.poison -= dt;
+      u.poisonTick = (u.poisonTick || 0) - dt;
+      if (u.poisonTick <= 0) {
+        u.poisonTick = 0.25;
+        this.hurt(u, (u.poisonDps || 4) * 0.25, u.x, u.y, 'poison', u.poisonSrc);
+        if (u.dead) return;
+      }
+    }
+    if (u.slow > 0) u.slow -= dt;
     if (u.form && this.formStep(u, dt)) {
       if (this.live) {
         const t = this.acquire(u, dt);
@@ -818,6 +867,9 @@ export class World {
       case 'grenade': this.stepGrenade(u, dt); break;
       case 'archer': this.stepArcher(u, dt); break;
       case 'cavalry': this.stepCavalry(u, dt); break;
+      case 'beast': this.stepBeast(u, dt); break;
+      case 'mage': this.stepMage(u, dt); break;
+      case 'necro': this.stepNecro(u, dt); break;
       default: this.stepSoldier(u, dt);
     }
   }
@@ -1059,6 +1111,7 @@ export class World {
         dark: Math.random() < 0.28,
       });
     }
+    if (this.sfx) this.sfx('flame', m.x);
     const cone = d.cone;
     this.eachEnemyNear(u.side, m.x, m.y, d.range, (o) => {
       const dx = o.x - m.x;
@@ -1073,6 +1126,17 @@ export class World {
       o.burnSrc = u;
       this.hurt(o, d.dps * dt, o.x, o.y, 'burn', u);
     });
+    for (const p of this.props) {
+      if (p.dead || p.type !== 'barrel') continue;
+      const dx = p.x - m.x;
+      const dy = p.y - 8 - m.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > d.range) continue;
+      let da = Math.atan2(dy, dx) - ang;
+      while (da > Math.PI) da -= TAU;
+      while (da < -Math.PI) da += TAU;
+      if (Math.abs(da) <= cone + 0.2) this.damageProp(p, d.dps * dt);
+    }
   }
 
   // Swing timer, cooldown and the moment the blow lands (halfway through).
@@ -1085,6 +1149,7 @@ export class World {
       const v = u.target;
       if (v && !v.dead && Math.hypot(v.x - u.x, v.y - u.y) <= d.reach * 1.5 + v.def.radius) {
         this.hurt(v, d.damage * (0.85 + Math.random() * 0.3), v.x, v.y, undefined, u);
+        if (this.sfx) this.sfx('hit', v.x);
         if (d.weapon === 'katana') {
           for (let i = 0; i < (Math.random() < 0.3 ? 1 : 0); i++) {
             this.puffs.push({
@@ -1310,6 +1375,7 @@ export class World {
       damage: d.damage,
     });
     u.recoil = 1;
+    if (this.sfx) this.sfx('bow', m.x);
   }
 
   // A ninja's throwing star: a short, low arc to where the target stands.
@@ -1333,6 +1399,7 @@ export class World {
     });
     u.atk = 1;
     u.swing = u.swing > 0 ? -1 : 1;
+    if (this.sfx) this.sfx('whoosh', u.x);
   }
 
   stepArrows(dt) {
@@ -1355,6 +1422,7 @@ export class World {
         }
       });
       if (hit) this.hurt(hit, a.damage, a.x1, a.y1, a.kind === 'star' ? undefined : 'arrow', a.owner);
+      else this.hitProps(a.x1, a.y1, 4, a.damage);
       if (a.kind !== 'star' && this.onArrowLand) this.onArrowLand(a);
     }
     if (gone) this.arrows = this.arrows.filter((a) => !a.dead);
@@ -1376,6 +1444,7 @@ export class World {
   explode(b) {
     const x = b.x1;
     const y = b.y1;
+    if (this.sfx) this.sfx('boom', x);
     this.blasts.push({ x, y, age: 0, life: 0.75, r: b.radius, seed: Math.random() });
     for (let i = 0; i < 7; i++) {
       const a = Math.random() * TAU;
@@ -1401,6 +1470,7 @@ export class World {
       o.ky += (dy / dist) * 300 * f;
       this.hurt(o, b.damage * f, o.x, o.y, 'blast', b.owner);
     });
+    this.hitProps(x, y, reach, b.damage);
   }
 
   // A killed unit's headgear is thrown high into the air.
@@ -1542,6 +1612,11 @@ export class World {
         anyGone = true;
         continue;
       }
+      if (this.shotBlocked(b.x, b.y, b.damage)) {
+        b.dead = true;
+        anyGone = true;
+        continue;
+      }
       const enemy = this.enemyGrids.get(b.side);
       if (!enemy || !enemy.length) continue;
       const cx = this.cellCol(b.x);
@@ -1585,8 +1660,37 @@ export class World {
     for (const g of this.ghosts) g.age += dt;
     if (this.ghosts.some((g) => g.age > GHOST_LIFE)) this.ghosts = this.ghosts.filter((g) => g.age <= GHOST_LIFE);
 
-    for (const s of this.streaks) s.age += dt;
-    if (this.streaks.some((s) => s.age > s.life)) this.streaks = this.streaks.filter((s) => s.age <= s.life);
+    for (const s of this.streaks) {
+      s.age += dt;
+      const from = s.dist;
+      s.dist = Math.min(s.total, s.dist + SNIPER_BULLET_SPEED * dt);
+      const c = Math.cos(s.ang);
+      const sn = Math.sin(s.ang);
+      for (const h of s.hits) {
+        if (!h.done && h.dist <= s.dist) {
+          h.done = true;
+          if (!h.u.dead) this.hurt(h.u, h.dmg, h.u.x, h.u.y, 'snipe', s.owner);
+        }
+      }
+      // a thin grey smoke trail is left hanging in the air along the whole flight
+      s.trail += s.dist - from;
+      while (s.trail >= 3.5) {
+        s.trail -= 3.5;
+        const d = s.dist - s.trail;
+        this.puffs.push({
+          x: s.x0 + c * d,
+          y: s.y0 + sn * d,
+          vx: (Math.random() - 0.5) * 5,
+          vy: -3 - Math.random() * 4,
+          age: 0,
+          life: 1.1 + Math.random() * 0.5,
+          size: 2.3 + Math.random() * 0.9,
+          trail: true,
+        });
+      }
+      if (s.dist >= s.total) s.gone = true;
+    }
+    if (this.streaks.some((s) => s.gone)) this.streaks = this.streaks.filter((s) => !s.gone);
 
     for (const p of this.puffs) {
       p.age += dt;
@@ -1626,6 +1730,8 @@ export class World {
   eraseAt(x, y, r) {
     const r2 = r * r;
     let any = false;
+    this.props = this.props.filter((p) => Math.hypot(p.x - x, p.y - 6 - y) > r + 4);
+    this.terrain.erase(x, y + FEET, r);
     for (const u of this.units) {
       const dx = u.x - x;
       const dy = u.y - y;
@@ -1650,6 +1756,7 @@ export class World {
     for (const u of this.units) {
       if (!u.dead) this.stepUnit(u, dt);
     }
+    this.stepFuses(dt);
     this.clock += dt;
     this.separate();
     if (this.stats && !this.stats.final) {
@@ -1663,6 +1770,9 @@ export class World {
     this.stepBullets(dt);
     this.stepArrows(dt);
     this.stepBombs(dt);
+    this.stepOrbs(dt);
+    this.stepRises(dt);
+    this.stepProps(dt);
     this.stepDebris(dt);
     this.stepEffects(dt);
     if (this.anyDead) {
@@ -1671,3 +1781,5 @@ export class World {
     }
   }
 }
+
+installBeasts(World);

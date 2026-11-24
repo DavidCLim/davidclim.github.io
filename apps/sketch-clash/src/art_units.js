@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=44';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=44';
+import { TAU, K } from './config.js?v=53';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=53';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -8,7 +8,7 @@ import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSni
 // Pupil offsets for the idle gaze variants: right, centre, left.
 export const GAZE3 = [[1.6, -2], [0, -2.5], [-1.6, -2]];
 
-function eggBody(g, top, bot, rx = 20.7, ry = 23) {
+export function eggBody(g, top, bot, rx = 20.7, ry = 23) {
   const gr = g.createLinearGradient(0, -ry, 0, ry);
   gr.addColorStop(0, top);
   gr.addColorStop(1, bot);
@@ -21,7 +21,7 @@ function eggBody(g, top, bot, rx = 20.7, ry = 23) {
   g.stroke();
 }
 
-function bigEyes(g, xs, gz, y = -4.8, rx = 4.4, ry = 4.6, ring = 1.6, pr = 2.8, squint = false) {
+export function bigEyes(g, xs, gz, y = -4.8, rx = 4.4, ry = 4.6, ring = 1.6, pr = 2.8, squint = false) {
   // white discs in a dark ring, with big plain pupils sitting low and to the right
   for (const x of xs) {
     if (squint) {
@@ -66,7 +66,7 @@ function bigEyes(g, xs, gz, y = -4.8, rx = 4.4, ry = 4.6, ring = 1.6, pr = 2.8, 
   }
 }
 
-function smile(g, mx, my, r = 4.4) {
+export function smile(g, mx, my, r = 4.4) {
   g.strokeStyle = OUT;
   g.lineWidth = 1.3;
   g.beginPath();
@@ -405,89 +405,62 @@ function drawBomb(g, lit) {
 }
 
 // ---------------------------------------------------------------- archer
-// A bowhunter: a plain olive egg with streaks of face paint under the eyes, a floppy bush hat with twigs stuck in the band, and a compound bow.
+// The archer: a lavender egg in a green knit beanie with a folded cuff, and a wooden bow.
 
-// Origin: the middle of the brim. Used on the head and for the dropped hat.
+// Origin: the middle of the cuff. Used on the head and for the dropped hat.
 function drawBushHat(g) {
   g.lineJoin = 'round';
   g.lineCap = 'round';
-  const felt = g.createLinearGradient(0, -14, 0, 4);
-  felt.addColorStop(0, '#6b7b45');
-  felt.addColorStop(1, '#4e5d33');
-  g.fillStyle = felt;
+  const knit = g.createLinearGradient(0, -15, 0, 3);
+  knit.addColorStop(0, '#62bb5e');
+  knit.addColorStop(1, '#3f9446');
+  g.fillStyle = knit;
   g.strokeStyle = OUT;
   g.lineWidth = 1.7;
-  // wide drooping brim
-  g.beginPath();
-  g.moveTo(-26, 0);
-  g.quadraticCurveTo(-24, 5.6, -10, 5);
-  g.quadraticCurveTo(0, 5.4, 10, 5);
-  g.quadraticCurveTo(24, 5.6, 26, 0);
-  g.quadraticCurveTo(14, -3.6, 0, -3.8);
-  g.quadraticCurveTo(-14, -3.6, -26, 0);
-  g.closePath();
-  g.fill();
-  g.stroke();
   // soft round crown
   g.beginPath();
-  g.moveTo(-13.4, -2);
-  g.quadraticCurveTo(-14, -14, -3, -15.4);
-  g.quadraticCurveTo(10, -15.4, 13.4, -2);
-  g.quadraticCurveTo(0, -4, -13.4, -2);
+  g.moveTo(-16.6, -1);
+  g.bezierCurveTo(-18, -13, -8, -15.4, 0, -15.4);
+  g.bezierCurveTo(8, -15.4, 18, -13, 16.6, -1);
   g.closePath();
   g.fill();
   g.stroke();
-  // camo blotches on the hat
-  g.fillStyle = 'rgba(35, 45, 22, 0.55)';
+  // knit ribbing up the crown
+  g.strokeStyle = 'rgba(30, 90, 40, 0.35)';
+  g.lineWidth = 0.9;
   g.beginPath();
-  g.ellipse(-6, -9, 3.4, 2.2, 0.4, 0, TAU);
-  g.ellipse(6.4, -7, 3, 1.8, -0.3, 0, TAU);
-  g.ellipse(14, 2.2, 3.6, 1.4, 0.1, 0, TAU);
-  g.ellipse(-16, 2.4, 3.2, 1.4, -0.1, 0, TAU);
-  g.fill();
-  g.fillStyle = 'rgba(160, 145, 90, 0.5)';
-  g.beginPath();
-  g.ellipse(1, -11, 2.6, 1.5, 0.1, 0, TAU);
-  g.ellipse(-9, 3.4, 3, 1.1, 0, 0, TAU);
-  g.fill();
-  // hat band with a few twigs and leaves tucked in
-  g.fillStyle = '#3a3a2a';
-  g.beginPath();
-  g.moveTo(-13.4, -2);
-  g.quadraticCurveTo(0, -4, 13.4, -2);
-  g.lineTo(13.2, -5.4);
-  g.quadraticCurveTo(0, -7.4, -13.2, -5.4);
-  g.closePath();
-  g.fill();
-  g.stroke();
-  g.strokeStyle = '#5a3c20';
-  g.lineWidth = 1.1;
-  g.beginPath();
-  g.moveTo(8, -5);
-  g.lineTo(13, -14);
-  g.moveTo(10, -5);
-  g.lineTo(18, -11);
-  g.stroke();
-  g.fillStyle = '#5fa04a';
-  g.strokeStyle = OUT;
-  g.lineWidth = 0.8;
-  for (const [x, y, r] of [[13, -14.6, 0.3], [18.6, -11.6, 0.9], [11, -11, 0.1]]) {
-    g.save();
-    g.translate(x, y);
-    g.rotate(r);
-    g.beginPath();
-    g.ellipse(0, 0, 3.2, 1.6, 0, 0, TAU);
-    g.fill();
-    g.stroke();
-    g.restore();
+  for (let x = -12; x <= 12; x += 4) {
+    g.moveTo(x * 0.95, -3);
+    g.lineTo(x * 0.62, -13.6 + Math.abs(x) * 0.18);
   }
+  g.stroke();
+  // a soft highlight
+  g.fillStyle = 'rgba(255, 255, 255, 0.2)';
+  g.beginPath();
+  g.ellipse(-6, -10, 4.4, 2, -0.5, 0, TAU);
+  g.fill();
+  // the turned-up cuff
+  g.fillStyle = '#74c971';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.7;
+  rr(g, -18.4, -3.4, 36.8, 6.6, 3.2);
+  g.fill();
+  g.stroke();
+  g.strokeStyle = 'rgba(30, 90, 40, 0.4)';
+  g.lineWidth = 0.9;
+  g.beginPath();
+  for (let x = -15; x <= 15; x += 3.4) {
+    g.moveTo(x, -2.4);
+    g.lineTo(x, 2.2);
+  }
+  g.stroke();
 }
 
 function drawArcherBody(g, front, gz, squint) {
   g.lineJoin = 'round';
   g.lineCap = 'round';
-  // a plain olive egg, like every other unit's bare body
-  eggBody(g, '#7d9150', '#5d7239');
+  // a lavender egg
+  eggBody(g, '#b49ad3', '#8d72b4');
   g.strokeStyle = OUT;
   g.lineWidth = 1.8;
   g.beginPath();
@@ -495,146 +468,86 @@ function drawArcherBody(g, front, gz, squint) {
   g.stroke();
 
   bigEyes(g, front ? [-8.4, 8.4] : [-2.2, 12.6], gz, -3.8, 4.5, 4.7, 1.1, 3, !!squint);
-  // black face-paint streaks across the cheek under each eye
-  g.strokeStyle = '#17171b';
-  g.lineWidth = 1.7;
-  g.beginPath();
-  for (const x of front ? [-8.4, 8.4] : [-2.2, 12.6]) {
-    g.moveTo(x - 4, 3.4);
-    g.lineTo(x + 3.4, 6.2);
-    g.moveTo(x - 3.4, 5.6);
-    g.lineTo(x + 2.4, 8);
-  }
-  g.stroke();
-  if (front) smile(g, 0, 8.4, 3.2);
-  else smile(g, 5.2, 9, 2.8);
+  if (front) smile(g, 0, 6.6, 3.2);
+  else smile(g, 5.2, 7, 2.8);
 
   g.save();
-  g.translate(0, -12.6);
+  g.translate(0, -11.8);
   drawBushHat(g);
   g.restore();
 }
 
-// Origin: the grip. The bow bulges toward +x; the string is on the left.
+// Origin: the grip. A wooden recurve: the bow bulges toward +x; the string is on the left.
 function drawBow(g, drawn) {
   g.lineCap = 'round';
   g.lineJoin = 'round';
-  const dark = '#2d3430';
-  // stabiliser rod with a weight on the end
-  g.strokeStyle = OUT;
-  g.lineWidth = 2.6;
-  g.beginPath();
-  g.moveTo(8, 0.6);
-  g.lineTo(17, 0.6);
-  g.stroke();
-  g.strokeStyle = '#555c58';
-  g.lineWidth = 1.2;
-  g.beginPath();
-  g.moveTo(8, 0.6);
-  g.lineTo(17, 0.6);
-  g.stroke();
-  g.fillStyle = dark;
-  g.strokeStyle = OUT;
-  g.lineWidth = 1;
-  rr(g, 15.6, -1.6, 3.4, 4.4, 1);
-  g.fill();
-  g.stroke();
-  // limbs sweeping back from the riser to the cams
-  for (const sgn of [-1, 1]) {
-    g.strokeStyle = OUT;
-    g.lineWidth = 3.4;
+  const limb = () => {
     g.beginPath();
-    g.moveTo(6.4, sgn * 8);
-    g.quadraticCurveTo(7.4, sgn * 17, 1.2, sgn * 21);
-    g.stroke();
-    g.strokeStyle = '#3c4a3a';
-    g.lineWidth = 1.9;
-    g.beginPath();
-    g.moveTo(6.4, sgn * 8);
-    g.quadraticCurveTo(7.4, sgn * 17, 1.2, sgn * 21);
-    g.stroke();
-    // cam wheel
-    g.fillStyle = '#9ba3a0';
-    g.strokeStyle = OUT;
-    g.lineWidth = 1.1;
-    g.beginPath();
-    g.arc(0.4, sgn * 21.6, 2.9, 0, TAU);
-    g.fill();
-    g.stroke();
-    g.fillStyle = '#2d3430';
-    g.beginPath();
-    g.arc(0.4, sgn * 21.6, 1, 0, TAU);
-    g.fill();
-  }
-  // riser with a rubber grip and a sight ring
-  g.fillStyle = dark;
+    g.moveTo(-2, -24);
+    g.bezierCurveTo(1, -22, 11.5, -17, 8.6, -8);
+    g.lineTo(8.6, 8);
+    g.bezierCurveTo(11.5, 17, 1, 22, -2, 24);
+  };
   g.strokeStyle = OUT;
-  g.lineWidth = 1.2;
-  rr(g, 4.4, -10, 4.4, 20, 1.6);
-  g.fill();
+  g.lineWidth = 4.6;
+  limb();
   g.stroke();
-  g.fillStyle = '#4a3a2a';
-  rr(g, 4.4, -3.6, 4.4, 7.2, 1);
-  g.fill();
+  g.strokeStyle = '#dd9a3a';
+  g.lineWidth = 2.8;
+  limb();
   g.stroke();
-  g.strokeStyle = '#d98a2a';
-  g.lineWidth = 1;
-  g.beginPath();
-  g.arc(10.4, -5.4, 2.4, 0, TAU);
-  g.stroke();
-  g.strokeStyle = OUT;
+  g.strokeStyle = 'rgba(255, 220, 140, 0.55)';
   g.lineWidth = 0.9;
   g.beginPath();
-  g.moveTo(8.8, -5.4);
-  g.lineTo(8, -5.4);
+  g.moveTo(8.6, -14);
+  g.lineTo(8.6, -4);
   g.stroke();
-  // string and cables
+  // leather grip
+  g.fillStyle = '#6a4326';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1;
+  rr(g, 6.4, -4.4, 4.4, 8.8, 1.4);
+  g.fill();
+  g.stroke();
+  // string
   g.strokeStyle = '#e8e2d2';
   g.lineWidth = 0.9;
   g.beginPath();
-  g.moveTo(0.4, -23.5);
+  g.moveTo(-2, -24);
   if (drawn) g.lineTo(-10, 0);
-  g.lineTo(0.4, 23.5);
-  g.stroke();
-  g.strokeStyle = 'rgba(232, 226, 210, 0.6)';
-  g.lineWidth = 0.6;
-  g.beginPath();
-  g.moveTo(0.4, -21);
-  g.lineTo(4.6, 8);
-  g.moveTo(0.4, 21);
-  g.lineTo(4.6, -8);
+  g.lineTo(-2, 24);
   g.stroke();
 }
 
 // Origin: the nock. Points right; used in hand and in flight.
 function drawArrow(g) {
-  g.strokeStyle = '#24272d';
+  g.lineCap = 'round';
+  g.strokeStyle = '#7b8089';
   g.lineWidth = 1.5;
   g.beginPath();
   g.moveTo(0, 0);
   g.lineTo(31, 0);
   g.stroke();
-  g.fillStyle = '#f08a24';
+  // red fletching
+  g.fillStyle = '#e24b3d';
   g.strokeStyle = OUT;
   g.lineWidth = 0.7;
   g.beginPath();
-  g.moveTo(-4, -2.9);
-  g.lineTo(5.2, -0.2);
-  g.lineTo(5.2, 0.2);
-  g.lineTo(-4, 2.9);
+  g.moveTo(-4, -3);
+  g.lineTo(5.4, -0.2);
+  g.lineTo(5.4, 0.2);
+  g.lineTo(-4, 3);
   g.closePath();
   g.fill();
   g.stroke();
-  g.fillStyle = '#7bc24a';
-  g.fillRect(-4.6, -0.9, 1.6, 1.8);
-  // a tri-blade steel field tip
-  g.fillStyle = '#b4b9c4';
+  // a small steel head
+  g.fillStyle = '#b8bdc8';
   g.strokeStyle = '#3a3c48';
   g.lineWidth = 0.8;
   g.beginPath();
-  g.moveTo(30, -2.6);
-  g.lineTo(38, 0);
-  g.lineTo(30, 2.6);
+  g.moveTo(30, -2.4);
+  g.lineTo(37, 0);
+  g.lineTo(30, 2.4);
   g.closePath();
   g.fill();
   g.stroke();
@@ -1251,7 +1164,7 @@ function drawKatana(g) {
 }
 
 // ---------------------------------------------------------------- ghosts, drops
-function ghostBody(g, tint, edge) {
+export function ghostBody(g, tint, edge) {
   g.fillStyle = tint;
   g.strokeStyle = edge;
   g.lineWidth = 1.2;
@@ -1351,9 +1264,9 @@ export const DROPS = {
     g.fill();
   },
   archer(g) {
-    // the bush hat, twigs and all
+    // the beanie
     g.save();
-    g.scale(0.62, 0.62);
+    g.scale(0.7, 0.7);
     g.translate(0, 6);
     drawBushHat(g);
     g.restore();
@@ -1402,10 +1315,10 @@ const GHOSTS = {
     g.stroke();
   }],
   grenadier: ['#ecf4f4', '#c4d3d3', (g) => dome(g, '#3c4a36', 12, 8, -10)],
-  archer: ['#eaf1e4', '#bccbb2', (g) => {
+  archer: ['#efeaf6', '#c9bfd9', (g) => {
     g.save();
     g.scale(0.7, 0.7);
-    g.translate(0, -6);
+    g.translate(0, -2);
     drawBushHat(g);
     g.restore();
   }],
@@ -1436,11 +1349,11 @@ const GHOSTS = {
 };
 
 // ---------------------------------------------------------------- build
-function feetSet(color) {
+export function feetSet(color) {
   return FEET_POSES.map((pose) => makeLayer(-30, 16, 32, 38, (g) => drawFeet(g, pose, true, color)));
 }
 
-function eggSet(drawBody, gazes = GAZE3, extra = {}) {
+export function eggSet(drawBody, gazes = GAZE3, extra = {}) {
   return {
     torso: makeLayer(-40, -38, 36, 26, (g) => drawBody(g, false, gazes[0], false)),
     torsoAngry: makeLayer(-40, -38, 36, 26, (g) => drawBody(g, false, gazes[0], true)),

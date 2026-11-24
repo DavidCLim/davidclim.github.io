@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Lilita+One&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=44">
+    <link rel="stylesheet" href="styles.css?v=53">
   </head>
   <body>
     <div class="stage-wrap" id="stage-wrap">
@@ -28,6 +28,9 @@
         </button>
         <button type="button" class="icon-btn" id="pause" aria-label="Pause" title="Pause">
           <svg viewBox="0 0 24 24" aria-hidden="true" id="pause-icon"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+        </button>
+        <button type="button" class="icon-btn" id="sound" aria-label="Sound" aria-pressed="false" title="Sound">
+          <svg viewBox="0 0 24 24" aria-hidden="true" id="sound-icon"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
         </button>
       </div>
 
@@ -53,38 +56,8 @@
 
       <div class="palette" id="palette">
         <div class="unit-tip" id="unit-tip" hidden></div>
-        <div class="tabs" role="tablist" aria-label="Unit type">
-          <button type="button" role="tab" aria-selected="true">Army</button>
-          <button type="button" role="tab" aria-selected="false" disabled title="Coming soon">Animals</button>
-          <button type="button" role="tab" aria-selected="false" disabled title="Coming soon">Mythical</button>
-          <button type="button" role="tab" aria-selected="false" disabled title="Coming soon">Terrain</button>
-        </div>
-        <div class="units" role="group" aria-label="Army units">
-          <button type="button" class="unit-btn" data-species="soldier" aria-pressed="true" aria-label="Soldier" title="Soldier">
-            <canvas width="132" height="108"></canvas>
-          </button>
-          <button type="button" class="unit-btn" data-species="flamethrower" aria-pressed="false" aria-label="Flamethrower" title="Flamethrower">
-            <canvas width="132" height="108"></canvas>
-          </button>
-          <button type="button" class="unit-btn" data-species="sniper" aria-pressed="false" aria-label="Sniper" title="Sniper">
-            <canvas width="132" height="108"></canvas>
-          </button>
-          <button type="button" class="unit-btn" data-species="roman" aria-pressed="false" aria-label="Roman" title="Roman">
-            <canvas width="132" height="108"></canvas>
-          </button>
-          <button type="button" class="unit-btn" data-species="grenadier" aria-pressed="false" aria-label="Grenadier" title="Grenadier">
-            <canvas width="132" height="108"></canvas>
-          </button>
-          <button type="button" class="unit-btn" data-species="archer" aria-pressed="false" aria-label="Archer" title="Archer">
-            <canvas width="132" height="108"></canvas>
-          </button>
-          <button type="button" class="unit-btn" data-species="cowboy" aria-pressed="false" aria-label="Cowboy" title="Cowboy">
-            <canvas width="132" height="108"></canvas>
-          </button>
-          <button type="button" class="unit-btn" data-species="ninja" aria-pressed="false" aria-label="Ninja" title="Ninja">
-            <canvas width="132" height="108"></canvas>
-          </button>
-        </div>
+        <div class="tabs" id="tabs" role="tablist" aria-label="Unit type"></div>
+        <div class="units" id="units" role="group" aria-label="Units"></div>
       </div>
 
       <div class="team-box">
@@ -105,6 +78,6 @@
       </div>
     </div>
 
-    <script type="module" src="src/main.js?v=44"></script>
+    <script type="module" src="src/main.js?v=53"></script>
   </body>
 </html>

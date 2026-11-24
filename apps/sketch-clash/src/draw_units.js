@@ -1,6 +1,8 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=44';
-import { drawLayer, OUT } from './sprites.js?v=44';
-import { drawDrop } from './art_units.js?v=44';
+import { TAU, K, UNIT, FEET } from './config.js?v=53';
+import { drawLayer, OUT } from './sprites.js?v=53';
+import { drawDrop } from './art_units.js?v=53';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=53';
+import { EGG_DROPS } from './art_eggs.js?v=53';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -27,6 +29,18 @@ function drawHurtMarks(ctx, sprites, u) {
 
 // A burning unit goes flat orange all over with a soft glow around it, as in the video.
 export function burnOverlay(ctx, u, rx, ry, cx = 0, cy = 0) {
+  if (u.slow > 0) {
+    ctx.fillStyle = `rgba(140, 210, 255, ${0.5 * Math.min(1, u.slow / 0.5)})`;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, TAU);
+    ctx.fill();
+  }
+  if (u.poison > 0) {
+    ctx.fillStyle = `rgba(120, 215, 70, ${0.42 * Math.min(1, u.poison / 0.6)})`;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, TAU);
+    ctx.fill();
+  }
   if (u.burn <= 0) return;
   const t = Math.min(1, u.burn / 1.2);
   ctx.save();
@@ -54,6 +68,12 @@ function eggBase(ctx, dpr, sprites, A, u, before) {
   const ph = (u.anim * Math.PI) / 2;
   const wobble = u.hit > 0 ? (Math.random() - 0.5) * 2 : 0;
   placeUnit(ctx, dpr, u, wobble);
+  if (u.rise !== undefined && u.rise < 1) {
+    ctx.translate(0, FEET);
+    ctx.scale(1, 0.15 + 0.85 * u.rise);
+    ctx.translate(0, -FEET);
+  }
+  if (u.atk > 0 && u.def.kind === 'beast') ctx.translate(Math.sin((1 - u.atk) * Math.PI) * 4 * K, 0);
   drawLayer(ctx, A.feet[u.moving ? (u.anim | 0) & 3 : 0]);
   const pose = u.pose;
   if (u.moving) {
@@ -232,7 +252,39 @@ function drawCowboy(ctx, dpr, sprites, u) {
   drawLayer(ctx, u.flash > 0 ? A.pistolFire : A.pistol);
 }
 
+function drawZombie(ctx, dpr, sprites, u) {
+  eggBase(ctx, dpr, sprites, sprites.zombie, u);
+}
+
+function drawSkeleton(ctx, dpr, sprites, u) {
+  const A = sprites.skeleton;
+  const d = u.def;
+  eggBase(ctx, dpr, sprites, A, u);
+  const pose = u.pose;
+  const p = 1 - u.atk;
+  ctx.translate(lerp(14 * K, 14 * K, pose), lerp(11 * K, 9 * K, pose));
+  // chopping down from overhead
+  const chop = u.atk > 0 ? -1.5 + p * 2.3 : lerp(-0.9, -0.35, pose);
+  ctx.rotate(chop);
+  drawLayer(ctx, A.sword);
+}
+
+function drawStaffUnit(ctx, dpr, sprites, u, id) {
+  const A = sprites[id];
+  eggBase(ctx, dpr, sprites, A, u);
+  const cd = u.def.castTime;
+  const cp = u.castT > 0 ? 1 - u.castT / cd : 0;
+  ctx.translate(lerp(23 * K, 25 * K, u.pose), 0);
+  ctx.rotate(u.castT > 0 ? Math.sin(cp * Math.PI) * 0.62 : 0);
+  drawLayer(ctx, u.castT > 0 ? A.staffGlow : A.staff);
+}
+
 const DRAWERS = {
+  zombie: drawZombie,
+  skeleton: drawSkeleton,
+  mage: (ctx, dpr, sprites, u) => drawStaffUnit(ctx, dpr, sprites, u, 'mage'),
+  necromancer: (ctx, dpr, sprites, u) => drawStaffUnit(ctx, dpr, sprites, u, 'necromancer'),
+  ...Object.fromEntries(CREATURE_IDS.map((id) => [id, (ctx, dpr, sprites, u) => drawCreature(ctx, dpr, sprites, u, burnOverlay)])),
   flamethrower: drawFlamethrower,
   roman: drawRoman,
   grenadier: drawGrenadier,
@@ -442,7 +494,7 @@ function markSprite(key, w, h, draw) {
 // What a unit leaves on the ground when it dies.
 export function dropMark(species, x, y) {
   return {
-    spr: markSprite('drop-' + species, 44, 30, (g) => drawDrop(g, species)),
+    spr: markSprite('drop-' + species, 44, 30, (g) => (EGG_DROPS[species] || ((h) => drawDrop(h, species)))(g)),
     x: x + (Math.random() - 0.5) * 22 * UNIT,
     y: y + (Math.random() - 0.5) * 8 * UNIT,
     rot: (Math.random() - 0.5) * 1.7,
@@ -548,6 +600,20 @@ const ICONS = {
     g.rotate(-0.8);
     drawLayer(g, S.katana);
   }],
+  zombie: [84, 33, 39, () => {}],
+  skeleton: [84, 33, 39, (g, S) => {
+    g.translate(14 * K, 11 * K);
+    g.rotate(-0.8);
+    drawLayer(g, S.sword);
+  }],
+  mage: [128, 54, 68, (g, S) => {
+    g.translate(25 * K, 0);
+    drawLayer(g, S.staff);
+  }],
+  necromancer: [128, 54, 68, (g, S) => {
+    g.translate(25 * K, 0);
+    drawLayer(g, S.staff);
+  }],
   knight: [84, 34, 39, (g, S) => {
     g.translate(8 * K, 12 * K);
     g.rotate(-0.95);
@@ -556,10 +622,14 @@ const ICONS = {
 };
 
 export function hasIcon(species) {
-  return species in ICONS;
+  return species in ICONS || CREATURE_IDS.includes(species);
 }
 
 export function paintUnitIcon(canvas, sprites, species) {
+  if (CREATURE_IDS.includes(species)) {
+    paintCreatureIcon(canvas, sprites, species);
+    return;
+  }
   const [w, ox, oy, extra] = ICONS[species];
   const S = sprites[species];
   const g = canvas.getContext('2d');
