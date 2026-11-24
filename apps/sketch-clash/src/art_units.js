@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=107';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=107';
+import { TAU, K } from './config.js?v=108';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=108';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -251,6 +251,29 @@ function drawRomanBody(g, front, gz, angry) {
     g.quadraticCurveTo(8.2, 5.9, 9.6, 7.2);
   }
   g.stroke();
+  // a gold belt with a round buckle around the middle
+  g.save();
+  g.beginPath();
+  g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
+  g.clip();
+  g.fillStyle = '#e8b13f';
+  g.fillRect(-22, 11.6, 44, 4.2);
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.2;
+  g.beginPath();
+  g.moveTo(-22, 11.6);
+  g.lineTo(22, 11.6);
+  g.moveTo(-22, 15.8);
+  g.lineTo(22, 15.8);
+  g.stroke();
+  g.restore();
+  g.fillStyle = '#f6d46a';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.2;
+  g.beginPath();
+  g.arc(front ? 0 : 5, 13.7, 3.1, 0, TAU);
+  g.fill();
+  g.stroke();
 
   // red dome of the helmet, a half-ellipse sitting on the visor
   const dg = g.createLinearGradient(0, -32, 0, -20);
@@ -384,6 +407,27 @@ function drawGrenBody(g, front, gz) {
   g.fillStyle = '#17151b';
   rr(g, -22.4, -8.9, 44.8, 3.4, 1.7);
   g.fill();
+  // flying goggles pushed up on the helmet: a tan strap and two round glass lenses
+  const gx = front ? 0 : 3;
+  g.fillStyle = '#a67a45';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.1;
+  rr(g, -14 + gx, -13.2, 28, 3.2, 1.4);
+  g.fill();
+  g.stroke();
+  for (const x of [-5.4, 5.4]) {
+    g.fillStyle = '#9fe0ee';
+    g.strokeStyle = OUT;
+    g.lineWidth = 1.3;
+    g.beginPath();
+    g.arc(x + gx, -11.6, 3.3, 0, TAU);
+    g.fill();
+    g.stroke();
+    g.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    g.beginPath();
+    g.arc(x + gx - 1, -12.6, 0.9, 0, TAU);
+    g.fill();
+  }
 }
 
 // Origin: the middle of the bomb.
