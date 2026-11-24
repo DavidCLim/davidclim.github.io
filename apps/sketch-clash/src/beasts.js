@@ -1,5 +1,5 @@
-import { TAU, FEET, GAIT } from './config.js?v=53';
-import { WATER, ICE, WALL } from './terrain.js?v=53';
+import { TAU, FEET, GAIT } from './config.js?v=58';
+import { WATER, ICE, WALL } from './terrain.js?v=58';
 
 // Everything the Animals and Mythical tabs add to the world, plus the terrain physics:
 // the beast brain, the mage's bolts, the necromancer's skeletons, zombie infection,
@@ -173,7 +173,7 @@ export function installBeasts(World) {
         } else if (p.type === 'mine') {
           if (fly || Math.hypot(ddx, ddy) > MINE_R) continue;
           p.dead = true;
-          this.blastAt(p.x, p.y - 4, 44, 110, null);
+          this.blastAt(p.x, p.y - 4, 26, 110, null);
         }
       }
     }
@@ -206,7 +206,7 @@ export function installBeasts(World) {
     p.hot = 0.2;
     if (p.hp <= 0) {
       p.dead = true;
-      this.blastAt(p.x, p.y - 12, 50, 95, null);
+      this.blastAt(p.x, p.y - 12, 30, 95, null);
     }
   };
 
@@ -219,7 +219,7 @@ export function installBeasts(World) {
           if (p.type === 'barrel') this.damageProp(p, dmg);
           else {
             p.dead = true;
-            this.blastAt(p.x, p.y - 4, 44, 110, null);
+            this.blastAt(p.x, p.y - 4, 26, 110, null);
           }
         }
       }
@@ -254,20 +254,7 @@ export function installBeasts(World) {
 
   // An explosion that doesn't care whose side anyone is on.
   P.blastAt = function (x, y, radius, damage, owner) {
-    this.blasts.push({ x, y, age: 0, life: 0.75, r: radius, seed: Math.random() });
-    for (let i = 0; i < 8; i++) {
-      const a = Math.random() * TAU;
-      const sp = 20 + Math.random() * 55;
-      this.puffs.push({
-        x: x + Math.cos(a) * 12,
-        y: y + Math.sin(a) * 8,
-        vx: Math.cos(a) * sp,
-        vy: Math.sin(a) * sp - 16,
-        age: 0,
-        life: 1.1 + Math.random() * 0.8,
-        size: 7 + Math.random() * 6,
-      });
-    }
+    this.blasts.push({ x, y, age: 0, life: 4.4, r: radius, seed: Math.random() });
     if (this.sfx) this.sfx('boom', x);
     for (const o of this.units) {
       if (o.dead) continue;
@@ -303,8 +290,8 @@ export function installBeasts(World) {
       p.fuse -= dt;
       if (p.fuse <= 0) {
         p.dead = true;
-        if (p.type === 'barrel') this.blastAt(p.x, p.y - 12, 50, 95, null);
-        else this.blastAt(p.x, p.y - 4, 44, 110, null);
+        if (p.type === 'barrel') this.blastAt(p.x, p.y - 12, 30, 95, null);
+        else this.blastAt(p.x, p.y - 4, 26, 110, null);
       }
     }
   };

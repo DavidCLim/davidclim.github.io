@@ -1,7 +1,7 @@
 :root {
   --ink: #23262f;
-  --muted: #9a9ca6;
-  --line: #e4e6ee;
+  --muted: #a3a3a3;
+  --line: #e7e7e7;
   --accent: #5b8def;
   --red: #ef4444;
   --blue: #2f6bf0;
@@ -16,7 +16,7 @@ html, body {
   overflow: hidden;
   background: #ffffff;
   color: var(--ink);
-  font-family: Roboto, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior: none;
   user-select: none;
@@ -53,12 +53,12 @@ canvas {
 /* ---------- Top bar ---------- */
 .back {
   position: absolute;
-  top: 16px;
-  left: 16px;
+  top: 14px;
+  left: 14px;
   color: var(--muted);
   text-decoration: none;
-  font-size: 0.95rem;
-  padding: 6px 4px;
+  font-size: 13px;
+  padding: 4px 2px;
 }
 .back:hover { color: var(--ink); }
 
@@ -70,7 +70,7 @@ canvas {
   margin: 0;
   font-family: 'Patrick Hand', 'Comic Sans MS', 'Chalkboard SE', cursive;
   font-weight: 400;
-  font-size: 2.1rem;
+  font-size: 28px;
   line-height: 1;
   white-space: nowrap;
   pointer-events: none;
@@ -82,39 +82,38 @@ canvas {
 
 .tools {
   position: absolute;
-  top: 12px;
-  right: 16px;
+  top: 10px;
+  right: 14px;
   display: flex;
   gap: 8px;
 }
 .icon-btn {
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   padding: 0;
   display: grid;
   place-items: center;
   border: 1px solid var(--line);
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: 0 1px 4px rgba(20, 30, 60, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   cursor: pointer;
 }
-.icon-btn:hover { background: #f5f7fc; }
+.icon-btn:hover { background: #f7f8fb; }
 .icon-btn[aria-pressed="true"] {
-  background: #eef3ff;
-  border-color: #9db6ee;
-  box-shadow: 0 0 0 2px rgba(91, 141, 239, 0.25);
+  background: #e9eef6;
+  border-color: #9db0cc;
 }
 .icon-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   fill: none;
-  stroke: #555b69;
+  stroke: #3a3d46;
   stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-#pause-icon rect, #pause-icon path { fill: #555b69; stroke: none; }
+#pause-icon rect, #pause-icon path { fill: #3a3d46; stroke: none; }
 
 .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
 .dot.red { background: var(--red); }
@@ -189,16 +188,16 @@ canvas {
 /* ---------- Brush size meter ---------- */
 .brush-box {
   position: absolute;
-  top: 60px;
-  right: 16px;
+  top: 52px;
+  right: 14px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 12px 6px 8px;
+  gap: 8px;
+  padding: 4px 10px 4px 6px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: #ffffff;
-  box-shadow: 0 1px 4px rgba(20, 30, 60, 0.08);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   cursor: pointer;
 }
 .brush-dot {
@@ -226,35 +225,37 @@ canvas {
 /* ---------- Unit count legend ---------- */
 .legend {
   position: absolute;
-  left: 16px;
-  bottom: 16px;
+  left: 14px;
+  bottom: 14px;
   display: flex;
   flex-direction: column;
-  gap: 0;
-  padding: 6px 12px 6px 6px;
+  gap: 2px;
+  padding: 6px 10px 6px 6px;
   border: 1px solid var(--line);
-  border-radius: 16px;
-  background: #ffffff;
-  box-shadow: 0 2px 8px rgba(20, 30, 60, 0.07);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   pointer-events: none;
+  font-size: 12px;
 }
 .legend-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.92rem;
-  line-height: 1;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 16px;
+  height: 18px;
 }
 .legend-row canvas {
   position: static;
-  width: 32px;
-  height: 26px;
+  width: 28px;
+  height: 18px;
 }
 .legend-row b {
-  min-width: 2.4ch;
+  min-width: 20px;
   text-align: right;
   font-weight: 600;
-  color: #2c2f38;
+  color: #2b2b2b;
 }
 .legend-row span { color: var(--muted); }
 
@@ -269,6 +270,7 @@ canvas {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  max-width: calc(100vw - 28px);
   cursor: grab;
   touch-action: none;
 }
@@ -276,79 +278,85 @@ canvas {
 .tabs {
   display: flex;
   gap: 2px;
-  padding: 4px 8px 3px;
+  padding: 3px 3px 4px;
   border: 1px solid var(--line);
   border-bottom: 0;
-  border-radius: 14px 14px 0 0;
+  border-radius: 10px 10px 0 0;
   background: #ffffff;
-  box-shadow: 0 -1px 6px rgba(20, 30, 60, 0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   margin-bottom: -1px;
   position: relative;
   z-index: 1;
 }
 .units {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
-  padding: 7px 10px;
+  padding: 4px;
   border: 1px solid var(--line);
-  border-radius: 0 18px 18px 18px;
+  border-radius: 0 12px 12px 12px;
   background: #ffffff;
-  box-shadow: 0 2px 8px rgba(20, 30, 60, 0.09);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 .tabs button {
+  height: 24px;
   padding: 3px 10px;
   border: 0;
-  border-radius: 9px;
+  border-radius: 999px;
   background: transparent;
-  color: #8e93a3;
-  font: inherit;
-  font-size: clamp(0.7rem, 1.05vw, 1.2rem);
+  color: #a3a3a3;
+  font-family: inherit;
+  font-size: 13.333px;
+  line-height: 18px;
   cursor: pointer;
 }
-.tabs button[aria-selected="true"] { background: #ebeef7; color: var(--ink); }
+.tabs button[aria-selected="true"] { background: #e9eef6; color: #2b2b2b; }
 .tabs button:disabled { pointer-events: none; }
 .unit-btn {
-  padding: 3px 4px;
-  border: 2px solid transparent;
-  border-radius: 11px;
+  width: 46px;
+  height: 42px;
+  padding: 5px 6px;
+  border: 0;
+  border-radius: 8px;
   background: transparent;
   cursor: pointer;
   display: grid;
   place-items: center;
 }
-.unit-btn:hover { background: #f5f7fc; }
-.unit-btn[aria-pressed="true"] { border-color: #9db6ee; background: #eaf0ff; }
+.unit-btn:hover { background: #f4f6fa; }
+.unit-btn[aria-pressed="true"] { background: #e9eef6; box-shadow: inset 0 0 0 1.5px #9db0cc; }
 .unit-btn canvas {
   position: static;
-  width: clamp(30px, 3.4vw, 66px);
-  aspect-ratio: 132 / 108;
-  height: auto;
+  width: 34px;
+  height: 32px;
 }
 
 /* ---------- Team battle ---------- */
 .team-box {
   position: absolute;
-  right: 16px;
-  bottom: 16px;
+  right: 14px;
+  bottom: 14px;
 }
 .toggle {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 16px 8px 10px;
+  gap: 6px;
+  height: 28px;
+  padding: 5px 11px 5px 7px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: #ffffff;
-  box-shadow: 0 1px 4px rgba(20, 30, 60, 0.08);
-  color: var(--muted);
-  font-size: 1.05rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  color: #a3a3a3;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
 }
 .toggle input { position: absolute; opacity: 0; pointer-events: none; }
 .track {
   position: relative;
-  width: 34px;
-  height: 19px;
+  width: 22px;
+  height: 13px;
   border-radius: 999px;
   background: #dfe3ec;
   transition: background 160ms ease;
@@ -356,17 +364,17 @@ canvas {
 .track::after {
   content: '';
   position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 15px;
-  height: 15px;
+  top: 1.5px;
+  left: 1.5px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: #ffffff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
   transition: transform 160ms ease;
 }
 .toggle input:checked + .track { background: var(--accent); }
-.toggle input:checked + .track::after { transform: translateX(15px); }
+.toggle input:checked + .track::after { transform: translateX(9px); }
 .toggle input:checked ~ .toggle-label { color: var(--ink); }
 .toggle input:focus-visible + .track { outline: 2px solid var(--accent); outline-offset: 2px; }
 
@@ -401,28 +409,16 @@ canvas {
   outline-offset: 2px;
 }
 
-@media (max-width: 960px) {
-  .legend { bottom: 120px; }
-  .team-box { bottom: 120px; }
+@media (max-width: 760px) {
+  .legend { bottom: 96px; }
+  .team-box { bottom: 96px; }
 }
 
 @media (max-width: 640px) {
-  .logo { font-size: 1.4rem; top: 12px; }
   .back span { display: none; }
-  .back { top: 12px; left: 10px; font-size: 1.3rem; }
-  .tools { right: 10px; gap: 6px; }
-  .icon-btn { width: 36px; height: 36px; }
-  .team-box { right: 10px; bottom: 120px; }
-  .legend { left: 10px; bottom: 120px; }
-  .palette { bottom: 10px; }
-  .tabs button { padding: 4px 8px; font-size: 0.85rem; }
-  .units { padding: 5px 5px; gap: 1px; }
-  .unit-btn { padding: 2px 1px; }
-  .unit-btn canvas { width: 32px; }
-  .start-btn { bottom: 176px; font-size: 1.7rem; padding: 3px 32px 7px; }
+  .back { font-size: 18px; }
+  .start-btn { bottom: 150px; font-size: 1.7rem; padding: 3px 32px 7px; }
   .team-label { top: 56px; font-size: 0.8rem; }
-  .brush-box { top: 54px; right: 10px; }
-  .brush-box input { width: 96px; }
 }
 
 /* ---------- Paused pill, legend overflow ---------- */

@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=53';
-import { buildCreatureArt } from './creatures.js?v=53';
-import { buildEggArt } from './art_eggs.js?v=53';
-import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=53';
-import { Sfx } from './sfx.js?v=53';
-import { World } from './world.js?v=53';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=53';
-import { buildUnitArt } from './art_units.js?v=53';
-import { drawUnit, drawFx, placeUnit, burnOverlay, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=53';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=58';
+import { buildCreatureArt } from './creatures.js?v=58';
+import { buildEggArt } from './art_eggs.js?v=58';
+import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=58';
+import { Sfx } from './sfx.js?v=58';
+import { World } from './world.js?v=58';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=58';
+import { buildUnitArt } from './art_units.js?v=58';
+import { drawUnit, drawFx, placeUnit, burnOverlay, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=58';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -35,7 +35,7 @@ world.sfx = (name, x) => sfx.play(name, x, W);
 
 // The battlefield is a fixed ~860 units wide whatever the screen: units, ranges
 // and speeds always keep the same size relative to the screen, as in the original.
-const LOGICAL_W = 860;
+const UNIT_ZOOM = 1.74; // screen px per world unit: units are a fixed size on screen, like the original
 let W = 1; // field size in world units
 let H = 1;
 let Z = 1; // screen px per world unit
@@ -146,8 +146,8 @@ function resize() {
   cssW = w;
   cssH = h;
   ratio = px;
-  Z = w / LOGICAL_W;
-  W = LOGICAL_W;
+  Z = UNIT_ZOOM;
+  W = w / Z;
   H = h / Z;
   dpr = ratio * Z;
   for (const c of [groundCanvas, stageCanvas]) {
@@ -838,6 +838,13 @@ function drawHurt(u) {
   drawLayer(ctx, sprites.hurt[u.hp < 30 ? 1 : 0]);
 }
 
+function hitFlash(rx, ry) {
+  ctx.fillStyle = 'rgba(206, 222, 252, 0.8)';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, rx, ry, 0, 0, TAU);
+  ctx.fill();
+}
+
 function drawSoldier(u) {
   const S = sprites.soldier;
   const f = u.facing;
@@ -861,6 +868,7 @@ function drawSoldier(u) {
   drawLayer(ctx, pose < 0.5 ? S.torsoSide[u.gaze] : S.torso);
   drawHurt(u);
   burnOverlay(ctx, u, 20.6 * K, 22 * K);
+  if (u.hit > 0) hitFlash(20.6 * K, 22 * K);
 
   // Standing around the rifle is held upright at the side; it swings
   // down to aim as the soldier readies up.
@@ -943,6 +951,7 @@ function drawSniper(u) {
     else drawLayer(ctx, S.torso);
     drawHurt(u);
     burnOverlay(ctx, u, 20.8 * K, 24 * K);
+    if (u.hit > 0) hitFlash(20.8 * K, 24 * K);
 
     ctx.save();
     ctx.translate(0, -11.6 * K);
@@ -1104,11 +1113,11 @@ function render() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.lineCap = 'round';
 
-  ctx.lineWidth = 1.8;
-  ctx.strokeStyle = '#3a3a44';
+  ctx.lineWidth = 1.2;
+  ctx.strokeStyle = '#7d818d';
   ctx.beginPath();
   for (const b of world.bullets) {
-    ctx.moveTo(b.x - b.vx * 0.03, b.y - b.vy * 0.03);
+    ctx.moveTo(b.x - b.vx * 0.04, b.y - b.vy * 0.04);
     ctx.lineTo(b.x, b.y);
   }
   ctx.stroke();
@@ -1186,7 +1195,7 @@ function render() {
   for (const g of world.ghosts) {
     const gl = sprites[g.species].ghost;
     const t = g.age / GHOST_LIFE;
-    ctx.globalAlpha = (1 - t) * 0.9;
+    ctx.globalAlpha = Math.min(1, (1 - t) * 1.8) * 0.96;
     const sway = Math.sin(g.age * 4 + g.seed * 6) * 3;
     ctx.drawImage(gl.canvas, g.x + gl.x + sway, g.y + gl.y - (4 + t * 36) * UNIT, gl.w, gl.h);
   }

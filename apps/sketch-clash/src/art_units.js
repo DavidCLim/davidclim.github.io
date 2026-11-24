@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=53';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=53';
+import { TAU, K } from './config.js?v=58';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=58';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -1165,27 +1165,28 @@ function drawKatana(g) {
 
 // ---------------------------------------------------------------- ghosts, drops
 export function ghostBody(g, tint, edge) {
-  g.fillStyle = tint;
-  g.strokeStyle = edge;
-  g.lineWidth = 1.2;
+  // the same pale periwinkle ghost for everyone, as in the original; only the headgear differs
+  g.fillStyle = '#cfdaf7';
+  g.strokeStyle = '#575c72';
+  g.lineWidth = 1.5;
   g.beginPath();
-  g.moveTo(-15, 20);
-  g.lineTo(-15.5, -4);
-  g.bezierCurveTo(-16, -24, 16, -24, 15.5, -4);
-  g.lineTo(15, 20);
-  g.quadraticCurveTo(10, 14, 5, 20);
-  g.quadraticCurveTo(0, 14, -5, 20);
-  g.quadraticCurveTo(-10, 14, -15, 20);
+  g.moveTo(-14, 21);
+  g.lineTo(-14.5, -4);
+  g.bezierCurveTo(-15, -24, 15, -24, 14.5, -4);
+  g.lineTo(14, 21);
+  g.quadraticCurveTo(9.4, 15, 4.6, 21);
+  g.quadraticCurveTo(0, 15, -4.6, 21);
+  g.quadraticCurveTo(-9.4, 15, -14, 21);
   g.closePath();
   g.fill();
   g.stroke();
-  g.fillStyle = '#9b9ba6';
+  g.fillStyle = '#3b3f52';
   g.beginPath();
-  g.ellipse(-5.5, -4, 2.4, 3.4, 0, 0, TAU);
-  g.ellipse(5.5, -4, 2.4, 3.4, 0, 0, TAU);
+  g.ellipse(-5, -3, 2, 3.4, 0, 0, TAU);
+  g.ellipse(5, -3, 2, 3.4, 0, 0, TAU);
   g.fill();
   g.beginPath();
-  g.ellipse(0, 6, 1.9, 2.6, 0, 0, TAU);
+  g.ellipse(0, 6, 1.6, 2.2, 0, 0, TAU);
   g.fill();
 }
 

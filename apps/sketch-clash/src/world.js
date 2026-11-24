@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=53';
-import { TerrainMap, WALL } from './terrain.js?v=53';
-import { installBeasts } from './beasts.js?v=53';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=58';
+import { TerrainMap, WALL } from './terrain.js?v=58';
+import { installBeasts } from './beasts.js?v=58';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -817,8 +817,8 @@ export class World {
           vy: -28 - Math.random() * 18,
           age: 0,
           life: 0.5 + Math.random() * 0.3,
-          size: 3 + Math.random() * 2,
-          grow: 2.4,
+          size: 1.6 + Math.random() * 1,
+          grow: 1.2,
           dark: Math.random() < 0.2,
           small: true,
         });
@@ -1097,18 +1097,18 @@ export class World {
     const ang = u.facing > 0 ? u.aim : Math.PI - u.aim;
     for (let i = 0; i < 3; i++) {
       if (Math.random() < 0.25) continue;
-      const a = ang + (Math.random() - 0.5) * 0.34;
-      const sp = 130 + Math.random() * 90;
+      const a = ang + (Math.random() - 0.5) * 0.3;
+      const sp = 70 + Math.random() * 60;
       this.flames.push({
         x: m.x,
         y: m.y,
         vx: Math.cos(a) * sp,
         vy: Math.sin(a) * sp,
         age: 0,
-        life: 0.5 + Math.random() * 0.22,
-        size: 2.4 + Math.random() * 1.6,
-        grow: 3.2 + Math.random() * 2,
-        dark: Math.random() < 0.28,
+        life: 0.42 + Math.random() * 0.2,
+        size: 1.1 + Math.random() * 0.9,
+        grow: 1.4 + Math.random() * 1.4,
+        dark: Math.random() < 0.3,
       });
     }
     if (this.sfx) this.sfx('flame', m.x);
@@ -1384,19 +1384,23 @@ export class World {
     const o = this.rifleOrigin(u);
     const dist = Math.hypot(t.x - o.x, t.y - o.y);
     const sp = 4 + dist * 0.04;
-    this.arrows.push({
-      kind: 'star',
-      owner: u,
-      x0: o.x,
-      y0: o.y,
-      x1: t.x + (Math.random() - 0.5) * sp * 2,
-      y1: t.y + (Math.random() - 0.5) * sp * 2,
-      age: 0,
-      dur: 0.2 + dist / d.star.speed,
-      h: 6 + dist * 0.08,
-      side: u.side,
-      damage: d.star.damage,
-    });
+    const tx = t.x + (Math.random() - 0.5) * sp * 2;
+    const ty = t.y + (Math.random() - 0.5) * sp * 2;
+    for (let i = 0; i < 3; i++) {
+      this.arrows.push({
+        kind: 'star',
+        owner: u,
+        x0: o.x,
+        y0: o.y,
+        x1: tx + (Math.random() - 0.5) * 3,
+        y1: ty + (Math.random() - 0.5) * 3,
+        age: -i * 0.09,
+        dur: 0.2 + dist / d.star.speed,
+        h: 6 + dist * 0.08,
+        side: u.side,
+        damage: d.star.damage,
+      });
+    }
     u.atk = 1;
     u.swing = u.swing > 0 ? -1 : 1;
     if (this.sfx) this.sfx('whoosh', u.x);
@@ -1445,20 +1449,7 @@ export class World {
     const x = b.x1;
     const y = b.y1;
     if (this.sfx) this.sfx('boom', x);
-    this.blasts.push({ x, y, age: 0, life: 0.75, r: b.radius, seed: Math.random() });
-    for (let i = 0; i < 7; i++) {
-      const a = Math.random() * TAU;
-      const sp = 20 + Math.random() * 50;
-      this.puffs.push({
-        x: x + Math.cos(a) * 12,
-        y: y + Math.sin(a) * 8,
-        vx: Math.cos(a) * sp,
-        vy: Math.sin(a) * sp - 16,
-        age: 0,
-        life: 1.1 + Math.random() * 0.8,
-        size: 7 + Math.random() * 6,
-      });
-    }
+    this.blasts.push({ x, y, age: 0, life: 4.4, r: b.radius, seed: Math.random() });
     const reach = b.radius;
     this.eachEnemyNear(b.side, x, y, reach + 14, (o) => {
       const dx = o.x - x;

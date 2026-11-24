@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=53';
-import { drawLayer, OUT } from './sprites.js?v=53';
-import { drawDrop } from './art_units.js?v=53';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=53';
-import { EGG_DROPS } from './art_eggs.js?v=53';
+import { TAU, K, UNIT, FEET } from './config.js?v=58';
+import { drawLayer, OUT } from './sprites.js?v=58';
+import { drawDrop } from './art_units.js?v=58';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=58';
+import { EGG_DROPS } from './art_eggs.js?v=58';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -97,7 +97,7 @@ function eggBase(ctx, dpr, sprites, A, u, before) {
   burnGlow(ctx, u, 20 * K, 23 * K);
   if (u.hit > 0) {
     // a hit flashes the body white for a moment
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.72)';
+    ctx.fillStyle = 'rgba(206, 222, 252, 0.8)';
     ctx.beginPath();
     ctx.ellipse(0, 0, 20.5 * K, 23 * K, 0, 0, TAU);
     ctx.fill();
@@ -331,6 +331,41 @@ const blobs = (() => {
   return { yellow: mk('255, 226, 110'), orange: mk('247, 150, 62'), brown: mk('176, 104, 46') };
 })();
 
+const discCache = new Map();
+function softDisc(color) {
+  let c = discCache.get(color);
+  if (c) return c;
+  c = document.createElement('canvas');
+  c.width = c.height = 96;
+  const g = c.getContext('2d');
+  const gr = g.createRadialGradient(48, 48, 0, 48, 48, 48);
+  gr.addColorStop(0, color);
+  gr.addColorStop(0.5, color);
+  gr.addColorStop(1, color + '00');
+  g.fillStyle = gr;
+  g.fillRect(0, 0, 96, 96);
+  discCache.set(color, c);
+  return c;
+}
+
+const FIRE_RAMP = ['#ffd25a', '#ffc247', '#ffa83c', '#ff8f33', '#f98530', '#ee7b2c', '#e2782c', '#d6783a'];
+function fireColor(age) {
+  return FIRE_RAMP[Math.min(FIRE_RAMP.length - 1, Math.floor((age / 0.46) * FIRE_RAMP.length))];
+}
+
+// A blast is a ring of overlapping blobs, the same ones for fire and smoke.
+function lumpsOf(e) {
+  if (e.lumps) return e.lumps;
+  const out = [{ x: 0, y: 0, s: 0.62 }];
+  for (let i = 0; i < 6; i++) {
+    const a = e.seed * 9 + i * 1.07 + (i % 2) * 0.4;
+    const d = 0.3 + ((i * 37 + Math.floor(e.seed * 100)) % 20) / 100;
+    out.push({ x: Math.cos(a) * d, y: Math.sin(a) * d * 0.9, s: 0.4 + ((i * 53 + Math.floor(e.seed * 77)) % 14) / 100 });
+  }
+  e.lumps = out;
+  return out;
+}
+
 export function drawFx(ctx, dpr, sprites, world) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   if (!blob) blob = makeBlob();
@@ -339,7 +374,7 @@ export function drawFx(ctx, dpr, sprites, world) {
   // small pale-yellow dots, swell into orange smudges, and end up charred brown
   for (const f of world.flames) {
     const t = f.age / f.life;
-    const r = f.size + f.grow * t * 2.4;
+    const r = f.size + f.grow * t;
     const spr = t < 0.22 ? blobs.yellow : f.dark && t > 0.5 ? blobs.brown : blobs.orange;
     ctx.globalAlpha = Math.max(0, (t < 0.12 ? 0.55 + t * 3 : 0.8) * (1 - t * t));
     ctx.drawImage(spr, f.x - r, f.y - r, r * 2, r * 2);
@@ -364,33 +399,45 @@ export function drawFx(ctx, dpr, sprites, world) {
     ctx.restore();
   }
 
-  // explosions: a soft orange fireball with a thin white ring and a flash
+  // explosions, as in the original: a yellow flash with a pale halo, a flat lumpy orange disc that
+  // darkens, then a beige smoke cloud that hangs about and fades slowly
   for (const e of world.blasts) {
-    const t = e.age / e.life;
-    const grow = 1 - (1 - Math.min(1, t * 2.4)) ** 2;
-    const fade = Math.max(0, 1 - t);
-    for (let i = 0; i < 3; i++) {
-      const a = (i / 3) * TAU + e.seed * 6;
-      const off = e.r * 0.3 * grow * (i === 0 ? 0 : 1);
-      const rad = e.r * (i === 0 ? 1 : 0.62) * (0.4 + 0.6 * grow);
-      ctx.globalAlpha = fade * (i === 0 ? 0.92 : 0.75);
-      ctx.drawImage(blob, e.x + Math.cos(a) * off - rad, e.y + Math.sin(a) * off * 0.85 - rad, rad * 2, rad * 2);
+    const age = e.age;
+    const r = e.r;
+    const lumps = lumpsOf(e);
+    if (age < 0.5) {
+      const grow = 1 - (1 - Math.min(1, age / 0.2)) ** 2;
+      const fire = age < 0.32 ? 1 : 1 - (age - 0.32) / 0.18;
+      if (age < 0.09) {
+        ctx.globalAlpha = 0.5;
+        ctx.drawImage(softDisc('#fff3b0'), e.x - r * 0.75, e.y - r * 0.75, r * 1.5, r * 1.5);
+      }
+      ctx.globalAlpha = Math.max(0, fire);
+      const spr = softDisc(fireColor(age));
+      for (const l of lumps) {
+        const rad = Math.max(1, r * 1.2 * l.s * (0.34 + 0.66 * grow));
+        ctx.drawImage(spr, e.x + l.x * r * grow - rad, e.y + l.y * r * grow - rad, rad * 2, rad * 2);
+      }
+      if (age > 0.08 && age < 0.45) {
+        const q = (age - 0.08) / 0.37;
+        ctx.globalAlpha = 0.28 * (1 - q);
+        ctx.strokeStyle = '#fff6cf';
+        ctx.lineWidth = r * 0.1;
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, r * (0.9 + 0.7 * q), 0, TAU);
+        ctx.stroke();
+      }
     }
-    const q = Math.min(1, t * 1.6);
-    if (q < 1) {
-      ctx.globalAlpha = (1 - q) * 0.95;
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.6;
-      ctx.beginPath();
-      ctx.arc(e.x, e.y, e.r * (0.35 + 0.8 * q), 0, TAU);
-      ctx.stroke();
-    }
-    if (t < 0.12) {
-      ctx.globalAlpha = (1 - t / 0.12) * 0.85;
-      ctx.fillStyle = '#fff8d8';
-      ctx.beginPath();
-      ctx.arc(e.x, e.y, e.r * 0.3, 0, TAU);
-      ctx.fill();
+    if (age > 0.28) {
+      const k = (age - 0.28) / (e.life - 0.28);
+      const a = Math.min(1, (age - 0.28) / 0.25) * 0.55 * (1 - k) ** 1.4;
+      ctx.globalAlpha = a;
+      const spr = softDisc('#e2d9d5');
+      const rise = (age - 0.28) * 5;
+      for (const l of lumps) {
+        const rad = r * 1.2 * l.s * (0.95 + 0.4 * k);
+        ctx.drawImage(spr, e.x + l.x * r * 1.05 - rad, e.y + l.y * r * 1.05 - rad - rise, rad * 2, rad * 2);
+      }
     }
   }
   ctx.globalAlpha = 1;
@@ -402,7 +449,8 @@ export function drawFx(ctx, dpr, sprites, world) {
     const gx = lerp(a.x0, a.x1, p);
     const gy = lerp(a.y0, a.y1, p);
     if (a.kind === 'star') {
-      // a small grey throwing star, spinning, with a shadow on the ground
+      if (a.age < 0) continue;
+      // a four-pointed silver throwing star, spinning, with a shadow on the ground
       ctx.fillStyle = 'rgba(0, 0, 0, 0.14)';
       ctx.beginPath();
       ctx.ellipse(gx, gy + FEET * 0.5, 2.6, 1, 0, 0, TAU);
@@ -410,12 +458,12 @@ export function drawFx(ctx, dpr, sprites, world) {
       ctx.save();
       ctx.translate(gx, gy - 4 * a.h * p * (1 - p));
       ctx.rotate(a.age * 22);
-      ctx.fillStyle = '#9a9ca8';
-      ctx.strokeStyle = '#3a3a44';
+      ctx.fillStyle = '#c9cedb';
+      ctx.strokeStyle = '#464a5a';
       ctx.lineWidth = 0.7;
       ctx.beginPath();
       for (let i = 0; i < 8; i++) {
-        const r = i % 2 === 0 ? 3.6 : 1.2;
+        const r = i % 2 === 0 ? 3.4 : 1.1;
         const ang = (i / 8) * TAU;
         if (i === 0) ctx.moveTo(Math.cos(ang) * r, Math.sin(ang) * r);
         else ctx.lineTo(Math.cos(ang) * r, Math.sin(ang) * r);
@@ -423,6 +471,10 @@ export function drawFx(ctx, dpr, sprites, world) {
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
+      ctx.fillStyle = '#7c8190';
+      ctx.beginPath();
+      ctx.arc(0, 0, 0.7, 0, TAU);
+      ctx.fill();
       ctx.restore();
       continue;
     }

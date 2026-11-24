@@ -1,7 +1,7 @@
-import { TAU, K, FEET, UNIT } from './config.js?v=53';
-import { makeLayer, drawLayer } from './sprites.js?v=53';
-import { ANIMALS } from './art_animals.js?v=53';
-import { MYTHIC } from './art_mythic.js?v=53';
+import { TAU, K, FEET, UNIT } from './config.js?v=58';
+import { makeLayer, drawLayer } from './sprites.js?v=58';
+import { ANIMALS } from './art_animals.js?v=58';
+import { MYTHIC } from './art_mythic.js?v=58';
 
 // Sprites and drawing for the creatures that aren't egg-shaped: every animal,
 // the slime, giant and dragon. Each gets 8 walk frames, a few idle (breathing)
@@ -29,8 +29,8 @@ function ghostOf(layer) {
   c.width = layer.canvas.width + 4;
   c.height = layer.canvas.height + 4;
   const g = c.getContext('2d');
-  const edge = silhouette(layer, '#c6cad6');
-  const body = silhouette(layer, '#f3f4f9');
+  const edge = silhouette(layer, '#575c72');
+  const body = silhouette(layer, '#cfdaf7');
   for (const [dx, dy] of [[-1.4, 0], [1.4, 0], [0, -1.4], [0, 1.4]]) g.drawImage(edge, 2 + dx, 2 + dy);
   g.drawImage(body, 2, 2);
   const k = layer.w / layer.canvas.width;
@@ -51,7 +51,7 @@ export function buildCreatureArt() {
       A.walkBreath = [];
       for (let i = 0; i < 8; i++) A.walkBreath.push(mk({ ph: i / 8, moving: true, pose: 'breath', open: true }));
     }
-    A.flash = { layer: A.idle[0], canvas: silhouette(A.idle[0], '#ffffff') };
+    A.flash = { layer: A.idle[0], canvas: silhouette(A.idle[0], '#cedefc') };
     A.ghost = ghostOf(A.idle[0]);
     A.gait = GAIT[id] || 8;
     out[id] = A;
@@ -121,7 +121,7 @@ export function drawCreature(ctx, dpr, sprites, u, overlay) {
   const frame = pickFrame(u, A);
   drawLayer(ctx, frame);
   if (u.hit > 0) {
-    ctx.globalAlpha = 0.72;
+    ctx.globalAlpha = 0.8;
     const f = A.flash;
     ctx.drawImage(f.canvas, f.layer.x, f.layer.y, f.layer.w, f.layer.h);
     ctx.globalAlpha = 1;
