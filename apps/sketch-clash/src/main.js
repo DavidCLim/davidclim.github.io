@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=61';
-import { buildCreatureArt } from './creatures.js?v=61';
-import { buildEggArt } from './art_eggs.js?v=61';
-import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=61';
-import { Sfx } from './sfx.js?v=61';
-import { World } from './world.js?v=61';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=61';
-import { buildUnitArt } from './art_units.js?v=61';
-import { drawUnit, drawFx, placeUnit, burnOverlay, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=61';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=64';
+import { buildCreatureArt } from './creatures.js?v=64';
+import { buildEggArt } from './art_eggs.js?v=64';
+import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=64';
+import { Sfx } from './sfx.js?v=64';
+import { World } from './world.js?v=64';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=64';
+import { buildUnitArt } from './art_units.js?v=64';
+import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=64';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -196,15 +196,50 @@ const LATTICE = {
 const TERRAIN_SET = new Set(['wall', 'water', 'ice', 'mine', 'tower', 'barrel', 'tree']);
 const DISCRETE = { mine: { gap: 84, off: 3 }, tower: { gap: 60, off: 20 }, barrel: { gap: 26, off: 10 }, tree: { gap: 50, off: 18 } };
 let tstroke = null;
+const STROKE_BASE = { wall: 22, water: 30, ice: 26 };
+
+function brushWidth() {
+  return 0.5 + brush / 32; // the default brush gives the normal width, the biggest about three times as wide
+}
+
+function putProp(kind, x, y) {
+  const { off } = DISCRETE[kind];
+  if (x < 8 || x > W - 8 || y < 12 || y > H - 12) return;
+  world.addProp(kind, x, y + off);
+}
+
+// A tap with a big brush fills the circle with items; a small brush drops one.
+function propPatch(kind, x, y) {
+  const { gap } = DISCRETE[kind];
+  if (brush < gap * 0.5) {
+    putProp(kind, x, y);
+    return;
+  }
+  const n = Math.ceil(brush / gap);
+  for (let j = -n; j <= n; j++) {
+    for (let i = -n; i <= n; i++) {
+      const px = x + (i + (j & 1 ? 0.5 : 0)) * gap;
+      const py = y + j * gap * 0.866;
+      if ((px - x) ** 2 + (py - y) ** 2 <= brush * brush) putProp(kind, px, py);
+    }
+  }
+}
+
+// Along a drag the brush drops a row of items across the path.
+function propRow(kind, x, y, ux, uy) {
+  const { gap } = DISCRETE[kind];
+  const n = brush < gap * 0.5 ? 0 : Math.floor(brush / gap);
+  for (let j = -n; j <= n; j++) putProp(kind, x - uy * j * gap, y + ux * j * gap);
+}
 
 function terrainDown(x, y) {
   const kind = species;
   x = Math.min(W - 8, Math.max(8, x));
   y = Math.min(H - 12, Math.max(12, y));
   if (DISCRETE[kind]) {
-    world.addProp(kind, x, y + DISCRETE[kind].off);
+    propPatch(kind, x, y);
     tstroke = { kind, lx: x, ly: y };
-  } else tstroke = { kind, st: world.terrain.begin(kind, x, y), lx: x, ly: y };
+  } else tstroke = { kind, st: world.terrain.begin(kind, x, y, STROKE_BASE[kind] * brushWidth()), lx: x, ly: y };
 }
 
 function terrainMove(x, y) {
@@ -220,13 +255,14 @@ function terrainMove(x, y) {
     t.ly = y;
     return;
   }
-  const { gap, off } = DISCRETE[t.kind];
+  const { gap } = DISCRETE[t.kind];
   let d = Math.hypot(x - t.lx, y - t.ly);
   while (d >= gap) {
-    const k = gap / d;
-    t.lx += (x - t.lx) * k;
-    t.ly += (y - t.ly) * k;
-    world.addProp(t.kind, t.lx, t.ly + off);
+    const ux = (x - t.lx) / d;
+    const uy = (y - t.ly) / d;
+    t.lx += ux * gap;
+    t.ly += uy * gap;
+    propRow(t.kind, t.lx, t.ly, ux, uy);
     d = Math.hypot(x - t.lx, y - t.ly);
   }
 }
@@ -838,13 +874,6 @@ function drawHurt(u) {
   drawLayer(ctx, sprites.hurt[u.hp < 30 ? 1 : 0]);
 }
 
-function hitFlash(rx, ry) {
-  ctx.fillStyle = 'rgba(206, 222, 252, 0.8)';
-  ctx.beginPath();
-  ctx.ellipse(0, 0, rx, ry, 0, 0, TAU);
-  ctx.fill();
-}
-
 function drawSoldier(u) {
   const S = sprites.soldier;
   const f = u.facing;
@@ -868,7 +897,7 @@ function drawSoldier(u) {
   drawLayer(ctx, pose < 0.5 ? S.torsoSide[u.gaze] : S.torso);
   drawHurt(u);
   burnOverlay(ctx, u, 20.6 * K, 22 * K);
-  if (u.hit > 0) hitFlash(20.6 * K, 22 * K);
+  drawHitFlash(ctx, u, 20.6 * K, 22 * K);
 
   // Standing around the rifle is held upright at the side; it swings
   // down to aim as the soldier readies up.
@@ -951,7 +980,7 @@ function drawSniper(u) {
     else drawLayer(ctx, S.torso);
     drawHurt(u);
     burnOverlay(ctx, u, 20.8 * K, 24 * K);
-    if (u.hit > 0) hitFlash(20.8 * K, 24 * K);
+    drawHitFlash(ctx, u, 20.8 * K, 24 * K);
 
     ctx.save();
     ctx.translate(0, -11.6 * K);
@@ -1127,25 +1156,36 @@ function render() {
     ctx.drawImage(orbSprite, o.x - 9, o.y - 9, 18, 18);
   }
 
-  // sniper rounds in flight: a small dark bullet with a hot tip (the smoke trail is drawn with the puffs)
+  // sniper rounds: a long thin dark bullet over one thin pale smoke line along its whole path, which lingers
   for (const sk of world.streaks) {
     const c = Math.cos(sk.ang);
     const sn = Math.sin(sk.ang);
     const x = sk.x0 + c * sk.dist;
     const y = sk.y0 + sn * sk.dist;
+    const a = sk.fade ? Math.max(0, 1 - sk.fade / 1.4) : 1;
     ctx.lineCap = 'round';
-    ctx.strokeStyle = '#3a3a44';
-    ctx.lineWidth = 1.5;
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = `rgba(206, 208, 216, ${0.8 * a})`;
+    ctx.lineWidth = 0.9;
     ctx.beginPath();
-    ctx.moveTo(x - c * 3.5, y - sn * 3.5);
-    ctx.lineTo(x, y);
+    const n = Math.max(2, Math.ceil(sk.dist / 6));
+    for (let i = 0; i <= n; i++) {
+      const d = (sk.dist * i) / n;
+      const w = Math.sin(d * 0.11 + sk.x0) * 0.7;
+      const px = sk.x0 + c * d - sn * w;
+      const py = sk.y0 + sn * d + c * w;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
     ctx.stroke();
-    ctx.strokeStyle = '#f2c44b';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(x - c * 1, y - sn * 1);
-    ctx.lineTo(x, y);
-    ctx.stroke();
+    if (sk.dist < sk.total) {
+      ctx.strokeStyle = '#26262f';
+      ctx.lineWidth = 1.1;
+      ctx.beginPath();
+      ctx.moveTo(x - c * 12, y - sn * 12);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    }
   }
 
   for (const p of world.puffs) {
@@ -1156,6 +1196,17 @@ function render() {
       ctx.globalAlpha = 0.62 * (t < 0.5 ? 1 : 1 - (t - 0.5) / 0.5);
       ctx.drawImage(smokeSprite, p.x - r, p.y - r, r * 2, r * 2);
       ctx.globalAlpha = 1;
+      continue;
+    }
+    if (p.dust) {
+      // the ninja's dust: little lumpy cream puffs
+      const r = p.size * (1 + 0.5 * t);
+      ctx.fillStyle = `rgba(232, 223, 202, ${0.8 * (1 - t)})`;
+      ctx.beginPath();
+      ctx.arc(p.x - r * 0.5, p.y, r * 0.8, 0, TAU);
+      ctx.arc(p.x + r * 0.5, p.y - r * 0.2, r * 0.9, 0, TAU);
+      ctx.arc(p.x, p.y - r * 0.6, r * 0.7, 0, TAU);
+      ctx.fill();
       continue;
     }
     if (p.trail) {

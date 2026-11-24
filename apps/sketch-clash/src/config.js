@@ -201,6 +201,8 @@ export const NINJA = {
   cooldownMin: 0.2,
   cooldownMax: 0.32,
   strafe: 34,
+  // throws stars, then blurs across the gap in a quick dash that leaves a trail of dust
+  dash: { speed: 240, min: 36, max: 240, cd: 2.4 },
   weapon: 'katana',
   // throws spinning stars while closing in, then cuts up close
   star: { range: 170 * R, cooldownMin: 1.0, cooldownMax: 1.8, damage: 9, speed: 330 },

@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=61';
-import { drawLayer, OUT } from './sprites.js?v=61';
-import { drawDrop } from './art_units.js?v=61';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=61';
-import { EGG_DROPS } from './art_eggs.js?v=61';
+import { TAU, K, UNIT, FEET } from './config.js?v=64';
+import { drawLayer, OUT } from './sprites.js?v=64';
+import { drawDrop } from './art_units.js?v=64';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=64';
+import { EGG_DROPS } from './art_eggs.js?v=64';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -95,12 +95,57 @@ function eggBase(ctx, dpr, sprites, A, u, before) {
   else drawLayer(ctx, (u.species === 'roman' && u.target) || (u.species === 'archer' && u.drawT > u.def.drawTime - 0.55) ? A.torsoAngry : A.torso);
   drawHurtMarks(ctx, sprites, u);
   burnGlow(ctx, u, 20 * K, 23 * K);
-  if (u.hit > 0) {
-    // a hit flashes the body white for a moment
-    ctx.fillStyle = 'rgba(206, 222, 252, 0.8)';
+  drawHitFlash(ctx, u, 20.5 * K, 23 * K);
+}
+
+// A hit turns the whole body white with dizzy spiral eyes and three stars circling over its head,
+// then pale blue for a moment, as in the original.
+export function drawHitFlash(ctx, u, rx, ry) {
+  if (!(u.hit > 0)) return;
+  const first = u.hit > 0.13;
+  ctx.fillStyle = first ? 'rgba(255, 255, 255, 0.96)' : 'rgba(198, 217, 252, 0.88)';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, rx, ry, 0, 0, TAU);
+  ctx.fill();
+  ctx.strokeStyle = '#2a2d3a';
+  ctx.lineCap = 'round';
+  if (first) {
+    ctx.lineWidth = 0.55;
+    for (const ex of [1.5, 11.5]) {
+      ctx.beginPath();
+      for (let i = 0; i <= 26; i++) {
+        const a = i * 0.62;
+        const r = 0.25 + i * 0.16;
+        const px = ex * K + Math.cos(a) * r * K * 1.15;
+        const py = -4.5 * K + Math.sin(a) * r * K * 1.15;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#ffffff';
+    ctx.lineWidth = 0.45;
+    for (const [sx, sy] of [[-7, -31], [3, -35], [13, -30]]) {
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const r = (i % 2 === 0 ? 3.2 : 1.3) * K;
+        const a = (i / 10) * TAU - Math.PI / 2;
+        if (i === 0) ctx.moveTo(sx * K + Math.cos(a) * r, sy * K + Math.sin(a) * r);
+        else ctx.lineTo(sx * K + Math.cos(a) * r, sy * K + Math.sin(a) * r);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+  } else {
+    // eyes screwed shut
+    ctx.lineWidth = 0.7;
     ctx.beginPath();
-    ctx.ellipse(0, 0, 20.5 * K, 23 * K, 0, 0, TAU);
-    ctx.fill();
+    for (const ex of [1.5, 11.5]) {
+      ctx.moveTo((ex - 3.2) * K, -4.5 * K);
+      ctx.lineTo((ex + 3.2) * K, -4.5 * K);
+    }
+    ctx.stroke();
   }
 }
 

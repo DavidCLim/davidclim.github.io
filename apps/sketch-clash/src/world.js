@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=61';
-import { TerrainMap, WALL } from './terrain.js?v=61';
-import { installBeasts } from './beasts.js?v=61';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=64';
+import { TerrainMap, WALL } from './terrain.js?v=64';
+import { installBeasts } from './beasts.js?v=64';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -418,6 +418,9 @@ export class World {
       dirx: 1,
       diry: 0,
       inWater: true,
+      dashCd: 0, // ninja: time until the next dash
+      dashing: false,
+      dustAcc: 0,
       castT: 0, // mage / necromancer casting
       stun: 0,
       slip: 0, // slipping on a banana peel
@@ -611,7 +614,7 @@ export class World {
     if (u.dead) return;
     if (u.def.armor && (kind === 'bullet' || kind === 'arrow')) dmg *= u.def.armor;
     u.hp -= dmg;
-    u.hit = 0.12;
+    u.hit = 0.2;
     if (kind !== 'burn' && kind !== 'poison' && kind !== 'drown') {
       for (let i = 0; i < 3; i++) {
         const a = Math.random() * Math.PI * 2;
@@ -653,7 +656,7 @@ export class World {
         k.facing = u.facing;
         k.pose = 1;
         k.cdT = 0.5;
-      } else if (kind === 'blast' && !u.def.noDrop && !u.def.creature) this.launchDrop(u);
+      } else if ((kind === 'blast' || kind === 'snipe') && !u.def.noDrop && !u.def.creature) this.launchDrop(u);
       else if (this.onDeath) this.onDeath(u);
       this.afterDeath(u, kind, src);
     }
@@ -710,7 +713,7 @@ export class World {
         vy: Math.sin(ang) * (20 + Math.random() * 30) - 8 - Math.random() * 14,
         age: 0,
         life: 0.9 + Math.random() * 0.5,
-        size: 5 + Math.random() * 4,
+        size: 2.6 + Math.random() * 2,
       });
     }
     const o = this.rifleOrigin(u);
@@ -1187,10 +1190,45 @@ export class World {
           u.starT = d.star.cooldownMin + Math.random() * (d.star.cooldownMax - d.star.cooldownMin);
         }
       }
+      let sp = speed;
+      if (d.dash) {
+        u.dashCd -= dt;
+        if (!u.dashing && u.dashCd <= 0 && dist > d.dash.min && dist < d.dash.max) {
+          u.dashing = true;
+          if (d.star && u.starT <= d.star.cooldownMax * 0.6) {
+            this.throwStar(u, t);
+            u.starT = d.star.cooldownMin + Math.random() * (d.star.cooldownMax - d.star.cooldownMin);
+          }
+        }
+        if (u.dashing) {
+          if (dist <= reach * 1.1) {
+            u.dashing = false;
+            u.dashCd = d.dash.cd;
+            u.cdT = Math.min(u.cdT, 0.04);
+          } else sp = d.dash.speed;
+        }
+      }
       if (dist > reach * 0.85) {
-        u.x += (dx / dist) * speed * dt;
-        u.y += (dy / dist) * speed * dt;
+        u.x += (dx / dist) * sp * dt;
+        u.y += (dy / dist) * sp * dt;
         u.moving = true;
+        if (u.dashing) {
+          // a trail of little dust puffs left along the dash
+          u.dustAcc += sp * dt;
+          while (u.dustAcc >= 17) {
+            u.dustAcc -= 17;
+            this.puffs.push({
+              x: u.x - (dx / dist) * u.dustAcc + (Math.random() - 0.5) * 2,
+              y: u.y + 5 + (Math.random() - 0.5) * 2,
+              vx: (Math.random() - 0.5) * 6,
+              vy: -1 - Math.random() * 3,
+              age: 0,
+              life: 0.8 + Math.random() * 0.6,
+              size: 1.2 + Math.random() * 0.8,
+              dust: true,
+            });
+          }
+        }
       } else if (d.strafe) {
         u.x += (-dy / dist) * u.strafeDir * d.strafe * dt;
         u.y += (dx / dist) * u.strafeDir * d.strafe * dt;
@@ -1204,6 +1242,7 @@ export class World {
         u.cdT = d.cooldownMin + Math.random() * (d.cooldownMax - d.cooldownMin);
       }
     } else {
+      u.dashing = false;
       u.aim -= u.aim * Math.min(1, dt * 6);
       this.marchStep(u, dt, speed * 0.85);
     }
@@ -1663,23 +1702,11 @@ export class World {
           if (!h.u.dead) this.hurt(h.u, h.dmg, h.u.x, h.u.y, 'snipe', s.owner);
         }
       }
-      // a thin grey smoke trail is left hanging in the air along the whole flight
-      s.trail += s.dist - from;
-      while (s.trail >= 3.5) {
-        s.trail -= 3.5;
-        const d = s.dist - s.trail;
-        this.puffs.push({
-          x: s.x0 + c * d,
-          y: s.y0 + sn * d,
-          vx: (Math.random() - 0.5) * 5,
-          vy: -3 - Math.random() * 4,
-          age: 0,
-          life: 1.1 + Math.random() * 0.5,
-          size: 2.3 + Math.random() * 0.9,
-          trail: true,
-        });
+      if (s.dist >= s.total) {
+        // the round has landed; its smoke line hangs in the air a moment longer
+        s.fade = (s.fade || 0) + dt;
+        if (s.fade > 1.4) s.gone = true;
       }
-      if (s.dist >= s.total) s.gone = true;
     }
     if (this.streaks.some((s) => s.gone)) this.streaks = this.streaks.filter((s) => !s.gone);
 

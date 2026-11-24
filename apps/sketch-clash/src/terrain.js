@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=61';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=61';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=61';
+import { TAU, K } from './config.js?v=64';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=64';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=64';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask
@@ -60,8 +60,8 @@ export class TerrainMap {
     }
   }
 
-  begin(kind, x, y) {
-    const s = { kind, w: STROKE_W[kind], pts: [[x, y]] };
+  begin(kind, x, y, w = STROKE_W[kind]) {
+    const s = { kind, w, pts: [[x, y]] };
     this.strokes.push(s);
     this.stampSeg(s, s.pts[0], s.pts[0]);
     this.version++;
