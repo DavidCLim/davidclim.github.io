@@ -1,5 +1,5 @@
-import { TAU } from './config.js?v=65';
-import { OUT } from './sprites.js?v=65';
+import { TAU } from './config.js?v=66';
+import { OUT } from './sprites.js?v=66';
 
 // Small drawing helpers shared by the creature and terrain art. Everything is
 // drawn in "art" units (the egg units are ~41 wide), the ground line is y = 25.

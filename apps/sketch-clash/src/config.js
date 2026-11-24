@@ -87,8 +87,8 @@ export const FLAMETHROWER = {
   ...BODY,
   speed: 42,
   sight: 280,
-  range: 44,
-  holdDist: 28,
+  range: 30,
+  holdDist: 18,
   dps: 62,
   cone: 0.36,
   burnTime: 2.6,
@@ -131,8 +131,9 @@ export const GRENADIER = {
   holdDist: 150,
   damage: 52,
   blastRadius: 22,
-  cooldownMin: 2.1,
-  cooldownMax: 3.1,
+  // the original grenadier is slow: a throw roughly every five and a half seconds
+  cooldownMin: 4.6,
+  cooldownMax: 5.8,
   throwTime: 0.4,
   pivot: { x: 17 * K, y: 14 * K },
 };

@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=65';
-import { TerrainMap, WALL } from './terrain.js?v=65';
-import { installBeasts } from './beasts.js?v=65';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=66';
+import { TerrainMap, WALL } from './terrain.js?v=66';
+import { installBeasts } from './beasts.js?v=66';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -1328,8 +1328,8 @@ export class World {
           x1: tx,
           y1: ty,
           age: 0,
-          dur: 0.5 + flight / 440,
-          h: 34 + flight * 0.24,
+          dur: 0.7 + flight / 170, // a long, slow lob
+          h: 30 + flight * 0.12,
           side: u.side,
           owner: u,
           damage: d.damage,
