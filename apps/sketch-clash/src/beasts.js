@@ -1,5 +1,5 @@
-import { TAU, FEET, GAIT } from './config.js?v=78';
-import { WATER, ICE, WALL } from './terrain.js?v=78';
+import { TAU, FEET, GAIT } from './config.js?v=79';
+import { WATER, ICE, WALL } from './terrain.js?v=79';
 
 // Everything the Animals and Mythical tabs add to the world, plus the terrain physics:
 // the beast brain, the mage's bolts, the necromancer's skeletons, zombie infection,
@@ -265,7 +265,8 @@ export function installBeasts(World) {
     for (const p of this.props) {
       if (p.dead) continue;
       if (p.type !== 'barrel' && p.type !== 'mine') continue;
-      if (Math.hypot(p.x - x, p.y - 8 - y) <= radius * 0.95) {
+      // in the original a blast next to a barrel does not set it off; only a close one does
+      if (Math.hypot(p.x - x, p.y - 8 - y) <= radius * 0.45) {
         if (p.type === 'barrel') {
           p.hp = Math.min(p.hp, 4);
           p.fuse = 0.12 + Math.random() * 0.12;
