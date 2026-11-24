@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=85';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=85';
+import { TAU, K } from './config.js?v=86';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=86';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -1010,7 +1010,7 @@ function drawCowboyTorso(g, look, blink) {
   g.strokeStyle = '#1d1a22';
   g.lineWidth = 1.7;
   g.beginPath();
-  g.ellipse(0, 0, 20.8, 24, 0, 0, TAU);
+  g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
   g.fill();
   g.stroke();
   g.fillStyle = '#f2b074';

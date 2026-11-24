@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=85';
+import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=86';
 
 // Units are drawn from "art" coordinates matching the reference sprites
 // (origin at the body centre, y down) into small offscreen layers, then
@@ -128,7 +128,7 @@ function drawSoldierTorso(g, front, gaze) {
   g.strokeStyle = OUT;
   g.lineWidth = 1.8;
   g.beginPath();
-  g.ellipse(0, 0, 20.6, 22, 0, 0, TAU);
+  g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
   g.fill();
   g.stroke();
 
@@ -315,7 +315,7 @@ export function drawSniperBody(g) {
   g.strokeStyle = INK;
   g.lineWidth = 1.7;
   g.beginPath();
-  g.ellipse(0, 0, 20.8, 24, 0, 0, TAU);
+  g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
   g.fill();
   g.stroke();
   // the small pale patch up by the brim

@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=85';
-import { buildCreatureArt } from './creatures.js?v=85';
-import { buildEggArt } from './art_eggs.js?v=85';
-import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=85';
-import { Sfx } from './sfx.js?v=85';
-import { World } from './world.js?v=85';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=85';
-import { buildUnitArt } from './art_units.js?v=85';
-import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=85';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=86';
+import { buildCreatureArt } from './creatures.js?v=86';
+import { buildEggArt } from './art_eggs.js?v=86';
+import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=86';
+import { Sfx } from './sfx.js?v=86';
+import { World } from './world.js?v=86';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=86';
+import { buildUnitArt } from './art_units.js?v=86';
+import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=86';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -35,7 +35,7 @@ world.sfx = (name, x) => sfx.play(name, x, W);
 
 // The battlefield is a fixed ~860 units wide whatever the screen: units, ranges
 // and speeds always keep the same size relative to the screen, as in the original.
-const UNIT_ZOOM = 1.74; // screen px per world unit: units are a fixed size on screen, like the original
+const UNIT_ZOOM = 1.613; // screen px per world unit: a unit is the same size on the field as its toolbar icon (42px canvas = 84 art units)
 let W = 1; // field size in world units
 let H = 1;
 let Z = 1; // screen px per world unit
