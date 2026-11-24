@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=76';
-import { drawLayer, OUT } from './sprites.js?v=76';
-import { drawDrop } from './art_units.js?v=76';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=76';
-import { EGG_DROPS } from './art_eggs.js?v=76';
+import { TAU, K, UNIT, FEET } from './config.js?v=78';
+import { drawLayer, OUT } from './sprites.js?v=78';
+import { drawDrop } from './art_units.js?v=78';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=78';
+import { EGG_DROPS } from './art_eggs.js?v=78';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -96,6 +96,31 @@ function eggBase(ctx, dpr, sprites, A, u, before) {
   drawHurtMarks(ctx, sprites, u);
   burnGlow(ctx, u, 20 * K, 23 * K);
   drawHitFlash(ctx, u, 20.5 * K, 23 * K);
+}
+
+// A fallen unit stares up with dizzy spiral eyes.
+export function drawDizzyEyes(ctx, u) {
+  ctx.lineCap = 'round';
+  for (const ex of [1.5, 11.5]) {
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#17141a';
+    ctx.lineWidth = 0.6;
+    ctx.beginPath();
+    ctx.arc(ex * K, -4.5 * K, 4.3 * K, 0, TAU);
+    ctx.fill();
+    ctx.stroke();
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    for (let i = 0; i <= 22; i++) {
+      const a = i * 0.7;
+      const r = 0.3 + i * 0.16;
+      const px = ex * K + Math.cos(a) * r * K;
+      const py = -4.5 * K + Math.sin(a) * r * K;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  }
 }
 
 // A hit turns the whole body white with dizzy spiral eyes and three stars circling over its head,
