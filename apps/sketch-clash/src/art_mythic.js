@@ -1,6 +1,6 @@
-import { TAU } from './config.js?v=67';
-import { OUT } from './sprites.js?v=67';
-import { G, vgrad, fs, ell, circ, blob, poly, stick, ribbon, eye, shadow, leg } from './art_kit.js?v=67';
+import { TAU } from './config.js?v=71';
+import { OUT } from './sprites.js?v=71';
+import { G, vgrad, fs, ell, circ, blob, poly, stick, ribbon, eye, shadow, leg } from './art_kit.js?v=71';
 
 // Mythical creatures that aren't egg-shaped: slime, giant, dragon.
 

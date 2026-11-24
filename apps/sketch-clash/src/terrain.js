@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=67';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=67';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=67';
+import { TAU, K } from './config.js?v=71';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=71';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=71';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask
@@ -8,8 +8,8 @@ import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=6
 export const WATER = 1;
 export const ICE = 2;
 export const WALL = 4;
-export const STROKE_W = { wall: 22, water: 30, ice: 26 };
-export const WALL_H = 7; // the front face of a wall hangs this far below its top
+export const STROKE_W = { wall: 14.5, water: 21, ice: 19 };
+export const WALL_H = 5.2; // the front face of a wall hangs this far below its top
 
 export class TerrainMap {
   constructor() {
@@ -110,6 +110,12 @@ export class TerrainMap {
 }
 
 // Paints all strokes onto the ground canvas (already scaled to world units).
+// Water and ice are flat colour with a thin edge; a wall is a raised slab of flagstones with a bricked front.
+function hash2(x, y) {
+  const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+  return n - Math.floor(n);
+}
+
 export function renderGround(ctx, W, H, strokes, clock) {
   ctx.clearRect(0, 0, W, H);
   ctx.lineCap = 'round';
@@ -121,8 +127,8 @@ export function renderGround(ctx, W, H, strokes, clock) {
     for (let i = 1; i < s.pts.length; i++) ctx.lineTo(s.pts[i][0], s.pts[i][1] + dy);
   };
   const of = (kind) => strokes.filter((s) => s.kind === kind);
-  // water and ice are drawn as a chain of slightly uneven discs, so the banks wobble like the originals
-  const blobPath = (s, grow, dy = 0, shrink = 1) => {
+  // water and ice are drawn as a chain of slightly uneven discs, so the banks wobble
+  const blobPath = (s, grow) => {
     ctx.beginPath();
     const pts = [];
     for (let i = 0; i < s.pts.length; i++) {
@@ -134,23 +140,22 @@ export function renderGround(ctx, W, H, strokes, clock) {
         for (let k = 1; k <= n; k++) pts.push([a[0] + ((b[0] - a[0]) * k) / n, a[1] + ((b[1] - a[1]) * k) / n]);
       }
     }
-    for (let i = 0; i < pts.length; i += 1) {
-      const [x, y] = pts[i];
-      const n = Math.sin(x * 0.11 + y * 0.07) * 0.5 + Math.sin(x * 0.043 - y * 0.09 + 1.7) * 0.5;
-      const r = (s.w / 2) * shrink * (0.9 + 0.13 * n) + grow;
-      ctx.moveTo(x + r, y + dy);
-      ctx.arc(x, y + dy, r, 0, TAU);
+    for (const [x, y] of pts) {
+      const n = Math.sin(x * 0.09 + y * 0.06) * 0.5 + Math.sin(x * 0.037 - y * 0.08 + 1.7) * 0.5;
+      const r = (s.w / 2) * (0.92 + 0.12 * n) + grow;
+      ctx.moveTo(x + r, y);
+      ctx.arc(x, y, r, 0, TAU);
     }
   };
-  for (const [kind, edge, fill, shine] of [
-    ['water', '#47a6c2', '#92e1ee', 'rgba(255,255,255,0.3)'],
-    ['ice', '#a6cbe0', '#e0f1fb', 'rgba(255,255,255,0.8)'],
+  for (const [kind, edge, fill] of [
+    ['water', '#62b4c8', '#92dae8'],
+    ['ice', '#b2d2e5', '#dff0fa'],
   ]) {
     const list = of(kind);
     if (!list.length) continue;
     ctx.fillStyle = edge;
     for (const s of list) {
-      blobPath(s, 1.5);
+      blobPath(s, 0.7);
       ctx.fill();
     }
     ctx.fillStyle = fill;
@@ -158,61 +163,122 @@ export function renderGround(ctx, W, H, strokes, clock) {
       blobPath(s, 0);
       ctx.fill();
     }
-    ctx.fillStyle = shine;
-    for (const s of list) {
-      blobPath(s, 0, -s.w * 0.14, 0.52);
-      ctx.fill();
-    }
-    if (kind === 'water') {
-      // little wavelets
-      ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-      ctx.lineWidth = 1;
-      for (const s of list) {
-        for (let i = 0; i < s.pts.length; i += 6) {
-          const [x, y] = s.pts[i];
-          const o = Math.sin(x * 0.7 + y * 0.3) * 5;
-          ctx.beginPath();
-          ctx.moveTo(x - 4 + o, y + 3);
-          ctx.quadraticCurveTo(x + o, y + 1, x + 4 + o, y + 3);
-          ctx.stroke();
-        }
-      }
-    }
   }
   const walls = of('wall');
-  if (walls.length) {
-    // front faces first, then the tops, so overlapping walls merge
-    ctx.strokeStyle = '#1e1e24';
-    for (const s of walls) {
-      ctx.lineWidth = s.w + 3.4;
-      path(s, WALL_H);
-      ctx.stroke();
-      path(s, 0);
-      ctx.stroke();
+  if (!walls.length) return;
+  const sc = ctx.getTransform().a || 1;
+  // soft shadow under the slab
+  ctx.save();
+  ctx.shadowColor = 'rgba(30, 30, 40, 0.28)';
+  ctx.shadowBlur = 9 * sc;
+  ctx.shadowOffsetY = 3.5 * sc;
+  ctx.strokeStyle = '#1e1e22';
+  for (const s of walls) {
+    ctx.lineWidth = s.w + 1.8;
+    path(s, WALL_H);
+    ctx.stroke();
+  }
+  ctx.restore();
+  // the front face, with rows of bricks
+  ctx.strokeStyle = '#1e1e22';
+  for (const s of walls) {
+    ctx.lineWidth = s.w + 1.8;
+    path(s, WALL_H);
+    ctx.stroke();
+    path(s, 0);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = '#4b4b4f';
+  for (const s of walls) {
+    ctx.lineWidth = s.w;
+    path(s, WALL_H);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = 'rgba(150, 150, 156, 0.55)';
+  ctx.lineWidth = 0.55;
+  for (const s of walls) {
+    ctx.setLineDash([4, 3]);
+    path(s, WALL_H + s.w * 0.5 - 1.1);
+    ctx.stroke();
+    ctx.lineDashOffset = 3.5;
+    path(s, WALL_H + s.w * 0.5 + 1.1);
+    ctx.stroke();
+    ctx.lineDashOffset = 0;
+    ctx.setLineDash([]);
+  }
+  // the flagstone top
+  ctx.strokeStyle = '#7e7c7b';
+  for (const s of walls) {
+    ctx.lineWidth = s.w;
+    path(s, 0);
+    ctx.stroke();
+  }
+  const mk = () => {
+    const c = document.createElement('canvas');
+    c.width = Math.ceil(W * sc);
+    c.height = Math.ceil(H * sc);
+    const g = c.getContext('2d');
+    g.scale(sc, sc);
+    g.lineCap = 'round';
+    g.lineJoin = 'round';
+    return [c, g];
+  };
+  const [mask, mg] = mk();
+  mg.strokeStyle = '#000';
+  for (const s of walls) {
+    mg.lineWidth = s.w - 0.6;
+    mg.beginPath();
+    mg.moveTo(s.pts[0][0], s.pts[0][1]);
+    if (s.pts.length === 1) mg.lineTo(s.pts[0][0] + 0.01, s.pts[0][1]);
+    for (let i = 1; i < s.pts.length; i++) mg.lineTo(s.pts[i][0], s.pts[i][1]);
+    mg.stroke();
+  }
+  const [pat, pg] = mk();
+  let x0 = W;
+  let x1 = 0;
+  let y0 = H;
+  let y1 = 0;
+  for (const s of walls) {
+    for (const [x, y] of s.pts) {
+      x0 = Math.min(x0, x - s.w);
+      x1 = Math.max(x1, x + s.w);
+      y0 = Math.min(y0, y - s.w);
+      y1 = Math.max(y1, y + s.w);
     }
-    ctx.strokeStyle = '#46464d';
-    for (const s of walls) {
-      ctx.lineWidth = s.w;
-      path(s, WALL_H);
-      ctx.stroke();
+  }
+  pg.strokeStyle = 'rgba(78, 76, 78, 0.6)';
+  pg.lineWidth = 0.6;
+  const cell = 11.5;
+  pg.beginPath();
+  for (let j = Math.floor(y0 / cell) - 1; j <= Math.ceil(y1 / cell) + 1; j++) {
+    for (let i = Math.floor(x0 / cell) - 1; i <= Math.ceil(x1 / cell) + 1; i++) {
+      const cx = (i + (j & 1 ? 0.5 : 0)) * cell + (hash2(i, j) - 0.5) * 5;
+      const cy = j * cell * 0.9 + (hash2(j, i + 9) - 0.5) * 5;
+      for (let k = 0; k < 6; k++) {
+        const a = (k / 6) * TAU + hash2(i + k, j) * 0.5;
+        const r = cell * (0.52 + hash2(k, i * 3 + j) * 0.12);
+        const px = cx + Math.cos(a) * r;
+        const py = cy + Math.sin(a) * r;
+        if (k === 0) pg.moveTo(px, py);
+        else pg.lineTo(px, py);
+      }
+      pg.closePath();
     }
-    for (const s of walls) {
-      ctx.strokeStyle = '#8a8a90';
-      ctx.lineWidth = s.w;
-      path(s, 0);
-      ctx.stroke();
-      // cobbles
-      ctx.strokeStyle = '#7a7a81';
-      ctx.lineWidth = s.w - 6;
-      ctx.setLineDash([11, 2.2]);
-      path(s, 0);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
-      ctx.lineWidth = 2.2;
-      path(s, -s.w * 0.3);
-      ctx.stroke();
-    }
+  }
+  pg.stroke();
+  pg.globalCompositeOperation = 'destination-in';
+  pg.setTransform(1, 0, 0, 1, 0, 0);
+  pg.drawImage(mask, 0, 0);
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(pat, 0, 0);
+  ctx.restore();
+  // a lighter edge along the top of the slab
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+  for (const s of walls) {
+    ctx.lineWidth = 1.2;
+    path(s, -s.w * 0.36);
+    ctx.stroke();
   }
 }
 
@@ -393,80 +459,43 @@ function drawTree(g) {
   }
 }
 
-// A stone tower with battlements, a door and an arrow slit. An obstacle, nothing more.
+// A plain stone tower: flat grey, three merlons and a little door. An obstacle, nothing more.
 function drawTower(g) {
-  g.scale(1.3, 0.9);
-  shadowEll(g, 30, 6, 2);
-  const lower = (x) => x; // the walls lean in a touch toward the top
+  shadowEll(g, 26, 5, 2);
   g.beginPath();
-  g.moveTo(-19, 0);
-  g.lineTo(-16.5, -82);
-  g.lineTo(16.5, -82);
-  g.lineTo(19, 0);
-  g.quadraticCurveTo(0, 7, -19, 0);
+  g.moveTo(-17, 0);
+  g.lineTo(-15, -62);
+  g.lineTo(15, -62);
+  g.lineTo(17, 0);
+  g.quadraticCurveTo(0, 6, -17, 0);
   g.closePath();
-  const hg = g.createLinearGradient(-19, 0, 19, 0);
-  hg.addColorStop(0, '#a9a9b2');
-  hg.addColorStop(0.45, '#b9b9c1');
-  hg.addColorStop(1, '#85858f');
+  const hg = g.createLinearGradient(-17, 0, 17, 0);
+  hg.addColorStop(0, '#a3a3ab');
+  hg.addColorStop(0.55, '#b3b3bb');
+  hg.addColorStop(1, '#8a8a93');
   g.fillStyle = hg;
   g.fill();
-  ink(g, 1.9);
-  g.stroke();
-  // stone courses
-  g.save();
-  g.clip();
-  g.strokeStyle = 'rgba(70, 70, 82, 0.55)';
-  g.lineWidth = 1;
-  for (let i = 0, y = -8; y > -80; y -= 9.5, i++) {
-    g.beginPath();
-    g.moveTo(-20, y);
-    g.quadraticCurveTo(0, y + 3.4, 20, y);
-    g.stroke();
-    for (let x = -14 + (i % 2) * 6; x < 18; x += 12) {
-      g.beginPath();
-      g.moveTo(x, y + 1.4);
-      g.lineTo(x, y - 8);
-      g.stroke();
-    }
-  }
-  g.restore();
-  // the top ring and its merlons
-  g.beginPath();
-  g.moveTo(-19.5, -82);
-  g.lineTo(-19.5, -92);
-  g.lineTo(19.5, -92);
-  g.lineTo(19.5, -82);
-  g.quadraticCurveTo(0, -77, -19.5, -82);
-  g.closePath();
-  g.fillStyle = hg;
-  g.fill();
+  ink(g, 1.7);
   g.stroke();
   g.beginPath();
-  g.ellipse(0, -92, 19.5, 5.4, 0, 0, TAU);
-  g.fillStyle = '#6b6b76';
+  g.ellipse(0, -62, 15, 4.6, 0, 0, TAU);
+  g.fillStyle = '#7b7b85';
   g.fill();
   g.stroke();
-  for (const x of [-15.5, -5.2, 5.2, 15.5]) {
+  for (const x of [-10.5, 0, 10.5]) {
     g.beginPath();
-    g.rect(x - 3.6, -99.5, 7.2, 9);
-    g.fillStyle = '#b4b4bd';
+    g.rect(x - 4, -70, 8, 9);
+    g.fillStyle = '#b3b3bb';
     g.fill();
     g.stroke();
   }
-  // door and arrow slit
   g.beginPath();
-  g.moveTo(-6, -1);
-  g.lineTo(-6, -17);
-  g.quadraticCurveTo(0, -25, 6, -17);
-  g.lineTo(6, -1);
+  g.moveTo(-5, -1);
+  g.lineTo(-5, -14);
+  g.quadraticCurveTo(0, -20, 5, -14);
+  g.lineTo(5, -1);
   g.closePath();
-  g.fillStyle = '#4a3322';
-  g.fill();
-  g.stroke();
-  g.beginPath();
-  g.rect(-1.8, -58, 3.6, 11);
-  g.fillStyle = '#2b2b36';
+  g.fillStyle = '#4a3a2c';
   g.fill();
   g.stroke();
 }
@@ -478,7 +507,7 @@ export function buildTerrainArt() {
     barrel: makeLayer(-26, -64, 26, 8, (g) => drawBarrel(g, false)),
     barrelHot: makeLayer(-26, -64, 26, 8, (g) => drawBarrel(g, true)),
     tree: makeLayer(-46, -106, 46, 8, drawTree),
-    tower: makeLayer(-46, -108, 46, 10, drawTower),
+    tower: makeLayer(-26, -78, 26, 10, drawTower),
   };
 }
 
@@ -595,7 +624,7 @@ const ICON_DRAW = {
   },
   mine: (g) => drawMine(g, false),
   tower: (g) => {
-    g.scale(0.46, 0.46);
+    g.scale(0.62, 0.62);
     drawTower(g);
   },
   barrel: (g) => {

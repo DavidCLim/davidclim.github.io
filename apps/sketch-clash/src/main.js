@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=67';
-import { buildCreatureArt } from './creatures.js?v=67';
-import { buildEggArt } from './art_eggs.js?v=67';
-import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=67';
-import { Sfx } from './sfx.js?v=67';
-import { World } from './world.js?v=67';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=67';
-import { buildUnitArt } from './art_units.js?v=67';
-import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=67';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=71';
+import { buildCreatureArt } from './creatures.js?v=71';
+import { buildEggArt } from './art_eggs.js?v=71';
+import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=71';
+import { Sfx } from './sfx.js?v=71';
+import { World } from './world.js?v=71';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=71';
+import { buildUnitArt } from './art_units.js?v=71';
+import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=71';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -196,7 +196,7 @@ const LATTICE = {
 const TERRAIN_SET = new Set(['wall', 'water', 'ice', 'mine', 'tower', 'barrel', 'tree']);
 const DISCRETE = { mine: { gap: 84, off: 3 }, tower: { gap: 60, off: 20 }, barrel: { gap: 26, off: 10 }, tree: { gap: 50, off: 18 } };
 let tstroke = null;
-const STROKE_BASE = { wall: 22, water: 30, ice: 26 };
+const STROKE_BASE = { wall: 14.5, water: 21, ice: 19 };
 
 function brushWidth() {
   return 0.5 + brush / 32; // the default brush gives the normal width, the biggest about three times as wide
@@ -1033,7 +1033,7 @@ function drawBody(u) {
   else drawUnit(ctx, dpr, sprites, u);
 }
 
-const PROP_SCALE = { tree: 1.25, barrel: 1.4, mine: 1.6, tower: 1.15 };
+const PROP_SCALE = { tree: 0.85, barrel: 0.82, mine: 0.9, tower: 0.9 };
 function drawProp(p) {
   const k = PROP_SCALE[p.type];
   ctx.setTransform(dpr * k, 0, 0, dpr * k, p.x * dpr, p.y * dpr);

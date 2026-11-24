@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=67';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=67';
+import { TAU, K } from './config.js?v=71';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat } from './sprites.js?v=71';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -412,8 +412,8 @@ function drawBushHat(g) {
   g.lineJoin = 'round';
   g.lineCap = 'round';
   const knit = g.createLinearGradient(0, -15, 0, 3);
-  knit.addColorStop(0, '#62bb5e');
-  knit.addColorStop(1, '#3f9446');
+  knit.addColorStop(0, '#3f8a45');
+  knit.addColorStop(1, '#245c2c');
   g.fillStyle = knit;
   g.strokeStyle = OUT;
   g.lineWidth = 1.7;
@@ -426,7 +426,7 @@ function drawBushHat(g) {
   g.fill();
   g.stroke();
   // knit ribbing up the crown
-  g.strokeStyle = 'rgba(30, 90, 40, 0.35)';
+  g.strokeStyle = 'rgba(10, 50, 20, 0.45)';
   g.lineWidth = 0.9;
   g.beginPath();
   for (let x = -12; x <= 12; x += 4) {
@@ -440,7 +440,7 @@ function drawBushHat(g) {
   g.ellipse(-6, -10, 4.4, 2, -0.5, 0, TAU);
   g.fill();
   // the turned-up cuff
-  g.fillStyle = '#74c971';
+  g.fillStyle = '#397d3f';
   g.strokeStyle = OUT;
   g.lineWidth = 1.7;
   rr(g, -18.4, -3.4, 36.8, 6.6, 3.2);
@@ -1055,70 +1055,122 @@ function drawFlintlock(g, firing) {
 
 // ---------------------------------------------------------------- ninja
 function drawNinjaBody(g, front, gz) {
-  // headband tails, behind the head
-  g.fillStyle = '#d92b2f';
+  // the samurai: crimson armour with gold lacing, navy shoulder plates, a kabuto helmet with golden horns
+  const cx = front ? 0 : 3;
+  // neck guard of the helmet, behind the head
+  g.fillStyle = '#2c3150';
   g.strokeStyle = OUT;
-  g.lineWidth = 1.2;
+  g.lineWidth = 1.3;
   g.beginPath();
-  g.moveTo(-18, -13);
-  g.quadraticCurveTo(-30, -20, -37, -13);
-  g.quadraticCurveTo(-30, -12, -22, -9.5);
+  g.moveTo(-17, -15);
+  g.lineTo(-26, -12);
+  g.lineTo(-25, -1);
+  g.lineTo(-18, -4);
   g.closePath();
   g.fill();
   g.stroke();
+  g.strokeStyle = '#d8b04a';
+  g.lineWidth = 0.9;
   g.beginPath();
-  g.moveTo(-19, -11);
-  g.quadraticCurveTo(-31, -7, -38, 0);
-  g.quadraticCurveTo(-30, -6, -21, -7);
-  g.closePath();
-  g.fill();
+  g.moveTo(-24.5, -8);
+  g.lineTo(-18, -9);
+  g.moveTo(-24.8, -4.5);
+  g.lineTo(-18.4, -6);
   g.stroke();
 
-  eggBody(g, '#383742', '#2b2a33');
-  g.fillStyle = 'rgba(255, 255, 255, 0.07)';
+  eggBody(g, '#bd3a32', '#8c2421');
+  // gold lacing across the armour
+  g.strokeStyle = '#e1b94b';
+  g.lineWidth = 1.3;
   g.beginPath();
-  g.ellipse(0, 11, 18, 11, 0, 0, TAU);
-  g.fill();
-  g.strokeStyle = 'rgba(14, 13, 20, 0.7)';
-  g.lineWidth = 3.4;
-  g.beginPath();
-  g.moveTo(-19.5, 3.4);
-  g.quadraticCurveTo(0, 6.6, 19.5, 3.4);
+  for (const y of [8, 13.5, 19]) {
+    g.moveTo(-19 + (y - 8) * 0.18, y);
+    g.quadraticCurveTo(0, y + 3.4, 19 - (y - 8) * 0.18, y);
+  }
   g.stroke();
-  // the opening of the hood
-  g.fillStyle = '#d9c5a2';
+  g.strokeStyle = 'rgba(40, 14, 14, 0.55)';
+  g.lineWidth = 1;
+  g.beginPath();
+  g.moveTo(0, 7);
+  g.lineTo(0, 22);
+  g.stroke();
+  // shoulder plates
+  g.fillStyle = '#2c3150';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.4;
+  rr(g, -22.5, -1, 9, 9, 3);
+  g.fill();
+  g.stroke();
+  rr(g, 13.5, -1, 9, 9, 3);
+  g.fill();
+  g.stroke();
+  g.strokeStyle = '#e1b94b';
+  g.lineWidth = 1;
+  g.beginPath();
+  g.moveTo(-21, 3.4);
+  g.lineTo(-15, 3.4);
+  g.moveTo(15, 3.4);
+  g.lineTo(21, 3.4);
+  g.stroke();
+  // face
+  g.fillStyle = '#ecc9a0';
   g.strokeStyle = OUT;
   g.lineWidth = 1.5;
-  rr(g, front ? -17.5 : -10.8, -11.8, front ? 35 : 27.6, 9.6, 3);
+  rr(g, front ? -15 : -9.4, -11.6, front ? 30 : 24, 10.4, 3.2);
   g.fill();
   g.stroke();
-  const xs = front ? [-7.4, 7.4] : [-4.4, 9.3];
+  const xs = front ? [-6.8, 6.8] : [-3.4, 9.2];
   for (const x of xs) {
     g.fillStyle = '#fdfdf8';
     g.strokeStyle = OUT;
-    g.lineWidth = 1.7;
+    g.lineWidth = 1.5;
     g.beginPath();
-    g.ellipse(x, -6.9, 4.5, 3.4, 0, 0, TAU);
+    g.ellipse(x, -6.2, 3.8, 3, 0, 0, TAU);
     g.fill();
     g.stroke();
     g.fillStyle = '#0d0b10';
     g.beginPath();
-    g.arc(x + 1.3 + gz[0] * 0.4, -6.7, 2.6, 0, TAU);
+    g.arc(x + 1.2 + gz[0] * 0.4, -6, 2.2, 0, TAU);
     g.fill();
+    // stern brow
+    g.strokeStyle = OUT;
+    g.lineWidth = 1.5;
+    g.beginPath();
+    g.moveTo(x - 4.4, -10.6);
+    g.lineTo(x + 3.8, -9);
+    g.stroke();
   }
-
-  // the red headband
-  g.fillStyle = '#d92b2f';
+  // kabuto: navy dome, a gold rim and two golden horns
+  g.fillStyle = '#2c3150';
   g.strokeStyle = OUT;
-  g.lineWidth = 1.5;
-  rr(g, -21, -17.4, 42, 5.4, 2.4);
+  g.lineWidth = 1.6;
+  g.beginPath();
+  g.moveTo(-20, -11.4);
+  g.bezierCurveTo(-21, -27, 21, -27, 20, -11.4);
+  g.quadraticCurveTo(0, -14.4, -20, -11.4);
+  g.closePath();
   g.fill();
   g.stroke();
-  g.fillStyle = 'rgba(255, 255, 255, 0.25)';
-  g.fillRect(-18, -16.6, 36, 1.2);
-  g.fillStyle = '#d92b2f';
+  g.strokeStyle = '#e1b94b';
+  g.lineWidth = 1.5;
   g.beginPath();
-  g.arc(-21, -14.7, 3.1, 0, TAU);
+  g.moveTo(-19.4, -12.4);
+  g.quadraticCurveTo(0, -15.6, 19.4, -12.4);
+  g.stroke();
+  g.fillStyle = '#e8c24e';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.2;
+  for (const sg of [-1, 1]) {
+    g.beginPath();
+    g.moveTo(sg * 3, -22);
+    g.quadraticCurveTo(sg * 6, -30, sg * 13, -33);
+    g.quadraticCurveTo(sg * 8, -27, sg * 7.4, -21);
+    g.closePath();
+    g.fill();
+    g.stroke();
+  }
+  g.beginPath();
+  g.arc(0, -19.6, 2.1, 0, TAU);
   g.fill();
   g.stroke();
 }
@@ -1296,12 +1348,25 @@ export const DROPS = {
     g.fill();
   },
   ninja(g) {
-    g.fillStyle = '#d92b2f';
+    g.fillStyle = '#2c3150';
     g.strokeStyle = OUT;
     g.lineWidth = 1;
-    rr(g, -11, -2, 22, 4.2, 2);
+    g.beginPath();
+    g.ellipse(0, 0, 11, 7.5, 0, Math.PI, TAU);
+    g.closePath();
     g.fill();
     g.stroke();
+    g.fillStyle = '#e8c24e';
+    g.beginPath();
+    g.moveTo(-2, -6);
+    g.quadraticCurveTo(-4, -11, -9, -13);
+    g.quadraticCurveTo(-5, -9, -5, -5);
+    g.closePath();
+    g.moveTo(2, -6);
+    g.quadraticCurveTo(4, -11, 9, -13);
+    g.quadraticCurveTo(5, -9, 5, -5);
+    g.closePath();
+    g.fill();
   },
 };
 
@@ -1324,10 +1389,19 @@ const GHOSTS = {
     g.restore();
   }],
   ninja: ['#eeedf0', '#cbcad0', (g) => {
-    g.fillStyle = '#d92b2f';
+    dome(g, '#2c3150', 12, 8, -10);
+    g.fillStyle = '#e8c24e';
     g.strokeStyle = OUT;
-    g.lineWidth = 1;
-    rr(g, -13, -13, 26, 4, 2);
+    g.lineWidth = 0.8;
+    g.beginPath();
+    g.moveTo(-2, -16);
+    g.quadraticCurveTo(-4, -21, -9, -23);
+    g.quadraticCurveTo(-5, -19, -5, -15);
+    g.closePath();
+    g.moveTo(2, -16);
+    g.quadraticCurveTo(4, -21, 9, -23);
+    g.quadraticCurveTo(5, -19, 5, -15);
+    g.closePath();
     g.fill();
     g.stroke();
   }],

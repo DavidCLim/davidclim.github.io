@@ -1,5 +1,5 @@
-import { TAU, FEET, GAIT } from './config.js?v=67';
-import { WATER, ICE, WALL } from './terrain.js?v=67';
+import { TAU, FEET, GAIT } from './config.js?v=71';
+import { WATER, ICE, WALL } from './terrain.js?v=71';
 
 // Everything the Animals and Mythical tabs add to the world, plus the terrain physics:
 // the beast brain, the mage's bolts, the necromancer's skeletons, zombie infection,
@@ -8,10 +8,10 @@ const rand = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
 const BARREL_HP = 28;
-const TREE_R = 5.6;
-const BARREL_R = 7;
-const MINE_R = 10;
-const TOWER_R = 8.5;
+const TREE_R = 4;
+const BARREL_R = 5;
+const MINE_R = 8;
+const TOWER_R = 6;
 
 export function installBeasts(World) {
   const P = World.prototype;
@@ -216,8 +216,8 @@ export function installBeasts(World) {
     if (this.terrain.at(x, y + 4) & WALL) return true;
     for (const p of this.props) {
       if (p.dead || (p.type !== 'tree' && p.type !== 'barrel' && p.type !== 'tower')) continue;
-      const cy = p.type === 'tree' ? p.y - 8 : p.type === 'tower' ? p.y - 14 : p.y - 10;
-      const r = p.type === 'tree' ? 5 : p.type === 'tower' ? 8.5 : 7.2;
+      const cy = p.type === 'tree' ? p.y - 6 : p.type === 'tower' ? p.y - 10 : p.y - 7;
+      const r = p.type === 'tree' ? 4 : p.type === 'tower' ? 6 : 5;
       if (Math.abs(x - p.x) > 10 || Math.abs(y - cy) > 20) continue;
       if (Math.hypot(x - p.x, (y - cy) * 0.55) <= r) {
         if (p.type === 'barrel') this.damageProp(p, dmg);
