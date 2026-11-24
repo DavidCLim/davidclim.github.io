@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=111';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=111';
+import { TAU, K } from './config.js?v=114';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=114';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -195,9 +195,9 @@ function drawMinigun(g, firing) {
 function drawRomanBody(g, front, gz, angry) {
   // egg: steel blue, lit from the upper left
   const gr = g.createLinearGradient(-14, -22, 16, 24);
-  gr.addColorStop(0, '#9db2d6');
-  gr.addColorStop(0.45, '#7890ba');
-  gr.addColorStop(1, '#55698f');
+  gr.addColorStop(0, '#f7da7c');
+  gr.addColorStop(0.45, '#e5b94d');
+  gr.addColorStop(1, '#c4922f');
   g.fillStyle = gr;
   g.strokeStyle = OUT;
   g.lineWidth = 1.9;
@@ -275,34 +275,43 @@ function drawRomanBody(g, front, gz, angry) {
   g.fill();
   g.stroke();
 
-  // red dome of the helmet, a half-ellipse sitting on the visor
-  const dg = g.createLinearGradient(0, -32, 0, -20);
-  dg.addColorStop(0, '#dfe4ee');
-  dg.addColorStop(1, '#a3acbd');
-  g.fillStyle = dg;
+  // a silver great helm with a dark eye slit (the eyes show through it)
+  const helmPath = () => {
+    g.beginPath();
+    g.moveTo(-19, -2);
+    g.lineTo(-19, -17);
+    g.quadraticCurveTo(-19, -29.4, 0, -29.4);
+    g.quadraticCurveTo(19, -29.4, 19, -17);
+    g.lineTo(19, -2);
+    g.quadraticCurveTo(0, 1.4, -19, -2);
+    g.closePath();
+  };
+  const hg = g.createLinearGradient(-19, 0, 19, 0);
+  hg.addColorStop(0, '#e6eaf2');
+  hg.addColorStop(0.55, '#c3cad8');
+  hg.addColorStop(1, '#8e98ab');
+  g.save();
+  helmPath();
+  g.rect(-15.5, -11, 31, 8);
+  g.clip('evenodd');
+  g.fillStyle = hg;
+  g.fillRect(-20, -31, 40, 34);
+  g.restore();
   g.strokeStyle = OUT;
   g.lineWidth = 1.9;
-  g.beginPath();
-  g.ellipse(-1.6, -13, 16.2, 18.6, 0, Math.PI, TAU);
-  g.closePath();
-  g.fill();
+  helmPath();
   g.stroke();
-  g.fillStyle = 'rgba(255, 255, 255, 0.4)';
+  g.lineWidth = 1.5;
+  g.strokeRect(-15.5, -11, 31, 8);
+  g.strokeStyle = 'rgba(90, 100, 120, 0.8)';
+  g.lineWidth = 1.2;
   g.beginPath();
-  g.ellipse(-5, -28.2, 6.2, 1.6, -0.12, 0, TAU);
-  g.fill();
-  // the orange visor: a half-disc with a flat underside, as wide as the body
-  g.fillStyle = '#434a5b';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.9;
-  g.beginPath();
-  g.ellipse(0, -10.8, 20.6, 10.4, 0, Math.PI, TAU);
-  g.closePath();
-  g.fill();
+  g.moveTo(0, -29);
+  g.lineTo(0, -11);
   g.stroke();
-  g.fillStyle = 'rgba(255, 255, 255, 0.2)';
+  g.fillStyle = 'rgba(255, 255, 255, 0.45)';
   g.beginPath();
-  g.ellipse(-3, -16, 12, 1.5, 0, 0, TAU);
+  g.ellipse(-9, -21, 2.4, 6, 0.1, 0, TAU);
   g.fill();
   // a red plume swept back over the top of the helmet
   g.fillStyle = '#d63a3a';
@@ -1141,62 +1150,63 @@ function drawFlintlock(g, firing) {
 
 // ---------------------------------------------------------------- ninja
 function drawNinjaBody(g, front, gz) {
-  // the samurai: an indigo egg, black hair in a topknot and a white headband with a red sun
-  eggBody(g, '#4c5da8', '#2f3c78');
-  bigEyes(g, front ? [-7.4, 7.4] : [-1.8, 11.4], gz, -4.4, 4.2, 4.4, 1.4, 2.6);
+  // the samurai: a slate-grey egg under a wide conical straw hat, with a red sash
+  eggBody(g, '#69788c', '#3f4a5c');
+  g.save();
+  g.beginPath();
+  g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
+  g.clip();
+  g.fillStyle = '#c93a34';
+  g.fillRect(-22, 11, 44, 4.6);
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.2;
+  g.beginPath();
+  g.moveTo(-22, 11);
+  g.lineTo(22, 11);
+  g.moveTo(-22, 15.6);
+  g.lineTo(22, 15.6);
+  g.stroke();
+  g.restore();
+  bigEyes(g, front ? [-7.4, 7.4] : [-1.8, 11.4], gz, -3.2, 4.2, 4.4, 1.4, 2.6);
   g.strokeStyle = OUT;
   g.lineWidth = 1.8;
   g.beginPath();
   for (const x of front ? [-7.4, 7.4] : [-1.8, 11.4]) {
-    g.moveTo(x - 4.6, -9.4);
-    g.lineTo(x + 4.2, -7.4);
+    g.moveTo(x - 4.6, -8.2);
+    g.lineTo(x + 4.2, -6.2);
   }
   g.stroke();
-  if (front) smile(g, 0, 8.4, 3);
-  else smile(g, 6, 8.4, 2.6);
-  // the hair
-  g.fillStyle = '#201e2a';
+  if (front) smile(g, 0, 8, 3);
+  else smile(g, 6, 8, 2.6);
+  // the straw hat
+  const hg = g.createLinearGradient(0, -32, 0, -8);
+  hg.addColorStop(0, '#ecd08a');
+  hg.addColorStop(1, '#c9a24e');
+  g.fillStyle = hg;
   g.strokeStyle = OUT;
-  g.lineWidth = 1.6;
+  g.lineWidth = 1.7;
   g.beginPath();
-  g.moveTo(-20, -11.5);
-  g.bezierCurveTo(-20, -28, 20, -28, 20, -11.5);
-  g.quadraticCurveTo(0, -14.5, -20, -11.5);
+  g.moveTo(-27, -9.4);
+  g.quadraticCurveTo(-12, -14, -2, -32);
+  g.quadraticCurveTo(0, -33.4, 2, -32);
+  g.quadraticCurveTo(12, -14, 27, -9.4);
+  g.quadraticCurveTo(0, -4.6, -27, -9.4);
   g.closePath();
   g.fill();
   g.stroke();
-  // the topknot
+  g.strokeStyle = 'rgba(120, 84, 30, 0.55)';
+  g.lineWidth = 0.9;
   g.beginPath();
-  g.ellipse(front ? 0 : 2, -28.4, 4.8, 3.8, 0, 0, TAU);
-  g.fill();
+  for (const t of [-0.66, -0.33, 0, 0.33, 0.66]) {
+    g.moveTo(0, -31);
+    g.lineTo(t * 22, -8.4 - Math.abs(t) * 2.4);
+  }
   g.stroke();
-  g.fillStyle = '#e4e4ec';
-  g.fillRect((front ? 0 : 2) - 1.2, -26.2, 2.4, 2);
-  // the headband and its two tails
-  const bx = front ? 0 : 3;
-  g.fillStyle = '#f4f2ee';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.5;
+  g.strokeStyle = 'rgba(120, 84, 30, 0.6)';
   g.beginPath();
-  g.moveTo(-20.4, -12.6);
-  g.quadraticCurveTo(0, -16.4, 20.4, -12.6);
-  g.lineTo(20.4, -8.6);
-  g.quadraticCurveTo(0, -12.4, -20.4, -8.6);
-  g.closePath();
-  g.fill();
+  g.moveTo(-14.6, -13.6);
+  g.quadraticCurveTo(0, -9.4, 14.6, -13.6);
   g.stroke();
-  g.beginPath();
-  g.moveTo(-19.4, -11.4);
-  g.quadraticCurveTo(-26, -11, -30, -4.4);
-  g.lineTo(-25.6, -5.6);
-  g.quadraticCurveTo(-22.4, -8.4, -19.4, -9.2);
-  g.closePath();
-  g.fill();
-  g.stroke();
-  g.fillStyle = '#d93a32';
-  g.beginPath();
-  g.arc(bx, -11.2, 2.1, 0, TAU);
-  g.fill();
 }
 
 // Origin: the hilt. The blade runs along +x.
