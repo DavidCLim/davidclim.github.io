@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=168';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=168';
+import { TAU, K } from './config.js?v=169';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=169';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -255,51 +255,47 @@ function drawRomanBody(g, front, gz, angry) {
   g.lineJoin = 'round';
   g.lineCap = 'round';
   const ox = front ? 0 : 3;
-  // a pink egg in a blue-striped apron
-  eggBody(g, '#f7bccb', '#d68aa3');
+  // a sandy, freshly baked egg in a double-breasted white coat
+  eggBody(g, '#f3c984', '#d79b4a');
   g.save();
   g.beginPath();
   g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
   g.clip();
   g.fillStyle = '#ffffff';
-  g.beginPath();
-  g.moveTo(-11 + ox, 6.4);
-  g.lineTo(11 + ox, 6.4);
-  g.lineTo(19 + ox, 25);
-  g.lineTo(-19 + ox, 25);
-  g.closePath();
-  g.fill();
-  g.save();
-  g.clip();
-  g.strokeStyle = '#5b8fd6';
-  g.lineWidth = 3;
-  g.beginPath();
-  for (let x = -18; x <= 18; x += 6) {
-    g.moveTo(x + ox, 6);
-    g.lineTo(x * 1.35 + ox, 26);
-  }
-  g.stroke();
-  g.restore();
-  g.strokeStyle = 'rgba(70, 60, 80, 0.8)';
+  g.strokeStyle = 'rgba(70, 56, 40, 0.8)';
   g.lineWidth = 1.3;
   g.beginPath();
-  g.moveTo(-11 + ox, 6.4);
-  g.lineTo(11 + ox, 6.4);
-  g.lineTo(19 + ox, 25);
-  g.moveTo(-11 + ox, 6.4);
-  g.lineTo(-19 + ox, 25);
+  g.moveTo(-23, 7);
+  g.lineTo(-5 + ox, 7);
+  g.lineTo(ox, 13);
+  g.lineTo(5 + ox, 7);
+  g.lineTo(23, 7);
+  g.lineTo(23, 26);
+  g.lineTo(-23, 26);
+  g.closePath();
+  g.fill();
   g.stroke();
+  g.beginPath();
+  g.moveTo(ox, 13);
+  g.lineTo(ox, 26);
+  g.stroke();
+  g.fillStyle = '#2b2a30';
+  for (const [x, y] of [[-5.4, 15], [5.4, 15], [-5.4, 20.4], [5.4, 20.4]]) {
+    g.beginPath();
+    g.arc(x + ox, y, 1.5, 0, TAU);
+    g.fill();
+  }
   g.restore();
   g.strokeStyle = OUT;
   g.lineWidth = 1.8;
   g.beginPath();
   g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
   g.stroke();
-  // flour on the cheeks
-  g.fillStyle = 'rgba(255, 255, 255, 0.7)';
-  for (const [x, y] of front ? [[-13, 3.6], [13, 3.6], [-15, 1.4]] : [[-9, 4], [16.4, 3.6], [18, 1]]) {
+  // rosy cheeks
+  g.fillStyle = 'rgba(232, 96, 96, 0.5)';
+  for (const x of front ? [-13.4, 13.4] : [-9, 16.4]) {
     g.beginPath();
-    g.arc(x, y, 1.7, 0, TAU);
+    g.ellipse(x, 3.2, 3.2, 2, 0, 0, TAU);
     g.fill();
   }
   bigEyes(g, front ? [-8, 8] : [-2.4, 11.6], gz, -4.4, 4.4, 4.6, 1.5, 2.7);
@@ -313,74 +309,77 @@ function drawRomanBody(g, front, gz, angry) {
     }
     g.stroke();
   }
-  if (front) smile(g, 0, 4.4, 3.4);
-  else smile(g, 5.2, 4.6, 3.2);
-  // a floppy white baker's cap, tilted, with a red band
-  g.save();
-  g.translate(ox * 0.3 + 1.4, -15.6);
-  g.rotate(-0.14);
+  if (front) smile(g, 0, 3.8, 3.4);
+  else smile(g, 5.2, 4, 3.2);
+  // a tall pleated toque with a band
+  const tx = ox * 0.3;
   g.fillStyle = '#ffffff';
   g.strokeStyle = OUT;
   g.lineWidth = 1.7;
   g.beginPath();
-  g.moveTo(-17.6, 5.6);
-  g.bezierCurveTo(-23, -8, -10, -17, 2, -15.6);
-  g.bezierCurveTo(14, -17, 24, -8, 17.6, 5.6);
-  g.quadraticCurveTo(0, 9, -17.6, 5.6);
+  g.moveTo(-12 + tx, -12);
+  g.lineTo(-14 + tx, -26);
+  g.bezierCurveTo(-20 + tx, -35, -8 + tx, -40, 0 + tx, -37);
+  g.bezierCurveTo(8 + tx, -40, 20 + tx, -35, 14 + tx, -26);
+  g.lineTo(12 + tx, -12);
   g.closePath();
   g.fill();
   g.stroke();
-  g.fillStyle = '#d23d36';
-  g.beginPath();
-  g.moveTo(-17.4, 1.4);
-  g.quadraticCurveTo(0, 5, 17.4, 1.4);
-  g.lineTo(17.6, 5.6);
-  g.quadraticCurveTo(0, 9, -17.6, 5.6);
-  g.closePath();
-  g.fill();
-  g.stroke();
-  g.strokeStyle = '#d3d9e4';
+  g.strokeStyle = '#cfd4de';
   g.lineWidth = 1;
   g.beginPath();
-  g.moveTo(-9, -9);
-  g.quadraticCurveTo(-8, -3, -8.4, 1);
-  g.moveTo(6, -12);
-  g.quadraticCurveTo(7.6, -5, 8, 1.4);
+  for (const x of [-8, -3, 3, 8]) {
+    g.moveTo(x + tx, -13);
+    g.lineTo(x * 1.2 + tx, -30);
+  }
   g.stroke();
-  g.restore();
+  g.fillStyle = '#ffffff';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.7;
+  g.beginPath();
+  g.roundRect(-14 + tx, -16, 28, 7.6, 3);
+  g.fill();
+  g.stroke();
+  g.strokeStyle = '#cfd4de';
+  g.lineWidth = 1;
+  g.beginPath();
+  g.moveTo(-13 + tx, -12);
+  g.lineTo(13 + tx, -12);
+  g.stroke();
 }
 
-// Origin: the hand. A wooden rolling pin, swung forward as a club.
+// Origin: the hand. A long steel ladle, used as a club.
 function drawSpear(g) {
   g.lineJoin = 'round';
+  const hg = g.createLinearGradient(0, -3, 0, 3);
+  hg.addColorStop(0, '#e1e5ee');
+  hg.addColorStop(1, '#8e98ac');
+  g.fillStyle = hg;
   g.strokeStyle = OUT;
   g.lineWidth = 1.4;
-  g.fillStyle = '#c28a4e';
-  rr(g, -8, -2.4, 14, 4.8, 2.2);
+  rr(g, -9, -2.2, 44, 4.4, 2);
   g.fill();
   g.stroke();
-  const pg = g.createLinearGradient(0, -6, 0, 6);
-  pg.addColorStop(0, '#f0c98a');
-  pg.addColorStop(1, '#b57f42');
-  g.fillStyle = pg;
-  rr(g, 5, -6, 32, 12, 5);
+  g.fillStyle = '#7a4a2a';
+  rr(g, -9, -2.6, 14, 5.2, 2.2);
   g.fill();
   g.stroke();
-  g.fillStyle = '#c28a4e';
-  rr(g, 36, -2.4, 12, 4.8, 2.2);
-  g.fill();
-  g.stroke();
-  g.fillStyle = '#e6b06a';
+  const bg = g.createRadialGradient(46, -3, 1, 47, 0, 13);
+  bg.addColorStop(0, '#f2f5fa');
+  bg.addColorStop(1, '#8590a6');
+  g.fillStyle = bg;
   g.beginPath();
-  g.arc(48, 0, 2.6, 0, TAU);
+  g.arc(47, 0, 11.4, 0, TAU);
   g.fill();
   g.stroke();
-  g.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-  g.lineWidth = 1.1;
+  g.fillStyle = '#4a4f5c';
   g.beginPath();
-  g.moveTo(10, -3.2);
-  g.lineTo(32, -3.2);
-  g.stroke();
+  g.ellipse(48.4, 0, 7.4, 8, 0, 0, TAU);
+  g.fill();
+  g.fillStyle = 'rgba(255, 255, 255, 0.35)';
+  g.beginPath();
+  g.ellipse(46, -3, 3.2, 1.6, -0.5, 0, TAU);
+  g.fill();
 }
 
 // Origin: the middle of the shield.
@@ -1463,15 +1462,19 @@ export const DROPS = {
     g.strokeStyle = OUT;
     g.lineWidth = 1;
     g.beginPath();
-    g.ellipse(0, -2, 11, 6.6, -0.1, 0, TAU);
+    g.moveTo(-7, 3);
+    g.lineTo(-8, -6);
+    g.bezierCurveTo(-12, -12, -4, -14, 0, -12);
+    g.bezierCurveTo(4, -14, 12, -12, 8, -6);
+    g.lineTo(7, 3);
+    g.closePath();
     g.fill();
     g.stroke();
-    g.fillStyle = '#d23d36';
-    g.beginPath();
-    g.ellipse(0, 2, 11, 2.4, 0, 0, Math.PI);
+    rr(g, -8, 0, 16, 5, 2);
     g.fill();
     g.stroke();
   },
+
 
 
   grenadier(g) {

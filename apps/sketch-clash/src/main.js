@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=168';
-import { buildCreatureArt } from './creatures.js?v=168';
-import { buildEggArt } from './art_eggs.js?v=168';
-import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=168';
-import { Sfx } from './sfx.js?v=168';
-import { World } from './world.js?v=168';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=168';
-import { buildUnitArt } from './art_units.js?v=168';
-import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=168';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=169';
+import { buildCreatureArt } from './creatures.js?v=169';
+import { buildEggArt } from './art_eggs.js?v=169';
+import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=169';
+import { Sfx } from './sfx.js?v=169';
+import { World } from './world.js?v=169';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=169';
+import { buildUnitArt } from './art_units.js?v=169';
+import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=169';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -126,7 +126,10 @@ TABS.forEach((t, i) => {
   b.type = 'button';
   b.setAttribute('role', 'tab');
   b.textContent = t.label;
-  b.addEventListener('click', () => pickTab(i));
+  if (t.locked) {
+    b.disabled = true;
+    b.setAttribute('aria-disabled', 'true');
+  } else b.addEventListener('click', () => pickTab(i));
   tabsEl.append(b);
 });
 pickTab(0);

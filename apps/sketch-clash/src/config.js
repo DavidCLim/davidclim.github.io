@@ -373,7 +373,7 @@ export const SPECIES = {
 // The order of the palette (the knight only ever comes from a cavalry).
 export const TABS = [
   { id: 'army', label: 'Army', items: ['soldier', 'flamethrower', 'sniper', 'roman', 'grenadier', 'archer', 'cowboy', 'ninja'] },
-  { id: 'robots', label: 'Robots', items: ['mechazord'] },
+  { id: 'robots', label: 'Robots', items: ['mechazord'], locked: true }, // MechaZord is kept but the tab is switched off
   { id: 'terrain', label: 'Terrain', items: ['wall', 'water', 'ice', 'mine', 'barrel', 'tree'] },
 ];
 export const TERRAIN_LABELS = { wall: 'Wall', water: 'Water', ice: 'Ice', mine: 'Mines', barrel: 'Barrel', tree: 'Tree' };

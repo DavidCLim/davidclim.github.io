@@ -317,7 +317,7 @@ canvas {
   cursor: pointer;
 }
 .tabs button[aria-selected="true"] { background: #e9eef6; color: #2b2b2b; }
-.tabs button:disabled { pointer-events: none; }
+.tabs button:disabled { pointer-events: none; opacity: 0.4; cursor: default; }
 .unit-btn {
   width: 46px;
   height: 42px;
