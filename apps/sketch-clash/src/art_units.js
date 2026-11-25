@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=119';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=119';
+import { TAU, K } from './config.js?v=121';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=121';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -117,6 +117,32 @@ function drawMiniBody(g, front, gz) {
   g.quadraticCurveTo(0, 8, 17, 19);
   g.stroke();
   g.setLineDash([]);
+  // heavy steel shoulder plates with a red stripe and a rivet
+  const plate = (x, y, rx, ry) => {
+    const pg = g.createLinearGradient(x - rx, y - ry, x + rx, y + ry);
+    pg.addColorStop(0, '#aab2c2');
+    pg.addColorStop(1, '#565d6e');
+    g.fillStyle = pg;
+    g.strokeStyle = OUT;
+    g.lineWidth = 1.6;
+    g.beginPath();
+    g.ellipse(x, y, rx, ry, 0, 0, TAU);
+    g.fill();
+    g.stroke();
+    g.strokeStyle = '#c63a2e';
+    g.lineWidth = 1.5;
+    g.beginPath();
+    g.ellipse(x, y, rx - 2.2, ry - 2.2, 0, Math.PI * 0.2, Math.PI * 0.8);
+    g.stroke();
+    g.fillStyle = '#e3e7ef';
+    g.beginPath();
+    g.arc(x, y - ry * 0.35, 0.9, 0, TAU);
+    g.fill();
+  };
+  if (front) {
+    plate(-17.2, 3, 5.2, 7);
+    plate(17.2, 3, 5.2, 7);
+  } else plate(-11.6, 4, 5, 6.6);
   bigEyes(g, front ? [-7.4, 7.4] : [-1.6, 11.4], gz, -4.6, 4.2, 4.4, 1.4, 2.6);
   // a stern brow over each eye
   g.strokeStyle = OUT;
@@ -193,11 +219,11 @@ function drawMinigun(g, firing) {
 
 // ---------------------------------------------------------------- knight (the old Roman's mechanics)
 function drawRomanBody(g, front, gz, angry) {
-  // egg: a full suit of steel plate, lit from the upper left
+  // egg: blackened plate armour, lit from the upper left
   const gr = g.createLinearGradient(-14, -22, 16, 24);
-  gr.addColorStop(0, '#dde3ee');
-  gr.addColorStop(0.45, '#aeb7c8');
-  gr.addColorStop(1, '#79849a');
+  gr.addColorStop(0, '#7d869a');
+  gr.addColorStop(0.45, '#4b5364');
+  gr.addColorStop(1, '#282d37');
   g.fillStyle = gr;
   g.strokeStyle = OUT;
   g.lineWidth = 1.9;
@@ -267,7 +293,7 @@ function drawRomanBody(g, front, gz, angry) {
   g.lineTo(22, 15.8);
   g.stroke();
   g.restore();
-  g.fillStyle = '#f6d46a';
+  g.fillStyle = '#cfd5e2';
   g.strokeStyle = OUT;
   g.lineWidth = 1.2;
   g.beginPath();
@@ -280,8 +306,8 @@ function drawRomanBody(g, front, gz, angry) {
   g.beginPath();
   g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
   g.clip();
-  g.strokeStyle = 'rgba(70, 80, 100, 0.75)';
-  g.lineWidth = 1.2;
+  g.strokeStyle = 'rgba(14, 16, 24, 0.85)';
+  g.lineWidth = 1.3;
   g.beginPath();
   g.moveTo(front ? 0 : 4, 1);
   g.lineTo(front ? 0 : 4, 11.6);
@@ -289,7 +315,7 @@ function drawRomanBody(g, front, gz, angry) {
   g.quadraticCurveTo(0, 9.2, 20, 6);
   g.stroke();
   g.restore();
-  g.fillStyle = '#f2cc5a';
+  g.fillStyle = '#d23d36';
   for (const [rx, ry] of front ? [[-6, 7.6], [6, 7.6], [0, 4]] : [[-1, 7.9], [9, 7.7]]) {
     g.beginPath();
     g.arc(rx, ry, 1.1, 0, TAU);
@@ -297,8 +323,8 @@ function drawRomanBody(g, front, gz, angry) {
   }
   const pauldron = (x, y, rx, ry) => {
     const pg = g.createLinearGradient(x - rx, y - ry, x + rx, y + ry);
-    pg.addColorStop(0, '#e9edf5');
-    pg.addColorStop(1, '#8691a8');
+    pg.addColorStop(0, '#8d96aa');
+    pg.addColorStop(1, '#3c4352');
     g.fillStyle = pg;
     g.strokeStyle = OUT;
     g.lineWidth = 1.6;
@@ -306,8 +332,8 @@ function drawRomanBody(g, front, gz, angry) {
     g.ellipse(x, y, rx, ry, 0, 0, TAU);
     g.fill();
     g.stroke();
-    g.strokeStyle = '#e2b84a';
-    g.lineWidth = 1.3;
+    g.strokeStyle = '#d23d36';
+    g.lineWidth = 1.5;
     g.beginPath();
     g.ellipse(x, y, rx - 2, ry - 2, 0, Math.PI * 0.15, Math.PI * 0.85);
     g.stroke();
@@ -328,9 +354,9 @@ function drawRomanBody(g, front, gz, angry) {
     g.closePath();
   };
   const hg = g.createLinearGradient(-19, 0, 19, 0);
-  hg.addColorStop(0, '#d2d8e4');
-  hg.addColorStop(0.55, '#a1abbe');
-  hg.addColorStop(1, '#697489');
+  hg.addColorStop(0, '#8a93a7');
+  hg.addColorStop(0.55, '#586073');
+  hg.addColorStop(1, '#343a47');
   g.save();
   helmPath();
   g.rect(-15.5, -11, 31, 8);
@@ -344,7 +370,7 @@ function drawRomanBody(g, front, gz, angry) {
   g.stroke();
   g.lineWidth = 1.5;
   g.strokeRect(-15.5, -11, 31, 8);
-  g.strokeStyle = '#e2b84a';
+  g.strokeStyle = '#d23d36';
   g.lineWidth = 2;
   g.beginPath();
   g.moveTo(-18.4, -13.4);
@@ -352,25 +378,25 @@ function drawRomanBody(g, front, gz, angry) {
   g.moveTo(15.6, -13.4);
   g.lineTo(18.4, -13.4);
   g.stroke();
-  g.strokeStyle = 'rgba(70, 80, 100, 0.8)';
+  g.strokeStyle = 'rgba(12, 14, 20, 0.85)';
   g.lineWidth = 1.2;
   g.beginPath();
   g.moveTo(0, -29);
   g.lineTo(0, -11);
   g.stroke();
-  g.fillStyle = 'rgba(255, 255, 255, 0.45)';
+  g.fillStyle = 'rgba(255, 255, 255, 0.3)';
   g.beginPath();
   g.ellipse(-9, -21, 2.4, 6, 0.1, 0, TAU);
   g.fill();
-  // a red plume swept back over the top of the helmet
-  g.fillStyle = '#d63a3a';
+  // a tall red crest running over the top of the helm
+  g.fillStyle = '#d23d36';
   g.strokeStyle = OUT;
   g.lineWidth = 1.5;
   g.beginPath();
-  g.moveTo(-5, -30.6);
-  g.quadraticCurveTo(-4, -37.5, 5.5, -36.8);
-  g.quadraticCurveTo(14, -36, 17, -28.5);
-  g.quadraticCurveTo(9, -33.4, 4, -30.6);
+  g.moveTo(-11, -27.6);
+  g.quadraticCurveTo(-9, -38.6, 2, -38.8);
+  g.quadraticCurveTo(11, -38.4, 14.4, -26.4);
+  g.quadraticCurveTo(6, -31.4, -11, -27.6);
   g.closePath();
   g.fill();
   g.stroke();
@@ -386,7 +412,7 @@ function drawSpear(g) {
   rr(g, -9, -1.8, 10, 3.6, 1.2);
   g.fill();
   g.stroke();
-  g.fillStyle = '#e8c24e';
+  g.fillStyle = '#c8352f';
   g.beginPath();
   g.arc(-10, 0, 2.4, 0, TAU);
   g.fill();
@@ -409,7 +435,7 @@ function drawSpear(g) {
   g.lineTo(50, 0);
   g.stroke();
   // the crossguard
-  g.fillStyle = '#e8c24e';
+  g.fillStyle = '#c8352f';
   g.strokeStyle = OUT;
   g.lineWidth = 1.3;
   rr(g, 0, -6.8, 3.8, 13.6, 1.4);
@@ -453,6 +479,29 @@ function drawGrenBody(g, front, gz) {
   g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
   g.stroke();
 
+  // a spare grenade clipped to the hip
+  const hx = front ? -12.6 : -10.4;
+  g.fillStyle = '#4b5a3a';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.3;
+  g.beginPath();
+  g.ellipse(hx, 14, 4.4, 5, 0, 0, TAU);
+  g.fill();
+  g.stroke();
+  g.strokeStyle = 'rgba(20, 28, 12, 0.7)';
+  g.lineWidth = 0.8;
+  g.beginPath();
+  g.moveTo(hx - 3.6, 12);
+  g.lineTo(hx + 3.6, 16);
+  g.moveTo(hx - 3.6, 16);
+  g.lineTo(hx + 3.6, 12);
+  g.stroke();
+  g.fillStyle = '#e5b94d';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1;
+  rr(g, hx - 2, 8.2, 4, 2.6, 0.8);
+  g.fill();
+  g.stroke();
   bigEyes(g, front ? [-8.4, 8.4] : [-2.4, 11], gz, -2, 4.5, 4.6, 1.9, 2.7);
   if (front) smile(g, 0, 3.8, 3.4);
   else smile(g, 4.6, 4.4, 3.2);
@@ -531,44 +580,58 @@ function drawBomb(g, lit) {
 function drawBushHat(g) {
   g.lineJoin = 'round';
   g.lineCap = 'round';
-  const gr = g.createLinearGradient(-10, -24, 10, 2);
-  gr.addColorStop(0, '#62a463');
-  gr.addColorStop(1, '#3d7a45');
+  // a rounded brown leather hood
+  const gr = g.createLinearGradient(-10, -22, 10, 4);
+  gr.addColorStop(0, '#a8744a');
+  gr.addColorStop(1, '#6a4126');
   g.fillStyle = gr;
   g.strokeStyle = OUT;
   g.lineWidth = 1.8;
   g.beginPath();
-  g.moveTo(-18.6, 1.6);
-  g.bezierCurveTo(-19.6, -8, -9, -13.6, 3, -17.6);
-  g.quadraticCurveTo(10, -23, 16.2, -18.8);
-  g.bezierCurveTo(14.8, -16, 19.4, -11, 18.8, -5.2);
-  g.bezierCurveTo(18.6, -2, 19.6, 0.4, 17.4, 2);
-  g.quadraticCurveTo(0, 5, -18.6, 1.6);
+  g.moveTo(-19.6, 2.4);
+  g.bezierCurveTo(-21.4, -9, -13, -19.4, 0, -19.8);
+  g.bezierCurveTo(13, -19.4, 21.4, -9, 19.6, 2.4);
+  g.quadraticCurveTo(0, 6.2, -19.6, 2.4);
   g.closePath();
   g.fill();
   g.stroke();
-  g.fillStyle = 'rgba(255, 255, 255, 0.16)';
+  g.fillStyle = 'rgba(255, 255, 255, 0.2)';
   g.beginPath();
-  g.ellipse(-8, -9, 5.6, 2.2, -0.75, 0, TAU);
+  g.ellipse(-8, -12.4, 6, 2.2, -0.5, 0, TAU);
   g.fill();
-  // a jaunty red feather in the band
-  g.fillStyle = '#d84a3a';
+  // a stitched seam over the top
+  g.strokeStyle = 'rgba(50, 28, 14, 0.7)';
+  g.lineWidth = 1;
+  g.setLineDash([2, 2]);
+  g.beginPath();
+  g.moveTo(0, -19.4);
+  g.lineTo(0, 3);
+  g.stroke();
+  g.setLineDash([]);
+  // a cream feather tucked in at the side
+  g.fillStyle = '#f2eddc';
   g.strokeStyle = OUT;
   g.lineWidth = 1.1;
   g.beginPath();
-  g.moveTo(11.5, -3);
-  g.quadraticCurveTo(21.5, -7, 18.6, -17);
-  g.quadraticCurveTo(14.4, -9.4, 8.6, -2.6);
+  g.moveTo(10.6, -4.6);
+  g.quadraticCurveTo(22.6, -9.4, 20.4, -20.6);
+  g.quadraticCurveTo(14.4, -12.4, 8.2, -3);
   g.closePath();
   g.fill();
+  g.stroke();
+  g.strokeStyle = '#7ba05a';
+  g.lineWidth = 0.9;
+  g.beginPath();
+  g.moveTo(10, -4.2);
+  g.quadraticCurveTo(17.4, -9.6, 19.6, -18.4);
   g.stroke();
 }
 
 function drawArcherBody(g, front, gz, squint) {
   g.lineJoin = 'round';
   g.lineCap = 'round';
-  // a lavender egg
-  eggBody(g, '#b49ad3', '#8d72b4');
+  // a moss-green egg
+  eggBody(g, '#9cc16b', '#6a9444');
   g.strokeStyle = OUT;
   g.lineWidth = 1.8;
   g.beginPath();
@@ -579,10 +642,42 @@ function drawArcherBody(g, front, gz, squint) {
   if (front) smile(g, 0, 6.6, 3.2);
   else smile(g, 5.2, 7, 2.8);
 
+  // a leather baldric across the chest with a brass buckle
+  g.save();
+  g.beginPath();
+  g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
+  g.clip();
+  g.strokeStyle = OUT;
+  g.lineWidth = 6.4;
+  g.beginPath();
+  g.moveTo(-22, 0);
+  g.lineTo(18, 24);
+  g.stroke();
+  g.strokeStyle = '#7a4a2a';
+  g.lineWidth = 4;
+  g.stroke();
+  g.restore();
+  g.fillStyle = '#e5b94d';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1;
+  g.beginPath();
+  g.rect(front ? -2.6 : 0.8, 8.4, 4.6, 4.6);
+  g.fill();
+  g.stroke();
   g.save();
   g.translate(0, -11.8);
   drawBushHat(g);
   g.restore();
+  // the hood's cheek flaps hang down beside the face
+  g.fillStyle = '#7e5232';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.5;
+  for (const x of front ? [-17.4, 17.4] : [-17.4]) {
+    g.beginPath();
+    g.ellipse(x, 2, 3.4, 8.4, 0, 0, TAU);
+    g.fill();
+    g.stroke();
+  }
 }
 
 // Origin: the grip. A wooden recurve: the bow bulges toward +x; the string is on the left.
@@ -1016,6 +1111,8 @@ function drawCowboyTorso(g, look, blink) {
   g.beginPath();
   g.arc(7, 8.4, 2.8, Math.PI * 0.2, Math.PI * 0.8);
   g.stroke();
+  // a sheriff's badge on the chest
+  star(g, -9.4, 8, 4.6, 2);
   // a red bandana knotted at the neck
   g.fillStyle = '#c8302f';
   g.strokeStyle = OUT;
@@ -1197,6 +1294,27 @@ function drawNinjaBody(g, front, gz) {
   g.lineTo(22, 15.6);
   g.stroke();
   g.restore();
+  // lacquered shoulder plates (sode) laced in red
+  const sode = (x, y, w, h) => {
+    g.fillStyle = '#2f3644';
+    g.strokeStyle = OUT;
+    g.lineWidth = 1.6;
+    rr(g, x - w / 2, y - h / 2, w, h, 2.4);
+    g.fill();
+    g.stroke();
+    g.strokeStyle = '#c93a34';
+    g.lineWidth = 1.2;
+    g.beginPath();
+    for (const k of [-0.22, 0.12, 0.46]) {
+      g.moveTo(x - w / 2 + 1, y + h * k);
+      g.lineTo(x + w / 2 - 1, y + h * k);
+    }
+    g.stroke();
+  };
+  if (front) {
+    sode(-18.2, 2, 8.4, 12.4);
+    sode(18.2, 2, 8.4, 12.4);
+  } else sode(-12, 3, 8.4, 12.4);
   bigEyes(g, front ? [-7.4, 7.4] : [-1.8, 11.4], gz, -3.2, 4.2, 4.4, 1.4, 2.6);
   g.strokeStyle = OUT;
   g.lineWidth = 1.8;

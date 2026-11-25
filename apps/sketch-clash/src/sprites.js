@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=119';
+import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=121';
 
 // Units are drawn from "art" coordinates matching the reference sprites
 // (origin at the body centre, y down) into small offscreen layers, then
@@ -151,6 +151,35 @@ function drawSoldierTorso(g, front, gaze) {
   g.beginPath();
   g.ellipse(-10.5, -6, 3.4, 5.6, -0.25, 0, TAU);
   g.fill();
+
+  // a webbing belt with a brass buckle and two ammo pouches
+  g.save();
+  g.beginPath();
+  g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
+  g.clip();
+  g.fillStyle = '#2b3342';
+  g.fillRect(-22, 11.4, 44, 4.4);
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.1;
+  g.beginPath();
+  g.moveTo(-22, 11.4);
+  g.lineTo(22, 11.4);
+  g.moveTo(-22, 15.8);
+  g.lineTo(22, 15.8);
+  g.stroke();
+  g.fillStyle = '#8b7a4e';
+  for (const px of front ? [-11.6, 11.6] : [-12.4, 1.8]) {
+    rr(g, px - 3.6, 12.2, 7.2, 8, 1.4);
+    g.fill();
+    g.stroke();
+  }
+  g.restore();
+  g.fillStyle = '#e5b94d';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1;
+  rr(g, front ? -2.8 : 3.8, 11.6, 5.6, 4, 1);
+  g.fill();
+  g.stroke();
 
   // eyes: white ovals in a heavy navy ring, a big black pupil pushed to the
   // upper right of each one
@@ -353,6 +382,33 @@ export function drawSniperBody(g) {
   g.beginPath();
   g.ellipse(-10.7, -5.4, 2.6, 2.3, 0, 0, TAU);
   g.fill();
+  // ghillie camouflage: soft olive blotches and a leather belt with a brass buckle
+  g.save();
+  g.beginPath();
+  g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
+  g.clip();
+  g.fillStyle = 'rgba(88, 118, 62, 0.55)';
+  for (const [x, y, rx, ry, r] of [[-13, 9, 6, 3.4, 0.5], [12, 14.5, 7, 3.2, -0.3], [16, 3, 3.6, 5, 0.2], [-4, 19, 6, 2.8, 0]]) {
+    g.beginPath();
+    g.ellipse(x, y, rx, ry, r, 0, TAU);
+    g.fill();
+  }
+  g.fillStyle = '#5b3d28';
+  g.fillRect(-22, 11, 44, 3.8);
+  g.strokeStyle = INK;
+  g.lineWidth = 1;
+  g.beginPath();
+  g.moveTo(-22, 11);
+  g.lineTo(22, 11);
+  g.moveTo(-22, 14.8);
+  g.lineTo(22, 14.8);
+  g.stroke();
+  g.restore();
+  g.fillStyle = '#d7aa3f';
+  g.beginPath();
+  g.rect(-9.6, 11.1, 4.2, 3.6);
+  g.fill();
+  g.stroke();
 }
 
 // Two eyes: a big black pupil with a sliver of white, hanging under the

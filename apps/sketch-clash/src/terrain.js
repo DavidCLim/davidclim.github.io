@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=119';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=119';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=119';
+import { TAU, K } from './config.js?v=121';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=121';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=121';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask
@@ -475,56 +475,66 @@ function drawTree(g) {
   }
 }
 
-// The campfire: a ring of grey stones round two crossed logs, with a cold blue fire (animated, see drawFlames).
+// The campfire: a dark stone fire pit with glowing runes, a bed of blue embers and a swirling cold flame.
+const PIT_STONES = Array.from({ length: 10 }, (_, i) => {
+  const a = (i / 10) * TAU + 0.3;
+  return [Math.cos(a) * 17.2, Math.sin(a) * 7.2, a];
+});
 
-function stoneAt(g, x, y, r) {
+function pitStone(g, x, y) {
   g.beginPath();
-  g.ellipse(x, y, r * 1.18, r * 0.9, 0, 0, TAU);
-  g.fillStyle = '#8f8e92';
+  g.ellipse(x, y, 5.2, 4, 0, 0, TAU);
+  const sg = g.createLinearGradient(x, y - 4, x, y + 4);
+  sg.addColorStop(0, '#9a9cac');
+  sg.addColorStop(1, '#5e6072');
+  g.fillStyle = sg;
   g.fill();
   ink(g, 1.4);
   g.stroke();
-  g.fillStyle = 'rgba(255, 255, 255, 0.38)';
+  // a glowing rune cut into the stone
+  g.strokeStyle = '#9ceaff';
+  g.lineWidth = 1;
   g.beginPath();
-  g.ellipse(x - r * 0.28, y - r * 0.32, r * 0.5, r * 0.28, 0, 0, TAU);
-  g.fill();
-}
-
-function logAt(g, x, y, ang) {
-  g.save();
-  g.translate(x, y);
-  g.rotate(ang);
-  g.beginPath();
-  g.roundRect(-13.5, -3.2, 27, 6.4, 3);
-  g.fillStyle = '#7a5130';
-  g.fill();
-  ink(g, 1.4);
+  g.moveTo(x - 1.6, y - 1.6);
+  g.lineTo(x + 0.4, y + 1.6);
+  g.lineTo(x + 2, y - 1.8);
   g.stroke();
-  g.fillStyle = '#c99763';
-  g.beginPath();
-  g.ellipse(12.8, 0, 1.8, 2.6, 0, 0, TAU);
-  g.fill();
-  g.restore();
 }
 
-// the part behind the flames: ground shadow, a pale blue glow, the back stones and the logs
+// the part behind the flames: the ground glow, the pit with its ember bed and the far stones
 function drawCampfireBack(g) {
-  shadowEll(g, 17, 6, 2);
-  const gl = g.createRadialGradient(0, 0, 2, 0, 0, 26);
-  gl.addColorStop(0, 'rgba(120, 200, 255, 0.5)');
-  gl.addColorStop(1, 'rgba(120, 200, 255, 0)');
+  shadowEll(g, 23, 8, 2);
+  const gl = g.createRadialGradient(0, 0, 3, 0, 0, 28);
+  gl.addColorStop(0, 'rgba(110, 200, 255, 0.45)');
+  gl.addColorStop(1, 'rgba(110, 200, 255, 0)');
   g.fillStyle = gl;
   g.beginPath();
-  g.ellipse(0, 0, 26, 12, 0, 0, TAU);
+  g.ellipse(0, 0, 28, 13, 0, 0, TAU);
   g.fill();
-  for (const [x, y, r] of [[-15, -1, 4.4], [-11, -5.6, 4.1], [-4, -8, 4.1], [5, -8, 4.2], [12, -5.2, 4.1], [15, 0.2, 4.4]]) stoneAt(g, x, y, r);
-  logAt(g, 0, -0.6, 0.3);
-  logAt(g, 0, -0.6, -0.3);
+  g.beginPath();
+  g.ellipse(0, 0, 19.4, 8.6, 0, 0, TAU);
+  g.fillStyle = '#4a4d5e';
+  g.fill();
+  ink(g, 1.7);
+  g.stroke();
+  g.beginPath();
+  g.ellipse(0, 0.6, 14.4, 5.8, 0, 0, TAU);
+  g.fillStyle = '#151827';
+  g.fill();
+  const eg = g.createRadialGradient(0, 0.6, 1, 0, 0.6, 11.5);
+  eg.addColorStop(0, '#dff8ff');
+  eg.addColorStop(0.45, '#58b4ff');
+  eg.addColorStop(1, 'rgba(38, 96, 226, 0.2)');
+  g.fillStyle = eg;
+  g.beginPath();
+  g.ellipse(0, 0.6, 11.5, 4.6, 0, 0, TAU);
+  g.fill();
+  for (const [x, y] of PIT_STONES) if (y < 0) pitStone(g, x, y);
 }
 
 // the stones in front of the flames
 function drawCampfireFront(g) {
-  for (const [x, y, r] of [[10, 5.2, 4.3], [2, 7, 4.6], [-7, 6, 4.2]]) stoneAt(g, x, y, r);
+  for (const [x, y] of PIT_STONES) if (y >= 0) pitStone(g, x, y);
 }
 
 // One tongue of fire: a teardrop leaning toward sx at its tip.
@@ -544,38 +554,58 @@ function tongue(g, w, h, sx, fill, line) {
   }
 }
 
-// The animated blue flames, with a few sparks rising. t is in seconds, seed makes every fire different.
-export function drawFlames(g, t, seed = 0) {
+// The animated flames: five swaying tongues, a turning ring of runes on the ground and blue embers drifting up.
+// t is in seconds, seed makes every fire different.
+export function drawFlames(g, t, seed = 0, ring = true) {
   g.save();
   g.lineJoin = 'round';
   const ph = seed * 20;
-  const pulse = 0.5 + 0.5 * Math.sin(t * 7 + ph);
-  g.fillStyle = `rgba(150, 215, 255, ${0.1 + pulse * 0.1})`;
+  const pulse = 0.5 + 0.5 * Math.sin(t * 6 + ph);
+  if (ring) {
+    g.strokeStyle = `rgba(140, 225, 255, ${0.3 + pulse * 0.3})`;
+    g.lineWidth = 1.2;
+    g.setLineDash([6, 5]);
+    g.lineDashOffset = -t * 16;
+    g.beginPath();
+    g.ellipse(0, 1, 26, 10.5, 0, 0, TAU);
+    g.stroke();
+    g.setLineDash([]);
+  }
+  g.fillStyle = `rgba(150, 215, 255, ${0.12 + pulse * 0.1})`;
   g.beginPath();
   g.ellipse(0, -2, 17 + pulse * 2, 8, 0, 0, TAU);
   g.fill();
   const tongues = [
-    [-6.5, 5.6, 18, -1.8, 4.2, 2.3, 0.5],
-    [6.5, 5.4, 16, 1.6, 5.1, 2.1, 1.7],
-    [0, 7.6, 27, 0, 3.4, 1.7, 0],
+    [-8.4, 4.6, 14, -2.2, 4.6, 2.3, 0.5],
+    [8.4, 4.4, 13, 2, 5.4, 2.1, 1.7],
+    [-4.4, 5.6, 23, -1.4, 3.8, 1.9, 2.6],
+    [4.4, 5.4, 21, 1.2, 4.3, 2.4, 3.4],
+    [0, 7, 33, 0, 3.2, 1.7, 0],
   ];
   for (const [bx, w, h0, lean, f1, f2, off] of tongues) {
     const h = h0 * (1 + 0.14 * Math.sin(t * (f1 + 5) + ph + off * 3) + 0.06 * Math.sin(t * (f2 + 12) + off));
-    const sx = lean * 3 + Math.sin(t * f1 + ph + off) * 3.4;
+    const sx = lean * 3.4 + Math.sin(t * f1 + ph + off) * 4;
     g.save();
-    g.translate(bx, -1);
-    tongue(g, w, h, sx, '#2f6fe8', '#1c3f9c');
-    tongue(g, w * 0.66, h * 0.76, sx * 0.8, '#5cb4ff');
-    tongue(g, w * 0.34, h * 0.5, sx * 0.55, '#d6f4ff');
+    g.translate(bx, 0);
+    tongue(g, w, h, sx, '#2a5fe0', '#17368f');
+    tongue(g, w * 0.68, h * 0.78, sx * 0.8, '#4aa8ff');
+    tongue(g, w * 0.34, h * 0.5, sx * 0.55, '#e4faff');
     g.restore();
   }
-  // sparks
-  g.fillStyle = '#bfe8ff';
-  for (let i = 0; i < 4; i++) {
-    const k = (t * 0.9 + i * 0.25 + (seed * 7) % 1) % 1;
-    g.globalAlpha = 1 - k;
+  // embers: little diamonds drifting up and fading
+  for (let i = 0; i < 7; i++) {
+    const k = (t * 0.7 + i / 7 + ((seed * 7) % 1)) % 1;
+    const x = Math.sin(i * 2.1 + ph) * 9 + Math.sin(t * 2.5 + i * 1.7) * 3 * k;
+    const y = -12 - k * 36;
+    const sz = 1.9 * (1 - k * 0.6);
+    g.globalAlpha = Math.min(1, (1 - k) * 1.6);
+    g.fillStyle = i % 2 ? '#ffffff' : '#9ae0ff';
     g.beginPath();
-    g.arc(Math.sin(i * 2.4 + ph) * 8 + Math.sin(t * 3 + i) * 2, -14 - k * 24, 1.5 * (1 - k * 0.5), 0, TAU);
+    g.moveTo(x, y - sz * 1.4);
+    g.lineTo(x + sz, y);
+    g.lineTo(x, y + sz * 1.4);
+    g.lineTo(x - sz, y);
+    g.closePath();
     g.fill();
   }
   g.restore();
@@ -706,9 +736,9 @@ const ICON_DRAW = {
   },
   mine: (g) => drawMine(g, false),
   campfire: (g) => {
-    g.scale(1.45, 1.45);
+    g.scale(1.3, 1.3);
     drawCampfireBack(g);
-    drawFlames(g, 0.4, 0.3);
+    drawFlames(g, 0.4, 0.3, false);
     drawCampfireFront(g);
   },
   barrel: (g) => {
