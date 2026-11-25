@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=121';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=121';
+import { TAU, K } from './config.js?v=123';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=123';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -219,6 +219,24 @@ function drawMinigun(g, firing) {
 
 // ---------------------------------------------------------------- knight (the old Roman's mechanics)
 function drawRomanBody(g, front, gz, angry) {
+  // a red cape hanging behind
+  g.fillStyle = '#b3302c';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.6;
+  g.beginPath();
+  g.moveTo(-12, -9);
+  g.quadraticCurveTo(-27, -2, -28.6, 12);
+  g.quadraticCurveTo(-28, 20, -25, 23.6);
+  g.lineTo(-9, 21);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.strokeStyle = 'rgba(70, 12, 12, 0.5)';
+  g.lineWidth = 1;
+  g.beginPath();
+  g.moveTo(-22, 0);
+  g.quadraticCurveTo(-24, 12, -21, 21);
+  g.stroke();
   // egg: blackened plate armour, lit from the upper left
   const gr = g.createLinearGradient(-14, -22, 16, 24);
   gr.addColorStop(0, '#7d869a');
@@ -446,6 +464,23 @@ function drawSpear(g) {
 // Origin: the middle of the shield.
 // ---------------------------------------------------------------- grenadier
 function drawGrenBody(g, front, gz) {
+  // a canvas satchel of spare bombs on the back
+  g.fillStyle = '#6b7a4a';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.5;
+  rr(g, -27.4, 0, 10.4, 15, 2.6);
+  g.fill();
+  g.stroke();
+  g.strokeStyle = 'rgba(24, 32, 14, 0.6)';
+  g.lineWidth = 1;
+  g.beginPath();
+  g.moveTo(-27, 6);
+  g.lineTo(-17.6, 6);
+  g.stroke();
+  g.fillStyle = '#e5b94d';
+  g.beginPath();
+  g.arc(-22.2, 6, 1.3, 0, TAU);
+  g.fill();
   eggBody(g, '#66b1bd', '#4f95a2');
   g.save();
   g.beginPath();
@@ -630,6 +665,32 @@ function drawBushHat(g) {
 function drawArcherBody(g, front, gz, squint) {
   g.lineJoin = 'round';
   g.lineCap = 'round';
+  // a quiver of arrows on the back
+  g.save();
+  g.translate(-22.4, 4);
+  g.rotate(-0.12);
+  for (const [x, h, c] of [[-2.8, 14, '#d84a3a'], [0, 17, '#f2eddc'], [2.8, 13, '#d84a3a']]) {
+    g.strokeStyle = OUT;
+    g.lineWidth = 1.2;
+    g.beginPath();
+    g.moveTo(x, -6);
+    g.lineTo(x, -6 - h);
+    g.stroke();
+    g.fillStyle = c;
+    g.beginPath();
+    g.ellipse(x, -6 - h + 1.6, 1.5, 3, 0, 0, TAU);
+    g.fill();
+    g.stroke();
+  }
+  g.fillStyle = '#7a4a2a';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.5;
+  rr(g, -5.2, -7, 10.4, 22, 2.4);
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#e5b94d';
+  g.fillRect(-5, 1, 10, 1.8);
+  g.restore();
   // a moss-green egg
   eggBody(g, '#9cc16b', '#6a9444');
   g.strokeStyle = OUT;
@@ -1065,6 +1126,17 @@ function drawCowboyHat(g) {
 }
 
 function drawCowboyTorso(g, look, blink) {
+  // a coiled lasso hanging at the back
+  for (const [r, w] of [[6.6, 2.6], [4, 2.2]]) {
+    g.strokeStyle = OUT;
+    g.lineWidth = w + 2;
+    g.beginPath();
+    g.arc(-21, 9, r, 0, TAU);
+    g.stroke();
+    g.strokeStyle = '#d9b878';
+    g.lineWidth = w;
+    g.stroke();
+  }
   // a rust-orange egg: nothing like the sniper's tan or the hunter's green
   const gr = g.createLinearGradient(0, -22, 0, 24);
   gr.addColorStop(0, '#e8924a');
@@ -1278,6 +1350,24 @@ function drawFlintlock(g, firing) {
 // ---------------------------------------------------------------- ninja
 function drawNinjaBody(g, front, gz) {
   // the samurai: a slate-grey egg under a wide conical straw hat, with a red sash
+  // a sheathed katana at the hip, peeking out behind
+  g.save();
+  g.translate(-14, 6);
+  g.rotate(0.62);
+  g.fillStyle = '#242836';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.5;
+  rr(g, -3, -4, 6, 27, 2.6);
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#c93a34';
+  g.fillRect(-3, 5, 6, 3);
+  g.fillStyle = '#e5b94d';
+  g.beginPath();
+  g.ellipse(0, -2, 5.2, 2.2, 0, 0, TAU);
+  g.fill();
+  g.stroke();
+  g.restore();
   eggBody(g, '#69788c', '#3f4a5c');
   g.save();
   g.beginPath();

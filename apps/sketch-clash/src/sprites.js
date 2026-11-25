@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=121';
+import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=123';
 
 // Units are drawn from "art" coordinates matching the reference sprites
 // (origin at the body centre, y down) into small offscreen layers, then
@@ -136,6 +136,23 @@ const GAZES = [[1.9, 0.8], [0, -2.6], [-1.7, -2.2], [1.7, -2.2], [-2.2, 0.3]];
 // `front` is the idle pose (both eyes centred, facing the viewer); the
 // default is the side-on pose used while walking and shooting.
 function drawSoldierTorso(g, front, gaze) {
+  // a little pack with a rolled blanket, behind the body
+  g.fillStyle = '#8a7a52';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.5;
+  rr(g, -26.4, -4, 9.4, 17, 2.4);
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#566a8a';
+  rr(g, -27.6, -8.2, 11.6, 5.2, 2.4);
+  g.fill();
+  g.stroke();
+  g.strokeStyle = 'rgba(20, 24, 36, 0.55)';
+  g.lineWidth = 0.9;
+  g.beginPath();
+  g.moveTo(-22.6, -8);
+  g.lineTo(-22.6, -3.2);
+  g.stroke();
   const gr = g.createLinearGradient(0, -22, 0, 22);
   gr.addColorStop(0, '#5088ea');
   gr.addColorStop(1, '#3365cf');
