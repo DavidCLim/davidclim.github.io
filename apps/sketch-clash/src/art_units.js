@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=140';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=140';
+import { TAU, K } from './config.js?v=141';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=141';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -556,45 +556,60 @@ function westernHat(g, c0, c1, band, feather) {
   g.stroke();
 }
 
-// A round black bowler with a red band; origin: the bottom edge of the crown.
 function drawBowler(g) {
+  // a cream explorer's pith helmet with a brown band; origin: the bottom edge of the crown
   g.lineJoin = 'round';
   g.lineCap = 'round';
-  const bg = g.createLinearGradient(0, -20, 0, 2);
-  bg.addColorStop(0, '#3c3c46');
-  bg.addColorStop(1, '#16161c');
+  const bg = g.createLinearGradient(0, -22, 0, 2);
+  bg.addColorStop(0, '#f6ecd0');
+  bg.addColorStop(1, '#cdb98a');
   g.fillStyle = bg;
   g.strokeStyle = OUT;
   g.lineWidth = 1.7;
   g.beginPath();
-  g.moveTo(-14.4, -2.4);
-  g.bezierCurveTo(-15.6, -22, 15.6, -22, 14.4, -2.4);
+  g.moveTo(-17, -2.4);
+  g.bezierCurveTo(-18.6, -23, 18.6, -23, 17, -2.4);
   g.closePath();
   g.fill();
   g.stroke();
   g.beginPath();
-  g.moveTo(-23.4, -1.2);
-  g.quadraticCurveTo(-22, -6, -14, -5);
-  g.quadraticCurveTo(0, -3.6, 14, -5);
-  g.quadraticCurveTo(22, -6, 23.4, -1.2);
-  g.quadraticCurveTo(0, 5.4, -23.4, -1.2);
+  g.moveTo(-23.6, -0.6);
+  g.quadraticCurveTo(-22, -5.6, -15, -4.6);
+  g.quadraticCurveTo(0, -3.2, 15, -4.6);
+  g.quadraticCurveTo(22, -5.6, 23.6, -0.6);
+  g.quadraticCurveTo(0, 6.4, -23.6, -0.6);
   g.closePath();
   g.fill();
   g.stroke();
-  g.fillStyle = '#c8302f';
+  g.fillStyle = '#7a5230';
   g.beginPath();
-  g.moveTo(-14.2, -4.6);
-  g.quadraticCurveTo(0, -2.4, 14.2, -4.6);
-  g.lineTo(14.4, -9);
-  g.quadraticCurveTo(0, -6.8, -14.4, -9);
+  g.moveTo(-16.6, -4.4);
+  g.quadraticCurveTo(0, -2, 16.6, -4.4);
+  g.lineTo(16.8, -9.2);
+  g.quadraticCurveTo(0, -6.8, -16.8, -9.2);
   g.closePath();
   g.fill();
   g.stroke();
-  g.strokeStyle = 'rgba(255, 255, 255, 0.28)';
+  g.fillStyle = '#e5b94d';
+  rr(g, -2.4, -8, 4.8, 3.6, 0.8);
+  g.fill();
+  g.stroke();
+  g.strokeStyle = 'rgba(110, 90, 50, 0.55)';
+  g.lineWidth = 0.9;
+  g.beginPath();
+  g.moveTo(0, -21);
+  g.lineTo(0, -9.4);
+  g.moveTo(-8, -19.6);
+  g.quadraticCurveTo(-10, -14, -9.4, -9.4);
+  g.moveTo(8, -19.6);
+  g.quadraticCurveTo(10, -14, 9.4, -9.4);
+  g.stroke();
+  g.fillStyle = '#d8c79a';
+  g.strokeStyle = OUT;
   g.lineWidth = 1.2;
   g.beginPath();
-  g.moveTo(-9, -13);
-  g.quadraticCurveTo(-6, -17.6, -1, -17.8);
+  g.arc(0, -20.6, 2, 0, TAU);
+  g.fill();
   g.stroke();
 }
 
@@ -612,18 +627,33 @@ function drawGrenBody(g, front, gz) {
   g.moveTo(-23, -5.5);
   g.lineTo(15, 17);
   g.stroke();
-  g.strokeStyle = '#7d4b1f';
+  g.strokeStyle = '#46603a';
   g.lineWidth = 6.4;
   g.beginPath();
   g.moveTo(-23, -5.5);
   g.lineTo(15, 17);
   g.stroke();
-  g.strokeStyle = '#a56b34';
-  g.lineWidth = 1.2;
+  g.strokeStyle = '#d7c27a';
+  g.lineWidth = 1;
+  g.setLineDash([2.2, 1.8]);
   g.beginPath();
   g.moveTo(-22, -8);
   g.lineTo(16, 14.6);
   g.stroke();
+  g.setLineDash([]);
+  // two little canvas pouches with brass snaps
+  for (const [px, py] of [[-0.2, 8.4], [7.6, 13]]) {
+    g.fillStyle = '#5b7a45';
+    g.strokeStyle = OUT;
+    g.lineWidth = 1.2;
+    rr(g, px - 3.6, py - 3.2, 7.2, 7.4, 1.6);
+    g.fill();
+    g.stroke();
+    g.fillStyle = '#e5b94d';
+    g.beginPath();
+    g.arc(px, py - 0.4, 1, 0, TAU);
+    g.fill();
+  }
   g.lineCap = 'round';
   g.restore();
   g.strokeStyle = OUT;
