@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=139';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=139';
+import { TAU, K } from './config.js?v=140';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=140';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -496,29 +496,6 @@ function drawSpear(g) {
 
 // Origin: the middle of the shield.
 // ---------------------------------------------------------------- grenadier
-// A handlebar mustache, like the cowboy's, centred on cx.
-function stache(g, cx, y, color) {
-  g.fillStyle = color;
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.2;
-  g.lineJoin = 'round';
-  for (const sx of [1, -1]) {
-    g.save();
-    g.translate(cx, y);
-    g.scale(sx, 1);
-    g.beginPath();
-    g.moveTo(0, -1.2);
-    g.quadraticCurveTo(4, -3, 9, -1.4);
-    g.quadraticCurveTo(14.4, 0.4, 13.6, 5.6);
-    g.quadraticCurveTo(10.6, 2.8, 6, 3.6);
-    g.quadraticCurveTo(2.6, 4.4, 0, 2.4);
-    g.closePath();
-    g.fill();
-    g.stroke();
-    g.restore();
-  }
-}
-
 // A wide-brimmed hat in the cowboy's shape; origin: the bottom edge of the crown.
 function westernHat(g, c0, c1, band, feather) {
   g.lineJoin = 'round';
@@ -656,10 +633,8 @@ function drawGrenBody(g, front, gz) {
   g.stroke();
 
   bigEyes(g, front ? [-8.4, 8.4] : [-2.4, 11], gz, -2, 4.5, 4.6, 1.9, 2.7);
-  const mx = front ? 0 : 5;
-  stache(g, mx, 5, '#3b2a1b');
-  if (front) smile(g, 0, 10.4, 2.8);
-  else smile(g, 5, 10.6, 2.6);
+  if (front) smile(g, 0, 3.8, 3.4);
+  else smile(g, 4.6, 4.4, 3.2);
   // a black bowler hat
   g.save();
   g.translate(0, -8.4);
@@ -747,9 +722,8 @@ function drawArcherBody(g, front, gz, squint) {
   g.stroke();
 
   bigEyes(g, front ? [-8.4, 8.4] : [-2.2, 12.6], gz, -3.8, 4.5, 4.7, 1.1, 3, !!squint);
-  stache(g, front ? 0 : 5.2, 3.8, '#5a3a1e');
-  if (front) smile(g, 0, 10, 2.8);
-  else smile(g, 5.2, 10, 2.6);
+  if (front) smile(g, 0, 6.6, 3.2);
+  else smile(g, 5.2, 7, 2.8);
   // a wide hat with a feather
   g.save();
   g.translate(0, -11.2);
