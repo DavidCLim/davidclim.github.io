@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=134';
-import { drawLayer, OUT } from './sprites.js?v=134';
-import { drawDrop } from './art_units.js?v=134';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=134';
-import { EGG_DROPS } from './art_eggs.js?v=134';
+import { TAU, K, UNIT, FEET } from './config.js?v=135';
+import { drawLayer, OUT } from './sprites.js?v=135';
+import { drawDrop } from './art_units.js?v=135';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=135';
+import { EGG_DROPS } from './art_eggs.js?v=135';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the

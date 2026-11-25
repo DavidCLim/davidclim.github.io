@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=134';
+import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=135';
 
 // Units are drawn from "art" coordinates matching the reference sprites
 // (origin at the body centre, y down) into small offscreen layers, then
@@ -169,14 +169,6 @@ function drawSoldierTorso(g, front, gaze) {
   g.ellipse(-10.5, -6, 3.4, 5.6, -0.25, 0, TAU);
   g.fill();
 
-  // a pirate's striped shirt
-  g.save();
-  g.beginPath();
-  g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
-  g.clip();
-  g.fillStyle = 'rgba(244, 244, 250, 0.86)';
-  for (const y of [6.6, 11.6, 16.6, 21.6]) g.fillRect(-22, y, 44, 2.6);
-  g.restore();
   // a webbing belt with a brass buckle and two ammo pouches
   g.save();
   g.beginPath();
@@ -230,57 +222,23 @@ function drawSoldierTorso(g, front, gaze) {
   else g.arc(6.5, 2.4, 4.2, Math.PI * 0.12, Math.PI * 0.88);
   g.stroke();
 
-  // a black tricorn hat with a gold trim and a skull and crossbones
-  g.save();
-  g.translate(front ? 0 : -1.4, 0);
-  const hg = g.createLinearGradient(0, -30, 0, -8);
-  hg.addColorStop(0, '#3a3942');
-  hg.addColorStop(1, '#17161c');
-  g.fillStyle = hg;
+  g.fillStyle = '#2e4358';
   g.strokeStyle = OUT;
-  g.lineWidth = 1.7;
+  g.lineWidth = 1.6;
   g.beginPath();
-  g.moveTo(-25, -7.4);
-  g.lineTo(-21, -17.4);
-  g.quadraticCurveTo(-9, -20, -3.4, -29.6);
-  g.quadraticCurveTo(0, -31.4, 3.4, -29.6);
-  g.quadraticCurveTo(9, -20, 21, -17.4);
-  g.lineTo(25, -7.4);
-  g.quadraticCurveTo(0, -13.4, -25, -7.4);
+  g.ellipse(0, -12.7, 18.8, 12, 0, Math.PI, TAU);
   g.closePath();
   g.fill();
   g.stroke();
-  g.strokeStyle = '#e0b43c';
+  g.strokeStyle = 'rgba(255, 255, 255, 0.16)';
   g.lineWidth = 1.5;
   g.beginPath();
-  g.moveTo(-21, -17.2);
-  g.quadraticCurveTo(-9, -19.8, -3.2, -29);
-  g.moveTo(3.2, -29);
-  g.quadraticCurveTo(9, -19.8, 21, -17.2);
+  g.ellipse(0, -12.7, 15.5, 9.2, 0, Math.PI * 1.08, Math.PI * 1.42);
   g.stroke();
-  // a gold anchor on the hat
-  g.strokeStyle = '#f0c64a';
-  g.lineWidth = 1.7;
-  g.beginPath();
-  g.arc(0, -19.6, 1.5, 0, TAU);
-  g.moveTo(0, -18.1);
-  g.lineTo(0, -12);
-  g.moveTo(-2.6, -16.4);
-  g.lineTo(2.6, -16.4);
-  g.moveTo(-4, -14.2);
-  g.quadraticCurveTo(-3.6, -10.8, 0, -10.8);
-  g.quadraticCurveTo(3.6, -10.8, 4, -14.2);
-  g.stroke();
-  g.restore();
-  // a gold hoop earring
-  g.strokeStyle = OUT;
-  g.lineWidth = 3;
-  g.beginPath();
-  g.arc(front ? -20.4 : -17.4, 4.4, 2.6, 0, TAU);
-  g.stroke();
-  g.strokeStyle = '#f0c64a';
-  g.lineWidth = 1.5;
-  g.stroke();
+  g.fillStyle = '#1b1920';
+  rr(g, -23.5, -14.3, 49, 3.6, 1.8);
+  g.fill();
+  helmetStar(g, front);
 }
 
 // the soldier's helmet badge
