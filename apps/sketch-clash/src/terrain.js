@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=148';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=148';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=148';
+import { TAU, K } from './config.js?v=150';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=150';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=150';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask
@@ -222,18 +222,23 @@ export function renderGround(ctx, W, H, strokes, clock) {
     path(s, WALL_H);
     ctx.stroke();
   }
-  // two rows of bricks along the front
-  ctx.strokeStyle = 'rgba(128, 128, 134, 0.7)';
-  ctx.lineWidth = 0.55;
+  // two rows of bricks along the front: a seam between the rows and staggered upright joints
+  ctx.strokeStyle = 'rgba(150, 150, 158, 0.75)';
   for (const s of walls) {
-    ctx.setLineDash([4, 3]);
-    path(s, WALL_H + s.w * 0.5 - 1.1);
+    ctx.lineWidth = 0.6;
+    path(s, s.w * 0.5 + WALL_H * 0.52);
+    ctx.stroke();
+    ctx.lineWidth = WALL_H * 0.42;
+    ctx.lineCap = 'butt';
+    ctx.setLineDash([0.7, 6.3]);
+    path(s, s.w * 0.5 + WALL_H * 0.27);
     ctx.stroke();
     ctx.lineDashOffset = 3.5;
-    path(s, WALL_H + s.w * 0.5 + 1.1);
+    path(s, s.w * 0.5 + WALL_H * 0.77);
     ctx.stroke();
     ctx.lineDashOffset = 0;
     ctx.setLineDash([]);
+    ctx.lineCap = 'round';
   }
   // the flagstone top
   ctx.strokeStyle = '#7e7c7b';
