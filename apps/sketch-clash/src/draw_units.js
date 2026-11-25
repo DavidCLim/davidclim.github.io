@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=169';
-import { drawLayer, OUT } from './sprites.js?v=169';
-import { drawDrop } from './art_units.js?v=169';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=169';
-import { EGG_DROPS } from './art_eggs.js?v=169';
+import { TAU, K, UNIT, FEET } from './config.js?v=170';
+import { drawLayer, OUT } from './sprites.js?v=170';
+import { drawDrop } from './art_units.js?v=170';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=170';
+import { EGG_DROPS } from './art_eggs.js?v=170';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -393,23 +393,42 @@ const blobs = (() => {
 })();
 
 const discCache = new Map();
-function softDisc(color) {
-  let c = discCache.get(color);
+function softDisc(color, hard = 0.5) {
+  const key = color + hard;
+  let c = discCache.get(key);
   if (c) return c;
   c = document.createElement('canvas');
   c.width = c.height = 96;
   const g = c.getContext('2d');
   const gr = g.createRadialGradient(48, 48, 0, 48, 48, 48);
   gr.addColorStop(0, color);
-  gr.addColorStop(0.5, color);
+  gr.addColorStop(hard, color);
   gr.addColorStop(1, color + '00');
   g.fillStyle = gr;
   g.fillRect(0, 0, 96, 96);
-  discCache.set(color, c);
+  discCache.set(key, c);
   return c;
 }
 
-const FIRE_RAMP = ['#ffd25a', '#ffc247', '#ffa83c', '#ff8f33', '#f98530', '#ee7b2c', '#e2782c', '#d6783a'];
+const FIRE_RAMP = ['#ffd25a', '#ffc247', '#ffa83c', '#ff8f33', '#f98530', '#ee7b2c', '#dd7a30', '#cc7640'];
+
+// one cloud of lobes, drawn solid into a scratch canvas first so overlapping lobes don't stack their alpha
+let scratch = null;
+function drawCloud(ctx, e, lumps, spr, r, spread, scale, alpha, rise) {
+  if (!scratch) {
+    scratch = document.createElement('canvas');
+    scratch.width = scratch.height = 220;
+  }
+  const g = scratch.getContext('2d');
+  const f = 110 / (r * 1.9);
+  g.clearRect(0, 0, 220, 220);
+  for (const l of lumps) {
+    const rad = Math.max(1, r * 1.2 * l.s * scale) * f;
+    g.drawImage(spr, 110 + l.x * r * spread * f - rad, 110 + l.y * r * spread * f - rad, rad * 2, rad * 2);
+  }
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(scratch, e.x - 110 / f, e.y - 110 / f - rise, 220 / f, 220 / f);
+}
 function fireColor(age) {
   return FIRE_RAMP[Math.min(FIRE_RAMP.length - 1, Math.floor((age / 0.46) * FIRE_RAMP.length))];
 }
@@ -417,11 +436,12 @@ function fireColor(age) {
 // A blast is a ring of overlapping blobs, the same ones for fire and smoke.
 function lumpsOf(e) {
   if (e.lumps) return e.lumps;
-  const out = [{ x: 0, y: 0, s: 0.62 }];
-  for (let i = 0; i < 6; i++) {
-    const a = e.seed * 9 + i * 1.07 + (i % 2) * 0.4;
-    const d = 0.3 + ((i * 37 + Math.floor(e.seed * 100)) % 20) / 100;
-    out.push({ x: Math.cos(a) * d, y: Math.sin(a) * d * 0.9, s: 0.4 + ((i * 53 + Math.floor(e.seed * 77)) % 14) / 100 });
+  // a round, scalloped disc: a fat middle and a ring of lobes around it
+  const out = [{ x: 0, y: 0, s: 0.8 }];
+  const n = 9;
+  for (let i = 0; i < n; i++) {
+    const a = e.seed * 9 + (i / n) * TAU;
+    out.push({ x: Math.cos(a) * 0.56, y: Math.sin(a) * 0.5, s: 0.4 + ((i * 53 + Math.floor(e.seed * 77)) % 6) / 100 });
   }
   e.lumps = out;
   return out;
@@ -464,21 +484,16 @@ export function drawFx(ctx, dpr, sprites, world) {
   // darkens, then a beige smoke cloud that hangs about and fades slowly
   for (const e of world.blasts) {
     const age = e.age;
-    const r = e.r;
+    const r = e.r * 1.28;
     const lumps = lumpsOf(e);
     if (age < 0.5) {
-      const grow = 1 - (1 - Math.min(1, age / 0.2)) ** 2;
-      const fire = age < 0.32 ? 1 : 1 - (age - 0.32) / 0.18;
+      const grow = 1 - (1 - Math.min(1, age / 0.36)) ** 2;
+      const fire = age < 0.4 ? 1 : 1 - (age - 0.4) / 0.1;
       if (age < 0.09) {
         ctx.globalAlpha = 0.5;
         ctx.drawImage(softDisc('#fff3b0'), e.x - r * 0.75, e.y - r * 0.75, r * 1.5, r * 1.5);
       }
-      ctx.globalAlpha = Math.max(0, fire);
-      const spr = softDisc(fireColor(age));
-      for (const l of lumps) {
-        const rad = Math.max(1, r * 1.2 * l.s * (0.34 + 0.66 * grow));
-        ctx.drawImage(spr, e.x + l.x * r * grow - rad, e.y + l.y * r * grow - rad, rad * 2, rad * 2);
-      }
+      drawCloud(ctx, e, lumps, softDisc(fireColor(age), 0.72), r, grow, 0.34 + 0.66 * grow, Math.max(0, fire) * (age < 0.1 ? 1 : 0.92), 0);
       if (age > 0.08 && age < 0.45) {
         const q = (age - 0.08) / 0.37;
         ctx.globalAlpha = 0.28 * (1 - q);
@@ -489,16 +504,10 @@ export function drawFx(ctx, dpr, sprites, world) {
         ctx.stroke();
       }
     }
-    if (age > 0.28) {
-      const k = (age - 0.28) / (e.life - 0.28);
-      const a = Math.min(1, (age - 0.28) / 0.25) * 0.55 * (1 - k) ** 1.4;
-      ctx.globalAlpha = a;
-      const spr = softDisc('#e2d9d5');
-      const rise = (age - 0.28) * 5;
-      for (const l of lumps) {
-        const rad = r * 1.2 * l.s * (0.95 + 0.4 * k);
-        ctx.drawImage(spr, e.x + l.x * r * 1.05 - rad, e.y + l.y * r * 1.05 - rad - rise, rad * 2, rad * 2);
-      }
+    if (age > 0.36) {
+      const k = (age - 0.36) / (e.life - 0.36);
+      const a = Math.min(1, (age - 0.36) / 0.12) * 0.42 * (1 - k) ** 1.3;
+      drawCloud(ctx, e, lumps, softDisc('#e2d9d5', 0.66), r, 1.05, 0.95 + 0.25 * k, a, (age - 0.36) * 5);
     }
   }
   ctx.globalAlpha = 1;
