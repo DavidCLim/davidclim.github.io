@@ -317,10 +317,10 @@ export const MECHAZORD = {
   flying: false,
   airborne: true, // like the dragon, he sometimes takes off and breathes fire from the air, sometimes he stays on the ground
   hoverH: 30,
-  shadowR: 38,
+  shadowR: 52,
   hp: 1100,
-  radius: 42,
-  sep: 46,
+  radius: 54,
+  sep: 58,
   speed: 38,
   sight: 420,
   dps: 80, // way stronger than the dragon's 38, and half as much again from the air
@@ -331,9 +331,9 @@ export const MECHAZORD = {
   onTime: 2.4,
   offTime: 0.8,
   stomp: { radius: 60, dmg: 70, cd: 2.6, knock: 460 }, // on the ground, a shockwave under his feet
-  ring: 4.6,
-  body: [88, 50, 18],
-  pivot: { x: 152 * K, y: -178 * K },
+  ring: 5,
+  body: [108, 62, 22],
+  pivot: { x: 212 * K, y: -205 * K },
   muzzleLen: 8 * K,
 };
 
