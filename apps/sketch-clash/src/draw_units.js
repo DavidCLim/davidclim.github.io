@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=123';
-import { drawLayer, OUT } from './sprites.js?v=123';
-import { drawDrop } from './art_units.js?v=123';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=123';
-import { EGG_DROPS } from './art_eggs.js?v=123';
+import { TAU, K, UNIT, FEET } from './config.js?v=128';
+import { drawLayer, OUT } from './sprites.js?v=128';
+import { drawDrop } from './art_units.js?v=128';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=128';
+import { EGG_DROPS } from './art_eggs.js?v=128';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -385,7 +385,15 @@ const blobs = (() => {
     g.fillRect(0, 0, 64, 64);
     return c;
   };
-  return { yellow: mk('255, 226, 110'), orange: mk('247, 150, 62'), brown: mk('176, 104, 46') };
+  return {
+    yellow: mk('255, 226, 110'),
+    orange: mk('247, 150, 62'),
+    brown: mk('176, 104, 46'),
+    // the campfire burns blue, with the same soft blobs
+    cyan: mk('206, 244, 255'),
+    blue: mk('74, 156, 255'),
+    navy: mk('34, 78, 178'),
+  };
 })();
 
 const discCache = new Map();
@@ -432,7 +440,7 @@ export function drawFx(ctx, dpr, sprites, world) {
   for (const f of world.flames) {
     const t = f.age / f.life;
     const r = f.size + f.grow * t;
-    const spr = t < 0.22 ? blobs.yellow : f.dark && t > 0.5 ? blobs.brown : blobs.orange;
+    const spr = f.blue ? (t < 0.1 ? blobs.cyan : f.dark && t > 0.5 ? blobs.navy : blobs.blue) : t < 0.22 ? blobs.yellow : f.dark && t > 0.5 ? blobs.brown : blobs.orange;
     ctx.globalAlpha = Math.max(0, (t < 0.12 ? 0.55 + t * 3 : 0.8) * (1 - t * t));
     ctx.drawImage(spr, f.x - r, f.y - r, r * 2, r * 2);
   }

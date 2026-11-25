@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=123';
-import { buildCreatureArt } from './creatures.js?v=123';
-import { buildEggArt } from './art_eggs.js?v=123';
-import { buildTerrainArt, drawFlames, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=123';
-import { Sfx } from './sfx.js?v=123';
-import { World } from './world.js?v=123';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=123';
-import { buildUnitArt } from './art_units.js?v=123';
-import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=123';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=128';
+import { buildCreatureArt } from './creatures.js?v=128';
+import { buildEggArt } from './art_eggs.js?v=128';
+import { buildTerrainArt, drawFlames, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=128';
+import { Sfx } from './sfx.js?v=128';
+import { World } from './world.js?v=128';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=128';
+import { buildUnitArt } from './art_units.js?v=128';
+import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=128';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -473,17 +473,22 @@ stageCanvas.addEventListener('pointerleave', () => {
 
 // The brush size meter: all the way down is a single unit per click.
 function setBrush(v) {
-  brush = Math.min(90, Math.max(0, Math.round(v)));
+  brush = Math.min(90, Math.max(0, Math.round(v * 10) / 10));
   brushInput.value = String(brush);
   brushDot.style.setProperty('--dot', `${4 + (brush / 90) * 16}px`);
 }
 brushInput.addEventListener('input', () => setBrush(Number(brushInput.value)));
-// the slider is hidden (the original has none): the wheel and [ ] change the brush instead
-stageCanvas.addEventListener(
+// As in the original, the mouse wheel is the brush control: scroll up for a bigger brush, down for a smaller one.
+// It works anywhere on the page, and smooth trackpad scrolling gives smooth sizes.
+window.addEventListener(
   'wheel',
   (e) => {
+    if (e.target.closest && e.target.closest('.settings-card')) return;
     e.preventDefault();
-    setBrush(brush - Math.sign(e.deltaY) * 3);
+    const unit = e.deltaMode === 1 ? 33 : e.deltaMode === 2 ? 400 : 1;
+    const d = Math.max(-150, Math.min(150, e.deltaY * unit));
+    setBrush(brush - d * 0.1);
+    ringShow = 1.2;
   },
   { passive: false },
 );
@@ -869,7 +874,11 @@ function syncUi() {
 }
 
 // ---------- Render ----------
+let ringR = brush; // the drawn ring eases toward the brush size
+let ringShow = 0;
 function drawBrushRing() {
+  ringR += (brush - ringR) * 0.4;
+  if (ringShow > 0) ringShow -= 1 / 60;
   if (!ptr.inside) return;
   const team = teamAt(ptr.x);
   let rgb = '70, 110, 225';
@@ -879,7 +888,7 @@ function drawBrushRing() {
   ctx.strokeStyle = canPaint() ? `rgba(${rgb}, 0.6)` : 'rgba(35, 38, 47, 0.25)';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.arc(ptr.x, ptr.y, Math.max(brush, 3), 0, TAU);
+  ctx.arc(ptr.x, ptr.y, Math.max(ringR, 3), 0, TAU);
   ctx.fill();
   ctx.stroke();
 }
@@ -1102,7 +1111,7 @@ function drawProp(p) {
     drawLayer(ctx, terrainArt.campfireBack);
     ctx.save();
     ctx.scale(K, K);
-    drawFlames(ctx, world.clock, p.seed);
+    drawFlames(ctx, world.clock, p.seed, true, false);
     ctx.restore();
     drawLayer(ctx, terrainArt.campfireFront);
     return;

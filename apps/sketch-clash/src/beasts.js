@@ -1,5 +1,5 @@
-import { TAU, FEET, GAIT } from './config.js?v=123';
-import { WATER, ICE, WALL } from './terrain.js?v=123';
+import { TAU, FEET, GAIT } from './config.js?v=128';
+import { WATER, ICE, WALL } from './terrain.js?v=128';
 
 // Everything the Animals and Mythical tabs add to the world, plus the terrain physics:
 // the beast brain, the mage's bolts, the necromancer's skeletons, zombie infection,
@@ -245,6 +245,26 @@ export function installBeasts(World) {
     let gone = false;
     for (const p of this.props) {
       p.age += dt;
+      if (p.type === 'campfire' && !p.dead) {
+        // the fire is made of the same soft blobs as the flamethrower's: pale blue dots that swell and darken as they rise
+        p.emit = (p.emit || 0) + dt * 120;
+        while (p.emit >= 1) {
+          p.emit -= 1;
+          const big = Math.random() < 0.3;
+          this.flames.push({
+            x: p.x + (Math.random() - 0.5) * (big ? 6 : 12),
+            y: p.y - 2 - Math.random() * 2,
+            vx: (Math.random() - 0.5) * 9,
+            vy: -(big ? 44 : 32) - Math.random() * 24,
+            age: 0,
+            life: 0.6 + Math.random() * 0.55,
+            size: 3.4 + Math.random() * 2,
+            grow: big ? 4.6 : 2.8,
+            dark: Math.random() < 0.3,
+            blue: true,
+          });
+        }
+      }
       if (p.hot > 0) p.hot -= dt;
       if (p.dead) gone = true;
     }

@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=123';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=123';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=123';
+import { TAU, K } from './config.js?v=128';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=128';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=128';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask
@@ -556,7 +556,7 @@ function tongue(g, w, h, sx, fill, line) {
 
 // The animated flames: five swaying tongues, a turning ring of runes on the ground and blue embers drifting up.
 // t is in seconds, seed makes every fire different.
-export function drawFlames(g, t, seed = 0, ring = true) {
+export function drawFlames(g, t, seed = 0, ring = true, tongues = true) {
   g.save();
   g.lineJoin = 'round';
   const ph = seed * 20;
@@ -575,14 +575,18 @@ export function drawFlames(g, t, seed = 0, ring = true) {
   g.beginPath();
   g.ellipse(0, -2, 17 + pulse * 2, 8, 0, 0, TAU);
   g.fill();
-  const tongues = [
+  const shapes = [
     [-8.4, 4.6, 14, -2.2, 4.6, 2.3, 0.5],
     [8.4, 4.4, 13, 2, 5.4, 2.1, 1.7],
     [-4.4, 5.6, 23, -1.4, 3.8, 1.9, 2.6],
     [4.4, 5.4, 21, 1.2, 4.3, 2.4, 3.4],
     [0, 7, 33, 0, 3.2, 1.7, 0],
   ];
-  for (const [bx, w, h0, lean, f1, f2, off] of tongues) {
+  if (!tongues) {
+    g.restore();
+    return;
+  }
+  for (const [bx, w, h0, lean, f1, f2, off] of shapes) {
     const h = h0 * (1 + 0.14 * Math.sin(t * (f1 + 5) + ph + off * 3) + 0.06 * Math.sin(t * (f2 + 12) + off));
     const sx = lean * 3.4 + Math.sin(t * f1 + ph + off) * 4;
     g.save();
@@ -736,7 +740,7 @@ const ICON_DRAW = {
   },
   mine: (g) => drawMine(g, false),
   campfire: (g) => {
-    g.scale(1.3, 1.3);
+    g.scale(1.0, 1.0);
     drawCampfireBack(g);
     drawFlames(g, 0.4, 0.3, false);
     drawCampfireFront(g);
@@ -750,7 +754,7 @@ const ICON_DRAW = {
     drawTree(g);
   },
 };
-const ICON_BASE = { wall: 0.82, water: 0.86, ice: 0.84, mine: 0.78, campfire: 0.95, barrel: 0.9, tree: 0.94 };
+const ICON_BASE = { wall: 0.82, water: 0.86, ice: 0.84, mine: 0.78, campfire: 0.8, barrel: 0.9, tree: 0.94 };
 
 export function hasTerrainIcon(id) {
   return id in ICON_DRAW;
