@@ -319,7 +319,7 @@ export const SPECIES = {
   soldier: { id: 'soldier', label: 'Soldier', def: SOLDIER },
   flamethrower: { id: 'flamethrower', label: 'Flamethrower', def: FLAMETHROWER },
   sniper: { id: 'sniper', label: 'Sniper', def: SNIPER },
-  roman: { id: 'roman', label: 'Knight', def: ROMAN },
+  roman: { id: 'roman', label: 'Chef', def: ROMAN },
   grenadier: { id: 'grenadier', label: 'Grenadier', def: GRENADIER },
   archer: { id: 'archer', label: 'Archer', def: ARCHER },
   cowboy: { id: 'cowboy', label: 'Cowboy', def: COWBOY },
