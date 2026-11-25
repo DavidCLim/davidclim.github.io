@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=147';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=147';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=147';
+import { TAU, K } from './config.js?v=148';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=148';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=148';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask
@@ -148,8 +148,8 @@ export function renderGround(ctx, W, H, strokes, clock) {
     }
   };
   for (const [kind, edge, fill] of [
-    ['water', '#62bccb', '#9ce4ec'],
-    ['ice', '#b4d4e6', '#dff0fa'],
+    ['water', '#76bccb', '#8dd3de'],
+    ['ice', '#b4d4e6', '#dcecf9'],
   ]) {
     const list = of(kind);
     if (!list.length) continue;
@@ -163,19 +163,31 @@ export function renderGround(ctx, W, H, strokes, clock) {
       blobPath(s, 0);
       ctx.fill();
     }
-    // soft light and dark patches inside (ice gets pale sheen streaks)
+    // the original's water is a smooth cyan that is lightest along the middle of the stroke and darker toward the banks;
+    // ice is flat pale blue with soft white sheen at the ends
     for (const s of list) {
       ctx.save();
       blobPath(s, 0);
       ctx.clip();
-      for (let i = 0; i < s.pts.length; i += 6) {
-        const [x, y] = s.pts[i];
-        const h = hash2(x * 0.7, y * 0.7);
-        ctx.fillStyle = kind === 'ice' ? `rgba(255, 255, 255, ${0.2 + h * 0.25})` : h > 0.5 ? 'rgba(190, 245, 250, 0.25)' : 'rgba(110, 200, 214, 0.14)';
+      ctx.filter = 'blur(5px)';
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      if (kind === 'water') {
+        ctx.strokeStyle = 'rgba(196, 248, 250, 0.85)';
+        ctx.lineWidth = s.w * 0.5;
         ctx.beginPath();
-        if (kind === 'ice') ctx.ellipse(x, y, 2.5 + h * 3, s.w * 0.42, 0.35, 0, TAU);
-        else ctx.ellipse(x, y, 7 + h * 8, s.w * 0.2, 0, 0, TAU);
-        ctx.fill();
+        s.pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+        if (s.pts.length === 1) ctx.lineTo(s.pts[0][0] + 0.1, s.pts[0][1]);
+        ctx.stroke();
+      } else {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+        ctx.lineWidth = s.w * 0.34;
+        for (const [x, y] of [s.pts[0], s.pts[s.pts.length - 1]]) {
+          ctx.beginPath();
+          ctx.moveTo(x - s.w * 0.22, y + s.w * 0.28);
+          ctx.lineTo(x + s.w * 0.22, y - s.w * 0.28);
+          ctx.stroke();
+        }
       }
       ctx.restore();
     }
