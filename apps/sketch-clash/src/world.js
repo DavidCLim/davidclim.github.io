@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=151';
-import { TerrainMap, WALL } from './terrain.js?v=151';
-import { installBeasts } from './beasts.js?v=151';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=153';
+import { TerrainMap, WALL } from './terrain.js?v=153';
+import { installBeasts } from './beasts.js?v=153';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -375,7 +375,7 @@ export class World {
       y,
       hp: def.hp,
       facing: team === 'red' ? 1 : team === 'blue' ? -1 : Math.random() < 0.5 ? 1 : -1,
-      speedMul: (0.9 + Math.random() * 0.2) * 1.6, // a soldier crosses about 105 screen px a second in the original
+      speedMul: 0.9 + Math.random() * 0.2,
       target: null,
       marchTarget: null,
       retargetT: Math.random() * 0.3,

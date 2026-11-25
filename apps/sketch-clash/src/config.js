@@ -32,7 +32,7 @@ export const SOLDIER = {
   hp: 100,
   radius: 11 * UNIT,
   sep: 17 * UNIT,
-  speed: 44,
+  speed: 71, // about 105 screen px a second, measured off the original
   sight: 360,
   range: 290,
   holdDist: 120,
@@ -87,10 +87,10 @@ export const FLAMETHROWER = {
   kind: 'flame',
   hp: 120,
   ...BODY,
-  speed: 44,
-  sight: 300,
-  range: 70,
-  holdDist: 44,
+  speed: 64, // about 95 screen px a second in the original
+  sight: 340,
+  range: 100,
+  holdDist: 90,
   dps: 30,
   cone: 0.32,
   burnTime: 3,
@@ -126,7 +126,7 @@ export const GRENADIER = {
   kind: 'grenade',
   hp: 95,
   ...BODY,
-  speed: 34,
+  speed: 57, // about 85 screen px a second in the original
   sight: 360,
   range: 270,
   minRange: 70 * R,
@@ -145,7 +145,7 @@ export const ARCHER = {
   kind: 'archer',
   hp: 75,
   ...BODY,
-  speed: 38,
+  speed: 68, // about 100 screen px a second in the original
   sight: 540,
   range: 440,
   minRange: 70 * R,
