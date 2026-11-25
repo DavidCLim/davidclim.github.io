@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=130';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=130';
+import { TAU, K } from './config.js?v=131';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=131';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -88,99 +88,82 @@ function dome(g, color, rx, ry, cy) {
 // ---------------------------------------------------------------- minigunner
 // A steel-grey egg with a dark helmet, a diagonal belt of gold rounds and an ammo box on his back.
 function drawMiniBody(g, front, gz) {
-  g.fillStyle = '#5f6b3c';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.6;
-  rr(g, -27, -9, 11, 22, 2.4);
-  g.fill();
-  g.stroke();
-  g.strokeStyle = 'rgba(20, 28, 10, 0.5)';
-  g.lineWidth = 1;
+  g.lineJoin = 'round';
+  g.lineCap = 'round';
+  eggBody(g, '#de4b3c', '#a02a2c');
+  g.save();
   g.beginPath();
-  g.moveTo(-26, 0);
-  g.lineTo(-17.5, 0);
-  g.stroke();
-
-  eggBody(g, '#6a7282', '#474d5a');
-  // the belt of rounds across the chest
-  g.strokeStyle = '#5a3f22';
-  g.lineWidth = 4.4;
-  g.beginPath();
-  g.moveTo(-17, -3);
-  g.quadraticCurveTo(0, 8, 17, 19);
-  g.stroke();
-  g.strokeStyle = '#e7bd45';
-  g.lineWidth = 2.4;
-  g.setLineDash([2.4, 1.8]);
-  g.beginPath();
-  g.moveTo(-17, -3);
-  g.quadraticCurveTo(0, 8, 17, 19);
-  g.stroke();
-  g.setLineDash([]);
-  // heavy steel shoulder plates with a red stripe and a rivet
-  const plate = (x, y, rx, ry) => {
-    const pg = g.createLinearGradient(x - rx, y - ry, x + rx, y + ry);
-    pg.addColorStop(0, '#aab2c2');
-    pg.addColorStop(1, '#565d6e');
-    g.fillStyle = pg;
+  g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
+  g.clip();
+  // two belts of gold rounds crossing over the belly
+  for (const [x0, x1] of [[-22, 14], [22, -14]]) {
     g.strokeStyle = OUT;
-    g.lineWidth = 1.6;
+    g.lineWidth = 6.6;
     g.beginPath();
-    g.ellipse(x, y, rx, ry, 0, 0, TAU);
-    g.fill();
+    g.moveTo(x0, 4);
+    g.lineTo(x1, 25);
     g.stroke();
-    g.strokeStyle = '#c63a2e';
-    g.lineWidth = 1.5;
-    g.beginPath();
-    g.ellipse(x, y, rx - 2.2, ry - 2.2, 0, Math.PI * 0.2, Math.PI * 0.8);
+    g.strokeStyle = '#5a3f22';
+    g.lineWidth = 4.6;
     g.stroke();
-    g.fillStyle = '#e3e7ef';
-    g.beginPath();
-    g.arc(x, y - ry * 0.35, 0.9, 0, TAU);
-    g.fill();
-  };
-  if (front) {
-    plate(-17.2, 3, 5.2, 7);
-    plate(17.2, 3, 5.2, 7);
-  } else plate(-11.6, 4, 5, 6.6);
-  bigEyes(g, front ? [-7.4, 7.4] : [-1.6, 11.4], gz, -4.6, 4.2, 4.4, 1.4, 2.6);
-  // a stern brow over each eye
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.6;
-  g.beginPath();
-  for (const x of front ? [-7.4, 7.4] : [-1.6, 11.4]) {
-    g.moveTo(x - 4.6, -10.8);
-    g.lineTo(x + 4.2, -9);
+    g.strokeStyle = '#f0c64a';
+    g.lineWidth = 2.6;
+    g.setLineDash([2.4, 1.8]);
+    g.stroke();
+    g.setLineDash([]);
   }
-  g.stroke();
-  if (front) smile(g, 0, 8.4, 3);
-  else smile(g, 6, 8.4, 2.6);
-  // an old scar across one cheek, with two stitches
-  const sx = front ? 7.4 : 11.4;
-  g.strokeStyle = '#e8d8c6';
-  g.lineWidth = 1.3;
+  // a black sweatband
+  g.fillStyle = '#17181e';
+  g.fillRect(-22, -15.6, 44, 5.4);
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.2;
   g.beginPath();
-  g.moveTo(sx - 2.2, -0.4);
-  g.lineTo(sx + 3.2, 5.6);
-  g.moveTo(sx - 1.6, 3.2);
-  g.lineTo(sx + 1.2, 1.2);
-  g.moveTo(sx + 0.4, 5.2);
-  g.lineTo(sx + 3, 3.2);
+  g.moveTo(-22, -15.6);
+  g.lineTo(22, -15.6);
+  g.moveTo(-22, -10.2);
+  g.lineTo(22, -10.2);
   g.stroke();
-  // the helmet
-  g.fillStyle = '#2d313b';
+  g.restore();
+  star(g, front ? 0 : 6, -12.9, 3.4, 1.5);
+  // mirrored shades
+  const lx = front ? [-7.6, 7.6] : [-1.8, 11.2];
   g.strokeStyle = OUT;
   g.lineWidth = 1.6;
   g.beginPath();
-  g.moveTo(-21, -12);
-  g.bezierCurveTo(-21, -29, 21, -29, 21, -12);
-  g.quadraticCurveTo(0, -15, -21, -12);
-  g.closePath();
+  g.moveTo(lx[0], -3.6);
+  g.lineTo(lx[1], -3.6);
+  g.stroke();
+  for (const x of lx) {
+    const lg = g.createLinearGradient(x - 5, -9, x + 5, 1);
+    lg.addColorStop(0, '#5a6f98');
+    lg.addColorStop(0.5, '#1a1d28');
+    lg.addColorStop(1, '#0b0c12');
+    g.fillStyle = lg;
+    g.beginPath();
+    g.ellipse(x, -3.6, 5.6, 4.4, 0, 0, TAU);
+    g.fill();
+    g.stroke();
+    g.fillStyle = 'rgba(255, 255, 255, 0.75)';
+    g.beginPath();
+    g.ellipse(x - 2.2, -5.4, 1.5, 0.9, -0.5, 0, TAU);
+    g.fill();
+  }
+  // a gritted-teeth grin
+  const mx = front ? 0 : 6;
+  g.fillStyle = '#f7f2ea';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.4;
+  rr(g, mx - 5.4, 3.6, 10.8, 4.6, 1.6);
   g.fill();
   g.stroke();
-  g.fillStyle = '#c63a2e';
-  rr(g, -19, -15.4, 38, 3.6, 1.6);
-  g.fill();
+  g.lineWidth = 0.9;
+  g.beginPath();
+  for (const dx of [-2.7, 0, 2.7]) {
+    g.moveTo(mx + dx, 3.8);
+    g.lineTo(mx + dx, 8);
+  }
+  g.moveTo(mx - 5, 5.9);
+  g.lineTo(mx + 5, 5.9);
   g.stroke();
 }
 
@@ -233,46 +216,32 @@ function drawMinigun(g, firing) {
 function drawRomanBody(g, front, gz, angry) {
   g.lineJoin = 'round';
   g.lineCap = 'round';
-  // the visor, pushed up and back: a steel hood standing over the top of the helmet, with its slits
-  const vg = g.createLinearGradient(-18, -32, 18, -14);
-  vg.addColorStop(0, '#c9d0de');
-  vg.addColorStop(1, '#7d879b');
-  g.fillStyle = vg;
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.9;
-  g.beginPath();
-  g.moveTo(-18.4, -10);
-  g.bezierCurveTo(-21, -27, -9, -32.4, 0, -32.4);
-  g.bezierCurveTo(9, -32.4, 21, -27, 18.4, -10);
-  g.closePath();
-  g.fill();
-  g.stroke();
-  g.strokeStyle = 'rgba(14, 16, 24, 0.85)';
-  g.lineWidth = 1.5;
-  g.beginPath();
-  for (const y of [-29.6, -26.2]) {
-    g.moveTo(-9.4, y);
-    g.lineTo(9.4, y);
-  }
-  g.stroke();
-  // a red crest running over the visor
-  g.fillStyle = '#d23d36';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.5;
-  g.beginPath();
-  g.moveTo(-11, -29.6);
-  g.quadraticCurveTo(-9, -36.6, 2, -36.8);
-  g.quadraticCurveTo(11, -36.4, 14.4, -27.4);
-  g.quadraticCurveTo(6, -32.6, -11, -29.6);
-  g.closePath();
-  g.fill();
-  g.stroke();
+  const ox = front ? 0 : 4.6;
+  // swept-back plates fanning out over the back of the helm
+  const plate = (bx, h, c0, c1) => {
+    const pg = g.createLinearGradient(bx - 8, -h, bx + 10, -12);
+    pg.addColorStop(0, c0);
+    pg.addColorStop(1, c1);
+    g.fillStyle = pg;
+    g.strokeStyle = OUT;
+    g.lineWidth = 1.7;
+    g.beginPath();
+    g.moveTo(bx + 12, -19);
+    g.quadraticCurveTo(bx + 5, -h + 3, bx - 6, -h);
+    g.quadraticCurveTo(bx - 3, -h + 11, bx - 10, -10);
+    g.closePath();
+    g.fill();
+    g.stroke();
+  };
+  plate(-3, 35, '#c4cad6', '#5d6676');
+  plate(-9, 32, '#b3bac8', '#4b5463');
+  plate(-15, 27, '#a3abba', '#3b4351');
 
-  // the whole body is the helmet: a big steel egg
-  const gr = g.createLinearGradient(-14, -22, 16, 24);
-  gr.addColorStop(0, '#eef1f7');
-  gr.addColorStop(0.45, '#b5bdcc');
-  gr.addColorStop(1, '#7a8498');
+  // the helm itself: blackened steel with a bright polished top
+  const gr = g.createLinearGradient(-14, -22, 14, 24);
+  gr.addColorStop(0, '#aab2c2');
+  gr.addColorStop(0.3, '#6a7283');
+  gr.addColorStop(1, '#262a33');
   g.fillStyle = gr;
   g.strokeStyle = OUT;
   g.lineWidth = 1.9;
@@ -280,85 +249,104 @@ function drawRomanBody(g, front, gz, angry) {
   g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
   g.fill();
   g.stroke();
-  g.fillStyle = 'rgba(255, 255, 255, 0.4)';
+  g.fillStyle = 'rgba(255, 255, 255, 0.34)';
   g.beginPath();
-  g.ellipse(-12, 4, 3.2, 9, 0.1, 0, TAU);
+  g.ellipse(-11, -8, 3, 9, 0.35, 0, TAU);
   g.fill();
-  // the chin guard: a curved seam with breath holes
+
+  // the pointed face guard, with slanted vents and a sharp central ridge
   g.save();
   g.beginPath();
   g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
   g.clip();
-  g.strokeStyle = 'rgba(30, 36, 52, 0.85)';
-  g.lineWidth = 1.4;
-  g.beginPath();
-  g.moveTo(-22, 6.4);
-  g.quadraticCurveTo(0, 11, 22, 6.4);
-  g.stroke();
-  g.fillStyle = '#1a1d27';
-  for (const [x, y] of front ? [[-7, 14.4], [0, 15.4], [7, 14.4], [-3.5, 18.4], [3.5, 18.4]] : [[-1, 14.6], [6, 15.4], [13, 14.2], [2.5, 18.6], [9.5, 18.2]]) {
-    g.beginPath();
-    g.arc(x, y, 1.1, 0, TAU);
-    g.fill();
-  }
-  g.restore();
-  // rivets where the visor pivots
-  g.fillStyle = '#e7eaf1';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.1;
-  for (const x of front ? [-18, 18] : [-17, 18.4]) {
-    g.beginPath();
-    g.arc(x, -8.6, 1.8, 0, TAU);
-    g.fill();
-    g.stroke();
-  }
-  // the open face under the raised visor
-  const ox = front ? 0 : 4.6;
-  g.fillStyle = '#1c1f2a';
+  const fg = g.createLinearGradient(-16, -12, 16, 22);
+  fg.addColorStop(0, '#3c424f');
+  fg.addColorStop(1, '#14161c');
+  g.fillStyle = fg;
   g.strokeStyle = OUT;
   g.lineWidth = 1.8;
   g.beginPath();
-  g.moveTo(-14.6 + ox, -13);
-  g.quadraticCurveTo(0 + ox, -16, 14.6 + ox, -13);
-  g.lineTo(15.6 + ox, 1);
-  g.quadraticCurveTo(0 + ox, 6, -15.6 + ox, 1);
+  g.moveTo(-17 + ox, -13);
+  g.quadraticCurveTo(ox, -17.4, 17 + ox, -13);
+  g.lineTo(14.6 + ox, 7);
+  g.lineTo(ox + 1.2, 24);
+  g.lineTo(ox - 1.2, 24);
+  g.lineTo(-14.6 + ox, 7);
   g.closePath();
   g.fill();
   g.stroke();
-
-  // eyes in the opening
-  const eyes = front ? [[-6.8, -5.6, 4.2, 3.7], [6.8, -5.6, 4.2, 3.7]] : [[-1.4, -5.6, 4.2, 3.7], [11.6, -5.6, 4.2, 3.7]];
-  eyes.forEach(([x, y, rx, ry], i) => {
-    g.save();
-    g.translate(x, y);
-    g.fillStyle = '#fbf4f1';
-    g.strokeStyle = OUT;
-    g.lineWidth = 1.7;
+  // slanted vents
+  g.strokeStyle = '#05060a';
+  g.lineWidth = 2.3;
+  for (const [x, y] of [[-10.4, 4], [-6, 8], [4.8, 8], [9.2, 4]]) {
     g.beginPath();
-    g.ellipse(0, 0, rx, ry, 0, 0, TAU);
+    g.moveTo(x + ox, y);
+    g.lineTo(x + ox + 1.6, y + 6.4);
+    g.stroke();
+  }
+  // a bright edge down the middle
+  g.strokeStyle = 'rgba(210, 218, 232, 0.8)';
+  g.lineWidth = 1.2;
+  g.beginPath();
+  g.moveTo(ox, -13);
+  g.lineTo(ox, 22);
+  g.stroke();
+  g.restore();
+  // breath holes along the cheek
+  g.fillStyle = '#07080c';
+  for (const [x, y] of front ? [[-17.2, 3], [-15.4, 7.4], [15.4, 7.4], [17.2, 3]] : [[-14.4, 3], [-12, 7.6], [-8.6, 11.6]]) {
+    g.beginPath();
+    g.arc(x, y, 1.2, 0, TAU);
+    g.fill();
+  }
+  // rivets
+  g.fillStyle = '#d7dce7';
+  g.strokeStyle = OUT;
+  g.lineWidth = 0.9;
+  for (const [x, y] of [[-15 + ox, -11], [15 + ox, -11], [-12.6 + ox, 0.2], [12.6 + ox, 0.2]]) {
+    g.beginPath();
+    g.arc(x, y, 1.3, 0, TAU);
     g.fill();
     g.stroke();
+  }
+  // the eye slit: a dark band the eyes show through
+  g.fillStyle = '#05060a';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.5;
+  g.beginPath();
+  g.moveTo(-12.6 + ox, -10.6);
+  g.lineTo(12.6 + ox, -10.6);
+  g.lineTo(11.4 + ox, -1.8);
+  g.lineTo(-11.4 + ox, -1.8);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  const eyes = front ? [[-5.8, -6.4, 3.6, 2.8], [5.8, -6.4, 3.6, 2.8]] : [[-0.8, -6.4, 3.6, 2.8], [10.2, -6.4, 3.6, 2.8]];
+  for (const [x, y, rx, ry] of eyes) {
+    g.save();
+    g.beginPath();
+    g.rect(-12 + ox, -10.2, 24, 8.1);
+    g.clip();
+    g.fillStyle = '#fbf4f1';
+    g.beginPath();
+    g.ellipse(x, y, rx, ry, 0, 0, TAU);
+    g.fill();
     g.fillStyle = '#0d0a0b';
     g.beginPath();
-    g.arc(1.2 + gz[0] * 0.4, 0.3 + gz[1] * 0.3, 2.5, 0, TAU);
+    g.arc(x + 1 + gz[0] * 0.35, y + 0.2 + gz[1] * 0.25, 2.1, 0, TAU);
     g.fill();
-    if (angry) {
-      g.strokeStyle = '#e7eaf1';
-      g.lineWidth = 2.2;
-      g.beginPath();
-      g.moveTo(-5.2, -5);
-      g.lineTo(5, -2.4);
-      g.stroke();
-    }
     g.restore();
-  });
-  // a small mouth
-  g.strokeStyle = '#e7eaf1';
-  g.lineWidth = 1.6;
-  g.beginPath();
-  if (front) g.arc(0, -0.6, 3, Math.PI * 0.2, Math.PI * 0.8);
-  else g.arc(6.4, -0.8, 2.8, Math.PI * 0.2, Math.PI * 0.8);
-  g.stroke();
+  }
+  if (angry) {
+    g.strokeStyle = '#d7dce7';
+    g.lineWidth = 1.6;
+    g.beginPath();
+    g.moveTo(-11 + ox, -12);
+    g.lineTo(-1 + ox, -9.4);
+    g.moveTo(11 + ox, -12);
+    g.lineTo(1 + ox, -9.4);
+    g.stroke();
+  }
 }
 
 // Origin: the hand. A straight silver sword with a gold crossguard.
@@ -1309,24 +1297,6 @@ function drawFlintlock(g, firing) {
 // ---------------------------------------------------------------- ninja
 function drawNinjaBody(g, front, gz) {
   // the samurai: a slate-grey egg under a wide conical straw hat, with a red sash
-  // a sheathed katana at the hip, peeking out behind
-  g.save();
-  g.translate(-14, 6);
-  g.rotate(0.62);
-  g.fillStyle = '#242836';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.5;
-  rr(g, -3, -4, 6, 27, 2.6);
-  g.fill();
-  g.stroke();
-  g.fillStyle = '#c93a34';
-  g.fillRect(-3, 5, 6, 3);
-  g.fillStyle = '#e5b94d';
-  g.beginPath();
-  g.ellipse(0, -2, 5.2, 2.2, 0, 0, TAU);
-  g.fill();
-  g.stroke();
-  g.restore();
   eggBody(g, '#69788c', '#3f4a5c');
   g.save();
   g.beginPath();
