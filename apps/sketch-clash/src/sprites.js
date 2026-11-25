@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=131';
+import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=132';
 
 // Units are drawn from "art" coordinates matching the reference sprites
 // (origin at the body centre, y down) into small offscreen layers, then
@@ -234,23 +234,55 @@ function drawSoldierTorso(g, front, gaze) {
   else g.arc(6.5, 2.4, 4.2, Math.PI * 0.12, Math.PI * 0.88);
   g.stroke();
 
-  g.fillStyle = '#2e4358';
+  // a red beret worn at a slant, with a gold badge and a little stalk
+  g.save();
+  g.translate(front ? 0 : -1.6, -15.4);
+  g.rotate(front ? -0.12 : -0.2);
+  const bg = g.createLinearGradient(0, -9, 0, 6);
+  bg.addColorStop(0, '#e2463d');
+  bg.addColorStop(1, '#a8281f');
+  g.fillStyle = bg;
   g.strokeStyle = OUT;
-  g.lineWidth = 1.6;
+  g.lineWidth = 1.7;
   g.beginPath();
-  g.ellipse(0, -12.7, 18.8, 12, 0, Math.PI, TAU);
+  g.moveTo(-20.4, 3);
+  g.bezierCurveTo(-22, -9, -9, -13.4, 2, -13);
+  g.bezierCurveTo(13, -12.6, 22.4, -8, 20.6, 3);
+  g.quadraticCurveTo(0, 8.2, -20.4, 3);
   g.closePath();
   g.fill();
   g.stroke();
-  g.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+  g.fillStyle = '#7e1a14';
+  rr(g, -1.6, -16.6, 3.6, 4.4, 1.2);
+  g.fill();
+  g.stroke();
+  g.fillStyle = 'rgba(255, 255, 255, 0.22)';
+  g.beginPath();
+  g.ellipse(-9, -6, 5.4, 2, -0.5, 0, TAU);
+  g.fill();
+  g.restore();
+  star(g, front ? 5.4 : 8.6, -17.4, 3.2, 1.4);
+  // an eyepatch over one eye, with its strap
+  const px = front ? 8.4 : 12.6;
+  g.strokeStyle = '#17141a';
   g.lineWidth = 1.5;
   g.beginPath();
-  g.ellipse(0, -12.7, 15.5, 9.2, 0, Math.PI * 1.08, Math.PI * 1.42);
+  g.moveTo(px - 4.6, -7.4);
+  g.lineTo(px - 16, -12);
+  g.moveTo(px + 4.6, -2);
+  g.lineTo(px + 9, 1);
   g.stroke();
-  g.fillStyle = '#1b1920';
-  rr(g, -23.5, -14.3, 49, 3.6, 1.8);
+  g.fillStyle = '#17141a';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1;
+  g.beginPath();
+  g.ellipse(px, -4.4, 5.6, 5.9, -0.2, 0, TAU);
   g.fill();
-  helmetStar(g, front);
+  g.stroke();
+  g.fillStyle = 'rgba(255, 255, 255, 0.2)';
+  g.beginPath();
+  g.ellipse(px - 1.8, -6.4, 1.6, 1, -0.5, 0, TAU);
+  g.fill();
 }
 
 // the soldier's helmet badge
@@ -503,43 +535,52 @@ function drawSniperTorso(g, front, look, blink) {
 
 // Origin is the centre of the brim, so the hat can tip about it.
 export function drawSniperHat(g) {
-  g.fillStyle = HAT;
+  // a shaggy ghillie hood: a mound of green and brown tufts
+  const N = 34;
+  g.beginPath();
+  g.moveTo(-21.6, 3.4);
+  for (let i = 0; i <= N; i++) {
+    const a = Math.PI + (i / N) * Math.PI;
+    const spike = i % 2 ? 1.1 : 0.96;
+    const x = Math.cos(a) * 22.4 * spike;
+    const y = -3 + Math.sin(a) * 17 * spike;
+    g.lineTo(x, y);
+  }
+  g.lineTo(21.6, 3.4);
+  g.quadraticCurveTo(0, 7.4, -21.6, 3.4);
+  g.closePath();
+  const hg = g.createLinearGradient(0, -20, 0, 6);
+  hg.addColorStop(0, '#7d9a4c');
+  hg.addColorStop(1, '#46602c');
+  g.fillStyle = hg;
+  g.fill();
   g.strokeStyle = INK;
   g.lineWidth = 1.6;
-  g.beginPath();
-  g.moveTo(-13, -2.6);
-  g.bezierCurveTo(-13, -9, -9.6, -11.9, -4, -11.9);
-  g.lineTo(4, -11.9);
-  g.bezierCurveTo(9.6, -11.9, 13, -9, 13, -2.6);
-  g.closePath();
-  g.fill();
+  g.lineJoin = 'round';
   g.stroke();
-  // the long, thin, pointed brim
-  g.beginPath();
-  g.moveTo(-32.4, 0);
-  g.quadraticCurveTo(-16, -5.2, 0, -5.2);
-  g.quadraticCurveTo(16, -5.2, 32.4, 0);
-  g.quadraticCurveTo(16, 5.4, 0, 5.4);
-  g.quadraticCurveTo(-16, 5.4, -32.4, 0);
-  g.closePath();
-  g.fill();
-  g.stroke();
-  g.strokeStyle = HAT_SHADE;
-  g.lineWidth = 1.2;
-  g.beginPath();
-  g.moveTo(-24, 2.7);
-  g.quadraticCurveTo(0, 4.7, 24, 2.7);
-  g.stroke();
-  // two small leaves tucked in the hat band
-  g.fillStyle = '#5f9a47';
+  // tufts of lighter grass and brown twigs
+  g.lineCap = 'round';
+  const tufts = [[-14, -8, '#a4c26a'], [-6, -13, '#8fae5a'], [4, -14, '#a4c26a'], [13, -9, '#8fae5a'], [-17, -1, '#7a5b36'], [8, -3, '#7a5b36'], [-3, -4, '#9a7a44'], [16, 0, '#a4c26a']];
+  for (const [x, y, c] of tufts) {
+    g.strokeStyle = c;
+    g.lineWidth = 1.5;
+    g.beginPath();
+    g.moveTo(x, y);
+    g.lineTo(x - 1.6, y - 4.6);
+    g.moveTo(x + 1.4, y + 0.4);
+    g.lineTo(x + 2.6, y - 3.6);
+    g.stroke();
+  }
+  // a few leaves tucked in
+  g.fillStyle = '#c9d96a';
   g.strokeStyle = INK;
   g.lineWidth = 0.9;
-  for (const [x, y, r] of [[-9.6, -8.6, -1.1], [10.2, -8.4, 1.1]]) {
+  for (const [x, y, r] of [[-9.6, -15.6, -0.9], [10.2, -15, 1]]) {
     g.save();
     g.translate(x, y);
     g.rotate(r);
     g.beginPath();
-    g.ellipse(0, -2.2, 1.6, 3.2, 0, 0, TAU);
+    g.ellipse(0, -2.2, 1.7, 3.4, 0, 0, TAU);
     g.fill();
     g.stroke();
     g.restore();
