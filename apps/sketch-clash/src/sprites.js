@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=128';
+import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=130';
 
 // Units are drawn from "art" coordinates matching the reference sprites
 // (origin at the body centre, y down) into small offscreen layers, then
@@ -213,6 +213,18 @@ function drawSoldierTorso(g, front, gaze) {
     g.arc(ex + 1.5 + gaze[0] * 0.5, -4.6 + gaze[1] * 0.5, 2.9, 0, TAU);
     g.fill();
   }
+
+  // war paint: two slanted stripes under each eye
+  g.strokeStyle = '#13244a';
+  g.lineWidth = 1.3;
+  g.beginPath();
+  for (const ex of front ? [-8.4, 8.4] : [-3.3, 12.6]) {
+    g.moveTo(ex - 2.4, 1.6);
+    g.lineTo(ex - 0.6, 4.6);
+    g.moveTo(ex + 0.8, 1.6);
+    g.lineTo(ex + 2.6, 4.6);
+  }
+  g.stroke();
 
   // the smile: a thick navy bowl
   g.strokeStyle = '#13244a';

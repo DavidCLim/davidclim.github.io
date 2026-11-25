@@ -1,9 +1,9 @@
-import { TAU, FEET, GAIT } from './config.js?v=128';
-import { WATER, ICE, WALL } from './terrain.js?v=128';
+import { TAU, FEET, GAIT } from './config.js?v=130';
+import { WATER, ICE, WALL } from './terrain.js?v=130';
 
 // Everything the Animals and Mythical tabs add to the world, plus the terrain physics:
 // the beast brain, the mage's bolts, the necromancer's skeletons, zombie infection,
-// and how water, ice, walls, mines, barrels, trees and campfires affect everyone.
+// and how water, ice, walls, mines, barrels, and trees affect everyone.
 const rand = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
@@ -11,7 +11,6 @@ const BARREL_HP = 28;
 const TREE_R = 4;
 const BARREL_R = 5;
 const MINE_R = 8;
-const FIRE_R = 11; // how close a unit's feet must be to the campfire to catch fire
 
 export function installBeasts(World) {
   const P = World.prototype;
@@ -155,13 +154,6 @@ export function installBeasts(World) {
             u.x += (ddx / dd) * (r - dd);
             u.y += (ddy / dd) * (r - dd);
           }
-        } else if (p.type === 'campfire') {
-          // anyone who steps into the blue fire catches alight
-          if (!fly && !u.inWater && Math.hypot(ddx, ddy * 1.5) < FIRE_R) {
-            if (!(u.burn > 0)) u.burnTick = 0;
-            u.burn = 3;
-            u.burnSrc = null;
-          }
         } else if (p.type === 'mine') {
           // units see a mine coming and walk around it
           const md = Math.hypot(ddx, ddy);
@@ -245,26 +237,6 @@ export function installBeasts(World) {
     let gone = false;
     for (const p of this.props) {
       p.age += dt;
-      if (p.type === 'campfire' && !p.dead) {
-        // the fire is made of the same soft blobs as the flamethrower's: pale blue dots that swell and darken as they rise
-        p.emit = (p.emit || 0) + dt * 120;
-        while (p.emit >= 1) {
-          p.emit -= 1;
-          const big = Math.random() < 0.3;
-          this.flames.push({
-            x: p.x + (Math.random() - 0.5) * (big ? 6 : 12),
-            y: p.y - 2 - Math.random() * 2,
-            vx: (Math.random() - 0.5) * 9,
-            vy: -(big ? 44 : 32) - Math.random() * 24,
-            age: 0,
-            life: 0.6 + Math.random() * 0.55,
-            size: 3.4 + Math.random() * 2,
-            grow: big ? 4.6 : 2.8,
-            dark: Math.random() < 0.3,
-            blue: true,
-          });
-        }
-      }
       if (p.hot > 0) p.hot -= dt;
       if (p.dead) gone = true;
     }

@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=128';
-import { buildCreatureArt } from './creatures.js?v=128';
-import { buildEggArt } from './art_eggs.js?v=128';
-import { buildTerrainArt, drawFlames, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=128';
-import { Sfx } from './sfx.js?v=128';
-import { World } from './world.js?v=128';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=128';
-import { buildUnitArt } from './art_units.js?v=128';
-import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=128';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=130';
+import { buildCreatureArt } from './creatures.js?v=130';
+import { buildEggArt } from './art_eggs.js?v=130';
+import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=130';
+import { Sfx } from './sfx.js?v=130';
+import { World } from './world.js?v=130';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=130';
+import { buildUnitArt } from './art_units.js?v=130';
+import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=130';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -193,8 +193,8 @@ const LATTICE = {
 };
 
 // Terrain: walls, water and ice are painted as strokes; the rest are dropped along the drag.
-const TERRAIN_SET = new Set(['wall', 'water', 'ice', 'mine', 'campfire', 'barrel', 'tree']);
-const DISCRETE = { mine: { gap: 84, off: 3 }, campfire: { gap: 60, off: 20 }, barrel: { gap: 26, off: 10 }, tree: { gap: 50, off: 18 } };
+const TERRAIN_SET = new Set(['wall', 'water', 'ice', 'mine', 'barrel', 'tree']);
+const DISCRETE = { mine: { gap: 84, off: 3 }, barrel: { gap: 26, off: 10 }, tree: { gap: 50, off: 18 } };
 let tstroke = null;
 const STROKE_BASE = { wall: 14.5, water: 24, ice: 21 };
 
@@ -1099,21 +1099,12 @@ function drawBody(u) {
   else drawUnit(ctx, dpr, sprites, u);
 }
 
-const PROP_SCALE = { tree: 0.85, barrel: 0.82, mine: 0.9, campfire: 1.6 };
+const PROP_SCALE = { tree: 0.85, barrel: 0.82, mine: 0.9 };
 function drawProp(p) {
   const k = PROP_SCALE[p.type];
   ctx.setTransform(dpr * k, 0, 0, dpr * k, p.x * dpr, p.y * dpr);
   if (p.type === 'tree') {
     drawLayer(ctx, terrainArt[p.type]);
-    return;
-  }
-  if (p.type === 'campfire') {
-    drawLayer(ctx, terrainArt.campfireBack);
-    ctx.save();
-    ctx.scale(K, K);
-    drawFlames(ctx, world.clock, p.seed, true, false);
-    ctx.restore();
-    drawLayer(ctx, terrainArt.campfireFront);
     return;
   }
   // a barrel about to go off rattles and glows
@@ -1200,7 +1191,7 @@ function render() {
     drawList.push(u);
   }
   for (const p of world.props) {
-    if (p.type !== 'barrel' && p.type !== 'tree' && p.type !== 'campfire') continue;
+    if (p.type !== 'barrel' && p.type !== 'tree') continue;
     p.sk = p.y - FEET;
     drawList.push(p);
   }

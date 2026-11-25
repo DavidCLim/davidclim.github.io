@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=128';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=128';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=128';
+import { TAU, K } from './config.js?v=130';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=130';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=130';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask
@@ -475,146 +475,6 @@ function drawTree(g) {
   }
 }
 
-// The campfire: a dark stone fire pit with glowing runes, a bed of blue embers and a swirling cold flame.
-const PIT_STONES = Array.from({ length: 10 }, (_, i) => {
-  const a = (i / 10) * TAU + 0.3;
-  return [Math.cos(a) * 17.2, Math.sin(a) * 7.2, a];
-});
-
-function pitStone(g, x, y) {
-  g.beginPath();
-  g.ellipse(x, y, 5.2, 4, 0, 0, TAU);
-  const sg = g.createLinearGradient(x, y - 4, x, y + 4);
-  sg.addColorStop(0, '#9a9cac');
-  sg.addColorStop(1, '#5e6072');
-  g.fillStyle = sg;
-  g.fill();
-  ink(g, 1.4);
-  g.stroke();
-  // a glowing rune cut into the stone
-  g.strokeStyle = '#9ceaff';
-  g.lineWidth = 1;
-  g.beginPath();
-  g.moveTo(x - 1.6, y - 1.6);
-  g.lineTo(x + 0.4, y + 1.6);
-  g.lineTo(x + 2, y - 1.8);
-  g.stroke();
-}
-
-// the part behind the flames: the ground glow, the pit with its ember bed and the far stones
-function drawCampfireBack(g) {
-  shadowEll(g, 23, 8, 2);
-  const gl = g.createRadialGradient(0, 0, 3, 0, 0, 28);
-  gl.addColorStop(0, 'rgba(110, 200, 255, 0.45)');
-  gl.addColorStop(1, 'rgba(110, 200, 255, 0)');
-  g.fillStyle = gl;
-  g.beginPath();
-  g.ellipse(0, 0, 28, 13, 0, 0, TAU);
-  g.fill();
-  g.beginPath();
-  g.ellipse(0, 0, 19.4, 8.6, 0, 0, TAU);
-  g.fillStyle = '#4a4d5e';
-  g.fill();
-  ink(g, 1.7);
-  g.stroke();
-  g.beginPath();
-  g.ellipse(0, 0.6, 14.4, 5.8, 0, 0, TAU);
-  g.fillStyle = '#151827';
-  g.fill();
-  const eg = g.createRadialGradient(0, 0.6, 1, 0, 0.6, 11.5);
-  eg.addColorStop(0, '#dff8ff');
-  eg.addColorStop(0.45, '#58b4ff');
-  eg.addColorStop(1, 'rgba(38, 96, 226, 0.2)');
-  g.fillStyle = eg;
-  g.beginPath();
-  g.ellipse(0, 0.6, 11.5, 4.6, 0, 0, TAU);
-  g.fill();
-  for (const [x, y] of PIT_STONES) if (y < 0) pitStone(g, x, y);
-}
-
-// the stones in front of the flames
-function drawCampfireFront(g) {
-  for (const [x, y] of PIT_STONES) if (y >= 0) pitStone(g, x, y);
-}
-
-// One tongue of fire: a teardrop leaning toward sx at its tip.
-function tongue(g, w, h, sx, fill, line) {
-  g.beginPath();
-  g.moveTo(-w, 0);
-  g.bezierCurveTo(-w * 1.05, -h * 0.45, sx * 0.4 - w * 0.3, -h * 0.72, sx, -h);
-  g.bezierCurveTo(sx * 0.4 + w * 0.3, -h * 0.72, w * 1.05, -h * 0.45, w, 0);
-  g.quadraticCurveTo(0, 3.4, -w, 0);
-  g.closePath();
-  g.fillStyle = fill;
-  g.fill();
-  if (line) {
-    g.strokeStyle = line;
-    g.lineWidth = 1.2;
-    g.stroke();
-  }
-}
-
-// The animated flames: five swaying tongues, a turning ring of runes on the ground and blue embers drifting up.
-// t is in seconds, seed makes every fire different.
-export function drawFlames(g, t, seed = 0, ring = true, tongues = true) {
-  g.save();
-  g.lineJoin = 'round';
-  const ph = seed * 20;
-  const pulse = 0.5 + 0.5 * Math.sin(t * 6 + ph);
-  if (ring) {
-    g.strokeStyle = `rgba(140, 225, 255, ${0.3 + pulse * 0.3})`;
-    g.lineWidth = 1.2;
-    g.setLineDash([6, 5]);
-    g.lineDashOffset = -t * 16;
-    g.beginPath();
-    g.ellipse(0, 1, 26, 10.5, 0, 0, TAU);
-    g.stroke();
-    g.setLineDash([]);
-  }
-  g.fillStyle = `rgba(150, 215, 255, ${0.12 + pulse * 0.1})`;
-  g.beginPath();
-  g.ellipse(0, -2, 17 + pulse * 2, 8, 0, 0, TAU);
-  g.fill();
-  const shapes = [
-    [-8.4, 4.6, 14, -2.2, 4.6, 2.3, 0.5],
-    [8.4, 4.4, 13, 2, 5.4, 2.1, 1.7],
-    [-4.4, 5.6, 23, -1.4, 3.8, 1.9, 2.6],
-    [4.4, 5.4, 21, 1.2, 4.3, 2.4, 3.4],
-    [0, 7, 33, 0, 3.2, 1.7, 0],
-  ];
-  if (!tongues) {
-    g.restore();
-    return;
-  }
-  for (const [bx, w, h0, lean, f1, f2, off] of shapes) {
-    const h = h0 * (1 + 0.14 * Math.sin(t * (f1 + 5) + ph + off * 3) + 0.06 * Math.sin(t * (f2 + 12) + off));
-    const sx = lean * 3.4 + Math.sin(t * f1 + ph + off) * 4;
-    g.save();
-    g.translate(bx, 0);
-    tongue(g, w, h, sx, '#2a5fe0', '#17368f');
-    tongue(g, w * 0.68, h * 0.78, sx * 0.8, '#4aa8ff');
-    tongue(g, w * 0.34, h * 0.5, sx * 0.55, '#e4faff');
-    g.restore();
-  }
-  // embers: little diamonds drifting up and fading
-  for (let i = 0; i < 7; i++) {
-    const k = (t * 0.7 + i / 7 + ((seed * 7) % 1)) % 1;
-    const x = Math.sin(i * 2.1 + ph) * 9 + Math.sin(t * 2.5 + i * 1.7) * 3 * k;
-    const y = -12 - k * 36;
-    const sz = 1.9 * (1 - k * 0.6);
-    g.globalAlpha = Math.min(1, (1 - k) * 1.6);
-    g.fillStyle = i % 2 ? '#ffffff' : '#9ae0ff';
-    g.beginPath();
-    g.moveTo(x, y - sz * 1.4);
-    g.lineTo(x + sz, y);
-    g.lineTo(x, y + sz * 1.4);
-    g.lineTo(x - sz, y);
-    g.closePath();
-    g.fill();
-  }
-  g.restore();
-}
-
 export function buildTerrainArt() {
   return {
     mine: makeLayer(-30, -26, 30, 8, (g) => drawMine(g, false)),
@@ -622,8 +482,6 @@ export function buildTerrainArt() {
     barrel: makeLayer(-26, -64, 26, 8, (g) => drawBarrel(g, false)),
     barrelHot: makeLayer(-26, -64, 26, 8, (g) => drawBarrel(g, true)),
     tree: makeLayer(-46, -106, 46, 8, drawTree),
-    campfireBack: makeLayer(-30, -16, 30, 12, drawCampfireBack),
-    campfireFront: makeLayer(-30, -6, 30, 12, drawCampfireFront),
   };
 }
 
@@ -739,12 +597,6 @@ const ICON_DRAW = {
     iconIce(g);
   },
   mine: (g) => drawMine(g, false),
-  campfire: (g) => {
-    g.scale(1.0, 1.0);
-    drawCampfireBack(g);
-    drawFlames(g, 0.4, 0.3, false);
-    drawCampfireFront(g);
-  },
   barrel: (g) => {
     g.scale(0.72, 0.72);
     drawBarrel(g, false);
@@ -754,7 +606,7 @@ const ICON_DRAW = {
     drawTree(g);
   },
 };
-const ICON_BASE = { wall: 0.82, water: 0.86, ice: 0.84, mine: 0.78, campfire: 0.8, barrel: 0.9, tree: 0.94 };
+const ICON_BASE = { wall: 0.82, water: 0.86, ice: 0.84, mine: 0.78, barrel: 0.9, tree: 0.94 };
 
 export function hasTerrainIcon(id) {
   return id in ICON_DRAW;
