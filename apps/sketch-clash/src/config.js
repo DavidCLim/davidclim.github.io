@@ -81,24 +81,22 @@ export const SNIPER = {
 
 const BODY = { radius: 11 * UNIT, sep: 17 * UNIT }; // crowds spread to about 14 screen px between bodies, as in the original
 
-// A slow heavy gunner: stands his ground and hoses a long burst of small bullets from a minigun.
-export const MINIGUNNER = {
-  kind: 'rifle',
-  hp: 150,
+// The flamethrower: a firefighter-style trooper with a fuel tank on his back who hoses a jet of fire.
+// Anyone it touches catches fire and keeps burning.
+export const FLAMETHROWER = {
+  kind: 'flame',
+  hp: 120,
   ...BODY,
-  speed: 30,
-  sight: 330,
-  range: 250,
-  holdDist: 120,
-  kite: 36,
-  burst: 16,
-  burstGap: 0.055,
-  cooldownMin: 1.6,
-  cooldownMax: 2.3,
-  damage: 7,
-  bulletSpeed: 620,
-  bulletRange: 330,
-  spread: 0.13,
+  speed: 44,
+  sight: 300,
+  range: 70,
+  holdDist: 44,
+  dps: 30,
+  cone: 0.32,
+  burnTime: 3,
+  burnDps: 9,
+  onTime: 1.5,
+  offTime: 1.1,
   pivot: { x: 8 * K, y: 11 * K },
   muzzleLen: 46 * K,
 };
@@ -319,7 +317,7 @@ export const TERRAIN_IDS = ['wall', 'water', 'ice', 'mine', 'barrel', 'tree'];
 // species itself); a knight is the same faction as the cavalry.
 export const SPECIES = {
   soldier: { id: 'soldier', label: 'Soldier', def: SOLDIER },
-  minigunner: { id: 'minigunner', label: 'Minigunner', def: MINIGUNNER },
+  flamethrower: { id: 'flamethrower', label: 'Flamethrower', def: FLAMETHROWER },
   sniper: { id: 'sniper', label: 'Sniper', def: SNIPER },
   roman: { id: 'roman', label: 'Knight', def: ROMAN },
   grenadier: { id: 'grenadier', label: 'Grenadier', def: GRENADIER },
@@ -347,7 +345,7 @@ export const SPECIES = {
 };
 // The order of the palette (the knight only ever comes from a cavalry).
 export const TABS = [
-  { id: 'army', label: 'Army', items: ['soldier', 'minigunner', 'sniper', 'roman', 'grenadier', 'archer', 'cowboy', 'ninja'] },
+  { id: 'army', label: 'Army', items: ['soldier', 'flamethrower', 'sniper', 'roman', 'grenadier', 'archer', 'cowboy', 'ninja'] },
   { id: 'terrain', label: 'Terrain', items: ['wall', 'water', 'ice', 'mine', 'barrel', 'tree'] },
 ];
 export const TERRAIN_LABELS = { wall: 'Wall', water: 'Water', ice: 'Ice', mine: 'Mines', barrel: 'Barrel', tree: 'Tree' };

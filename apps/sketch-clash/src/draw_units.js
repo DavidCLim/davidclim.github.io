@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=135';
-import { drawLayer, OUT } from './sprites.js?v=135';
-import { drawDrop } from './art_units.js?v=135';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=135';
-import { EGG_DROPS } from './art_eggs.js?v=135';
+import { TAU, K, UNIT, FEET } from './config.js?v=138';
+import { drawLayer, OUT } from './sprites.js?v=138';
+import { drawDrop } from './art_units.js?v=138';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=138';
+import { EGG_DROPS } from './art_eggs.js?v=138';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -174,14 +174,14 @@ export function drawHitFlash(ctx, u, rx, ry) {
   }
 }
 
-function drawMinigunner(ctx, dpr, sprites, u) {
-  const A = sprites.minigunner;
-  const d = u.def;
+function drawFlamethrower(ctx, dpr, sprites, u) {
+  const A = sprites.flamethrower;
+  const dd = u.def;
   eggBase(ctx, dpr, sprites, A, u);
   const pose = u.pose;
-  ctx.translate(lerp(8 * K, d.pivot.x, pose) - u.recoil * 1.2 * K, lerp(11 * K, d.pivot.y, pose) + (u.flash > 0 ? (Math.random() - 0.5) * 0.7 : 0));
+  ctx.translate(lerp(8 * K, dd.pivot.x, pose), lerp(11 * K, dd.pivot.y, pose));
   ctx.rotate(lerp(0.06, u.aim, pose));
-  drawLayer(ctx, u.flash > 0 ? A.gunFire : A.gun);
+  drawLayer(ctx, u.firing ? A.gunFire : A.gun);
 }
 
 function drawRoman(ctx, dpr, sprites, u) {
@@ -342,7 +342,7 @@ const DRAWERS = {
   mage: (ctx, dpr, sprites, u) => drawStaffUnit(ctx, dpr, sprites, u, 'mage'),
   necromancer: (ctx, dpr, sprites, u) => drawStaffUnit(ctx, dpr, sprites, u, 'necromancer'),
   ...Object.fromEntries(CREATURE_IDS.map((id) => [id, (ctx, dpr, sprites, u) => drawCreature(ctx, dpr, sprites, u, burnOverlay)])),
-  minigunner: drawMinigunner,
+  flamethrower: drawFlamethrower,
   roman: drawRoman,
   grenadier: drawGrenadier,
   archer: drawArcher,
@@ -676,7 +676,7 @@ export function drawMarks(ctx, dpr, marks) {
 // ------------------------------------------------------------- palette icons
 // [canvas width in art px, body x, body y, drawing]
 const ICONS = {
-  minigunner: [84, 34, 39, (g, S) => {
+  flamethrower: [84, 34, 39, (g, S) => {
     g.translate(8 * K, 11 * K);
     g.rotate(0.03);
     drawLayer(g, S.gun);

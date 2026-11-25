@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=135';
-import { TerrainMap, WALL } from './terrain.js?v=135';
-import { installBeasts } from './beasts.js?v=135';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=138';
+import { TerrainMap, WALL } from './terrain.js?v=138';
+import { installBeasts } from './beasts.js?v=138';
 
 export const CELL = 32;
 const SEP_CELL = 20;

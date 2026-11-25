@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=135';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=135';
+import { TAU, K } from './config.js?v=138';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=138';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -88,132 +88,165 @@ function dome(g, color, rx, ry, cy) {
 // ---------------------------------------------------------------- minigunner
 // A steel-grey egg with a dark helmet, a diagonal belt of gold rounds and an ammo box on his back.
 function drawMiniBody(g, front, gz) {
-  g.fillStyle = '#5f6b3c';
+  g.lineJoin = 'round';
+  g.lineCap = 'round';
+  // the fuel tank on his back: a silver cylinder with an orange band and a red cap
+  const tg = g.createLinearGradient(-28, 0, -17, 0);
+  tg.addColorStop(0, '#dfe3eb');
+  tg.addColorStop(0.5, '#aab2c1');
+  tg.addColorStop(1, '#7c8497');
+  g.fillStyle = tg;
   g.strokeStyle = OUT;
   g.lineWidth = 1.6;
-  rr(g, -27, -9, 11, 22, 2.4);
+  rr(g, -28.6, -9, 11.6, 27, 4.6);
   g.fill();
   g.stroke();
-  g.strokeStyle = 'rgba(20, 28, 10, 0.5)';
+  g.fillStyle = '#ee8a2a';
+  g.fillRect(-28.4, 3.4, 11.2, 4);
+  g.strokeStyle = OUT;
   g.lineWidth = 1;
   g.beginPath();
-  g.moveTo(-26, 0);
-  g.lineTo(-17.5, 0);
+  g.moveTo(-28.4, 3.4);
+  g.lineTo(-17.2, 3.4);
+  g.moveTo(-28.4, 7.4);
+  g.lineTo(-17.2, 7.4);
   g.stroke();
-
-  eggBody(g, '#6a7282', '#474d5a');
-  // the belt of rounds across the chest
-  g.strokeStyle = '#5a3f22';
-  g.lineWidth = 4.4;
+  g.fillStyle = '#d23d36';
+  rr(g, -26.4, -12, 7.6, 4.2, 1.4);
+  g.fill();
+  g.stroke();
+  // a red egg
+  eggBody(g, '#ea5a3c', '#b8321f');
+  // two silver reflective stripes round the belly
+  g.save();
   g.beginPath();
-  g.moveTo(-17, -3);
-  g.quadraticCurveTo(0, 8, 17, 19);
-  g.stroke();
-  g.strokeStyle = '#e7bd45';
-  g.lineWidth = 2.4;
-  g.setLineDash([2.4, 1.8]);
-  g.beginPath();
-  g.moveTo(-17, -3);
-  g.quadraticCurveTo(0, 8, 17, 19);
-  g.stroke();
-  g.setLineDash([]);
-  // heavy steel shoulder plates with a red stripe and a rivet
-  const plate = (x, y, rx, ry) => {
-    const pg = g.createLinearGradient(x - rx, y - ry, x + rx, y + ry);
-    pg.addColorStop(0, '#aab2c2');
-    pg.addColorStop(1, '#565d6e');
-    g.fillStyle = pg;
-    g.strokeStyle = OUT;
-    g.lineWidth = 1.6;
-    g.beginPath();
-    g.ellipse(x, y, rx, ry, 0, 0, TAU);
-    g.fill();
-    g.stroke();
-    g.strokeStyle = '#c63a2e';
-    g.lineWidth = 1.5;
-    g.beginPath();
-    g.ellipse(x, y, rx - 2.2, ry - 2.2, 0, Math.PI * 0.2, Math.PI * 0.8);
-    g.stroke();
-    g.fillStyle = '#e3e7ef';
-    g.beginPath();
-    g.arc(x, y - ry * 0.35, 0.9, 0, TAU);
-    g.fill();
-  };
-  if (front) {
-    plate(-17.2, 3, 5.2, 7);
-    plate(17.2, 3, 5.2, 7);
-  } else plate(-11.6, 4, 5, 6.6);
-  bigEyes(g, front ? [-7.4, 7.4] : [-1.6, 11.4], gz, -4.6, 4.2, 4.4, 1.4, 2.6);
-  // a stern brow over each eye
+  g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
+  g.clip();
+  g.fillStyle = '#e9ecf3';
+  g.fillRect(-22, 8.6, 44, 3);
+  g.fillRect(-22, 13.6, 44, 3);
   g.strokeStyle = OUT;
-  g.lineWidth = 1.6;
+  g.lineWidth = 1;
   g.beginPath();
-  for (const x of front ? [-7.4, 7.4] : [-1.6, 11.4]) {
-    g.moveTo(x - 4.6, -10.8);
-    g.lineTo(x + 4.2, -9);
+  for (const y of [8.6, 11.6, 13.6, 16.6]) {
+    g.moveTo(-22, y);
+    g.lineTo(22, y);
   }
   g.stroke();
-  if (front) smile(g, 0, 8.4, 3);
-  else smile(g, 6, 8.4, 2.6);
-  // the helmet
-  g.fillStyle = '#2d313b';
+  g.restore();
+  bigEyes(g, front ? [-7.4, 7.4] : [-1.6, 11.4], gz, -2.4, 4.2, 4.4, 1.4, 2.6);
+  if (front) smile(g, 0, 5, 3.4);
+  else smile(g, 6, 5, 3);
+  // a yellow firefighter's helmet with a long back brim, a ridge and a badge
+  const hg = g.createLinearGradient(0, -26, 0, -8);
+  hg.addColorStop(0, '#ffd83e');
+  hg.addColorStop(1, '#e8a31c');
+  g.fillStyle = hg;
   g.strokeStyle = OUT;
-  g.lineWidth = 1.6;
+  g.lineWidth = 1.7;
   g.beginPath();
-  g.moveTo(-21, -12);
-  g.bezierCurveTo(-21, -29, 21, -29, 21, -12);
-  g.quadraticCurveTo(0, -15, -21, -12);
+  g.moveTo(-18.6, -8.4);
+  g.bezierCurveTo(-19.8, -25, 19.8, -25, 18.6, -8.4);
+  g.quadraticCurveTo(0, -11.4, -18.6, -8.4);
   g.closePath();
   g.fill();
   g.stroke();
-  g.fillStyle = '#c63a2e';
-  rr(g, -19, -15.4, 38, 3.6, 1.6);
+  g.fillStyle = '#f5b524';
+  rr(g, -2.4, -25.6, 4.8, 15.6, 2);
   g.fill();
   g.stroke();
+  g.fillStyle = '#e29a1a';
+  g.beginPath();
+  g.moveTo(-22.8, -9.4);
+  g.quadraticCurveTo(0, -5.6, 22.8, -9.4);
+  g.lineTo(21.4, -6.6);
+  g.quadraticCurveTo(0, -3, -21.4, -6.6);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  const bx = front ? 0 : 6.6;
+  g.fillStyle = '#d23d36';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.2;
+  g.beginPath();
+  g.moveTo(bx - 4, -20.6);
+  g.lineTo(bx + 4, -20.6);
+  g.lineTo(bx + 4, -14.6);
+  g.quadraticCurveTo(bx, -11.8, bx - 4, -14.6);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#fff6d6';
+  g.beginPath();
+  g.moveTo(bx, -19.4);
+  g.quadraticCurveTo(bx + 2.6, -16.6, bx, -14.4);
+  g.quadraticCurveTo(bx - 2.6, -16.6, bx, -19.4);
+  g.fill();
+  g.fillStyle = 'rgba(255, 255, 255, 0.4)';
+  g.beginPath();
+  g.ellipse(-10, -17, 2.4, 5, 0.4, 0, TAU);
+  g.fill();
 }
 
 // Origin: the grip. A fat cluster of barrels pointing right.
 function drawMinigun(g, firing) {
-  g.fillStyle = '#34373f';
+  g.lineJoin = 'round';
+  g.lineCap = 'round';
+  // the hose coiling back to the tank
+  g.strokeStyle = OUT;
+  g.lineWidth = 5.2;
+  g.beginPath();
+  g.moveTo(-2, 3);
+  g.quadraticCurveTo(-12, 8, -16, 1);
+  g.stroke();
+  g.strokeStyle = '#3b3f4b';
+  g.lineWidth = 3.2;
+  g.stroke();
+  // the pistol grip
+  g.fillStyle = '#4a3322';
   g.strokeStyle = OUT;
   g.lineWidth = 1.2;
-  rr(g, -8, -6.6, 15, 13.2, 2);
+  rr(g, -5, -1, 8, 11, 2);
   g.fill();
   g.stroke();
-  g.fillStyle = '#9aa0ad';
-  rr(g, 7, -5.4, 33, 10.8, 1.6);
+  // the gun body, a steel barrel and the nozzle
+  g.fillStyle = '#d23d36';
+  rr(g, -3, -5, 22, 9, 2.4);
   g.fill();
   g.stroke();
-  g.strokeStyle = '#4a4e5a';
-  g.lineWidth = 1;
-  g.beginPath();
-  g.moveTo(8, -1.8);
-  g.lineTo(39, -1.8);
-  g.moveTo(8, 1.8);
-  g.lineTo(39, 1.8);
-  g.stroke();
-  g.fillStyle = '#4b4f5b';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.1;
-  rr(g, 18, -6.4, 3.4, 12.8, 1);
+  g.fillStyle = '#9aa3b4';
+  rr(g, 18, -3, 24, 6, 1.6);
   g.fill();
   g.stroke();
-  rr(g, 38, -6.2, 5, 12.4, 1.2);
+  g.fillStyle = '#5a6172';
+  rr(g, 32, -4.4, 3.4, 8.8, 1);
   g.fill();
   g.stroke();
-  g.fillStyle = '#5a3f22';
-  rr(g, -4, 6, 5, 7, 1.2);
+  g.fillStyle = '#2f3340';
+  rr(g, 40, -4.8, 6, 9.6, 1.6);
   g.fill();
   g.stroke();
+  // a little blue pilot light, flaring up when it fires
   if (firing) {
-    const r = g.createRadialGradient(47, 0, 1, 47, 0, 11);
+    const r = g.createRadialGradient(50, 0, 1, 50, 0, 13);
     r.addColorStop(0, 'rgba(255, 244, 170, 0.98)');
-    r.addColorStop(0.5, 'rgba(255, 190, 60, 0.7)');
-    r.addColorStop(1, 'rgba(255, 150, 30, 0)');
+    r.addColorStop(0.5, 'rgba(255, 170, 60, 0.7)');
+    r.addColorStop(1, 'rgba(255, 130, 30, 0)');
     g.fillStyle = r;
     g.beginPath();
-    g.arc(47, 0, 11, 0, TAU);
+    g.arc(50, 0, 13, 0, TAU);
     g.fill();
+  } else {
+    g.fillStyle = '#7fd0ff';
+    g.strokeStyle = OUT;
+    g.lineWidth = 0.9;
+    g.beginPath();
+    g.moveTo(47, 1.6);
+    g.quadraticCurveTo(46, -2, 49.6, -4.4);
+    g.quadraticCurveTo(51, -1.4, 48.8, 1.6);
+    g.closePath();
+    g.fill();
+    g.stroke();
   }
 }
 
@@ -1513,8 +1546,8 @@ export const DROPS = {
     g.fill();
     g.stroke();
   },
-  minigunner(g) {
-    g.fillStyle = '#2d313b';
+  flamethrower(g) {
+    g.fillStyle = '#f2b81c';
     g.strokeStyle = OUT;
     g.lineWidth = 1;
     g.beginPath();
@@ -1627,7 +1660,7 @@ export const DROPS = {
 
 // Light, tinted ghosts that keep the unit's headgear.
 const GHOSTS = {
-  minigunner: ['#eef0f5', '#c9cdd8', (g) => dome(g, '#2d313b', 11, 8, -10)],
+  flamethrower: ['#fff3dd', '#e8d3a8', (g) => dome(g, '#f2b81c', 11, 8, -10)],
   roman: ['#f9eded', '#d9c4c4', (g) => {
     dome(g, '#a9aeb8', 11, 8, -10);
     g.fillStyle = '#4a5060';
@@ -1697,11 +1730,11 @@ export function buildUnitArt() {
   const dark = feetSet('#25232e');
   const art = {};
 
-  art.minigunner = {
+  art.flamethrower = {
     feet: dark,
     ...eggSet(drawMiniBody),
-    gun: makeLayer(-10, -14, 60, 16, (g) => drawMinigun(g, false)),
-    gunFire: makeLayer(-10, -14, 60, 16, (g) => drawMinigun(g, true)),
+    gun: makeLayer(-20, -14, 66, 16, (g) => drawMinigun(g, false)),
+    gunFire: makeLayer(-20, -14, 66, 16, (g) => drawMinigun(g, true)),
   };
 
   art.roman = {
