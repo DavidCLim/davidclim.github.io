@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=132';
+import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=133';
 
 // Units are drawn from "art" coordinates matching the reference sprites
 // (origin at the body centre, y down) into small offscreen layers, then
@@ -169,6 +169,14 @@ function drawSoldierTorso(g, front, gaze) {
   g.ellipse(-10.5, -6, 3.4, 5.6, -0.25, 0, TAU);
   g.fill();
 
+  // a pirate's striped shirt
+  g.save();
+  g.beginPath();
+  g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
+  g.clip();
+  g.fillStyle = 'rgba(244, 244, 250, 0.86)';
+  for (const y of [6.6, 11.6, 16.6, 21.6]) g.fillRect(-22, y, 44, 2.6);
+  g.restore();
   // a webbing belt with a brass buckle and two ammo pouches
   g.save();
   g.beginPath();
@@ -214,18 +222,6 @@ function drawSoldierTorso(g, front, gaze) {
     g.fill();
   }
 
-  // war paint: two slanted stripes under each eye
-  g.strokeStyle = '#13244a';
-  g.lineWidth = 1.3;
-  g.beginPath();
-  for (const ex of front ? [-8.4, 8.4] : [-3.3, 12.6]) {
-    g.moveTo(ex - 2.4, 1.6);
-    g.lineTo(ex - 0.6, 4.6);
-    g.moveTo(ex + 0.8, 1.6);
-    g.lineTo(ex + 2.6, 4.6);
-  }
-  g.stroke();
-
   // the smile: a thick navy bowl
   g.strokeStyle = '#13244a';
   g.lineWidth = 2;
@@ -234,34 +230,68 @@ function drawSoldierTorso(g, front, gaze) {
   else g.arc(6.5, 2.4, 4.2, Math.PI * 0.12, Math.PI * 0.88);
   g.stroke();
 
-  // a red beret worn at a slant, with a gold badge and a little stalk
+  // a black tricorn hat with a gold trim and a skull and crossbones
   g.save();
-  g.translate(front ? 0 : -1.6, -15.4);
-  g.rotate(front ? -0.12 : -0.2);
-  const bg = g.createLinearGradient(0, -9, 0, 6);
-  bg.addColorStop(0, '#e2463d');
-  bg.addColorStop(1, '#a8281f');
-  g.fillStyle = bg;
+  g.translate(front ? 0 : -1.4, 0);
+  const hg = g.createLinearGradient(0, -30, 0, -8);
+  hg.addColorStop(0, '#3a3942');
+  hg.addColorStop(1, '#17161c');
+  g.fillStyle = hg;
   g.strokeStyle = OUT;
   g.lineWidth = 1.7;
   g.beginPath();
-  g.moveTo(-20.4, 3);
-  g.bezierCurveTo(-22, -9, -9, -13.4, 2, -13);
-  g.bezierCurveTo(13, -12.6, 22.4, -8, 20.6, 3);
-  g.quadraticCurveTo(0, 8.2, -20.4, 3);
+  g.moveTo(-25, -7.4);
+  g.lineTo(-21, -17.4);
+  g.quadraticCurveTo(-9, -20, -3.4, -29.6);
+  g.quadraticCurveTo(0, -31.4, 3.4, -29.6);
+  g.quadraticCurveTo(9, -20, 21, -17.4);
+  g.lineTo(25, -7.4);
+  g.quadraticCurveTo(0, -13.4, -25, -7.4);
   g.closePath();
   g.fill();
   g.stroke();
-  g.fillStyle = '#7e1a14';
-  rr(g, -1.6, -16.6, 3.6, 4.4, 1.2);
+  g.strokeStyle = '#e0b43c';
+  g.lineWidth = 1.5;
+  g.beginPath();
+  g.moveTo(-21, -17.2);
+  g.quadraticCurveTo(-9, -19.8, -3.2, -29);
+  g.moveTo(3.2, -29);
+  g.quadraticCurveTo(9, -19.8, 21, -17.2);
+  g.stroke();
+  // skull and crossbones
+  g.strokeStyle = '#f2eee2';
+  g.lineWidth = 1.7;
+  g.beginPath();
+  g.moveTo(-6, -18);
+  g.lineTo(6, -11.4);
+  g.moveTo(6, -18);
+  g.lineTo(-6, -11.4);
+  g.stroke();
+  g.fillStyle = '#f7f3e8';
+  g.strokeStyle = OUT;
+  g.lineWidth = 0.9;
+  g.beginPath();
+  g.arc(0, -17.4, 4, 0, TAU);
   g.fill();
   g.stroke();
-  g.fillStyle = 'rgba(255, 255, 255, 0.22)';
+  rr(g, -2.4, -14.6, 4.8, 3.4, 1);
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#17141a';
   g.beginPath();
-  g.ellipse(-9, -6, 5.4, 2, -0.5, 0, TAU);
+  g.arc(-1.7, -17.8, 1.1, 0, TAU);
+  g.arc(1.7, -17.8, 1.1, 0, TAU);
   g.fill();
   g.restore();
-  star(g, front ? 5.4 : 8.6, -17.4, 3.2, 1.4);
+  // a gold hoop earring
+  g.strokeStyle = OUT;
+  g.lineWidth = 3;
+  g.beginPath();
+  g.arc(front ? -20.4 : -17.4, 4.4, 2.6, 0, TAU);
+  g.stroke();
+  g.strokeStyle = '#f0c64a';
+  g.lineWidth = 1.5;
+  g.stroke();
   // an eyepatch over one eye, with its strap
   const px = front ? 8.4 : 12.6;
   g.strokeStyle = '#17141a';
@@ -535,52 +565,43 @@ function drawSniperTorso(g, front, look, blink) {
 
 // Origin is the centre of the brim, so the hat can tip about it.
 export function drawSniperHat(g) {
-  // a shaggy ghillie hood: a mound of green and brown tufts
-  const N = 34;
-  g.beginPath();
-  g.moveTo(-21.6, 3.4);
-  for (let i = 0; i <= N; i++) {
-    const a = Math.PI + (i / N) * Math.PI;
-    const spike = i % 2 ? 1.1 : 0.96;
-    const x = Math.cos(a) * 22.4 * spike;
-    const y = -3 + Math.sin(a) * 17 * spike;
-    g.lineTo(x, y);
-  }
-  g.lineTo(21.6, 3.4);
-  g.quadraticCurveTo(0, 7.4, -21.6, 3.4);
-  g.closePath();
-  const hg = g.createLinearGradient(0, -20, 0, 6);
-  hg.addColorStop(0, '#7d9a4c');
-  hg.addColorStop(1, '#46602c');
-  g.fillStyle = hg;
-  g.fill();
+  g.fillStyle = HAT;
   g.strokeStyle = INK;
   g.lineWidth = 1.6;
-  g.lineJoin = 'round';
+  g.beginPath();
+  g.moveTo(-13, -2.6);
+  g.bezierCurveTo(-13, -9, -9.6, -11.9, -4, -11.9);
+  g.lineTo(4, -11.9);
+  g.bezierCurveTo(9.6, -11.9, 13, -9, 13, -2.6);
+  g.closePath();
+  g.fill();
   g.stroke();
-  // tufts of lighter grass and brown twigs
-  g.lineCap = 'round';
-  const tufts = [[-14, -8, '#a4c26a'], [-6, -13, '#8fae5a'], [4, -14, '#a4c26a'], [13, -9, '#8fae5a'], [-17, -1, '#7a5b36'], [8, -3, '#7a5b36'], [-3, -4, '#9a7a44'], [16, 0, '#a4c26a']];
-  for (const [x, y, c] of tufts) {
-    g.strokeStyle = c;
-    g.lineWidth = 1.5;
-    g.beginPath();
-    g.moveTo(x, y);
-    g.lineTo(x - 1.6, y - 4.6);
-    g.moveTo(x + 1.4, y + 0.4);
-    g.lineTo(x + 2.6, y - 3.6);
-    g.stroke();
-  }
-  // a few leaves tucked in
-  g.fillStyle = '#c9d96a';
+  // the long, thin, pointed brim
+  g.beginPath();
+  g.moveTo(-32.4, 0);
+  g.quadraticCurveTo(-16, -5.2, 0, -5.2);
+  g.quadraticCurveTo(16, -5.2, 32.4, 0);
+  g.quadraticCurveTo(16, 5.4, 0, 5.4);
+  g.quadraticCurveTo(-16, 5.4, -32.4, 0);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.strokeStyle = HAT_SHADE;
+  g.lineWidth = 1.2;
+  g.beginPath();
+  g.moveTo(-24, 2.7);
+  g.quadraticCurveTo(0, 4.7, 24, 2.7);
+  g.stroke();
+  // two small leaves tucked in the hat band
+  g.fillStyle = '#5f9a47';
   g.strokeStyle = INK;
   g.lineWidth = 0.9;
-  for (const [x, y, r] of [[-9.6, -15.6, -0.9], [10.2, -15, 1]]) {
+  for (const [x, y, r] of [[-9.6, -8.6, -1.1], [10.2, -8.4, 1.1]]) {
     g.save();
     g.translate(x, y);
     g.rotate(r);
     g.beginPath();
-    g.ellipse(0, -2.2, 1.7, 3.4, 0, 0, TAU);
+    g.ellipse(0, -2.2, 1.6, 3.2, 0, 0, TAU);
     g.fill();
     g.stroke();
     g.restore();
