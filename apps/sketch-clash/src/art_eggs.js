@@ -1,6 +1,6 @@
-import { TAU } from './config.js?v=142';
-import { makeLayer, rr, OUT } from './sprites.js?v=142';
-import { eggBody, bigEyes, feetSet, eggSet, ghostBody } from './art_units.js?v=142';
+import { TAU } from './config.js?v=145';
+import { makeLayer, rr, OUT } from './sprites.js?v=145';
+import { eggBody, bigEyes, feetSet, eggSet, ghostBody } from './art_units.js?v=145';
 
 // The egg-shaped mythical units: zombie, mage, necromancer and the necromancer's skeletons.
 
@@ -450,13 +450,7 @@ export function buildEggArt() {
     },
   };
   for (const [id, [tint, edge, head]] of Object.entries(GHOSTS)) {
-    art[id].ghost = makeLayer(-30, -34, 30, 28, (g) => {
-      ghostBody(g, tint, edge);
-      g.save();
-      g.translate(0, -3);
-      head(g);
-      g.restore();
-    });
+    art[id].ghost = makeLayer(-26, -30, 26, 26, (g) => ghostBody(g));
   }
   return art;
 }

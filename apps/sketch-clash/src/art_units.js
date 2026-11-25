@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=142';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=142';
+import { TAU, K } from './config.js?v=145';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=145';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -255,26 +255,39 @@ function drawRomanBody(g, front, gz, angry) {
   g.lineJoin = 'round';
   g.lineCap = 'round';
   const ox = front ? 0 : 3;
-  // a butter-yellow egg in a white apron
-  eggBody(g, '#f6d96a', '#d4a63a');
+  // a pink egg in a blue-striped apron
+  eggBody(g, '#f7bccb', '#d68aa3');
   g.save();
   g.beginPath();
   g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
   g.clip();
   g.fillStyle = '#ffffff';
-  g.strokeStyle = 'rgba(90, 80, 50, 0.8)';
-  g.lineWidth = 1.3;
   g.beginPath();
-  g.moveTo(-10 + ox, 7.4);
-  g.lineTo(10 + ox, 7.4);
-  g.lineTo(18 + ox, 25);
-  g.lineTo(-18 + ox, 25);
+  g.moveTo(-11 + ox, 6.4);
+  g.lineTo(11 + ox, 6.4);
+  g.lineTo(19 + ox, 25);
+  g.lineTo(-19 + ox, 25);
   g.closePath();
   g.fill();
+  g.save();
+  g.clip();
+  g.strokeStyle = '#5b8fd6';
+  g.lineWidth = 3;
+  g.beginPath();
+  for (let x = -18; x <= 18; x += 6) {
+    g.moveTo(x + ox, 6);
+    g.lineTo(x * 1.35 + ox, 26);
+  }
   g.stroke();
-  g.fillStyle = '#eef2f8';
-  rr(g, -5.4 + ox, 15, 10.8, 6.4, 1.6);
-  g.fill();
+  g.restore();
+  g.strokeStyle = 'rgba(70, 60, 80, 0.8)';
+  g.lineWidth = 1.3;
+  g.beginPath();
+  g.moveTo(-11 + ox, 6.4);
+  g.lineTo(11 + ox, 6.4);
+  g.lineTo(19 + ox, 25);
+  g.moveTo(-11 + ox, 6.4);
+  g.lineTo(-19 + ox, 25);
   g.stroke();
   g.restore();
   g.strokeStyle = OUT;
@@ -282,11 +295,11 @@ function drawRomanBody(g, front, gz, angry) {
   g.beginPath();
   g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
   g.stroke();
-  // rosy cheeks
-  g.fillStyle = 'rgba(236, 110, 110, 0.5)';
-  for (const x of front ? [-13.4, 13.4] : [-9, 16.4]) {
+  // flour on the cheeks
+  g.fillStyle = 'rgba(255, 255, 255, 0.7)';
+  for (const [x, y] of front ? [[-13, 3.6], [13, 3.6], [-15, 1.4]] : [[-9, 4], [16.4, 3.6], [18, 1]]) {
     g.beginPath();
-    g.ellipse(x, 3.4, 3.2, 2, 0, 0, TAU);
+    g.arc(x, y, 1.7, 0, TAU);
     g.fill();
   }
   bigEyes(g, front ? [-8, 8] : [-2.4, 11.6], gz, -4.4, 4.4, 4.6, 1.5, 2.7);
@@ -302,73 +315,72 @@ function drawRomanBody(g, front, gz, angry) {
   }
   if (front) smile(g, 0, 4.4, 3.4);
   else smile(g, 5.2, 4.6, 3.2);
-  // a tall puffy white chef's hat
-  const lobes = [[-8.4, -23, 8, 7.6], [8.4, -23, 8, 7.6], [0, -27.4, 9.4, 8.4]];
-  g.strokeStyle = OUT;
-  g.lineWidth = 3.6;
-  for (const [x, y, rx, ry] of lobes) {
-    g.beginPath();
-    g.ellipse(x + ox * 0.3, y, rx, ry, 0, 0, TAU);
-    g.stroke();
-  }
-  g.fillStyle = '#ffffff';
-  for (const [x, y, rx, ry] of lobes) {
-    g.beginPath();
-    g.ellipse(x + ox * 0.3, y, rx, ry, 0, 0, TAU);
-    g.fill();
-  }
-  g.strokeStyle = '#d3d9e4';
-  g.lineWidth = 1.1;
-  g.beginPath();
-  for (const x of [-9, -3, 3, 9]) {
-    g.moveTo(x + ox * 0.3, -16);
-    g.lineTo(x * 1.1 + ox * 0.3, -25);
-  }
-  g.stroke();
+  // a floppy white baker's cap, tilted, with a red band
+  g.save();
+  g.translate(ox * 0.3 + 1.4, -15.6);
+  g.rotate(-0.14);
   g.fillStyle = '#ffffff';
   g.strokeStyle = OUT;
   g.lineWidth = 1.7;
-  rr(g, -15 + ox * 0.3, -17, 30, 8.4, 3);
+  g.beginPath();
+  g.moveTo(-17.6, 5.6);
+  g.bezierCurveTo(-23, -8, -10, -17, 2, -15.6);
+  g.bezierCurveTo(14, -17, 24, -8, 17.6, 5.6);
+  g.quadraticCurveTo(0, 9, -17.6, 5.6);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#d23d36';
+  g.beginPath();
+  g.moveTo(-17.4, 1.4);
+  g.quadraticCurveTo(0, 5, 17.4, 1.4);
+  g.lineTo(17.6, 5.6);
+  g.quadraticCurveTo(0, 9, -17.6, 5.6);
+  g.closePath();
   g.fill();
   g.stroke();
   g.strokeStyle = '#d3d9e4';
   g.lineWidth = 1;
   g.beginPath();
-  g.moveTo(-15 + ox * 0.3, -12.8);
-  g.lineTo(15 + ox * 0.3, -12.8);
+  g.moveTo(-9, -9);
+  g.quadraticCurveTo(-8, -3, -8.4, 1);
+  g.moveTo(6, -12);
+  g.quadraticCurveTo(7.6, -5, 8, 1.4);
   g.stroke();
+  g.restore();
 }
 
-// Origin: the hand. A cast-iron frying pan on a long handle, used as a weapon.
+// Origin: the hand. A wooden rolling pin, swung forward as a club.
 function drawSpear(g) {
   g.lineJoin = 'round';
-  g.fillStyle = '#7a4a2a';
   g.strokeStyle = OUT;
   g.lineWidth = 1.4;
-  rr(g, -9, -2.2, 24, 4.4, 1.8);
+  g.fillStyle = '#c28a4e';
+  rr(g, -8, -2.4, 14, 4.8, 2.2);
   g.fill();
   g.stroke();
-  g.fillStyle = '#4a4e5a';
-  rr(g, 14, -1.8, 12, 3.6, 1.2);
-  g.fill();
-  g.stroke();
-  const pg = g.createRadialGradient(34, -3, 1, 36, 0, 13);
-  pg.addColorStop(0, '#6a6e7c');
-  pg.addColorStop(1, '#262830');
+  const pg = g.createLinearGradient(0, -6, 0, 6);
+  pg.addColorStop(0, '#f0c98a');
+  pg.addColorStop(1, '#b57f42');
   g.fillStyle = pg;
-  g.beginPath();
-  g.arc(36.5, 0, 11.4, 0, TAU);
+  rr(g, 5, -6, 32, 12, 5);
   g.fill();
   g.stroke();
-  g.strokeStyle = 'rgba(200, 206, 220, 0.45)';
-  g.lineWidth = 1.2;
-  g.beginPath();
-  g.arc(36.5, 0, 7.6, Math.PI * 1.1, Math.PI * 1.7);
-  g.stroke();
-  g.fillStyle = '#d9dde8';
-  g.beginPath();
-  g.arc(20, 0, 1.1, 0, TAU);
+  g.fillStyle = '#c28a4e';
+  rr(g, 36, -2.4, 12, 4.8, 2.2);
   g.fill();
+  g.stroke();
+  g.fillStyle = '#e6b06a';
+  g.beginPath();
+  g.arc(48, 0, 2.6, 0, TAU);
+  g.fill();
+  g.stroke();
+  g.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+  g.lineWidth = 1.1;
+  g.beginPath();
+  g.moveTo(10, -3.2);
+  g.lineTo(32, -3.2);
+  g.stroke();
 }
 
 // Origin: the middle of the shield.
@@ -1354,29 +1366,39 @@ function drawKatana(g) {
 }
 
 // ---------------------------------------------------------------- ghosts, drops
-export function ghostBody(g, tint, edge) {
-  // the same pale periwinkle ghost for everyone, as in the original; only the headgear differs
-  g.fillStyle = '#cfdaf7';
-  g.strokeStyle = '#575c72';
-  g.lineWidth = 1.5;
+export function ghostBody(g) {
+  // the original's ghost: a pale periwinkle dome with three scallops at the foot, two small dark eyes and a round mouth,
+  // all shifted toward the side it faces; the same ghost for every unit
+  g.lineJoin = 'round';
+  const W = 19.5;
   g.beginPath();
-  g.moveTo(-14, 21);
-  g.lineTo(-14.5, -4);
-  g.bezierCurveTo(-15, -24, 15, -24, 14.5, -4);
-  g.lineTo(14, 21);
-  g.quadraticCurveTo(9.4, 15, 4.6, 21);
-  g.quadraticCurveTo(0, 15, -4.6, 21);
-  g.quadraticCurveTo(-9.4, 15, -14, 21);
+  g.moveTo(-W, 21);
+  g.lineTo(-W, -4);
+  g.bezierCurveTo(-W, -28, W, -28, W, -4);
+  g.lineTo(W, 21);
+  g.quadraticCurveTo(W - 6.5, 14, W - 13, 21);
+  g.quadraticCurveTo(W - 19.5, 14, W - 26, 21);
+  g.quadraticCurveTo(W - 32.5, 14, -W, 21);
   g.closePath();
+  const gr = g.createLinearGradient(0, -22, 0, 21);
+  gr.addColorStop(0, '#dde8fc');
+  gr.addColorStop(1, '#bccbee');
+  g.fillStyle = gr;
   g.fill();
+  g.strokeStyle = '#68708a';
+  g.lineWidth = 1.7;
   g.stroke();
+  g.fillStyle = 'rgba(255, 255, 255, 0.9)';
+  g.beginPath();
+  g.ellipse(9.4, -12, 2.6, 6, 0.25, 0, TAU);
+  g.fill();
   g.fillStyle = '#3b3f52';
   g.beginPath();
-  g.ellipse(-5, -3, 2, 3.4, 0, 0, TAU);
-  g.ellipse(5, -3, 2, 3.4, 0, 0, TAU);
+  g.ellipse(-9.2, -7, 1.9, 3.2, 0, 0, TAU);
+  g.ellipse(-2.6, -7, 1.9, 3.2, 0, 0, TAU);
   g.fill();
   g.beginPath();
-  g.ellipse(0, 6, 1.6, 2.2, 0, 0, TAU);
+  g.ellipse(-5.9, 2, 1.7, 2.3, 0, 0, TAU);
   g.fill();
 }
 
@@ -1440,16 +1462,17 @@ export const DROPS = {
     g.fillStyle = '#ffffff';
     g.strokeStyle = OUT;
     g.lineWidth = 1;
-    for (const [x, y, rx, ry] of [[-5, -3, 6, 5.4], [5, -3, 6, 5.4], [0, -6, 7, 6]]) {
-      g.beginPath();
-      g.ellipse(x, y, rx, ry, 0, 0, TAU);
-      g.fill();
-      g.stroke();
-    }
-    rr(g, -10, -1, 20, 6, 2.4);
+    g.beginPath();
+    g.ellipse(0, -2, 11, 6.6, -0.1, 0, TAU);
+    g.fill();
+    g.stroke();
+    g.fillStyle = '#d23d36';
+    g.beginPath();
+    g.ellipse(0, 2, 11, 2.4, 0, 0, Math.PI);
     g.fill();
     g.stroke();
   },
+
 
   grenadier(g) {
     g.fillStyle = '#3c4a36';
@@ -1521,17 +1544,16 @@ export const DROPS = {
 // Light, tinted ghosts that keep the unit's headgear.
 const GHOSTS = {
   flamethrower: ['#fff3dd', '#e8d3a8', (g) => dome(g, '#f2b81c', 11, 8, -10)],
-  roman: ['#fffaf0', '#e6dcc0', (g) => {
+  roman: ['#fff0f4', '#e8c4d0', (g) => {
     g.fillStyle = '#ffffff';
     g.strokeStyle = OUT;
     g.lineWidth = 1;
-    for (const [x, y, rx, ry] of [[-5, -16, 6, 5.4], [5, -16, 6, 5.4], [0, -19, 7, 6]]) {
-      g.beginPath();
-      g.ellipse(x, y, rx, ry, 0, 0, TAU);
-      g.fill();
-      g.stroke();
-    }
-    rr(g, -10, -14, 20, 6, 2.4);
+    g.beginPath();
+    g.ellipse(0, -14, 12, 7, -0.1, 0, TAU);
+    g.fill();
+    g.stroke();
+    g.fillStyle = '#d23d36';
+    rr(g, -11.6, -10.6, 23.2, 3.6, 1.6);
     g.fill();
     g.stroke();
   }],
@@ -1670,13 +1692,7 @@ export function buildUnitArt() {
   };
 
   for (const [id, [tint, edge, head]] of Object.entries(GHOSTS)) {
-    art[id].ghost = makeLayer(-30, -34, 30, 28, (g) => {
-      ghostBody(g, tint, edge);
-      g.save();
-      g.translate(0, -3);
-      head(g);
-      g.restore();
-    });
+    art[id].ghost = makeLayer(-26, -30, 26, 26, (g) => ghostBody(g));
   }
 
   // small shared bits

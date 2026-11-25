@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=142';
-import { buildCreatureArt } from './creatures.js?v=142';
-import { buildEggArt } from './art_eggs.js?v=142';
-import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=142';
-import { Sfx } from './sfx.js?v=142';
-import { World } from './world.js?v=142';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=142';
-import { buildUnitArt } from './art_units.js?v=142';
-import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=142';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=145';
+import { buildCreatureArt } from './creatures.js?v=145';
+import { buildEggArt } from './art_eggs.js?v=145';
+import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=145';
+import { Sfx } from './sfx.js?v=145';
+import { World } from './world.js?v=145';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=145';
+import { buildUnitArt } from './art_units.js?v=145';
+import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=145';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -1150,7 +1150,7 @@ function render() {
     // knocked over backwards, dizzy stars circling, then fading as the ghost rises
     const k = c.age;
     const fall = 1 - (1 - Math.min(1, k / 0.2)) ** 2;
-    const a = k < 0.55 ? 1 : Math.max(0, 1 - (k - 0.55) / 0.4);
+    const a = k < 0.9 ? 1 : Math.max(0, 1 - (k - 0.9) / 0.6);
     c.u.tilt = -1.45 * fall;
     c.u.breath = 0;
     ctx.globalAlpha = a;
@@ -1341,12 +1341,20 @@ function render() {
   drawFx(ctx, dpr, sprites, world);
 
   // Ghosts drift up and fade where a unit fell, keeping their headgear.
+  // In the original the ghost pops up about 0.4s after the fall, floats up beside the body, sways and fades out.
   for (const g of world.ghosts) {
     const gl = sprites[g.species].ghost;
-    const t = g.age / GHOST_LIFE;
-    ctx.globalAlpha = Math.min(1, (1 - t) * 1.8) * 0.96;
-    const sway = Math.sin(g.age * 4 + g.seed * 6) * 3;
-    ctx.drawImage(gl.canvas, g.x + gl.x + sway, g.y + gl.y - (4 + t * 36) * UNIT, gl.w, gl.h);
+    const t = (g.age - 0.4) / (GHOST_LIFE - 0.4);
+    if (t < 0) continue;
+    ctx.globalAlpha = Math.min(1, t * 6) * Math.min(1, (1 - t) * 2.2) * 0.95;
+    const rise = 1 - (1 - Math.min(1, t * 1.6)) ** 2;
+    const sway = Math.sin(g.age * 3 + g.seed * 6) * 2;
+    ctx.save();
+    ctx.translate(g.x - g.facing * 4 + sway, g.y - 6 - rise * 22);
+    ctx.rotate(Math.sin(g.age * 3 + g.seed * 6) * 0.12);
+    ctx.scale(-g.facing * UNIT, UNIT);
+    ctx.drawImage(gl.canvas, gl.x, gl.y, gl.w, gl.h);
+    ctx.restore();
   }
   ctx.globalAlpha = 1;
 

@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=142';
-import { TerrainMap, WALL } from './terrain.js?v=142';
-import { installBeasts } from './beasts.js?v=142';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=145';
+import { TerrainMap, WALL } from './terrain.js?v=145';
+import { installBeasts } from './beasts.js?v=145';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -635,7 +635,7 @@ export class World {
           killerTeam: src ? src.team : null,
         });
       }
-      this.ghosts.push({ x: u.x, y: u.y, age: 0, seed: Math.random(), species: u.species });
+      this.ghosts.push({ x: u.x, y: u.y, age: 0, seed: Math.random(), species: u.species, facing: u.facing || 1 });
       this.corpses.push({ u: { ...u, dead: false, moving: false, hit: 0, flash: 0 }, age: 0 });
       if (u.def.smoke) {
         for (let i = 0; i < 2; i++) {
@@ -1749,7 +1749,7 @@ export class World {
     if (this.flames.some((f) => f.age > f.life)) this.flames = this.flames.filter((f) => f.age <= f.life);
 
     for (const c of this.corpses) c.age += dt;
-    if (this.corpses.some((c) => c.age > 1)) this.corpses = this.corpses.filter((c) => c.age <= 1);
+    if (this.corpses.some((c) => c.age > 1.5)) this.corpses = this.corpses.filter((c) => c.age <= 1.5);
 
     for (const b of this.blasts) b.age += dt;
     if (this.blasts.some((b) => b.age > b.life)) this.blasts = this.blasts.filter((b) => b.age <= b.life);
