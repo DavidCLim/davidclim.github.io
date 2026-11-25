@@ -1,6 +1,6 @@
-import { TAU } from './config.js?v=170';
-import { OUT } from './sprites.js?v=170';
-import { G, vgrad, fs, ell, circ, blob, poly, stick, ribbon, eye, shadow, leg } from './art_kit.js?v=170';
+import { TAU } from './config.js?v=172';
+import { OUT } from './sprites.js?v=172';
+import { G, vgrad, fs, ell, circ, blob, poly, stick, ribbon, eye, shadow, leg } from './art_kit.js?v=172';
 
 // The Animals tab, all facing right with their feet on y = 25.
 // Each drawer gets (g, st): st.ph is the walk cycle (0..1), st.moving, st.open (mouth),

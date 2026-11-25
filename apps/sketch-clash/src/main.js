@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=170';
-import { buildCreatureArt } from './creatures.js?v=170';
-import { buildEggArt } from './art_eggs.js?v=170';
-import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=170';
-import { Sfx } from './sfx.js?v=170';
-import { World } from './world.js?v=170';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=170';
-import { buildUnitArt } from './art_units.js?v=170';
-import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=170';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=172';
+import { buildCreatureArt } from './creatures.js?v=172';
+import { buildEggArt } from './art_eggs.js?v=172';
+import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=172';
+import { Sfx } from './sfx.js?v=172';
+import { World } from './world.js?v=172';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=172';
+import { buildUnitArt } from './art_units.js?v=172';
+import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=172';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
