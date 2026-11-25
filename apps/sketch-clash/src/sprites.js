@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=114';
+import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=115';
 
 // Units are drawn from "art" coordinates matching the reference sprites
 // (origin at the body centre, y down) into small offscreen layers, then
@@ -216,9 +216,9 @@ function helmetStar(g, front) {
 
 // the muzzle flash: a small yellow disc with an orange rim
 function muzzleDisc(g, x, y, r) {
-  g.fillStyle = '#ffe45c';
-  g.strokeStyle = '#f29a2e';
-  g.lineWidth = 1.3;
+  g.fillStyle = '#fff6b4';
+  g.strokeStyle = '#ffc61f';
+  g.lineWidth = 1.6;
   g.beginPath();
   g.arc(x, y, r, 0, TAU);
   g.fill();

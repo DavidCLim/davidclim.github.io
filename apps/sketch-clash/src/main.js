@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=114';
-import { buildCreatureArt } from './creatures.js?v=114';
-import { buildEggArt } from './art_eggs.js?v=114';
-import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=114';
-import { Sfx } from './sfx.js?v=114';
-import { World } from './world.js?v=114';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=114';
-import { buildUnitArt } from './art_units.js?v=114';
-import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=114';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=115';
+import { buildCreatureArt } from './creatures.js?v=115';
+import { buildEggArt } from './art_eggs.js?v=115';
+import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=115';
+import { Sfx } from './sfx.js?v=115';
+import { World } from './world.js?v=115';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=115';
+import { buildUnitArt } from './art_units.js?v=115';
+import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=115';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -1299,7 +1299,7 @@ function render() {
     // gun smoke: a small ragged cloud of a few overlapping lumps that swells a little and thins out
     const r = p.size * (0.9 + 0.6 * Math.min(1, t * 2.5));
     const sd = ((p.life * 977) % 1) * TAU;
-    ctx.fillStyle = `rgba(172, 174, 183, ${0.5 * (1 - t * t)})`;
+    ctx.fillStyle = `rgba(184, 186, 194, ${0.75 * (1 - t * t)})`;
     ctx.beginPath();
     for (let k = 0; k < 4; k++) {
       const ang = sd + k * 1.7;

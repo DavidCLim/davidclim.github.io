@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=114';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=114';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=114';
+import { TAU, K } from './config.js?v=115';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=115';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=115';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask
@@ -475,7 +475,7 @@ function drawTree(g) {
   }
 }
 
-// The tower is a wizard's tower: the wall's grey stone and bricks, a lit round window, a bent purple pointed roof with a star.
+// The tower is a wizard's tower: smooth grey stone, a lit round window, a bent purple pointed roof with a star.
 function drawTower(g) {
   const w = 12;
   const h = 46;
@@ -497,19 +497,6 @@ function drawTower(g) {
   g.fillRect(w * 0.3, -h, w, h + 8);
   g.restore();
   ink(g, 1.8);
-  g.stroke();
-  g.strokeStyle = 'rgba(70, 68, 70, 0.7)';
-  g.lineWidth = 0.9;
-  g.beginPath();
-  let row = 0;
-  for (let y = -h + 8; y < -1; y += 8, row++) {
-    g.moveTo(-w - 1, y);
-    g.lineTo(w + 1, y);
-    for (let x = -w + (row % 2 ? 6 : 12); x < w; x += 12) {
-      g.moveTo(x, y - 8);
-      g.lineTo(x, y);
-    }
-  }
   g.stroke();
   // the arched door
   g.beginPath();
