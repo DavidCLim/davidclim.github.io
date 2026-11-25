@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=173';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=173';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=173';
+import { TAU, K } from './config.js?v=177';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=177';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=177';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask
@@ -526,6 +526,370 @@ function drawTree(g) {
   g.fill();
 }
 
+// A wizard tower, redrawn from the user's pencil sketch: a stepped round base, a tall stone tower with arched windows and a
+// wooden door under a stone arch, a wide balcony ring with mosaic windows and carved corner blocks, and a huge
+// flared mushroom roof of stone slabs that winds up into a crooked spire. Origin: the middle of the ground.
+function drawTower(g) {
+  const PI = Math.PI;
+  // a round step: a side band under an elliptical top
+  const drum = (cx, cy, rx, ry, h, side, top, lw) => {
+    g.beginPath();
+    g.moveTo(cx - rx, cy - h);
+    g.lineTo(cx - rx, cy);
+    g.ellipse(cx, cy, rx, ry, 0, PI, 0, true);
+    g.lineTo(cx + rx, cy - h);
+    g.ellipse(cx, cy - h, rx, ry, 0, 0, PI);
+    g.closePath();
+    g.fillStyle = side;
+    g.fill();
+    ink(g, lw);
+    g.stroke();
+    g.beginPath();
+    g.ellipse(cx, cy - h, rx, ry, 0, 0, TAU);
+    g.fillStyle = top;
+    g.fill();
+    g.stroke();
+  };
+  const arch = (x, y, w, h) => {
+    g.beginPath();
+    g.moveTo(x - w / 2, y);
+    g.lineTo(x - w / 2, y - h + w / 2);
+    g.arc(x, y - h + w / 2, w / 2, PI, 0);
+    g.lineTo(x + w / 2, y);
+    g.closePath();
+  };
+
+  shadowEll(g, 36, 6.4, 1);
+
+  // the stepped base, with two chunky blocks at its sides
+  drum(0, 0, 28, 6.4, 5, '#8f8c88', '#aaa7a1', 1.8);
+  drum(0, -5, 22.5, 5.2, 5, '#98958f', '#b3b0aa', 1.8);
+  for (const sx of [-1, 1]) {
+    g.save();
+    g.translate(sx * 27, -12);
+    g.rotate(sx * 0.12);
+    g.beginPath();
+    g.roundRect(-5.5, -4, 11, 9, 1.6);
+    g.fillStyle = '#a19e98';
+    g.fill();
+    ink(g, 1.6);
+    g.stroke();
+    g.restore();
+  }
+  drum(0, -10, 26, 6, 6, '#9b988f', '#bdb9ae', 1.8);
+
+  // the tower body, a little narrower at the top, lit from the left
+  g.beginPath();
+  g.moveTo(-15.5, -16);
+  g.lineTo(-13.6, -86);
+  g.lineTo(13.6, -86);
+  g.lineTo(15.5, -16);
+  g.quadraticCurveTo(0, -9.5, -15.5, -16);
+  g.closePath();
+  const bg = g.createLinearGradient(-15, 0, 15, 0);
+  bg.addColorStop(0, '#d8cfba');
+  bg.addColorStop(0.5, '#b9ae97');
+  bg.addColorStop(1, '#827866');
+  g.fillStyle = bg;
+  g.fill();
+  g.save();
+  g.clip();
+  // courses of stone: a few offset bricks and joints
+  g.strokeStyle = 'rgba(70, 60, 45, 0.28)';
+  g.lineWidth = 0.9;
+  g.beginPath();
+  for (let y = -24; y > -86; y -= 8.5) {
+    g.moveTo(-16, y);
+    g.quadraticCurveTo(0, y + 3, 16, y);
+  }
+  for (const [x, y] of [[-7, -30], [8, -39], [-10, -47], [5, -56], [-3, -64], [10, -73], [-9, -80], [2, -26]]) {
+    g.moveTo(x, y);
+    g.lineTo(x, y - 8);
+  }
+  g.stroke();
+  g.fillStyle = 'rgba(60, 40, 30, 0.1)';
+  g.fillRect(6, -86, 12, 70);
+  g.restore();
+  ink(g, 2);
+  g.beginPath();
+  g.moveTo(-15.5, -16);
+  g.lineTo(-13.6, -86);
+  g.moveTo(15.5, -16);
+  g.lineTo(13.6, -86);
+  g.stroke();
+
+  // three arched windows climbing the side
+  for (const [x, y] of [[3, -79], [-2.5, -69], [-8, -58]]) {
+    arch(x, y + 4, 5.6, 8.6);
+    g.fillStyle = '#34304a';
+    g.fill();
+    ink(g, 1.5);
+    g.stroke();
+    g.fillStyle = 'rgba(160, 190, 235, 0.55)';
+    g.beginPath();
+    g.ellipse(x + 0.6, y - 0.5, 1.2, 2, 0, 0, TAU);
+    g.fill();
+  }
+
+  // a little turret bulging out on the left, with its own window and a slate cap
+  g.beginPath();
+  g.moveTo(-24, -33);
+  g.lineTo(-23, -57);
+  g.lineTo(-13, -58);
+  g.lineTo(-13, -30);
+  g.closePath();
+  const tg = g.createLinearGradient(-24, 0, -13, 0);
+  tg.addColorStop(0, '#cfc5ae');
+  tg.addColorStop(1, '#a89d86');
+  g.fillStyle = tg;
+  g.fill();
+  ink(g, 1.8);
+  g.stroke();
+  arch(-18.8, -37, 4, 7);
+  g.fillStyle = '#34304a';
+  g.fill();
+  ink(g, 1.2);
+  g.stroke();
+  g.beginPath();
+  g.moveTo(-27, -56);
+  g.lineTo(-21, -64);
+  g.lineTo(-11, -62);
+  g.lineTo(-10, -57);
+  g.closePath();
+  g.fillStyle = '#6a5fa6';
+  g.fill();
+  ink(g, 1.6);
+  g.stroke();
+
+  // the door: planks in a pointed arch under a ring of stone with a keystone
+  arch(6, -15, 22, 31);
+  g.fillStyle = '#a29a8a';
+  g.fill();
+  ink(g, 1.9);
+  g.stroke();
+  arch(6, -15, 17, 25.5);
+  const dg = g.createLinearGradient(-3, 0, 15, 0);
+  dg.addColorStop(0, '#a26b3c');
+  dg.addColorStop(1, '#6e4524');
+  g.fillStyle = dg;
+  g.fill();
+  ink(g, 1.5);
+  g.stroke();
+  g.strokeStyle = 'rgba(40, 20, 8, 0.55)';
+  g.lineWidth = 0.9;
+  g.beginPath();
+  for (const x of [1, 6, 11]) {
+    g.moveTo(x, -15);
+    g.lineTo(x, -37);
+  }
+  g.stroke();
+  g.fillStyle = '#f0c25a';
+  g.beginPath();
+  g.arc(12, -26, 1.3, 0, TAU);
+  g.fill();
+  ink(g, 0.9);
+  g.stroke();
+  g.beginPath();
+  g.moveTo(1, -45);
+  g.lineTo(11, -45);
+  g.lineTo(13, -39);
+  g.lineTo(-1, -39);
+  g.closePath();
+  g.fillStyle = '#b9b2a2';
+  g.fill();
+  ink(g, 1.4);
+  g.stroke();
+  // a few loose stones round the doorway
+  for (const [x, y, w] of [[-8, -22, 4], [-9, -29, 3.2], [22, -30, 3.4]]) {
+    g.beginPath();
+    g.roundRect(x - w / 2, y - 2.5, w, 5, 1.2);
+    g.fillStyle = '#aaa396';
+    g.fill();
+    ink(g, 1.1);
+    g.stroke();
+  }
+
+  // the balcony ring around the top of the tower
+  drum(0, -83, 29.5, 7.2, 14, '#d4c8b0', '#bdb199', 2);
+  g.save();
+  g.beginPath();
+  g.ellipse(0, -83, 29.5, 7.2, 0, 0, PI);
+  g.lineTo(29.5, -83);
+  g.lineTo(29.5, -97);
+  g.lineTo(-29.5, -97);
+  g.lineTo(-29.5, -83);
+  g.closePath();
+  g.clip();
+  g.strokeStyle = 'rgba(80, 66, 46, 0.55)';
+  g.lineWidth = 1.2;
+  g.beginPath();
+  for (const x of [-26, -17, -7, 4, 14, 23]) {
+    const e = 7.2 * Math.sqrt(Math.max(0, 1 - (x / 29.5) ** 2));
+    g.moveTo(x, -97 + e * 0.1);
+    g.lineTo(x * 1.01, -83 + e);
+  }
+  g.stroke();
+  g.restore();
+  // two mosaic windows in the balcony band
+  for (const [x, y, w, h, sk] of [[-4, -83.5, 13, 9, 0], [22, -85, 8, 8, 0.32]]) {
+    g.save();
+    g.translate(x, y);
+    g.transform(1, sk * 0.3, 0, 1, 0, 0);
+    g.beginPath();
+    g.roundRect(-w / 2, -h / 2, w, h, 1.4);
+    g.fillStyle = '#e8dfc9';
+    g.fill();
+    ink(g, 1.3);
+    g.stroke();
+    g.fillStyle = '#7d9bbd';
+    g.fillRect(-w / 2 + 1.5, -h / 2 + 1.5, w - 3, h - 3);
+    g.strokeStyle = '#3b4a63';
+    g.lineWidth = 0.7;
+    g.beginPath();
+    for (let i = 1; i < 4; i++) {
+      g.moveTo(-w / 2 + 1.5 + ((w - 3) * i) / 4, -h / 2 + 1.5);
+      g.lineTo(-w / 2 + 1.5 + ((w - 3) * i) / 4, h / 2 - 1.5);
+    }
+    for (let i = 1; i < 3; i++) {
+      g.moveTo(-w / 2 + 1.5, -h / 2 + 1.5 + ((h - 3) * i) / 3);
+      g.lineTo(w / 2 - 1.5, -h / 2 + 1.5 + ((h - 3) * i) / 3);
+    }
+    g.stroke();
+    g.restore();
+  }
+  // carved stone blocks hanging under the ring at its two corners, with a spiral cut into each
+  for (const [x, flip] of [[-17, 1], [17, -1]]) {
+    g.beginPath();
+    g.moveTo(x - 6.5, -76);
+    g.lineTo(x + 6.5, -76);
+    g.lineTo(x + 5 * flip, -65);
+    g.lineTo(x - 5 * flip, -66);
+    g.closePath();
+    g.fillStyle = '#c4b99f';
+    g.fill();
+    ink(g, 1.6);
+    g.stroke();
+    g.strokeStyle = 'rgba(70, 58, 42, 0.8)';
+    g.lineWidth = 0.9;
+    g.beginPath();
+    g.moveTo(x - 3, -73.5);
+    g.lineTo(x + 3, -73.5);
+    g.lineTo(x + 3, -69);
+    g.lineTo(x - 2, -69);
+    g.lineTo(x - 2, -71.5);
+    g.lineTo(x + 1, -71.5);
+    g.stroke();
+  }
+  // a cluster of slate shingles hanging off the right side
+  for (const [x, y, r] of [[19, -62, 0.1], [23, -58, -0.15], [16, -56, -0.05], [21, -52, 0.12]]) {
+    g.save();
+    g.translate(x, y);
+    g.rotate(r);
+    g.beginPath();
+    g.moveTo(-5, -3);
+    g.lineTo(5, -3.4);
+    g.lineTo(4, 3.4);
+    g.lineTo(-4, 4);
+    g.closePath();
+    g.fillStyle = '#7a6fb4';
+    g.fill();
+    ink(g, 1.3);
+    g.stroke();
+    g.restore();
+  }
+
+  // the roof: a dark underside, a thick slab rim, then a dome of stone slabs, lifted clear of the balcony ring
+  g.save();
+  g.translate(0, -8);
+  g.beginPath();
+  g.ellipse(0, -97, 41, 8.4, 0, 0, TAU);
+  g.fillStyle = '#2b2548';
+  g.fill();
+  drum(0, -97, 41.5, 8.6, 5, '#4e4590', '#6d63ad', 2);
+  // the dome and spire as one silhouette
+  const dome = () => {
+    g.moveTo(-40.5, -102);
+    g.bezierCurveTo(-39, -113, -27, -121, -14, -124);
+    // the spire climbs in crooked stacked slabs
+    g.lineTo(-12.5, -130);
+    g.lineTo(-7, -131.5);
+    g.lineTo(-6.5, -138);
+    g.lineTo(-1, -139.5);
+    g.lineTo(0, -147);
+    g.lineTo(5, -148);
+    g.lineTo(5.5, -156);
+    g.lineTo(10, -163);
+    g.lineTo(14, -156);
+    g.lineTo(13, -149);
+    g.lineTo(17.5, -147);
+    g.lineTo(18, -139);
+    g.lineTo(22, -137);
+    g.lineTo(21, -128);
+    g.bezierCurveTo(27, -124, 38, -116, 40.5, -102);
+  };
+  g.beginPath();
+  dome();
+  g.ellipse(0, -102, 40.5, 8.4, 0, 0, PI);
+  g.closePath();
+  const rg = g.createLinearGradient(-40, -150, 40, -95);
+  rg.addColorStop(0, '#9288d0');
+  rg.addColorStop(0.5, '#7468b4');
+  rg.addColorStop(1, '#4a4189');
+  g.fillStyle = rg;
+  g.fill();
+  g.save();
+  g.clip();
+  // slab joints running up from the rim, and rings round the dome
+  g.strokeStyle = 'rgba(30, 22, 70, 0.7)';
+  g.lineWidth = 1.5;
+  g.beginPath();
+  for (const x of [-33, -22, -10, 3, 16, 28, 37]) {
+    g.moveTo(x, -92 + 8.4 * Math.sqrt(Math.max(0, 1 - (x / 40.5) ** 2)) * 0.9);
+    g.quadraticCurveTo(x * 0.8, -112, x * 0.3, -125);
+  }
+  g.stroke();
+  g.beginPath();
+  g.moveTo(-38, -108);
+  g.quadraticCurveTo(0, -98, 38, -108);
+  g.moveTo(-31, -117);
+  g.quadraticCurveTo(0, -109, 30, -118);
+  g.stroke();
+  // pale tops on the slabs and a dark hatch on the shadowed right
+  g.fillStyle = 'rgba(214, 208, 255, 0.35)';
+  for (const [x, y, rx, ry] of [[-26, -112, 8, 3.6], [-8, -116, 8, 3.4], [10, -117, 6, 3], [-30, -103, 6, 2.6]]) {
+    g.beginPath();
+    g.ellipse(x, y, rx, ry, -0.2, 0, TAU);
+    g.fill();
+  }
+  g.fillStyle = 'rgba(24, 16, 60, 0.35)';
+  g.beginPath();
+  g.moveTo(14, -168);
+  g.lineTo(46, -168);
+  g.lineTo(46, -96);
+  g.lineTo(24, -104);
+  g.lineTo(22, -126);
+  g.closePath();
+  g.fill();
+  // the winding spire: stacked slabs getting smaller
+  g.strokeStyle = 'rgba(30, 22, 70, 0.75)';
+  g.lineWidth = 1.3;
+  g.beginPath();
+  for (const [a, b, c, d] of [[-13, -130, 22, -128], [-7, -138.5, 18, -138], [-1, -147, 14, -148], [5, -156, 13, -156]]) {
+    g.moveTo(a, b);
+    g.lineTo(c, d);
+  }
+  g.stroke();
+  g.restore();
+  ink(g, 2);
+  g.beginPath();
+  dome();
+  g.stroke();
+  g.beginPath();
+  g.ellipse(0, -102, 40.5, 8.4, 0, 0, PI);
+  g.stroke();
+  g.restore();
+}
+
 export function buildTerrainArt() {
   return {
     mine: makeLayer(-30, -26, 30, 8, (g) => drawMine(g, false)),
@@ -533,6 +897,7 @@ export function buildTerrainArt() {
     barrel: makeLayer(-26, -64, 26, 8, (g) => drawBarrel(g, false)),
     barrelHot: makeLayer(-26, -64, 26, 8, (g) => drawBarrel(g, true)),
     tree: makeLayer(-46, -106, 46, 8, drawTree),
+    tower: makeLayer(-52, -170, 52, 12, drawTower),
   };
 }
 
@@ -656,8 +1021,12 @@ const ICON_DRAW = {
     g.scale(0.44, 0.44);
     drawTree(g);
   },
+  tower: (g) => {
+    g.scale(0.29, 0.29);
+    drawTower(g);
+  },
 };
-const ICON_BASE = { wall: 0.82, water: 0.86, ice: 0.84, mine: 0.78, barrel: 0.9, tree: 0.94 };
+const ICON_BASE = { wall: 0.82, water: 0.86, ice: 0.84, mine: 0.78, barrel: 0.9, tree: 0.94, tower: 0.96 };
 
 export function hasTerrainIcon(id) {
   return id in ICON_DRAW;

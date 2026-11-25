@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=173';
-import { TerrainMap, WALL } from './terrain.js?v=173';
-import { installBeasts } from './beasts.js?v=173';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=177';
+import { TerrainMap, WALL } from './terrain.js?v=177';
+import { installBeasts } from './beasts.js?v=177';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -485,7 +485,7 @@ export class World {
       this.counts[u.side] = (this.counts[u.side] || 0) + 1;
     }
     for (const p of this.props) {
-      if (!p.dead && (p.type === 'barrel' || p.type === 'tree')) this.speciesCounts[p.type] = (this.speciesCounts[p.type] || 0) + 1;
+      if (!p.dead && (p.type === 'barrel' || p.type === 'tree' || p.type === 'tower')) this.speciesCounts[p.type] = (this.speciesCounts[p.type] || 0) + 1;
     }
     this.enemyGrids.clear();
     for (const side of this.grids.keys()) {

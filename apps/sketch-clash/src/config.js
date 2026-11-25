@@ -337,7 +337,7 @@ export const MECHAZORD = {
   muzzleLen: 8 * K,
 };
 
-export const TERRAIN_IDS = ['wall', 'water', 'ice', 'mine', 'barrel', 'tree'];
+export const TERRAIN_IDS = ['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower'];
 
 // `faction` decides who fights whom in free-for-all (defaults to the
 // species itself); a knight is the same faction as the cavalry.
@@ -369,13 +369,14 @@ export const SPECIES = {
   // terrain items that appear in the legend
   barrel: { id: 'barrel', label: 'Barrel', def: { prop: true } },
   tree: { id: 'tree', label: 'Tree', def: { prop: true } },
+  tower: { id: 'tower', label: 'Wizard Tower', def: { prop: true } },
 };
 // The order of the palette (the knight only ever comes from a cavalry).
 export const TABS = [
   { id: 'army', label: 'Army', items: ['soldier', 'flamethrower', 'sniper', 'roman', 'grenadier', 'archer', 'cowboy', 'ninja'] },
   { id: 'robots', label: 'Robots', items: ['mechazord'], locked: true }, // MechaZord is kept but the tab is switched off
-  { id: 'terrain', label: 'Terrain', items: ['wall', 'water', 'ice', 'mine', 'barrel', 'tree'] },
+  { id: 'terrain', label: 'Terrain', items: ['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower'] },
 ];
-export const TERRAIN_LABELS = { wall: 'Wall', water: 'Water', ice: 'Ice', mine: 'Mines', barrel: 'Barrel', tree: 'Tree' };
+export const TERRAIN_LABELS = { wall: 'Wall', water: 'Water', ice: 'Ice', mine: 'Mines', barrel: 'Barrel', tree: 'Tree', tower: 'Wizard Tower' };
 export const PALETTE_ORDER = TABS[0].items;
-export const SPECIES_ORDER = [...TABS[0].items, ...TABS[1].items, 'barrel', 'tree'];
+export const SPECIES_ORDER = [...TABS[0].items, ...TABS[1].items, 'barrel', 'tree', 'tower'];

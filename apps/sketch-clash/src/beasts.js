@@ -1,5 +1,5 @@
-import { TAU, FEET, GAIT } from './config.js?v=173';
-import { WATER, ICE, WALL } from './terrain.js?v=173';
+import { TAU, FEET, GAIT } from './config.js?v=177';
+import { WATER, ICE, WALL } from './terrain.js?v=177';
 
 // Everything the Animals and Mythical tabs add to the world, plus the terrain physics:
 // the beast brain, the mage's bolts, the necromancer's skeletons, zombie infection,
@@ -9,6 +9,7 @@ const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
 const BARREL_HP = 28;
 const TREE_R = 6;
+const TOWER_R = 16;
 const BARREL_R = 7;
 const MINE_R = 12;
 
@@ -145,10 +146,10 @@ export function installBeasts(World) {
         if (p.dead) continue;
         const ddx = fx - p.x;
         const ddy = fy - p.y;
-        if (ddx > 24 || ddx < -24 || ddy > 24 || ddy < -24) continue;
-        if (p.type === 'tree' || p.type === 'barrel') {
+        if (ddx > 34 || ddx < -34 || ddy > 34 || ddy < -34) continue;
+        if (p.type === 'tree' || p.type === 'barrel' || p.type === 'tower') {
           if (fly) continue;
-          const r = (p.type === 'tree' ? TREE_R : BARREL_R) + 3;
+          const r = (p.type === 'tower' ? TOWER_R : p.type === 'tree' ? TREE_R : BARREL_R) + 3;
           const dd = Math.hypot(ddx, ddy) || 0.01;
           if (dd < r) {
             u.x += (ddx / dd) * (r - dd);
@@ -221,10 +222,10 @@ export function installBeasts(World) {
   P.shotBlocked = function (x, y, dmg) {
     if (this.terrain.at(x, y + 4) & WALL) return true;
     for (const p of this.props) {
-      if (p.dead || (p.type !== 'tree' && p.type !== 'barrel')) continue;
-      const cy = p.type === 'tree' ? p.y - 6 : p.y - 7;
-      const r = p.type === 'tree' ? 4 : 5;
-      if (Math.abs(x - p.x) > 10 || Math.abs(y - cy) > 20) continue;
+      if (p.dead || (p.type !== 'tree' && p.type !== 'barrel' && p.type !== 'tower')) continue;
+      const cy = p.type === 'tower' ? p.y - 24 : p.y - (p.type === 'tree' ? 6 : 7);
+      const r = p.type === 'tower' ? 14 : p.type === 'tree' ? 4 : 5;
+      if (Math.abs(x - p.x) > r + 6 || Math.abs(y - cy) > 24) continue;
       if (Math.hypot(x - p.x, (y - cy) * 0.55) <= r) {
         if (p.type === 'barrel') this.damageProp(p, dmg);
         return true;
