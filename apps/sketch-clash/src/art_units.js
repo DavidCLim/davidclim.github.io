@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=133';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=133';
+import { TAU, K } from './config.js?v=134';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=134';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -90,90 +90,67 @@ function dome(g, color, rx, ry, cy) {
 function drawMiniBody(g, front, gz) {
   g.lineJoin = 'round';
   g.lineCap = 'round';
-  eggBody(g, '#d6e24e', '#9cae28');
+  // an olive-green egg with a diagonal belt of gold rounds
+  eggBody(g, '#79a055', '#4e7237');
+  g.strokeStyle = OUT;
+  g.lineWidth = 6.4;
   g.save();
   g.beginPath();
   g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
   g.clip();
-  // a hazard-striped belt
-  g.fillStyle = '#f2c630';
-  g.fillRect(-22, 12, 44, 5);
-  g.fillStyle = '#17181e';
-  for (let x = -24; x < 24; x += 7) {
-    g.beginPath();
-    g.moveTo(x, 12);
-    g.lineTo(x + 3.6, 12);
-    g.lineTo(x + 0.4, 17);
-    g.lineTo(x - 3.2, 17);
-    g.closePath();
-    g.fill();
-  }
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.3;
   g.beginPath();
-  g.moveTo(-22, 12);
-  g.lineTo(22, 12);
-  g.moveTo(-22, 17);
-  g.lineTo(22, 17);
+  g.moveTo(-22, 1);
+  g.lineTo(16, 25);
   g.stroke();
-  // a black hood strap over the head
-  g.fillStyle = '#23252d';
-  g.fillRect(-22, -17.4, 44, 4.4);
-  g.beginPath();
-  g.moveTo(-22, -17.4);
-  g.lineTo(22, -17.4);
-  g.moveTo(-22, -13);
-  g.lineTo(22, -13);
+  g.strokeStyle = '#5a3f22';
+  g.lineWidth = 4.4;
   g.stroke();
+  g.strokeStyle = '#f0c64a';
+  g.lineWidth = 2.4;
+  g.setLineDash([2.4, 1.8]);
+  g.stroke();
+  g.setLineDash([]);
   g.restore();
-  // big round lenses with the eyes behind the glass
-  const lx = front ? [-7.4, 7.4] : [-1.8, 11.2];
-  for (const x of lx) {
-    g.fillStyle = '#20232b';
-    g.strokeStyle = OUT;
-    g.lineWidth = 1.6;
-    g.beginPath();
-    g.arc(x, -4.4, 7, 0, TAU);
-    g.fill();
-    g.stroke();
-    g.fillStyle = '#bfeaf4';
-    g.beginPath();
-    g.arc(x, -4.4, 5.4, 0, TAU);
-    g.fill();
-  }
-  bigEyes(g, lx, gz, -4.4, 3.6, 3.8, 1.2, 2.3);
-  for (const x of lx) {
-    g.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-    g.lineWidth = 1.2;
-    g.beginPath();
-    g.arc(x, -4.4, 4, Math.PI * 1.1, Math.PI * 1.45);
-    g.stroke();
-  }
-  // the rubber mask over the nose and mouth, with a round filter on the front
-  const mx = front ? 0 : 6;
-  g.fillStyle = '#4a4f5b';
+  bigEyes(g, front ? [-7.4, 7.4] : [-1.6, 11.4], gz, -4.2, 4.2, 4.4, 1.4, 2.6);
+  // thick friendly-stern brows
   g.strokeStyle = OUT;
-  g.lineWidth = 1.6;
+  g.lineWidth = 1.9;
   g.beginPath();
-  g.moveTo(mx - 10, 3.6);
-  g.quadraticCurveTo(mx, 1.4, mx + 10, 3.6);
-  g.lineTo(mx + 8.4, 11.6);
-  g.quadraticCurveTo(mx, 16.4, mx - 8.4, 11.6);
+  for (const x of front ? [-7.4, 7.4] : [-1.6, 11.4]) {
+    g.moveTo(x - 4.6, -9.6);
+    g.lineTo(x + 4.2, -8);
+  }
+  g.stroke();
+  if (front) smile(g, 0, 5.4, 3.4);
+  else smile(g, 6, 5.4, 3);
+  // a steel pot helmet with a rim and a chin strap
+  const hg = g.createLinearGradient(0, -27, 0, -10);
+  hg.addColorStop(0, '#a7b0be');
+  hg.addColorStop(1, '#5f6877');
+  g.fillStyle = hg;
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.7;
+  g.beginPath();
+  g.moveTo(-19, -10);
+  g.bezierCurveTo(-20, -27, 20, -27, 19, -10);
   g.closePath();
   g.fill();
   g.stroke();
-  const fg = g.createRadialGradient(mx - 1.4, 7.4, 1, mx, 8.6, 6);
-  fg.addColorStop(0, '#aeb5c4');
-  fg.addColorStop(1, '#5d6474');
-  g.fillStyle = fg;
-  g.beginPath();
-  g.arc(mx, 8.6, 5.2, 0, TAU);
+  g.fillStyle = '#434a57';
+  rr(g, -22.6, -12.2, 45.2, 4, 2);
   g.fill();
   g.stroke();
-  g.strokeStyle = 'rgba(20, 24, 34, 0.7)';
-  g.lineWidth = 0.9;
+  g.fillStyle = 'rgba(255, 255, 255, 0.35)';
   g.beginPath();
-  for (const r of [1.8, 3.4]) g.arc(mx, 8.6, r, 0, TAU), g.moveTo(mx + r + 1.6, 8.6);
+  g.ellipse(-9, -19, 2.6, 5, 0.5, 0, TAU);
+  g.fill();
+  g.strokeStyle = 'rgba(20, 24, 30, 0.8)';
+  g.lineWidth = 1.2;
+  g.beginPath();
+  g.moveTo(-19.6, -9);
+  g.quadraticCurveTo(-21, 6, -15, 14);
+  g.moveTo(19.6, -9);
+  g.quadraticCurveTo(21, 6, 15, 14);
   g.stroke();
 }
 
@@ -227,179 +204,132 @@ function drawRomanBody(g, front, gz, angry) {
   g.lineJoin = 'round';
   g.lineCap = 'round';
   const ox = front ? 0 : 4.6;
-  // two curved horns sweeping up from the helm
-  for (const sx of [-1, 1]) {
-    g.save();
-    g.translate(front ? 0 : 2, 0);
-    g.scale(sx, 1);
-    const hg = g.createLinearGradient(14, -14, 30, -34);
-    hg.addColorStop(0, '#d9cfb4');
-    hg.addColorStop(1, '#fbf6e8');
-    g.fillStyle = hg;
-    g.strokeStyle = OUT;
-    g.lineWidth = 1.6;
-    g.beginPath();
-    g.moveTo(11, -17);
-    g.bezierCurveTo(22, -17, 29, -22, 28, -35);
-    g.bezierCurveTo(24, -27, 19, -25, 12, -24.4);
-    g.closePath();
-    g.fill();
-    g.stroke();
-    g.restore();
-  }
-  // a broad egg in blue-grey
-  eggBody(g, '#6f92bb', '#456590');
+  // a red plume on top
+  g.fillStyle = '#d23d36';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.6;
+  g.beginPath();
+  g.moveTo(-6, -22);
+  g.quadraticCurveTo(-7, -35, 5, -35.4);
+  g.quadraticCurveTo(15, -35, 18, -26);
+  g.quadraticCurveTo(9, -30.4, 6, -22);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  // a big steel helmet egg
+  const gr = g.createLinearGradient(-14, -22, 16, 24);
+  gr.addColorStop(0, '#f2f4f8');
+  gr.addColorStop(0.45, '#b4bccb');
+  gr.addColorStop(1, '#7a8498');
+  g.fillStyle = gr;
   g.strokeStyle = OUT;
   g.lineWidth = 1.9;
   g.beginPath();
   g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
-  g.stroke();
-  // the big braided orange beard
-  const bg = g.createLinearGradient(0, 0, 0, 26);
-  bg.addColorStop(0, '#f0963a');
-  bg.addColorStop(1, '#b4561c');
-  g.fillStyle = bg;
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.7;
-  g.beginPath();
-  g.moveTo(-17 + ox, 1);
-  g.quadraticCurveTo(ox, -3.4, 17 + ox, 1);
-  g.quadraticCurveTo(19 + ox, 14, 9 + ox, 21);
-  g.lineTo(5.4 + ox, 26);
-  g.lineTo(ox + 0.4, 21.6);
-  g.lineTo(-5 + ox, 26);
-  g.lineTo(-9 + ox, 21);
-  g.quadraticCurveTo(-19 + ox, 14, -17 + ox, 1);
-  g.closePath();
   g.fill();
   g.stroke();
-  g.strokeStyle = 'rgba(110, 48, 12, 0.7)';
-  g.lineWidth = 1;
+  g.fillStyle = 'rgba(255, 255, 255, 0.45)';
   g.beginPath();
-  g.moveTo(-9 + ox, 6);
-  g.quadraticCurveTo(-8 + ox, 14, -5 + ox, 22);
-  g.moveTo(ox, 6);
-  g.lineTo(ox, 19);
-  g.moveTo(9 + ox, 6);
-  g.quadraticCurveTo(8 + ox, 14, 5 + ox, 22);
-  g.stroke();
-  // a mustache
-  g.fillStyle = '#d97c2a';
-  g.strokeStyle = OUT;
+  g.ellipse(-12, 3, 3, 9, 0.1, 0, TAU);
+  g.fill();
+  // a ridge down the middle and a rim at the neck
+  g.save();
+  g.beginPath();
+  g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
+  g.clip();
+  g.strokeStyle = 'rgba(70, 80, 100, 0.8)';
   g.lineWidth = 1.3;
   g.beginPath();
-  g.moveTo(-9 + ox, 3.4);
-  g.quadraticCurveTo(ox, 0.2, 9 + ox, 3.4);
-  g.quadraticCurveTo(ox, 6.6, -9 + ox, 3.4);
+  g.moveTo(ox, -24);
+  g.lineTo(ox, 24);
+  g.moveTo(-22, 11);
+  g.quadraticCurveTo(0, 14.6, 22, 11);
+  g.stroke();
+  g.restore();
+  // the visor slit with the eyes behind it
+  g.fillStyle = '#0c0e14';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.5;
+  g.beginPath();
+  g.moveTo(-14 + ox, -10.4);
+  g.lineTo(14 + ox, -10.4);
+  g.lineTo(13 + ox, -1.6);
+  g.lineTo(-13 + ox, -1.6);
   g.closePath();
   g.fill();
   g.stroke();
-  // eyes under the helm's brow
-  const eyes = front ? [-7, 7] : [-1.4, 11];
-  for (const x of eyes) {
+  const eyes = front ? [[-6.4, -6, 3.6, 2.8], [6.4, -6, 3.6, 2.8]] : [[-1, -6, 3.6, 2.8], [10.4, -6, 3.6, 2.8]];
+  for (const [x, y, rx, ry] of eyes) {
     g.fillStyle = '#fbf4f1';
-    g.strokeStyle = OUT;
-    g.lineWidth = 1.6;
     g.beginPath();
-    g.ellipse(x, -4.4, 4.1, 3.6, 0, 0, TAU);
+    g.ellipse(x, y, rx, ry, 0, 0, TAU);
     g.fill();
-    g.stroke();
     g.fillStyle = '#0d0a0b';
     g.beginPath();
-    g.arc(x + 1 + gz[0] * 0.4, -4.2 + gz[1] * 0.3, 2.3, 0, TAU);
+    g.arc(x + 1 + gz[0] * 0.35, y + 0.2 + gz[1] * 0.25, 2.1, 0, TAU);
     g.fill();
   }
-  // the steel helm: a round cap with a rivet band and a nose guard
-  const sg = g.createLinearGradient(-16, -26, 16, -8);
-  sg.addColorStop(0, '#dde3ee');
-  sg.addColorStop(1, '#7f899d');
-  g.fillStyle = sg;
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.8;
+  // a small smile painted on the faceplate
+  g.strokeStyle = 'rgba(40, 46, 60, 0.85)';
+  g.lineWidth = 1.5;
   g.beginPath();
-  g.moveTo(-19.6, -8.4);
-  g.bezierCurveTo(-20.6, -24, -9, -27, 0, -27);
-  g.bezierCurveTo(9, -27, 20.6, -24, 19.6, -8.4);
-  g.quadraticCurveTo(0, -12.4, -19.6, -8.4);
-  g.closePath();
-  g.fill();
+  g.arc(ox, 3, 3.6, Math.PI * 0.18, Math.PI * 0.82);
   g.stroke();
-  g.fillStyle = '#58606f';
-  rr(g, -20.4, -13.6, 40.8, 4.8, 2);
-  g.fill();
-  g.stroke();
-  g.fillStyle = '#e7eaf1';
-  for (const x of [-15, -9, -3, 3, 9, 15]) {
-    g.beginPath();
-    g.arc(x, -11.2, 1, 0, TAU);
-    g.fill();
-  }
-  g.fillStyle = '#8f99ad';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.4;
-  g.beginPath();
-  g.moveTo(ox - 2.2, -9);
-  g.lineTo(ox + 2.2, -9);
-  g.lineTo(ox + 1.6, 1);
-  g.lineTo(ox - 1.6, 1);
-  g.closePath();
-  g.fill();
-  g.stroke();
-  g.fillStyle = 'rgba(255, 255, 255, 0.4)';
-  g.beginPath();
-  g.ellipse(-9, -20, 2.4, 4.4, 0.4, 0, TAU);
-  g.fill();
   if (angry) {
-    g.strokeStyle = OUT;
-    g.lineWidth = 2;
+    g.strokeStyle = '#d23d36';
+    g.lineWidth = 1.8;
     g.beginPath();
-    g.moveTo(-12 + ox, -9.6);
-    g.lineTo(-2 + ox, -6.8);
-    g.moveTo(12 + ox, -9.6);
-    g.lineTo(2 + ox, -6.8);
+    g.moveTo(-12 + ox, -12);
+    g.lineTo(-1 + ox, -9.4);
+    g.moveTo(12 + ox, -12);
+    g.lineTo(1 + ox, -9.4);
+    g.stroke();
+  }
+  g.fillStyle = '#e7eaf1';
+  g.strokeStyle = OUT;
+  g.lineWidth = 0.9;
+  for (const x of [-15.4, 15.4]) {
+    g.beginPath();
+    g.arc(x + ox * 0.4, -6, 1.3, 0, TAU);
+    g.fill();
     g.stroke();
   }
 }
 
-// Origin: the hand. A long-handled battle axe with a broad steel head.
+// Origin: the hand. A straight silver sword with a red crossguard.
 function drawSpear(g) {
   g.lineJoin = 'round';
-  g.fillStyle = '#8a5a30';
+  g.fillStyle = '#6b4427';
   g.strokeStyle = OUT;
-  g.lineWidth = 1.4;
-  rr(g, -10, -1.9, 52, 3.8, 1.4);
+  g.lineWidth = 1.3;
+  rr(g, -9, -1.8, 10, 3.6, 1.2);
   g.fill();
   g.stroke();
-  const ag = g.createLinearGradient(28, -16, 46, 16);
-  ag.addColorStop(0, '#eef1f7');
-  ag.addColorStop(1, '#7f899d');
-  g.fillStyle = ag;
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.5;
+  g.fillStyle = '#e8c24e';
   g.beginPath();
-  g.moveTo(30, -3);
-  g.quadraticCurveTo(28, -14, 38, -17);
-  g.quadraticCurveTo(48, -9, 42, 0);
-  g.quadraticCurveTo(48, 9, 38, 17);
-  g.quadraticCurveTo(28, 14, 30, 3);
+  g.arc(-10, 0, 2.4, 0, TAU);
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#dde1ea';
+  g.beginPath();
+  g.moveTo(2, -2.6);
+  g.lineTo(46, -2.6);
+  g.lineTo(58, 0);
+  g.lineTo(46, 2.6);
+  g.lineTo(2, 2.6);
   g.closePath();
   g.fill();
   g.stroke();
-  g.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-  g.lineWidth = 1;
+  g.strokeStyle = 'rgba(120, 128, 146, 0.8)';
+  g.lineWidth = 0.9;
   g.beginPath();
-  g.moveTo(41, -9);
-  g.quadraticCurveTo(44.4, -4, 41, 0);
-  g.moveTo(41, 9);
-  g.quadraticCurveTo(44.4, 4, 41, 0);
+  g.moveTo(6, 0);
+  g.lineTo(50, 0);
   g.stroke();
-  g.fillStyle = '#5b3d28';
-  rr(g, 27.4, -3.8, 4.4, 7.6, 1.2);
-  g.fill();
-  g.stroke();
-  g.fillStyle = '#c9ccd6';
-  g.beginPath();
-  g.arc(-10.6, 0, 2.6, 0, TAU);
+  g.fillStyle = '#c8352f';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.3;
+  rr(g, 0, -6.8, 3.8, 13.6, 1.4);
   g.fill();
   g.stroke();
 }
@@ -425,7 +355,7 @@ function drawGrenBody(g, front, gz) {
   g.beginPath();
   g.arc(-22.2, 6, 1.3, 0, TAU);
   g.fill();
-  eggBody(g, '#ee7fa3', '#c8517a');
+  eggBody(g, '#66b1bd', '#4f95a2');
   g.save();
   g.beginPath();
   g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
@@ -481,45 +411,64 @@ function drawGrenBody(g, front, gz) {
   g.fill();
   g.stroke();
   bigEyes(g, front ? [-8.4, 8.4] : [-2.4, 11], gz, -2, 4.5, 4.6, 1.9, 2.7);
-  // soot smudged across the cheeks
-  g.fillStyle = 'rgba(24, 28, 30, 0.38)';
-  for (const [x, y, rx, ry, r] of front ? [[-12.4, 5.6, 3.4, 1.7, 0.3], [12.4, 5.6, 3.4, 1.7, -0.3]] : [[-8, 6.6, 3, 1.6, 0.2], [15.2, 5.4, 3.2, 1.7, -0.2]]) {
-    g.beginPath();
-    g.ellipse(x, y, rx, ry, r, 0, TAU);
-    g.fill();
-  }
   if (front) smile(g, 0, 3.8, 3.4);
   else smile(g, 4.6, 4.4, 3.2);
 
-  // a tall spiky blue mohawk with a stud band
-  const tops = [-12, -8, -4, 0, 4, 8, 12];
-  tops.forEach((x, k) => {
-    const by = -Math.sqrt(Math.max(0, 1 - (x / 20.7) ** 2)) * 23 + 3;
-    const h = 12 + (k === 3 ? 6 : k % 2 ? 0 : 3) + (3 - Math.abs(k - 3)) * 1.2;
-    const sg = g.createLinearGradient(0, by - h, 0, by);
-    sg.addColorStop(0, '#7fd0ff');
-    sg.addColorStop(1, '#2477d8');
-    g.fillStyle = sg;
+  // a brown leather aviator cap with ear flaps, a fur rim and goggles
+  for (const sx of [-1, 1]) {
+    g.fillStyle = '#8a5a30';
     g.strokeStyle = OUT;
     g.lineWidth = 1.5;
     g.beginPath();
-    g.moveTo(x - 3.4, by + 1);
-    g.lineTo(x + (k - 3) * 0.7, by - h);
-    g.lineTo(x + 3.4, by + 1);
-    g.closePath();
+    g.ellipse(sx * 18.6, -1, 4, 7.2, 0, 0, TAU);
     g.fill();
     g.stroke();
-  });
-  g.fillStyle = '#23252d';
+  }
+  const cg = g.createLinearGradient(0, -26, 0, -6);
+  cg.addColorStop(0, '#a66e3c');
+  cg.addColorStop(1, '#6f4524');
+  g.fillStyle = cg;
   g.strokeStyle = OUT;
-  g.lineWidth = 1.4;
-  rr(g, -17, -9.2, 34, 4.2, 2);
+  g.lineWidth = 1.7;
+  g.beginPath();
+  g.moveTo(-18.4, -6);
+  g.bezierCurveTo(-19.6, -24, -8, -26.4, 0, -26.4);
+  g.bezierCurveTo(8, -26.4, 19.6, -24, 18.4, -6);
+  g.closePath();
   g.fill();
   g.stroke();
-  g.fillStyle = '#d8dce6';
-  for (const x of [-12, -6, 0, 6, 12]) {
+  g.strokeStyle = 'rgba(40, 22, 10, 0.55)';
+  g.lineWidth = 1;
+  g.beginPath();
+  g.moveTo(0, -26);
+  g.lineTo(0, -12);
+  g.moveTo(-9, -24.4);
+  g.quadraticCurveTo(-11, -17, -10, -11);
+  g.moveTo(9, -24.4);
+  g.quadraticCurveTo(11, -17, 10, -11);
+  g.stroke();
+  g.fillStyle = '#efe4cb';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.5;
+  rr(g, -20.4, -10.6, 40.8, 5, 2.4);
+  g.fill();
+  g.stroke();
+  const gx = front ? 0 : 3;
+  g.fillStyle = '#3b3f4a';
+  rr(g, -16 + gx, -19.6, 32, 3.2, 1.4);
+  g.fill();
+  g.stroke();
+  for (const x of [-5.4, 5.4]) {
+    g.fillStyle = '#a8e4f0';
+    g.strokeStyle = OUT;
+    g.lineWidth = 1.4;
     g.beginPath();
-    g.arc(x, -7.1, 1.1, 0, TAU);
+    g.arc(x + gx, -18, 3.8, 0, TAU);
+    g.fill();
+    g.stroke();
+    g.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    g.beginPath();
+    g.arc(x + gx - 1.2, -19.2, 1, 0, TAU);
     g.fill();
   }
 }
@@ -565,41 +514,50 @@ function drawBomb(g, lit) {
 function drawBushHat(g) {
   g.lineJoin = 'round';
   g.lineCap = 'round';
-  // a golden circlet with a green gem and two leaves
-  for (const sx of [-1, 1]) {
-    g.save();
-    g.scale(sx, 1);
-    g.fillStyle = '#6cc060';
-    g.strokeStyle = OUT;
-    g.lineWidth = 1.3;
-    g.beginPath();
-    g.moveTo(9, -5);
-    g.quadraticCurveTo(14, -12, 19.6, -9.4);
-    g.quadraticCurveTo(15.6, -3.4, 9, -5);
-    g.closePath();
-    g.fill();
-    g.stroke();
-    g.restore();
-  }
+  // a green felt cap with a turned-up brim
+  const gr = g.createLinearGradient(-10, -22, 10, 4);
+  gr.addColorStop(0, '#4f9a4a');
+  gr.addColorStop(1, '#2f6a33');
+  g.fillStyle = gr;
   g.strokeStyle = OUT;
-  g.lineWidth = 4.2;
+  g.lineWidth = 1.8;
   g.beginPath();
-  g.moveTo(-19.4, -1);
-  g.quadraticCurveTo(0, -8.4, 19.4, -1);
+  g.moveTo(-19.4, 2);
+  g.bezierCurveTo(-21, -10, -10, -19.6, 3, -19.6);
+  g.bezierCurveTo(13, -19.6, 20.6, -11, 19.4, 2);
+  g.quadraticCurveTo(0, 5.8, -19.4, 2);
+  g.closePath();
+  g.fill();
   g.stroke();
-  g.strokeStyle = '#f0c64a';
-  g.lineWidth = 2.4;
+  g.fillStyle = '#2a5a2e';
+  g.beginPath();
+  g.moveTo(-19.8, -1.4);
+  g.quadraticCurveTo(0, 3.2, 19.8, -1.4);
+  g.lineTo(19.4, 3.4);
+  g.quadraticCurveTo(0, 7.4, -19.4, 3.4);
+  g.closePath();
+  g.fill();
   g.stroke();
-  g.fillStyle = '#3fd47a';
+  g.fillStyle = 'rgba(255, 255, 255, 0.2)';
+  g.beginPath();
+  g.ellipse(-8, -11, 5.6, 2.2, -0.6, 0, TAU);
+  g.fill();
+  // a long white feather tucked into the brim
+  g.fillStyle = '#f6f1e2';
   g.strokeStyle = OUT;
   g.lineWidth = 1.2;
   g.beginPath();
-  g.moveTo(0, -10.4);
-  g.lineTo(3.2, -5.6);
-  g.lineTo(0, -1.4);
-  g.lineTo(-3.2, -5.6);
+  g.moveTo(8, -1);
+  g.quadraticCurveTo(24, -6, 27, -22);
+  g.quadraticCurveTo(15, -14, 8, -1);
   g.closePath();
   g.fill();
+  g.stroke();
+  g.strokeStyle = '#d84a3a';
+  g.lineWidth = 1;
+  g.beginPath();
+  g.moveTo(9, -2);
+  g.quadraticCurveTo(21, -8, 25.6, -19);
   g.stroke();
 }
 
@@ -632,21 +590,8 @@ function drawArcherBody(g, front, gz, squint) {
   g.fillStyle = '#e5b94d';
   g.fillRect(-5, 1, 10, 1.8);
   g.restore();
-  // long pointed ears
-  g.fillStyle = '#f0e4c2';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.6;
-  for (const sx of front ? [-1, 1] : [-1]) {
-    g.beginPath();
-    g.moveTo(sx * 17, -9);
-    g.quadraticCurveTo(sx * 25, -12, sx * 31, -17);
-    g.quadraticCurveTo(sx * 27, -6, sx * 18.6, 0);
-    g.closePath();
-    g.fill();
-    g.stroke();
-  }
-  // a cream egg
-  eggBody(g, '#f4ead0', '#d6c79c');
+  // a light green egg
+  eggBody(g, '#9ccf6a', '#6aa042');
   g.strokeStyle = OUT;
   g.lineWidth = 1.8;
   g.beginPath();
@@ -656,18 +601,6 @@ function drawArcherBody(g, front, gz, squint) {
   bigEyes(g, front ? [-8.4, 8.4] : [-2.2, 12.6], gz, -3.8, 4.5, 4.7, 1.1, 3, !!squint);
   if (front) smile(g, 0, 6.6, 3.2);
   else smile(g, 5.2, 7, 2.8);
-  // two stripes of green paint under each eye
-  g.strokeStyle = '#3f9a52';
-  g.lineWidth = 1.5;
-  g.beginPath();
-  for (const x of front ? [-8.4, 8.4] : [-2.2, 12.6]) {
-    g.moveTo(x - 2.2, 1.4);
-    g.lineTo(x - 0.6, 4.2);
-    g.moveTo(x + 1, 1.4);
-    g.lineTo(x + 2.6, 4.2);
-  }
-  g.stroke();
-
   // a leather baldric across the chest with a brass buckle
   g.save();
   g.beginPath();
@@ -679,7 +612,7 @@ function drawArcherBody(g, front, gz, squint) {
   g.moveTo(-22, 0);
   g.lineTo(18, 24);
   g.stroke();
-  g.strokeStyle = '#3f7a3a';
+  g.strokeStyle = '#7a4a2a';
   g.lineWidth = 4;
   g.stroke();
   g.restore();
@@ -1294,21 +1227,8 @@ function drawNinjaBody(g, front, gz) {
   g.lineJoin = 'round';
   g.lineCap = 'round';
   const ox = front ? 0 : 4;
-  // two headband tails flying out behind
-  g.fillStyle = '#d23d36';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.4;
-  for (const [dy, len] of [[-13, 11], [-9.6, 8]]) {
-    g.beginPath();
-    g.moveTo(-17, dy - 2);
-    g.quadraticCurveTo(-24, dy - 5, -17 - len - 4, dy + 1);
-    g.quadraticCurveTo(-24, dy + 1, -17, dy + 2.4);
-    g.closePath();
-    g.fill();
-    g.stroke();
-  }
-  // the ninja: a black egg in a red sash
-  eggBody(g, '#3a3d48', '#16171d');
+  // an indigo egg in a red sash
+  eggBody(g, '#5a6fb0', '#34448a');
   g.save();
   g.beginPath();
   g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
@@ -1323,64 +1243,57 @@ function drawNinjaBody(g, front, gz) {
   g.moveTo(-22, 15.6);
   g.lineTo(22, 15.6);
   g.stroke();
-  g.restore();
-  // the strip of skin around the eyes
-  g.fillStyle = '#efd9bd';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.5;
+  // black hair over the top, under the headband
+  g.fillStyle = '#1d1c24';
   g.beginPath();
-  g.moveTo(-16 + ox, -8.8);
-  g.quadraticCurveTo(ox, -11.6, 16 + ox, -8.8);
-  g.lineTo(15 + ox, 1.2);
-  g.quadraticCurveTo(ox, 3.8, -15 + ox, 1.2);
-  g.closePath();
+  g.ellipse(0, -13, 21.6, 12, 0, Math.PI, TAU);
+  g.fill();
+  g.restore();
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.8;
+  g.beginPath();
+  g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
+  g.stroke();
+  // the topknot
+  g.fillStyle = '#1d1c24';
+  g.beginPath();
+  g.ellipse(front ? 0 : -2, -27.4, 5, 4.2, 0, 0, TAU);
   g.fill();
   g.stroke();
-  bigEyes(g, front ? [-7, 7] : [-1.6, 10.8], gz, -3.8, 3.8, 3.8, 1.4, 2.4);
-  // sharp brows
+  g.fillStyle = '#d23d36';
+  rr(g, (front ? 0 : -2) - 2.6, -24.4, 5.2, 2.4, 0.8);
+  g.fill();
+  g.stroke();
+  bigEyes(g, front ? [-7.4, 7.4] : [-1.8, 11.4], gz, -2.6, 4.2, 4.4, 1.4, 2.6);
   g.strokeStyle = OUT;
-  g.lineWidth = 1.9;
+  g.lineWidth = 1.8;
   g.beginPath();
-  for (const [x, sx] of front ? [[-7, 1], [7, -1]] : [[-1.6, 1], [10.8, -1]]) {
-    g.moveTo(x - 4.8 * sx, -8.6);
-    g.lineTo(x + 4.2 * sx, -6.4);
+  for (const x of front ? [-7.4, 7.4] : [-1.8, 11.4]) {
+    g.moveTo(x - 4.6, -8);
+    g.lineTo(x + 4.2, -6.4);
   }
   g.stroke();
-  // the red headband with a steel plate
+  if (front) smile(g, 0, 6, 3);
+  else smile(g, 6, 6, 2.6);
+  // a white headband with a red sun
   g.save();
   g.beginPath();
   g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
   g.clip();
-  g.fillStyle = '#d23d36';
-  g.fillRect(-22, -17.6, 44, 5.4);
+  g.fillStyle = '#f6f2ea';
+  g.fillRect(-22, -15.6, 44, 5.6);
   g.strokeStyle = OUT;
   g.lineWidth = 1.2;
   g.beginPath();
-  g.moveTo(-22, -17.6);
-  g.lineTo(22, -17.6);
-  g.moveTo(-22, -12.2);
-  g.lineTo(22, -12.2);
+  g.moveTo(-22, -15.6);
+  g.lineTo(22, -15.6);
+  g.moveTo(-22, -10);
+  g.lineTo(22, -10);
   g.stroke();
   g.restore();
-  g.fillStyle = '#c4cad6';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.2;
-  rr(g, ox * 0.5 - 6, -18, 12, 6, 1.6);
-  g.fill();
-  g.stroke();
-  // a four-pointed star on the plate
-  g.fillStyle = '#2a2d36';
+  g.fillStyle = '#d23d36';
   g.beginPath();
-  const cx = ox * 0.5;
-  g.moveTo(cx, -17.4);
-  g.lineTo(cx + 1.2, -15.6);
-  g.lineTo(cx + 2.6, -15);
-  g.lineTo(cx + 1.2, -14.4);
-  g.lineTo(cx, -12.6);
-  g.lineTo(cx - 1.2, -14.4);
-  g.lineTo(cx - 2.6, -15);
-  g.lineTo(cx - 1.2, -15.6);
-  g.closePath();
+  g.arc(ox * 0.6, -12.8, 2.2, 0, TAU);
   g.fill();
 }
 

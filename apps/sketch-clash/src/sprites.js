@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=133';
+import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=134';
 
 // Units are drawn from "art" coordinates matching the reference sprites
 // (origin at the body centre, y down) into small offscreen layers, then
@@ -258,30 +258,19 @@ function drawSoldierTorso(g, front, gaze) {
   g.moveTo(3.2, -29);
   g.quadraticCurveTo(9, -19.8, 21, -17.2);
   g.stroke();
-  // skull and crossbones
-  g.strokeStyle = '#f2eee2';
+  // a gold anchor on the hat
+  g.strokeStyle = '#f0c64a';
   g.lineWidth = 1.7;
   g.beginPath();
-  g.moveTo(-6, -18);
-  g.lineTo(6, -11.4);
-  g.moveTo(6, -18);
-  g.lineTo(-6, -11.4);
+  g.arc(0, -19.6, 1.5, 0, TAU);
+  g.moveTo(0, -18.1);
+  g.lineTo(0, -12);
+  g.moveTo(-2.6, -16.4);
+  g.lineTo(2.6, -16.4);
+  g.moveTo(-4, -14.2);
+  g.quadraticCurveTo(-3.6, -10.8, 0, -10.8);
+  g.quadraticCurveTo(3.6, -10.8, 4, -14.2);
   g.stroke();
-  g.fillStyle = '#f7f3e8';
-  g.strokeStyle = OUT;
-  g.lineWidth = 0.9;
-  g.beginPath();
-  g.arc(0, -17.4, 4, 0, TAU);
-  g.fill();
-  g.stroke();
-  rr(g, -2.4, -14.6, 4.8, 3.4, 1);
-  g.fill();
-  g.stroke();
-  g.fillStyle = '#17141a';
-  g.beginPath();
-  g.arc(-1.7, -17.8, 1.1, 0, TAU);
-  g.arc(1.7, -17.8, 1.1, 0, TAU);
-  g.fill();
   g.restore();
   // a gold hoop earring
   g.strokeStyle = OUT;
@@ -292,27 +281,6 @@ function drawSoldierTorso(g, front, gaze) {
   g.strokeStyle = '#f0c64a';
   g.lineWidth = 1.5;
   g.stroke();
-  // an eyepatch over one eye, with its strap
-  const px = front ? 8.4 : 12.6;
-  g.strokeStyle = '#17141a';
-  g.lineWidth = 1.5;
-  g.beginPath();
-  g.moveTo(px - 4.6, -7.4);
-  g.lineTo(px - 16, -12);
-  g.moveTo(px + 4.6, -2);
-  g.lineTo(px + 9, 1);
-  g.stroke();
-  g.fillStyle = '#17141a';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1;
-  g.beginPath();
-  g.ellipse(px, -4.4, 5.6, 5.9, -0.2, 0, TAU);
-  g.fill();
-  g.stroke();
-  g.fillStyle = 'rgba(255, 255, 255, 0.2)';
-  g.beginPath();
-  g.ellipse(px - 1.8, -6.4, 1.6, 1, -0.5, 0, TAU);
-  g.fill();
 }
 
 // the soldier's helmet badge
