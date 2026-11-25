@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=172';
-import { buildCreatureArt } from './creatures.js?v=172';
-import { buildEggArt } from './art_eggs.js?v=172';
-import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=172';
-import { Sfx } from './sfx.js?v=172';
-import { World } from './world.js?v=172';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=172';
-import { buildUnitArt } from './art_units.js?v=172';
-import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=172';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=173';
+import { buildCreatureArt } from './creatures.js?v=173';
+import { buildEggArt } from './art_eggs.js?v=173';
+import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=173';
+import { Sfx } from './sfx.js?v=173';
+import { World } from './world.js?v=173';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=173';
+import { buildUnitArt } from './art_units.js?v=173';
+import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=173';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -203,7 +203,7 @@ let tstroke = null;
 const STROKE_BASE = { wall: 14.5, water: 24, ice: 21 };
 
 function brushWidth() {
-  return 0.5 + brush / 32; // the default brush gives the normal width, the biggest about three times as wide
+  return Math.max(1, brush / 9); // the default ring gives the normal width; a bigger ring paints a proportionally thicker stroke
 }
 
 function putProp(kind, x, y) {
@@ -320,60 +320,31 @@ function dab(x, y) {
     }
     return;
   }
-  const { ox, oy, occ, sp } = stroke;
-  const [sx, sy, stag] = LATTICE[sp] || LATTICE.default;
-  const team = teamAt(x);
-  for (let j = Math.floor((y - oy - brush) / sy); j <= Math.ceil((y - oy + brush) / sy); j++) {
-    const off = stag && j & 1 ? 0.5 : 0;
-    for (let i = Math.floor((x - ox - brush) / sx - off); i <= Math.ceil((x - ox + brush) / sx - off); i++) {
-      const px = ox + (i + off) * sx;
-      const py = oy + j * sy;
-      if ((px - x) ** 2 + (py - y) ** 2 > brush * brush) continue;
-      const key = `t${i},${j}`;
-      if (occ.has(key)) continue;
-      if (!canPlace(px, py, team)) continue;
-      occ.add(key);
-      stroke.made.push(world.addUnit(sp, team, px, py));
+  // Units scatter loosely inside the ring, as in the original: no two closer than a unit's width,
+  // so a tap with a big brush fills the whole circle and a drag leaves a band as wide as the ring.
+  const { sp } = stroke;
+  const D = (LATTICE[sp] || LATTICE.default)[1] * 0.72;
+  const pts = stroke.pts || (stroke.pts = []);
+  const area = (brush * brush) / (D * D);
+  const tries = Math.ceil(area * (stroke.dragged ? 0.8 : 4)) + 1;
+  for (let n = 0; n < tries; n++) {
+    const a = Math.random() * TAU;
+    const r = brush < 2 ? 0 : Math.sqrt(Math.random()) * brush;
+    const px = x + Math.cos(a) * r;
+    const py = y + Math.sin(a) * r;
+    const team = teamAt(px);
+    if (!canPlace(px, py, team)) continue;
+    let near = false;
+    for (const q of pts) {
+      if ((q.x - px) ** 2 + (q.y - py) ** 2 < D * D) {
+        near = true;
+        break;
+      }
     }
+    if (near) continue;
+    pts.push({ x: px, y: py });
+    stroke.made.push(world.addUnit(sp, team, px, py));
   }
-}
-
-// A drag: columns every `sx` along the path, `brush` wide either side.
-function layPath(x0, y0, x1, y1) {
-  const st = stroke;
-  const d = Math.hypot(x1 - x0, y1 - y0);
-  if (!st || !d) return;
-  st.started = true;
-  const ux = (x1 - x0) / d;
-  const uy = (y1 - y0) / d;
-  if (!st.angSet) {
-    st.ang = Math.atan2(uy, ux);
-    st.angSet = true;
-  }
-  const nx = -uy;
-  const ny = ux;
-  const [sx, sy, stag] = LATTICE[st.sp] || LATTICE.default;
-  const team = teamAt(x1);
-  const s1 = st.s + d;
-  while (st.nextI * sx <= s1) {
-    const t = st.nextI * sx - st.s;
-    const cx = x0 + ux * t;
-    const cy = y0 + uy * t;
-    const off0 = stag && st.nextI & 1 && brush >= 6 ? 0.5 : 0;
-    for (let j = -Math.ceil(brush / sy); j <= Math.ceil(brush / sy); j++) {
-      const off = (j + off0) * sy;
-      if (Math.abs(off) > brush) continue;
-      const key = `p${st.nextI},${j}`;
-      if (st.occ.has(key)) continue;
-      const px = cx + nx * off;
-      const py = cy + ny * off;
-      if (!canPlace(px, py, teamAt(px))) continue;
-      st.occ.add(key);
-      st.made.push(world.addUnit(st.sp, teamAt(px), px, py));
-    }
-    st.nextI++;
-  }
-  st.s = s1;
 }
 
 let distAcc = 0;
@@ -445,15 +416,14 @@ stageCanvas.addEventListener('pointermove', (e) => {
     lastPaint = { x: ptr.x, y: ptr.y };
     return;
   }
-  if (!stroke.dragged) {
+  if (!stroke.started) {
     if (Math.hypot(ptr.x - stroke.ox, ptr.y - stroke.oy) < 5) return;
-    stroke.dragged = true;
-    stroke.lx = stroke.ox;
-    stroke.ly = stroke.oy;
+    dab(stroke.ox, stroke.oy);
+    lastPaint = { x: stroke.ox, y: stroke.oy };
   }
-  layPath(stroke.lx, stroke.ly, ptr.x, ptr.y);
-  stroke.lx = ptr.x;
-  stroke.ly = ptr.y;
+  stroke.dragged = true;
+  paintSegment(lastPaint.x, lastPaint.y, ptr.x, ptr.y);
+  lastPaint = { x: ptr.x, y: ptr.y };
 });
 
 function endPaint(e) {
@@ -616,8 +586,29 @@ wallToggle.addEventListener('change', () => {
     // storage may be blocked; the switch still works for this visit
   }
 });
-$('settings').addEventListener('click', () => {
-  settingsPanel.hidden = false;
+// the speaker button mutes and unmutes, as in the original; Settings opens with the comma key
+const SOUND_ON = '<path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>';
+const SOUND_OFF = '<path d="M11 5 6 9H2v6h4l5 4z"/><path d="m22 9-6 6M16 9l6 6"/>';
+$('sound').addEventListener('click', () => {
+  const m = !sfx.muted;
+  sfx.setMuted(m);
+  $('sound-icon').innerHTML = m ? SOUND_OFF : SOUND_ON;
+  $('sound').setAttribute('aria-pressed', String(m));
+  $('sound').setAttribute('aria-label', m ? 'Unmute' : 'Mute');
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === ',') settingsPanel.hidden = !settingsPanel.hidden;
+  // the same shortcuts as the original: E erase, C clear, Space pause, M sound
+  const typing = e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
+  if (typing || e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (k === 'e') eraserBtn.click();
+  else if (k === 'c') clearBtn.click();
+  else if (k === 'm') $('sound').click();
+  else if (e.key === ' ') {
+    e.preventDefault();
+    pauseBtn.click();
+  }
 });
 $('settings-close').addEventListener('click', () => {
   settingsPanel.hidden = true;
@@ -637,7 +628,7 @@ pauseBtn.addEventListener('click', () => {
   paused = !paused;
   $('pause-icon').innerHTML = paused ? PLAY_ICON : PAUSE_ICON;
   pauseBtn.setAttribute('aria-label', paused ? 'Resume' : 'Pause');
-  pauseBtn.title = paused ? 'Resume' : 'Pause';
+  pauseBtn.title = paused ? 'Resume (Space)' : 'Pause (Space)';
   $('paused').hidden = !paused;
 });
 

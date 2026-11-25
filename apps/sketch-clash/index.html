@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Lilita+One&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=172">
+    <link rel="stylesheet" href="styles.css?v=173">
   </head>
   <body>
     <div class="stage-wrap" id="stage-wrap">
@@ -20,21 +20,21 @@
       <h1 class="logo" aria-label="Sketch Clash"><span>S</span><span>k</span><span>e</span><span>t</span><span>c</span><span>h</span> <span>C</span><span>l</span><span>a</span><span>s</span><span>h</span></h1>
 
       <div class="tools">
-        <button type="button" class="icon-btn" id="eraser" aria-label="Eraser" aria-pressed="false" title="Eraser">
+        <button type="button" class="icon-btn" id="eraser" aria-label="Eraser" aria-pressed="false" title="Erase (E)">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
         </button>
-        <button type="button" class="icon-btn" id="clear" aria-label="Clear the battlefield" title="Clear everything">
+        <button type="button" class="icon-btn" id="clear" aria-label="Clear the battlefield" title="Clear (C)">
           <svg viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(45 12 12)"><path d="M12 1.5V10"/><rect x="9" y="10" width="6" height="2.6" rx="1"/><path d="M8.4 12.6h7.2l1.9 7.9H6.5z"/><path d="M10.4 14.8v5.7M12 14.8v5.7M13.6 14.8v5.7"/></g></svg>
         </button>
-        <button type="button" class="icon-btn" id="pause" aria-label="Pause" title="Pause">
+        <button type="button" class="icon-btn" id="pause" aria-label="Pause" title="Pause (Space)">
           <svg viewBox="0 0 24 24" aria-hidden="true" id="pause-icon"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
         </button>
-        <button type="button" class="icon-btn" id="settings" aria-label="Settings" title="Settings">
-          <svg viewBox="0 0 24 24" aria-hidden="true" id="settings-icon"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        <button type="button" class="icon-btn" id="sound" aria-label="Mute" aria-pressed="false" title="Sound on (M)">
+          <svg viewBox="0 0 24 24" aria-hidden="true" id="sound-icon"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>
         </button>
       </div>
 
-      <label class="brush-box" title="Brush size (lowest = one unit per click)">
+      <label class="brush-box" hidden>
         <span class="brush-dot" id="brush-dot" aria-hidden="true"></span>
         <input type="range" id="brush" min="0" max="90" value="9" aria-label="Brush size">
       </label>
@@ -93,6 +93,6 @@
       </div>
     </div>
 
-    <script type="module" src="src/main.js?v=172"></script>
+    <script type="module" src="src/main.js?v=173"></script>
   </body>
 </html>
