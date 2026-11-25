@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=157';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=157';
+import { TAU, K } from './config.js?v=158';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=158';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -593,6 +593,262 @@ function drawBomb(g, lit) {
   g.fill();
   g.stroke();
 }
+
+// ---------------------------------------------------------------- robots
+// One metal egg with a dark visor, glowing eyes, an antenna and a chest light; each robot has its own colours and gear.
+function robotBody(st) {
+  return function (g, front, gz, angry) {
+    g.lineJoin = 'round';
+    g.lineCap = 'round';
+    const ox = front ? 0 : 4;
+    // the pack on the back
+    if (st.pack === 'rocket') {
+      g.fillStyle = '#d23d36';
+      g.strokeStyle = OUT;
+      g.lineWidth = 1.6;
+      rr(g, -28, -10, 10.4, 24, 4.6);
+      g.fill();
+      g.stroke();
+      g.fillStyle = '#f4f1ea';
+      g.fillRect(-27.8, -1, 10, 3.6);
+      g.fillStyle = '#f5a52a';
+      rr(g, -26, 13, 6.6, 3.4, 1);
+      g.fill();
+      g.stroke();
+    } else if (st.pack === 'tank') {
+      g.fillStyle = '#7c8497';
+      g.strokeStyle = OUT;
+      g.lineWidth = 1.6;
+      rr(g, -28.4, -9, 11.4, 25, 4.6);
+      g.fill();
+      g.stroke();
+      g.fillStyle = '#ff7a1a';
+      g.fillRect(-28.2, 3, 11, 3.6);
+      g.fillStyle = '#d23d36';
+      rr(g, -26.4, -12, 7.4, 4, 1.4);
+      g.fill();
+      g.stroke();
+    }
+    // the antenna
+    const ax = ox * 0.4 + 1;
+    g.strokeStyle = OUT;
+    g.lineWidth = 3;
+    g.beginPath();
+    g.moveTo(ax, -20);
+    g.lineTo(ax, -29);
+    g.stroke();
+    g.strokeStyle = '#aab3c2';
+    g.lineWidth = 1.2;
+    g.stroke();
+    g.fillStyle = st.accent;
+    g.strokeStyle = OUT;
+    g.lineWidth = 1.4;
+    g.beginPath();
+    g.arc(ax, -31.4, 2.8, 0, TAU);
+    g.fill();
+    g.stroke();
+    // the metal egg
+    eggBody(g, st.c0, st.c1);
+    g.strokeStyle = OUT;
+    g.lineWidth = 1.8;
+    g.beginPath();
+    g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
+    g.stroke();
+    g.save();
+    g.beginPath();
+    g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
+    g.clip();
+    if (st.belt) {
+      g.fillStyle = st.belt;
+      g.fillRect(-22, 11, 44, 5);
+      g.strokeStyle = OUT;
+      g.lineWidth = 1.1;
+      g.beginPath();
+      g.moveTo(-22, 11);
+      g.lineTo(22, 11);
+      g.moveTo(-22, 16);
+      g.lineTo(22, 16);
+      g.stroke();
+    }
+    g.strokeStyle = 'rgba(20, 30, 45, 0.55)';
+    g.lineWidth = 1.1;
+    g.beginPath();
+    g.moveTo(-22, 5.6);
+    g.quadraticCurveTo(0, 8.4, 22, 5.6);
+    g.moveTo(ox * 0.5, 16);
+    g.lineTo(ox * 0.5, 24);
+    g.stroke();
+    g.restore();
+    g.fillStyle = 'rgba(255, 255, 255, 0.55)';
+    g.beginPath();
+    g.ellipse(-13, 4, 2.6, 6, 0.1, 0, TAU);
+    g.fill();
+    // rivets
+    g.fillStyle = '#e6eaf1';
+    g.strokeStyle = OUT;
+    g.lineWidth = 0.8;
+    for (const [x, y] of [[-15, 9.4], [15, 9.4], [-9, 19], [9, 19]]) {
+      g.beginPath();
+      g.arc(x + ox * 0.4, y, 1.2, 0, TAU);
+      g.fill();
+      g.stroke();
+    }
+    // the visor with two glowing eyes
+    g.fillStyle = '#141c27';
+    g.strokeStyle = OUT;
+    g.lineWidth = 1.5;
+    rr(g, -14.4 + ox, -13.4, 28.8, 14.6, 6.4);
+    g.fill();
+    g.stroke();
+    for (const x of front ? [-6.4, 6.4] : [-1.4, 10.2]) {
+      const eg = g.createRadialGradient(x, -6.4, 0.5, x, -6.4, 5.6);
+      eg.addColorStop(0, st.eye);
+      eg.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      g.fillStyle = eg;
+      g.beginPath();
+      g.arc(x, -6.4, 5.6, 0, TAU);
+      g.fill();
+      g.fillStyle = st.eye;
+      g.beginPath();
+      g.arc(x, -6.4, 3.6, 0, TAU);
+      g.fill();
+      g.fillStyle = '#10141c';
+      g.beginPath();
+      g.arc(x + gz[0] * 0.5 + 0.6, -6.4 + gz[1] * 0.4, 1.6, 0, TAU);
+      g.fill();
+      if (angry) {
+        g.strokeStyle = st.eye;
+        g.lineWidth = 2;
+        g.beginPath();
+        g.moveTo(x - 4.6, -11.4);
+        g.lineTo(x + 3.6, -9);
+        g.stroke();
+      }
+    }
+    // a speaker grille for a mouth and a glowing chest light
+    g.strokeStyle = 'rgba(20, 28, 40, 0.8)';
+    g.lineWidth = 1.2;
+    g.beginPath();
+    for (const x of [-3.4, 0, 3.4]) {
+      g.moveTo(x + ox * 0.5, 4);
+      g.lineTo(x + ox * 0.5, 7.4);
+    }
+    g.stroke();
+    g.fillStyle = st.accent;
+    g.strokeStyle = OUT;
+    g.lineWidth = 1;
+    g.beginPath();
+    g.arc(ox * 0.5, 19, 2.2, 0, TAU);
+    g.fill();
+    g.stroke();
+    // ear bolts
+    g.fillStyle = '#9aa3b4';
+    g.strokeStyle = OUT;
+    g.lineWidth = 1.2;
+    for (const x of front ? [-20.4, 20.4] : [-17]) {
+      g.beginPath();
+      g.arc(x, -4, 2.6, 0, TAU);
+      g.fill();
+      g.stroke();
+    }
+  };
+}
+
+const ROBOT_STYLES = {
+  boltbot: { c0: '#a9bdd6', c1: '#647d9d', eye: '#5ee9ff', accent: '#3ad0f0' },
+  bruiser: { c0: '#f3bf52', c1: '#b8791f', eye: '#ff5a4a', accent: '#e8412f', belt: '#2a2d36' },
+  rocketbot: { c0: '#f4f6fa', c1: '#b9c2d0', eye: '#ffd23a', accent: '#e8412f', belt: '#d23d36', pack: 'rocket' },
+  torchbot: { c0: '#707887', c1: '#303642', eye: '#ff9a2a', accent: '#ff7a1a', pack: 'tank' },
+};
+
+// Origin: the grip. A sleek laser rifle with a cyan strip and a glowing emitter.
+function drawLaserGun(g, firing) {
+  g.lineJoin = 'round';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.2;
+  g.fillStyle = '#3b4252';
+  rr(g, -3, 3, 6, 9, 2);
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#9aa6bb';
+  rr(g, -6, -4.6, 24, 9.2, 2.4);
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#5ee9ff';
+  rr(g, 0, -1.2, 14, 2.4, 1);
+  g.fill();
+  g.fillStyle = '#4a5468';
+  rr(g, 17, -3, 22, 6, 1.6);
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#3ad0f0';
+  rr(g, 37, -4.4, 5, 8.8, 1.6);
+  g.fill();
+  g.stroke();
+  if (firing) {
+    const r = g.createRadialGradient(47, 0, 1, 47, 0, 12);
+    r.addColorStop(0, 'rgba(230, 255, 255, 0.98)');
+    r.addColorStop(0.5, 'rgba(90, 225, 255, 0.7)');
+    r.addColorStop(1, 'rgba(60, 200, 255, 0)');
+    g.fillStyle = r;
+    g.beginPath();
+    g.arc(47, 0, 12, 0, TAU);
+    g.fill();
+  }
+}
+
+// Origin: the hand. A big box wrench, swung like a club.
+function drawWrench(g) {
+  g.lineJoin = 'round';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.4;
+  const wg = g.createLinearGradient(0, -3, 0, 3);
+  wg.addColorStop(0, '#d5dae5');
+  wg.addColorStop(1, '#8791a6');
+  g.fillStyle = wg;
+  rr(g, -9, -2.6, 38, 5.2, 2.2);
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#c3c9d6';
+  g.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * TAU + Math.PI / 6;
+    const px = 38 + Math.cos(a) * 11;
+    const py = Math.sin(a) * 11;
+    if (i === 0) g.moveTo(px, py);
+    else g.lineTo(px, py);
+  }
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#2a2f3a';
+  g.beginPath();
+  g.arc(38, 0, 4.2, 0, TAU);
+  g.fill();
+  g.stroke();
+}
+
+// the head of a dropped robot
+const ROBOT_DROP = (g) => {
+  g.fillStyle = '#aab3c2';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1;
+  g.beginPath();
+  g.ellipse(0, 1, 10, 6.5, 0, Math.PI, TAU);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.strokeStyle = '#aab3c2';
+  g.lineWidth = 1.4;
+  g.beginPath();
+  g.moveTo(0, -5.5);
+  g.lineTo(0, -10);
+  g.stroke();
+  g.fillStyle = '#3ad0f0';
+  g.beginPath();
+  g.arc(0, -11, 2, 0, TAU);
+  g.fill();
+};
 
 // ---------------------------------------------------------------- archer
 // The archer: a lavender egg in a green knit beanie with a folded cuff, and a wooden bow.
@@ -1405,6 +1661,10 @@ export function ghostBody(g) {
 // What each unit loses when it dies, also used for the flying debris.
 // Drawn centred on the origin, about 30 art px wide.
 export const DROPS = {
+  boltbot: ROBOT_DROP,
+  bruiser: ROBOT_DROP,
+  rocketbot: ROBOT_DROP,
+  torchbot: ROBOT_DROP,
   soldier(g) {
     g.fillStyle = '#2e4358';
     g.strokeStyle = OUT;
@@ -1543,6 +1803,10 @@ export const DROPS = {
 
 // Light, tinted ghosts that keep the unit's headgear.
 const GHOSTS = {
+  boltbot: ['#ffffff', '#cccccc', () => {}],
+  bruiser: ['#ffffff', '#cccccc', () => {}],
+  rocketbot: ['#ffffff', '#cccccc', () => {}],
+  torchbot: ['#ffffff', '#cccccc', () => {}],
   flamethrower: ['#fff3dd', '#e8d3a8', (g) => dome(g, '#f2b81c', 11, 8, -10)],
   roman: ['#fff0f4', '#e8c4d0', (g) => {
     g.fillStyle = '#ffffff';
@@ -1638,6 +1902,33 @@ export function buildUnitArt() {
     ...eggSet(drawGrenBody),
     bomb: makeLayer(-10, -18, 14, 10, (g) => drawBomb(g, false)),
     bombLit: makeLayer(-10, -18, 14, 10, (g) => drawBomb(g, true)),
+  };
+
+  art.boltbot = {
+    feet: dark,
+    ...eggSet(robotBody(ROBOT_STYLES.boltbot)),
+    gun: makeLayer(-20, -14, 66, 16, (g) => drawLaserGun(g, false)),
+    gunFire: makeLayer(-20, -14, 66, 16, (g) => drawLaserGun(g, true)),
+  };
+
+  art.bruiser = {
+    feet: dark,
+    ...eggSet(robotBody(ROBOT_STYLES.bruiser)),
+    spear: makeLayer(-14, -16, 68, 16, drawWrench),
+  };
+
+  art.rocketbot = {
+    feet: dark,
+    ...eggSet(robotBody(ROBOT_STYLES.rocketbot)),
+    bomb: makeLayer(-10, -18, 14, 10, (g) => drawBomb(g, false)),
+    bombLit: makeLayer(-10, -18, 14, 10, (g) => drawBomb(g, true)),
+  };
+
+  art.torchbot = {
+    feet: dark,
+    ...eggSet(robotBody(ROBOT_STYLES.torchbot)),
+    gun: makeLayer(-20, -14, 66, 16, (g) => drawMinigun(g, false)),
+    gunFire: makeLayer(-20, -14, 66, 16, (g) => drawMinigun(g, true)),
   };
 
   art.archer = {

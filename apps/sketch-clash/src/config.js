@@ -310,6 +310,15 @@ export const SKELETON = {
 // How fast each creature's legs cycle (frames per second of its 8-frame walk).
 export const GAIT = { boar: 8, rat: 15, ant: 15, ape: 7, alligator: 7, piranha: 11, snake: 7, cheetah: 13, slime: 6, giant: 5, dragon: 7, zombie: 4.5, skeleton: 8 };
 
+
+// ------------------------------------------------------------------ robots
+// Four mechanical troopers that borrow the army's mechanics: a laser rifle, a wrench-wielding bruiser, a rocket lobber
+// and a flame vent.
+export const BOLTBOT = { ...SOLDIER, hp: 130, speed: 62, damage: 30, bulletSpeed: 700, cooldownMin: 1.2, cooldownMax: 1.7 };
+export const BRUISER = { ...ROMAN, hp: 280, speed: 24, damage: 44, armor: 0.6, formation: false, weapon: 'wrench' };
+export const ROCKETBOT = { ...GRENADIER, hp: 115, speed: 52, damage: 60, blastRadius: 26, cooldownMin: 3.6, cooldownMax: 4.8 };
+export const TORCHBOT = { ...FLAMETHROWER, hp: 160, speed: 56, dps: 36 };
+
 // ------------------------------------------------------------------ terrain items
 export const TERRAIN_IDS = ['wall', 'water', 'ice', 'mine', 'barrel', 'tree'];
 
@@ -324,6 +333,10 @@ export const SPECIES = {
   archer: { id: 'archer', label: 'Archer', def: ARCHER },
   cowboy: { id: 'cowboy', label: 'Cowboy', def: COWBOY },
   ninja: { id: 'ninja', label: 'Samurai', def: NINJA },
+  boltbot: { id: 'boltbot', label: 'Bolt Bot', def: BOLTBOT },
+  bruiser: { id: 'bruiser', label: 'Bruiser', def: BRUISER },
+  rocketbot: { id: 'rocketbot', label: 'Rocket Bot', def: ROCKETBOT },
+  torchbot: { id: 'torchbot', label: 'Torch Bot', def: TORCHBOT },
   boar: { id: 'boar', label: 'Boar', def: BOAR },
   rat: { id: 'rat', label: 'Rat', def: RAT },
   ant: { id: 'ant', label: 'Ant', def: ANT },
@@ -346,8 +359,9 @@ export const SPECIES = {
 // The order of the palette (the knight only ever comes from a cavalry).
 export const TABS = [
   { id: 'army', label: 'Army', items: ['soldier', 'flamethrower', 'sniper', 'roman', 'grenadier', 'archer', 'cowboy', 'ninja'] },
+  { id: 'robots', label: 'Robots', items: ['boltbot', 'bruiser', 'rocketbot', 'torchbot'] },
   { id: 'terrain', label: 'Terrain', items: ['wall', 'water', 'ice', 'mine', 'barrel', 'tree'] },
 ];
 export const TERRAIN_LABELS = { wall: 'Wall', water: 'Water', ice: 'Ice', mine: 'Mines', barrel: 'Barrel', tree: 'Tree' };
 export const PALETTE_ORDER = TABS[0].items;
-export const SPECIES_ORDER = [...TABS[0].items, 'barrel', 'tree'];
+export const SPECIES_ORDER = [...TABS[0].items, ...TABS[1].items, 'barrel', 'tree'];
