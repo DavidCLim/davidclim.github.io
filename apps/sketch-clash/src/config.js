@@ -313,7 +313,7 @@ export const SKELETON = {
 export const GAIT = { boar: 8, rat: 15, ant: 15, ape: 7, alligator: 7, piranha: 11, snake: 7, cheetah: 13, slime: 6, giant: 5, dragon: 7, zombie: 4.5, skeleton: 8 };
 
 // ------------------------------------------------------------------ terrain items
-export const TERRAIN_IDS = ['wall', 'water', 'ice', 'mine', 'tower', 'barrel', 'tree'];
+export const TERRAIN_IDS = ['wall', 'water', 'ice', 'mine', 'campfire', 'barrel', 'tree'];
 
 // `faction` decides who fights whom in free-for-all (defaults to the
 // species itself); a knight is the same faction as the cavalry.
@@ -342,15 +342,15 @@ export const SPECIES = {
   necromancer: { id: 'necromancer', label: 'Necromancer', def: NECROMANCER },
   skeleton: { id: 'skeleton', label: 'Skeleton', def: SKELETON },
   // terrain items that appear in the legend
-  tower: { id: 'tower', label: 'Tower', def: { prop: true } },
+  campfire: { id: 'campfire', label: 'Campfire', def: { prop: true } },
   barrel: { id: 'barrel', label: 'Barrel', def: { prop: true } },
   tree: { id: 'tree', label: 'Tree', def: { prop: true } },
 };
 // The order of the palette (the knight only ever comes from a cavalry).
 export const TABS = [
   { id: 'army', label: 'Army', items: ['soldier', 'minigunner', 'sniper', 'roman', 'grenadier', 'archer', 'cowboy', 'ninja'] },
-  { id: 'terrain', label: 'Terrain', items: ['wall', 'water', 'ice', 'mine', 'tower', 'barrel', 'tree'] },
+  { id: 'terrain', label: 'Terrain', items: ['wall', 'water', 'ice', 'mine', 'campfire', 'barrel', 'tree'] },
 ];
-export const TERRAIN_LABELS = { wall: 'Wall', water: 'Water', ice: 'Ice', mine: 'Mines', tower: 'Tower', barrel: 'Barrel', tree: 'Tree' };
+export const TERRAIN_LABELS = { wall: 'Wall', water: 'Water', ice: 'Ice', mine: 'Mines', campfire: 'Campfire', barrel: 'Barrel', tree: 'Tree' };
 export const PALETTE_ORDER = TABS[0].items;
-export const SPECIES_ORDER = [...TABS[0].items, 'tower', 'barrel', 'tree'];
+export const SPECIES_ORDER = [...TABS[0].items, 'campfire', 'barrel', 'tree'];

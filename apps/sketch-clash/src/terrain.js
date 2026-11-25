@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=115';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=115';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=115';
+import { TAU, K } from './config.js?v=119';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=119';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=119';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask
@@ -475,94 +475,110 @@ function drawTree(g) {
   }
 }
 
-// The tower is a wizard's tower: smooth grey stone, a lit round window, a bent purple pointed roof with a star.
-function drawTower(g) {
-  const w = 12;
-  const h = 46;
-  shadowEll(g, 22, 4.5, 3);
-  // the tall bricked shaft, a touch wider at the foot
+// The campfire: a ring of grey stones round two crossed logs, with a cold blue fire (animated, see drawFlames).
+
+function stoneAt(g, x, y, r) {
   g.beginPath();
-  g.moveTo(-w + 1, -h);
-  g.lineTo(-w - 2, -2);
-  g.quadraticCurveTo(-w - 2, 2, -w + 2, 2);
-  g.lineTo(w - 2, 2);
-  g.quadraticCurveTo(w + 2, 2, w + 2, -2);
-  g.lineTo(w - 1, -h);
-  g.closePath();
-  g.fillStyle = '#8e8c8d';
-  g.fill();
-  g.save();
-  g.clip();
-  g.fillStyle = 'rgba(40, 38, 44, 0.2)';
-  g.fillRect(w * 0.3, -h, w, h + 8);
-  g.restore();
-  ink(g, 1.8);
-  g.stroke();
-  // the arched door
-  g.beginPath();
-  g.moveTo(-4, 1);
-  g.lineTo(-4, -7);
-  g.quadraticCurveTo(0, -13, 4, -7);
-  g.lineTo(4, 1);
-  g.closePath();
-  g.fillStyle = '#4a3a2c';
+  g.ellipse(x, y, r * 1.18, r * 0.9, 0, 0, TAU);
+  g.fillStyle = '#8f8e92';
   g.fill();
   ink(g, 1.4);
   g.stroke();
-  // a round window glowing yellow
+  g.fillStyle = 'rgba(255, 255, 255, 0.38)';
   g.beginPath();
-  g.arc(0, -26, 4.2, 0, TAU);
-  g.fillStyle = '#ffd95a';
+  g.ellipse(x - r * 0.28, y - r * 0.32, r * 0.5, r * 0.28, 0, 0, TAU);
   g.fill();
-  ink(g, 1.5);
-  g.stroke();
-  g.strokeStyle = '#a2711b';
-  g.lineWidth = 1;
+}
+
+function logAt(g, x, y, ang) {
+  g.save();
+  g.translate(x, y);
+  g.rotate(ang);
   g.beginPath();
-  g.moveTo(-4.2, -26);
-  g.lineTo(4.2, -26);
-  g.moveTo(0, -30.2);
-  g.lineTo(0, -21.8);
-  g.stroke();
-  // a stone ledge under the roof
-  g.beginPath();
-  g.rect(-w - 4, -h - 3, w * 2 + 8, 6);
-  g.fillStyle = '#b3b1b2';
+  g.roundRect(-13.5, -3.2, 27, 6.4, 3);
+  g.fillStyle = '#7a5130';
   g.fill();
-  ink(g, 1.7);
+  ink(g, 1.4);
   g.stroke();
-  // the purple wizard roof, leaning over at the tip
-  const rg = g.createLinearGradient(-w, 0, w, 0);
-  rg.addColorStop(0, '#7a62c8');
-  rg.addColorStop(1, '#4b3a98');
+  g.fillStyle = '#c99763';
   g.beginPath();
-  g.moveTo(-w - 3, -h - 2);
-  g.quadraticCurveTo(-w + 2, -h - 22, 2, -h - 36);
-  g.quadraticCurveTo(7, -h - 44, 14, -h - 40);
-  g.quadraticCurveTo(8, -h - 36, 8.4, -h - 28);
-  g.quadraticCurveTo(w + 1, -h - 14, w + 3, -h - 2);
-  g.quadraticCurveTo(0, -h + 3, -w - 3, -h - 2);
+  g.ellipse(12.8, 0, 1.8, 2.6, 0, 0, TAU);
+  g.fill();
+  g.restore();
+}
+
+// the part behind the flames: ground shadow, a pale blue glow, the back stones and the logs
+function drawCampfireBack(g) {
+  shadowEll(g, 17, 6, 2);
+  const gl = g.createRadialGradient(0, 0, 2, 0, 0, 26);
+  gl.addColorStop(0, 'rgba(120, 200, 255, 0.5)');
+  gl.addColorStop(1, 'rgba(120, 200, 255, 0)');
+  g.fillStyle = gl;
+  g.beginPath();
+  g.ellipse(0, 0, 26, 12, 0, 0, TAU);
+  g.fill();
+  for (const [x, y, r] of [[-15, -1, 4.4], [-11, -5.6, 4.1], [-4, -8, 4.1], [5, -8, 4.2], [12, -5.2, 4.1], [15, 0.2, 4.4]]) stoneAt(g, x, y, r);
+  logAt(g, 0, -0.6, 0.3);
+  logAt(g, 0, -0.6, -0.3);
+}
+
+// the stones in front of the flames
+function drawCampfireFront(g) {
+  for (const [x, y, r] of [[10, 5.2, 4.3], [2, 7, 4.6], [-7, 6, 4.2]]) stoneAt(g, x, y, r);
+}
+
+// One tongue of fire: a teardrop leaning toward sx at its tip.
+function tongue(g, w, h, sx, fill, line) {
+  g.beginPath();
+  g.moveTo(-w, 0);
+  g.bezierCurveTo(-w * 1.05, -h * 0.45, sx * 0.4 - w * 0.3, -h * 0.72, sx, -h);
+  g.bezierCurveTo(sx * 0.4 + w * 0.3, -h * 0.72, w * 1.05, -h * 0.45, w, 0);
+  g.quadraticCurveTo(0, 3.4, -w, 0);
   g.closePath();
-  g.fillStyle = rg;
+  g.fillStyle = fill;
   g.fill();
-  ink(g, 1.8);
-  g.stroke();
-  // a gold star on the roof
-  g.fillStyle = '#ffd95a';
-  g.strokeStyle = '#a2711b';
-  g.lineWidth = 0.7;
-  g.beginPath();
-  for (let i = 0; i < 10; i++) {
-    const r = i % 2 === 0 ? 4.4 : 1.8;
-    const a = (i / 10) * TAU - Math.PI / 2;
-    const px = -1 + Math.cos(a) * r;
-    const py = -h - 17 + Math.sin(a) * r;
-    if (i === 0) g.moveTo(px, py);
-    else g.lineTo(px, py);
+  if (line) {
+    g.strokeStyle = line;
+    g.lineWidth = 1.2;
+    g.stroke();
   }
-  g.closePath();
+}
+
+// The animated blue flames, with a few sparks rising. t is in seconds, seed makes every fire different.
+export function drawFlames(g, t, seed = 0) {
+  g.save();
+  g.lineJoin = 'round';
+  const ph = seed * 20;
+  const pulse = 0.5 + 0.5 * Math.sin(t * 7 + ph);
+  g.fillStyle = `rgba(150, 215, 255, ${0.1 + pulse * 0.1})`;
+  g.beginPath();
+  g.ellipse(0, -2, 17 + pulse * 2, 8, 0, 0, TAU);
   g.fill();
-  g.stroke();
+  const tongues = [
+    [-6.5, 5.6, 18, -1.8, 4.2, 2.3, 0.5],
+    [6.5, 5.4, 16, 1.6, 5.1, 2.1, 1.7],
+    [0, 7.6, 27, 0, 3.4, 1.7, 0],
+  ];
+  for (const [bx, w, h0, lean, f1, f2, off] of tongues) {
+    const h = h0 * (1 + 0.14 * Math.sin(t * (f1 + 5) + ph + off * 3) + 0.06 * Math.sin(t * (f2 + 12) + off));
+    const sx = lean * 3 + Math.sin(t * f1 + ph + off) * 3.4;
+    g.save();
+    g.translate(bx, -1);
+    tongue(g, w, h, sx, '#2f6fe8', '#1c3f9c');
+    tongue(g, w * 0.66, h * 0.76, sx * 0.8, '#5cb4ff');
+    tongue(g, w * 0.34, h * 0.5, sx * 0.55, '#d6f4ff');
+    g.restore();
+  }
+  // sparks
+  g.fillStyle = '#bfe8ff';
+  for (let i = 0; i < 4; i++) {
+    const k = (t * 0.9 + i * 0.25 + (seed * 7) % 1) % 1;
+    g.globalAlpha = 1 - k;
+    g.beginPath();
+    g.arc(Math.sin(i * 2.4 + ph) * 8 + Math.sin(t * 3 + i) * 2, -14 - k * 24, 1.5 * (1 - k * 0.5), 0, TAU);
+    g.fill();
+  }
+  g.restore();
 }
 
 export function buildTerrainArt() {
@@ -572,7 +588,8 @@ export function buildTerrainArt() {
     barrel: makeLayer(-26, -64, 26, 8, (g) => drawBarrel(g, false)),
     barrelHot: makeLayer(-26, -64, 26, 8, (g) => drawBarrel(g, true)),
     tree: makeLayer(-46, -106, 46, 8, drawTree),
-    tower: makeLayer(-26, -100, 26, 10, drawTower),
+    campfireBack: makeLayer(-30, -16, 30, 12, drawCampfireBack),
+    campfireFront: makeLayer(-30, -6, 30, 12, drawCampfireFront),
   };
 }
 
@@ -688,9 +705,11 @@ const ICON_DRAW = {
     iconIce(g);
   },
   mine: (g) => drawMine(g, false),
-  tower: (g) => {
-    g.scale(0.5, 0.5);
-    drawTower(g);
+  campfire: (g) => {
+    g.scale(1.45, 1.45);
+    drawCampfireBack(g);
+    drawFlames(g, 0.4, 0.3);
+    drawCampfireFront(g);
   },
   barrel: (g) => {
     g.scale(0.72, 0.72);
@@ -701,7 +720,7 @@ const ICON_DRAW = {
     drawTree(g);
   },
 };
-const ICON_BASE = { wall: 0.82, water: 0.86, ice: 0.84, mine: 0.78, tower: 0.95, barrel: 0.9, tree: 0.94 };
+const ICON_BASE = { wall: 0.82, water: 0.86, ice: 0.84, mine: 0.78, campfire: 0.95, barrel: 0.9, tree: 0.94 };
 
 export function hasTerrainIcon(id) {
   return id in ICON_DRAW;

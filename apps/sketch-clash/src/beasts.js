@@ -1,9 +1,9 @@
-import { TAU, FEET, GAIT } from './config.js?v=115';
-import { WATER, ICE, WALL } from './terrain.js?v=115';
+import { TAU, FEET, GAIT } from './config.js?v=119';
+import { WATER, ICE, WALL } from './terrain.js?v=119';
 
 // Everything the Animals and Mythical tabs add to the world, plus the terrain physics:
 // the beast brain, the mage's bolts, the necromancer's skeletons, zombie infection,
-// and how water, ice, walls, mines, barrels, trees and towers affect everyone.
+// and how water, ice, walls, mines, barrels, trees and campfires affect everyone.
 const rand = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
@@ -11,7 +11,7 @@ const BARREL_HP = 28;
 const TREE_R = 4;
 const BARREL_R = 5;
 const MINE_R = 8;
-const TOWER_R = 6;
+const FIRE_R = 11; // how close a unit's feet must be to the campfire to catch fire
 
 export function installBeasts(World) {
   const P = World.prototype;
@@ -147,13 +147,20 @@ export function installBeasts(World) {
         const ddx = fx - p.x;
         const ddy = fy - p.y;
         if (ddx > 24 || ddx < -24 || ddy > 24 || ddy < -24) continue;
-        if (p.type === 'tree' || p.type === 'barrel' || p.type === 'tower') {
+        if (p.type === 'tree' || p.type === 'barrel') {
           if (fly) continue;
-          const r = (p.type === 'tree' ? TREE_R : p.type === 'tower' ? TOWER_R : BARREL_R) + 3;
+          const r = (p.type === 'tree' ? TREE_R : BARREL_R) + 3;
           const dd = Math.hypot(ddx, ddy) || 0.01;
           if (dd < r) {
             u.x += (ddx / dd) * (r - dd);
             u.y += (ddy / dd) * (r - dd);
+          }
+        } else if (p.type === 'campfire') {
+          // anyone who steps into the blue fire catches alight
+          if (!fly && !u.inWater && Math.hypot(ddx, ddy * 1.5) < FIRE_R) {
+            if (!(u.burn > 0)) u.burnTick = 0;
+            u.burn = 3;
+            u.burnSrc = null;
           }
         } else if (p.type === 'mine') {
           // units see a mine coming and walk around it
@@ -222,9 +229,9 @@ export function installBeasts(World) {
   P.shotBlocked = function (x, y, dmg) {
     if (this.terrain.at(x, y + 4) & WALL) return true;
     for (const p of this.props) {
-      if (p.dead || (p.type !== 'tree' && p.type !== 'barrel' && p.type !== 'tower')) continue;
-      const cy = p.type === 'tree' ? p.y - 6 : p.type === 'tower' ? p.y - 10 : p.y - 7;
-      const r = p.type === 'tree' ? 4 : p.type === 'tower' ? 6 : 5;
+      if (p.dead || (p.type !== 'tree' && p.type !== 'barrel')) continue;
+      const cy = p.type === 'tree' ? p.y - 6 : p.y - 7;
+      const r = p.type === 'tree' ? 4 : 5;
       if (Math.abs(x - p.x) > 10 || Math.abs(y - cy) > 20) continue;
       if (Math.hypot(x - p.x, (y - cy) * 0.55) <= r) {
         if (p.type === 'barrel') this.damageProp(p, dmg);

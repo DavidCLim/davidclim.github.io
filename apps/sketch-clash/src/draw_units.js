@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=115';
-import { drawLayer, OUT } from './sprites.js?v=115';
-import { drawDrop } from './art_units.js?v=115';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=115';
-import { EGG_DROPS } from './art_eggs.js?v=115';
+import { TAU, K, UNIT, FEET } from './config.js?v=119';
+import { drawLayer, OUT } from './sprites.js?v=119';
+import { drawDrop } from './art_units.js?v=119';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=119';
+import { EGG_DROPS } from './art_eggs.js?v=119';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -189,17 +189,13 @@ function drawRoman(ctx, dpr, sprites, u) {
   const pose = u.pose;
   eggBase(ctx, dpr, sprites, A, u);
   const body = ctx.getTransform();
-  // Standing around the spear is held upright in front and the shield stands
-  // beside him; fighting, the spear levels out and jabs and the shield comes in.
+  // Standing around the sword is held upright in front; fighting, it levels out and jabs.
   const p = 1 - u.atk;
   const thrust = u.atk > 0 ? Math.sin(p * Math.PI) * 16 * K : 0;
   ctx.translate(lerp(5.4 * K, -4 * K, pose), lerp(23.3 * K, 4 * K, pose));
   ctx.rotate(lerp(-1.32, u.aim - 0.04, pose));
   ctx.translate(pose * thrust, 0);
   drawLayer(ctx, A.spear);
-  ctx.setTransform(body);
-  ctx.translate(lerp(27 * K, 22 * K, pose), lerp(14 * K, 8 * K, pose));
-  drawLayer(ctx, A.shield);
 }
 
 function drawGrenadier(ctx, dpr, sprites, u) {
@@ -682,10 +678,6 @@ const ICONS = {
     drawLayer(g, S.gun);
   }],
   roman: [84, 32, 39, (g, S) => {
-    g.save();
-    g.translate(27 * K, 14 * K);
-    drawLayer(g, S.shield);
-    g.restore();
     g.translate(5.4 * K, 23.3 * K);
     g.rotate(-1.32);
     drawLayer(g, S.spear);

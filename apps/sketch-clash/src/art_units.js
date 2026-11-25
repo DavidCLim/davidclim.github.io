@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=115';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=115';
+import { TAU, K } from './config.js?v=119';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=119';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -193,11 +193,11 @@ function drawMinigun(g, firing) {
 
 // ---------------------------------------------------------------- knight (the old Roman's mechanics)
 function drawRomanBody(g, front, gz, angry) {
-  // egg: steel blue, lit from the upper left
+  // egg: a full suit of steel plate, lit from the upper left
   const gr = g.createLinearGradient(-14, -22, 16, 24);
-  gr.addColorStop(0, '#f7da7c');
-  gr.addColorStop(0.45, '#e5b94d');
-  gr.addColorStop(1, '#c4922f');
+  gr.addColorStop(0, '#dde3ee');
+  gr.addColorStop(0.45, '#aeb7c8');
+  gr.addColorStop(1, '#79849a');
   g.fillStyle = gr;
   g.strokeStyle = OUT;
   g.lineWidth = 1.9;
@@ -275,6 +275,47 @@ function drawRomanBody(g, front, gz, angry) {
   g.fill();
   g.stroke();
 
+  // plate armour: a ridge down the breastplate, a gold rimmed collar line and a big pauldron on each shoulder
+  g.save();
+  g.beginPath();
+  g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
+  g.clip();
+  g.strokeStyle = 'rgba(70, 80, 100, 0.75)';
+  g.lineWidth = 1.2;
+  g.beginPath();
+  g.moveTo(front ? 0 : 4, 1);
+  g.lineTo(front ? 0 : 4, 11.6);
+  g.moveTo(-20, 6);
+  g.quadraticCurveTo(0, 9.2, 20, 6);
+  g.stroke();
+  g.restore();
+  g.fillStyle = '#f2cc5a';
+  for (const [rx, ry] of front ? [[-6, 7.6], [6, 7.6], [0, 4]] : [[-1, 7.9], [9, 7.7]]) {
+    g.beginPath();
+    g.arc(rx, ry, 1.1, 0, TAU);
+    g.fill();
+  }
+  const pauldron = (x, y, rx, ry) => {
+    const pg = g.createLinearGradient(x - rx, y - ry, x + rx, y + ry);
+    pg.addColorStop(0, '#e9edf5');
+    pg.addColorStop(1, '#8691a8');
+    g.fillStyle = pg;
+    g.strokeStyle = OUT;
+    g.lineWidth = 1.6;
+    g.beginPath();
+    g.ellipse(x, y, rx, ry, 0, 0, TAU);
+    g.fill();
+    g.stroke();
+    g.strokeStyle = '#e2b84a';
+    g.lineWidth = 1.3;
+    g.beginPath();
+    g.ellipse(x, y, rx - 2, ry - 2, 0, Math.PI * 0.15, Math.PI * 0.85);
+    g.stroke();
+  };
+  if (front) {
+    pauldron(-16.4, 3.4, 5.6, 7.4);
+    pauldron(16.4, 3.4, 5.6, 7.4);
+  } else pauldron(-5, 4.4, 6.2, 7);
   // a silver great helm with a dark eye slit (the eyes show through it)
   const helmPath = () => {
     g.beginPath();
@@ -287,9 +328,9 @@ function drawRomanBody(g, front, gz, angry) {
     g.closePath();
   };
   const hg = g.createLinearGradient(-19, 0, 19, 0);
-  hg.addColorStop(0, '#e6eaf2');
-  hg.addColorStop(0.55, '#c3cad8');
-  hg.addColorStop(1, '#8e98ab');
+  hg.addColorStop(0, '#d2d8e4');
+  hg.addColorStop(0.55, '#a1abbe');
+  hg.addColorStop(1, '#697489');
   g.save();
   helmPath();
   g.rect(-15.5, -11, 31, 8);
@@ -303,7 +344,15 @@ function drawRomanBody(g, front, gz, angry) {
   g.stroke();
   g.lineWidth = 1.5;
   g.strokeRect(-15.5, -11, 31, 8);
-  g.strokeStyle = 'rgba(90, 100, 120, 0.8)';
+  g.strokeStyle = '#e2b84a';
+  g.lineWidth = 2;
+  g.beginPath();
+  g.moveTo(-18.4, -13.4);
+  g.lineTo(-15.6, -13.4);
+  g.moveTo(15.6, -13.4);
+  g.lineTo(18.4, -13.4);
+  g.stroke();
+  g.strokeStyle = 'rgba(70, 80, 100, 0.8)';
   g.lineWidth = 1.2;
   g.beginPath();
   g.moveTo(0, -29);
@@ -369,25 +418,6 @@ function drawSpear(g) {
 }
 
 // Origin: the middle of the shield.
-function drawShield(g) {
-  g.lineJoin = 'round';
-  g.fillStyle = '#2f5fb8';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.7;
-  g.beginPath();
-  g.moveTo(-6.4, -16.5);
-  g.lineTo(6.4, -16.5);
-  g.lineTo(6.4, 3);
-  g.quadraticCurveTo(5, 12, 0, 17);
-  g.quadraticCurveTo(-5, 12, -6.4, 3);
-  g.closePath();
-  g.fill();
-  g.stroke();
-  g.fillStyle = '#f4f1ea';
-  g.fillRect(-1.3, -14, 2.6, 22);
-  g.fillRect(-4.8, -8.4, 9.6, 2.6);
-}
-
 // ---------------------------------------------------------------- grenadier
 function drawGrenBody(g, front, gz) {
   eggBody(g, '#66b1bd', '#4f95a2');
@@ -1502,7 +1532,6 @@ export function buildUnitArt() {
     // the Romans' pupils drift up and to the sides, the first (used for the icon) looks down-left
     ...eggSet(drawRomanBody, [[-1.7, 0.7], [0.6, -1.8], [1.7, -1.3]]),
     spear: makeLayer(-4, -6, 68, 6, drawSpear),
-    shield: makeLayer(-8, -18, 8, 18, drawShield),
   };
 
   art.grenadier = {
