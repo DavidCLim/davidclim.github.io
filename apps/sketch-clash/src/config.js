@@ -147,9 +147,9 @@ export const ARCHER = {
   ...BODY,
   speed: 68, // about 100 screen px a second in the original
   sight: 540,
-  range: 440,
+  range: 270, // they walk up to about 375 screen px from the target before drawing, as in the original
   minRange: 70 * R,
-  holdDist: 260,
+  holdDist: 233,
   drawTime: 1.8,
   cooldownMin: 0.25,
   cooldownMax: 0.6,
