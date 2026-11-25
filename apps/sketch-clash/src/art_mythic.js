@@ -1,6 +1,6 @@
-import { TAU } from './config.js?v=160';
-import { OUT } from './sprites.js?v=160';
-import { G, vgrad, fs, ell, circ, blob, poly, stick, ribbon, eye, shadow, leg } from './art_kit.js?v=160';
+import { TAU } from './config.js?v=161';
+import { OUT } from './sprites.js?v=161';
+import { G, vgrad, fs, ell, circ, blob, poly, stick, ribbon, eye, shadow, leg } from './art_kit.js?v=161';
 
 // Mythical creatures that aren't egg-shaped: slime, giant, dragon.
 
@@ -331,19 +331,19 @@ function dragon(g, st) {
 }
 
 function mechazord(g, st) {
-  // MechaZord: a huge upright kaiju in red and gold armour, part Mecha-Godzilla (tall dorsal fins, a heavy snout and jaw,
+  // MechaZord: a huge upright kaiju in silver armour, part Mecha-Godzilla (tall dorsal fins, a heavy snout and jaw,
   // a thick tail) and part Iron Man (a glowing arc-reactor chest, a faceplate with light-blue eye slits, repulsor palms and
   // boot jets). He hovers.
   const ph = st.ph;
   const mv = st.moving;
   const bob = mv ? Math.abs(Math.sin(ph * TAU * 2)) * 1 : Math.sin(ph * TAU) * 0.4;
-  const red = '#c9322b';
-  const redDark = '#861f1a';
-  const gold = '#f0c04e';
-  const goldDark = '#b8872a';
+  const red = '#bcc4d1';
+  const redDark = '#6c7689';
+  const gold = '#e3e8f0';
+  const goldDark = '#59637a';
   const iron = '#2a303c';
   const steel = '#b8c2d3';
-  const glow = '#7cf3ff';
+  const glow = '#ff4a2a';
   const bolt = (x, y) => {
     g.fillStyle = '#e9edf4';
     g.strokeStyle = OUT;
@@ -369,10 +369,10 @@ function mechazord(g, st) {
   // everything is drawn bigger, scaled about the ground line
   g.save();
   g.translate(0, 26);
-  g.scale(1.35, 1.35);
+  g.scale(1.8, 1.8);
   g.translate(0, -26);
   // a thick tail of armoured segments with gold bands, ending in a blade
-  ribbon(g, [[-16, 8], [-32, 11], [-50, 6], [-66, -5], [-80, -15]], 22, 2.6, vgrad(g, -14, 20, '#e0463c', '#7a1c17'), 1.9);
+  ribbon(g, [[-16, 8], [-32, 11], [-50, 6], [-66, -5], [-80, -15]], 22, 2.6, vgrad(g, -14, 20, '#dde3ec', '#566073'), 1.9);
   g.strokeStyle = goldDark;
   g.lineWidth = 2;
   for (const [x, y, h] of [[-26, 8, 9], [-38, 9, 8], [-50, 4, 7], [-62, -4, 5.5], [-72, -10, 4]]) {
@@ -401,7 +401,7 @@ function mechazord(g, st) {
     g.lineTo(6.5 * s, -4 * s);
     g.lineTo(7 * s, 0);
     g.closePath();
-    g.fillStyle = vgrad(g, -18 * s, 0, '#f8de8c', '#c18f2c');
+    g.fillStyle = vgrad(g, -18 * s, 0, '#f2f4f9', '#8793a8');
     g.fill();
     g.strokeStyle = OUT;
     g.lineWidth = 1.5;
@@ -421,13 +421,13 @@ function mechazord(g, st) {
   fin(-8, -32, 1.05, -0.4);
   // the torso: a tall red armoured barrel chest with a gold belly plate
   const torso = [[-18, 8], [-22, -8], [-15, -27], [1, -34], [16, -27], [22, -9], [19, 11], [2, 21], [-12, 19]];
-  blob(g, torso, vgrad(g, -34, 21, '#e8574a', '#8c2019'), 2.1);
+  blob(g, torso, vgrad(g, -34, 21, '#e1e6ee', '#6b758a'), 2.1);
   g.save();
   g.beginPath();
   torso.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
   g.closePath();
   g.clip();
-  g.fillStyle = vgrad(g, 4, 22, '#f8dc86', '#bf8a28');
+  g.fillStyle = vgrad(g, 4, 22, '#c8cfdb', '#7a8497');
   g.beginPath();
   g.moveTo(-8, 4);
   g.quadraticCurveTo(8, 1, 22, 4);
@@ -435,7 +435,7 @@ function mechazord(g, st) {
   g.lineTo(-8, 24);
   g.closePath();
   g.fill();
-  g.strokeStyle = 'rgba(110, 70, 10, 0.65)';
+  g.strokeStyle = 'rgba(36, 42, 56, 0.7)';
   g.lineWidth = 1;
   for (const y of [9, 14, 19]) {
     g.beginPath();
@@ -444,7 +444,7 @@ function mechazord(g, st) {
     g.stroke();
   }
   // panel seams and vents on the red chest
-  g.strokeStyle = 'rgba(40, 8, 6, 0.6)';
+  g.strokeStyle = 'rgba(18, 22, 32, 0.7)';
   g.lineWidth = 1.1;
   g.beginPath();
   g.moveTo(-14, -20);
@@ -464,14 +464,14 @@ function mechazord(g, st) {
   // shoulder spikes and a big gold pauldron
   poly(g, [[-6, -30], [-4, -44], [2, -31]], gold, 1.4);
   poly(g, [[14, -28], [24, -42], [22, -25]], gold, 1.4);
-  g.fillStyle = vgrad(g, -30, -14, '#f8de8c', '#b8872a');
+  g.fillStyle = vgrad(g, -30, -14, '#f2f4f9', '#7a8497');
   g.strokeStyle = OUT;
   g.lineWidth = 1.8;
   g.beginPath();
   g.ellipse(14, -19, 9.6, 8, -0.3, 0, TAU);
   g.fill();
   g.stroke();
-  g.strokeStyle = red;
+  g.strokeStyle = '#a7b0c1';
   g.lineWidth = 2;
   g.beginPath();
   g.ellipse(14, -19, 6.4, 5, -0.3, Math.PI * 0.1, Math.PI * 0.9);
@@ -492,7 +492,7 @@ function mechazord(g, st) {
   g.arc(8, -4, 6.2, 0, TAU);
   g.fill();
   g.stroke();
-  g.fillStyle = '#e9fdff';
+  g.fillStyle = '#ffe2c0';
   g.beginPath();
   g.arc(8, -4, 4.2, 0, TAU);
   g.fill();
@@ -553,7 +553,7 @@ function mechazord(g, st) {
   g.rotate(st.open ? -0.12 : 0.04);
   poly(g, [[-8, -8], [-17, -19], [-4, -10]], red, 1.3);
   poly(g, [[-2, -10], [-7, -24], [4, -12]], red, 1.3);
-  blob(g, [[-10, -3], [-5, -11], [8, -12], [20, -9], [30, -4], [31, 3], [10, 6], [-8, 5]], vgrad(g, -12, 6, '#fae38e', '#bf8a28'), 1.9);
+  blob(g, [[-10, -3], [-5, -11], [8, -12], [20, -9], [30, -4], [31, 3], [10, 6], [-8, 5]], vgrad(g, -12, 6, '#eef1f7', '#7c869a'), 1.9);
   g.strokeStyle = 'rgba(110, 70, 10, 0.7)';
   g.lineWidth = 1;
   g.beginPath();
@@ -572,7 +572,7 @@ function mechazord(g, st) {
   g.closePath();
   g.fill();
   const eyeG = g.createLinearGradient(0, -7, 15, -8);
-  eyeG.addColorStop(0, '#e9fdff');
+  eyeG.addColorStop(0, '#ffd8c8');
   eyeG.addColorStop(1, glow);
   g.fillStyle = eyeG;
   g.beginPath();
@@ -582,7 +582,7 @@ function mechazord(g, st) {
   g.lineTo(1, -4.4);
   g.closePath();
   g.fill();
-  g.fillStyle = 'rgba(124, 243, 255, 0.35)';
+  g.fillStyle = 'rgba(255, 60, 40, 0.38)';
   g.beginPath();
   g.ellipse(8, -7, 11, 5, -0.12, 0, TAU);
   g.fill();
@@ -593,7 +593,7 @@ function mechazord(g, st) {
   g.save();
   g.translate(0, 4);
   g.rotate(st.open ? 0.55 : 0.02);
-  blob(g, [[0, 0], [12, -0.5], [26, -1], [28, 3.6], [10, 6.4], [-2, 4]], vgrad(g, -1, 6, '#e0463c', '#821d17'), 1.6);
+  blob(g, [[0, 0], [12, -0.5], [26, -1], [28, 3.6], [10, 6.4], [-2, 4]], vgrad(g, -1, 6, '#ccd3de', '#626c80'), 1.6);
   if (st.open) {
     g.fillStyle = '#ffb347';
     g.beginPath();
@@ -626,9 +626,9 @@ function mechazord(g, st) {
   const jet = 0.75 + 0.25 * Math.sin(ph * TAU * 3);
   for (const x of [-10, 8]) {
     const jg = g.createLinearGradient(0, 26, 0, 26 + 8 * jet);
-    jg.addColorStop(0, 'rgba(240, 253, 255, 0.95)');
-    jg.addColorStop(0.4, 'rgba(124, 243, 255, 0.7)');
-    jg.addColorStop(1, 'rgba(124, 243, 255, 0)');
+    jg.addColorStop(0, 'rgba(255, 244, 210, 0.95)');
+    jg.addColorStop(0.4, 'rgba(255, 150, 50, 0.7)');
+    jg.addColorStop(1, 'rgba(255, 150, 50, 0)');
     g.fillStyle = jg;
     g.beginPath();
     g.moveTo(x - 5, 26);
@@ -644,5 +644,5 @@ export const MYTHIC = {
   slime: { draw: slime, box: [-32, -34, 32, 30] },
   giant: { draw: giant, box: [-34, -72, 86, 30] },
   dragon: { draw: dragon, box: [-82, -60, 66, 30] },
-  mechazord: { draw: mechazord, box: [-132, -104, 72, 42] },
+  mechazord: { draw: mechazord, box: [-176, -142, 90, 48] },
 };

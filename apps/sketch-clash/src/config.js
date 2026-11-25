@@ -312,7 +312,7 @@ export const GAIT = { boar: 8, rat: 15, ant: 15, ape: 7, alligator: 7, piranha: 
 
 // ------------------------------------------------------------------ terrain items
 // MechaZord: this game's dragon in robot form, a flying silver dino-dragon that breathes a cone of fire.
-export const MECHAZORD = { ...DRAGON, hp: 620, radius: 22, sep: 26, speed: 44, dps: 50, burnDps: 12, range: 185, holdDist: 130, ring: 2.8, body: [48, 27, 10], pivot: { x: 52 * K, y: -24 * K }, muzzleLen: 32 * K };
+export const MECHAZORD = { ...DRAGON, hp: 700, radius: 30, sep: 34, speed: 42, dps: 54, burnDps: 13, range: 200, holdDist: 140, ring: 3.6, body: [64, 36, 14], pivot: { x: 66 * K, y: -76 * K }, muzzleLen: 14 * K };
 
 export const TERRAIN_IDS = ['wall', 'water', 'ice', 'mine', 'barrel', 'tree'];
 
