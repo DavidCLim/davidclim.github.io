@@ -1,5 +1,5 @@
-import { TAU, FEET, GAIT } from './config.js?v=145';
-import { WATER, ICE, WALL } from './terrain.js?v=145';
+import { TAU, FEET, GAIT } from './config.js?v=147';
+import { WATER, ICE, WALL } from './terrain.js?v=147';
 
 // Everything the Animals and Mythical tabs add to the world, plus the terrain physics:
 // the beast brain, the mage's bolts, the necromancer's skeletons, zombie infection,
@@ -8,9 +8,9 @@ const rand = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
 const BARREL_HP = 28;
-const TREE_R = 4;
-const BARREL_R = 5;
-const MINE_R = 8;
+const TREE_R = 6;
+const BARREL_R = 7;
+const MINE_R = 12;
 
 export function installBeasts(World) {
   const P = World.prototype;

@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=145';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=145';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=145';
+import { TAU, K } from './config.js?v=147';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=147';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=147';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask
@@ -426,53 +426,87 @@ function drawBarrel(g, glow) {
 
 // A tree: one lumpy green crown on a slim brown trunk with flared roots.
 function drawTree(g) {
-  shadowEll(g, 26, 5, 1);
+  // measured off the original: a big lumpy crown with a dark outline, light patches up on the left, a darker underside
+  // with a few brown speckles, and a trunk that flares into two roots, with a soft shadow beside it
+  g.save();
+  g.translate(-6, 0);
+  shadowEll(g, 28, 5.6, 1);
+  g.restore();
   g.beginPath();
-  g.moveTo(-12, 1);
-  g.quadraticCurveTo(-5, -3, -5, -12);
-  g.lineTo(-4.2, -42);
-  g.lineTo(4.4, -42);
-  g.lineTo(5.2, -12);
-  g.quadraticCurveTo(5.5, -3, 12, 1);
-  g.quadraticCurveTo(0, 4, -12, 1);
+  g.moveTo(-13, 2);
+  g.quadraticCurveTo(-6, -2, -6, -13);
+  g.lineTo(-5, -46);
+  g.lineTo(5.4, -46);
+  g.lineTo(6.2, -13);
+  g.quadraticCurveTo(6.6, -2, 13, 2);
+  g.quadraticCurveTo(0, 5, -13, 2);
   g.closePath();
-  g.fillStyle = vgrad(g, -42, 2, '#86592f', '#5f3c1e');
+  const tg = g.createLinearGradient(-6, 0, 7, 0);
+  tg.addColorStop(0, '#a87343');
+  tg.addColorStop(0.55, '#7d5230');
+  tg.addColorStop(1, '#5a3a1f');
+  g.fillStyle = tg;
   g.fill();
-  ink(g, 2);
+  ink(g, 2.2);
+  g.stroke();
+  g.strokeStyle = 'rgba(255, 220, 170, 0.35)';
+  g.lineWidth = 1.2;
+  g.beginPath();
+  g.moveTo(-2.6, -42);
+  g.lineTo(-3.2, -10);
   g.stroke();
   g.strokeStyle = 'rgba(40, 20, 8, 0.45)';
   g.lineWidth = 1;
   g.beginPath();
-  g.moveTo(-1.4, -38);
-  g.lineTo(-2, -8);
+  g.moveTo(2.6, -40);
+  g.lineTo(3, -12);
   g.stroke();
   const crown = [[0, -66, 25], [-21, -58, 17], [21, -58, 17], [-13, -80, 17], [13, -79, 18], [0, -48, 19]];
-  ink(g, 4.4);
+  ink(g, 4.6);
   for (const [x, y, r] of crown) {
     g.beginPath();
     g.arc(x, y, r, 0, TAU);
     g.stroke();
   }
   for (const [x, y, r] of crown) {
-    g.fillStyle = vgrad(g, y - r, y + r, '#62ab50', '#4a8d3c');
+    g.fillStyle = vgrad(g, y - r, y + r, '#5fae4f', '#3f8236');
     g.beginPath();
     g.arc(x, y, r, 0, TAU);
     g.fill();
   }
-  // leaf clumps
-  g.strokeStyle = 'rgba(46, 96, 40, 0.85)';
-  g.lineWidth = 1.7;
-  for (const [x, y, r, a0] of [[-8, -72, 7, 3.4], [10, -66, 7, 3.6], [-18, -55, 6, 3.3], [8, -50, 7, 3.5], [0, -86, 6, 3.4], [18, -76, 6, 3.7]]) {
-    g.beginPath();
-    g.arc(x, y, r, a0, a0 + 2.6);
-    g.stroke();
-  }
-  g.fillStyle = 'rgba(150, 215, 110, 0.5)';
-  for (const [x, y, r] of [[-8, -84, 7], [-18, -64, 5], [12, -86, 5]]) {
-    g.beginPath();
+  g.save();
+  g.beginPath();
+  for (const [x, y, r] of crown) {
+    g.moveTo(x + r, y);
     g.arc(x, y, r, 0, TAU);
+  }
+  g.clip();
+  g.fillStyle = 'rgba(176, 226, 140, 0.42)';
+  for (const [x, y, rx, ry] of [[-14, -78, 22, 13], [8, -88, 16, 8], [-22, -60, 12, 9]]) {
+    g.beginPath();
+    g.ellipse(x, y, rx, ry, -0.3, 0, TAU);
     g.fill();
   }
+  g.fillStyle = 'rgba(28, 82, 34, 0.5)';
+  for (const [x, y, rx, ry] of [[14, -46, 28, 11], [-16, -50, 20, 8], [24, -66, 10, 14]]) {
+    g.beginPath();
+    g.ellipse(x, y, rx, ry, 0.2, 0, TAU);
+    g.fill();
+  }
+  g.fillStyle = 'rgba(122, 74, 38, 0.8)';
+  for (const [x, y] of [[12, -52], [-4, -46], [22, -62]]) {
+    g.beginPath();
+    g.ellipse(x, y, 4.4, 1.7, 0.1, 0, TAU);
+    g.fill();
+  }
+  g.restore();
+  g.fillStyle = 'rgba(214, 240, 196, 0.85)';
+  g.beginPath();
+  g.arc(-14, -84, 4.6, 0, TAU);
+  g.fill();
+  g.beginPath();
+  g.arc(8, -78, 4, 0, TAU);
+  g.fill();
 }
 
 export function buildTerrainArt() {
