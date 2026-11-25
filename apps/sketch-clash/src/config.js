@@ -312,7 +312,30 @@ export const GAIT = { boar: 8, rat: 15, ant: 15, ape: 7, alligator: 7, piranha: 
 
 // ------------------------------------------------------------------ terrain items
 // MechaZord: this game's dragon in robot form, a flying silver dino-dragon that breathes a cone of fire.
-export const MECHAZORD = { ...DRAGON, flying: false, hp: 900, radius: 42, sep: 46, speed: 38, dps: 60, burnDps: 14, range: 230, holdDist: 170, ring: 4.6, body: [88, 50, 18], pivot: { x: 152 * K, y: -178 * K }, muzzleLen: 8 * K };
+export const MECHAZORD = {
+  ...DRAGON,
+  flying: false,
+  airborne: true, // like the dragon, he sometimes takes off and breathes fire from the air, sometimes he stays on the ground
+  hoverH: 30,
+  shadowR: 38,
+  hp: 1100,
+  radius: 42,
+  sep: 46,
+  speed: 38,
+  sight: 420,
+  dps: 80, // way stronger than the dragon's 38, and half as much again from the air
+  burnDps: 16,
+  cone: 0.36,
+  range: 260,
+  holdDist: 170,
+  onTime: 2.4,
+  offTime: 0.8,
+  stomp: { radius: 60, dmg: 70, cd: 2.6, knock: 460 }, // on the ground, a shockwave under his feet
+  ring: 4.6,
+  body: [88, 50, 18],
+  pivot: { x: 152 * K, y: -178 * K },
+  muzzleLen: 8 * K,
+};
 
 export const TERRAIN_IDS = ['wall', 'water', 'ice', 'mine', 'barrel', 'tree'];
 

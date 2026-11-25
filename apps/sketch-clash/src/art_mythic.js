@@ -1,6 +1,6 @@
-import { TAU } from './config.js?v=163';
-import { OUT } from './sprites.js?v=163';
-import { G, vgrad, fs, ell, circ, blob, poly, stick, ribbon, eye, shadow, leg } from './art_kit.js?v=163';
+import { TAU } from './config.js?v=164';
+import { OUT } from './sprites.js?v=164';
+import { G, vgrad, fs, ell, circ, blob, poly, stick, ribbon, eye, shadow, leg } from './art_kit.js?v=164';
 
 // Mythical creatures that aren't egg-shaped: slime, giant, dragon.
 
@@ -373,18 +373,6 @@ function mechazord(g, st) {
   g.translate(0, G);
   g.scale(2.4, 2.4);
   g.translate(0, -G);
-  // ground shadow
-  g.save();
-  g.translate(-6, G + 0.5);
-  g.scale(1, 0.16);
-  const sg = g.createRadialGradient(0, 0, 8, 0, 0, 70);
-  sg.addColorStop(0, 'rgba(30, 30, 40, 0.3)');
-  sg.addColorStop(1, 'rgba(30, 30, 40, 0)');
-  g.fillStyle = sg;
-  g.beginPath();
-  g.arc(0, 0, 70, 0, TAU);
-  g.fill();
-  g.restore();
   // the tail: a thick armoured taper that swings a little, ending in a spiked blade
   const tw = sway;
   ribbon(g, [[-12, -2], [-34, 5 + tw], [-58, 10 + tw * 1.6], [-82, 10 + tw * 2.2], [-104, 2 + tw * 2.6]], 28, 3, vgrad(g, -12, 24, '#d3d9e4', '#5d687c'), 1.9);

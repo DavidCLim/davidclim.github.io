@@ -1,7 +1,7 @@
-import { TAU, K, FEET, UNIT } from './config.js?v=163';
-import { makeLayer, drawLayer } from './sprites.js?v=163';
-import { ANIMALS } from './art_animals.js?v=163';
-import { MYTHIC } from './art_mythic.js?v=163';
+import { TAU, K, FEET, UNIT } from './config.js?v=164';
+import { makeLayer, drawLayer } from './sprites.js?v=164';
+import { ANIMALS } from './art_animals.js?v=164';
+import { MYTHIC } from './art_mythic.js?v=164';
 
 // Sprites and drawing for the creatures that aren't egg-shaped: every animal,
 // the slime, giant and dragon. Each gets 8 walk frames, a few idle (breathing)
@@ -93,18 +93,19 @@ export function drawCreature(ctx, dpr, sprites, u, overlay) {
     ctx.scale(sc, sc);
     ctx.translate(0, -FEET);
   }
-  if (d.flying) {
+  const alt = d.flying ? 1 : u.alt || 0;
+  if (alt > 0.01 || d.shadowR) {
     // hovers above its shadow
     ctx.save();
     ctx.translate(0, FEET);
     ctx.scale(1, 0.22);
-    ctx.fillStyle = 'rgba(30, 30, 40, 0.2)';
+    ctx.fillStyle = `rgba(30, 30, 40, ${d.shadowR ? 0.26 - alt * 0.1 : 0.2})`;
     ctx.beginPath();
-    ctx.arc(0, 0, 15, 0, TAU);
+    ctx.arc(0, 0, (d.shadowR || 15) * (1 - alt * 0.18), 0, TAU);
     ctx.fill();
     ctx.restore();
-    ctx.translate(0, -(7 + Math.sin(u.breath * 3.2) * 1.2 + (u.moving ? 0 : 0.6)));
   }
+  if (alt > 0.01) ctx.translate(0, -alt * ((d.hoverH || 7) + Math.sin(u.breath * 3.2) * 1.2 + (u.moving ? 0 : 0.6)));
   let lunge = 0;
   if (u.atk > 0 && d.kind === 'beast') {
     const p = 1 - u.atk;

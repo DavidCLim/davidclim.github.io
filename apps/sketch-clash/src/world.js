@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=163';
-import { TerrainMap, WALL } from './terrain.js?v=163';
-import { installBeasts } from './beasts.js?v=163';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=164';
+import { TerrainMap, WALL } from './terrain.js?v=164';
+import { installBeasts } from './beasts.js?v=164';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -1062,10 +1062,65 @@ export class World {
     if (u.moving) u.anim += dt * 7.3;
   }
 
+  // MechaZord alternates between walking and flying, like the dragon: he lifts off for a few seconds, then lands
+  // and stomps the ground.
+  airMode(u, dt) {
+    const d = u.def;
+    if (u.airT === undefined) {
+      u.airT = 2 + Math.random() * 3;
+      u.air = false;
+      u.alt = 0;
+      u.stompCd = 1;
+    }
+    u.airT -= dt;
+    if (u.airT <= 0 && u.target) {
+      u.air = !u.air;
+      u.airT = u.air ? 3.5 + Math.random() * 2.5 : 4 + Math.random() * 3.5;
+    }
+    u.alt += ((u.air ? 1 : 0) - u.alt) * Math.min(1, dt * 2.2);
+    if (d.stomp && !u.air && u.alt < 0.12) {
+      u.stompCd -= dt;
+      if (u.stompCd <= 0) {
+        const m = d.stomp;
+        let hit = false;
+        this.eachEnemyNear(u.side, u.x, u.y, m.radius, (o) => {
+          const dx = o.x - u.x;
+          const dy = o.y - u.y;
+          const dist = Math.hypot(dx, dy) || 1;
+          if (dist > m.radius + o.def.radius) return;
+          hit = true;
+          if (!o.def.noKnock) {
+            o.kx += (dx / dist) * m.knock;
+            o.ky += (dy / dist) * m.knock * 0.6;
+          }
+          this.hurt(o, m.dmg, o.x, o.y, 'blast', u);
+        });
+        if (hit) {
+          u.stompCd = m.cd;
+          if (this.sfx) this.sfx('boom', u.x);
+          for (let i = 0; i < 18; i++) {
+            const a = (i / 18) * TAU;
+            this.puffs.push({
+              x: u.x + Math.cos(a) * 8,
+              y: u.y + FEET + Math.sin(a) * 3,
+              vx: Math.cos(a) * 34,
+              vy: Math.sin(a) * 10 - 2,
+              age: 0,
+              life: 0.7 + Math.random() * 0.4,
+              size: 2 + Math.random() * 1.2,
+              dust: true,
+            });
+          }
+        } else u.stompCd = 0.3;
+      }
+    }
+  }
+
   stepFlame(u, dt) {
     const d = u.def;
     const t = this.acquire(u, dt);
-    const speed = d.speed * u.speedMul;
+    if (d.airborne) this.airMode(u, dt);
+    const speed = d.speed * u.speedMul * (u.air ? 1.7 : 1);
     u.firing = false;
     if (t) {
       const dx = t.x - u.x;
@@ -1135,7 +1190,7 @@ export class World {
       if (Math.abs(da) > cone + (o.def.radius / Math.max(dist, 1)) * 0.9) return;
       o.burn = d.burnTime;
       o.burnSrc = u;
-      this.hurt(o, d.dps * dt, o.x, o.y, 'burn', u);
+      this.hurt(o, d.dps * (u.air && d.airborne ? 1.5 : 1) * dt, o.x, o.y, 'burn', u);
     });
     for (const p of this.props) {
       if (p.dead || p.type !== 'barrel') continue;

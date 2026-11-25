@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=163';
-import { buildCreatureArt } from './creatures.js?v=163';
-import { buildEggArt } from './art_eggs.js?v=163';
-import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=163';
-import { Sfx } from './sfx.js?v=163';
-import { World } from './world.js?v=163';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=163';
-import { buildUnitArt } from './art_units.js?v=163';
-import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=163';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=164';
+import { buildCreatureArt } from './creatures.js?v=164';
+import { buildEggArt } from './art_eggs.js?v=164';
+import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=164';
+import { Sfx } from './sfx.js?v=164';
+import { World } from './world.js?v=164';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=164';
+import { buildUnitArt } from './art_units.js?v=164';
+import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=164';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -1127,7 +1127,7 @@ function render() {
 
   // ripples where units wade, mines and peels flat on the ground
   for (const u of world.units) {
-    if (!u.inWater || u.def.flying || u.dead) continue;
+    if (!u.inWater || u.def.flying || u.alt > 0.5 || u.dead) continue;
     const w = 5 + (u.def.radius || 6) * 0.5 + Math.sin(u.breath * 5) * 1.2;
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
     ctx.lineWidth = 0.9;
