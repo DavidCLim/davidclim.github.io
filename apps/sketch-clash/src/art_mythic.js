@@ -1,6 +1,6 @@
-import { TAU } from './config.js?v=167';
-import { OUT } from './sprites.js?v=167';
-import { G, vgrad, fs, ell, circ, blob, poly, stick, ribbon, eye, shadow, leg } from './art_kit.js?v=167';
+import { TAU } from './config.js?v=168';
+import { OUT } from './sprites.js?v=168';
+import { G, vgrad, fs, ell, circ, blob, poly, stick, ribbon, eye, shadow, leg } from './art_kit.js?v=168';
 
 // Mythical creatures that aren't egg-shaped: slime, giant, dragon.
 
@@ -391,7 +391,7 @@ function mechazord(g, st) {
   g.translate(0, -G);
   // ---- the thick ringed tail that rises into a pincer
   const tail = [[-18, 0], [-42, 10 + sway * 0.3], [-66, 14 + sway * 0.6], [-86, 6 + sway * 0.9], [-98, -12 + sway], [-99, -30 + sway]];
-  ribbon(g, tail, 36, 15, vgrad(g, -30, 20, '#f0efee', warm), 1.9);
+  ribbon(g, tail, 44, 17, vgrad(g, -30, 20, '#f0efee', warm), 1.9);
   g.strokeStyle = line;
   g.lineWidth = 1.2;
   for (let i = 0; i < tail.length - 1; i++) {
@@ -407,7 +407,7 @@ function mechazord(g, st) {
       const f = (k + 0.5) / n;
       const px = ax + dx * f;
       const py = ay + dy * f;
-      const w = (36 - 21 * ((i + f) / (tail.length - 1))) / 2;
+      const w = (44 - 27 * ((i + f) / (tail.length - 1))) / 2;
       g.beginPath();
       g.moveTo(px - nx * w, py - ny * w);
       g.quadraticCurveTo(px + dx * 0.05, py + dy * 0.05 + 1.4, px + nx * w, py + ny * w);
@@ -433,8 +433,8 @@ function mechazord(g, st) {
     const knee = [hx + 10 + swing * 0.4, 10 - lift * 0.4];
     const ankle = [hx + 4 + swing, 20 - lift];
     const shade = far ? [warmDark, '#4f403d'] : [white, warm];
-    ribbon(g, [[hx, -6], knee], 32, 24, vgrad(g, -10, 14, shade[0], shade[1]), 1.9);
-    ribbon(g, [knee, ankle], 22, 15, vgrad(g, 6, 22, shade[0], shade[1]), 1.9);
+    ribbon(g, [[hx, -6], knee], 38, 28, vgrad(g, -10, 14, shade[0], shade[1]), 1.9);
+    ribbon(g, [knee, ankle], 26, 18, vgrad(g, 6, 22, shade[0], shade[1]), 1.9);
     box(hx - 8, -8, 12, 9, far ? '#86726f' : lite);
     bolt(hx - 6, -6);
     bolt(hx + 2, -1);
@@ -474,8 +474,8 @@ function mechazord(g, st) {
   // ---- the pelvis and a tall boxy torso
   box(-26, -14, 48, 16, '#cfc9c8', 3);
   for (const x of [-20, -8, 4, 14]) bolt(x, -6);
-  const torso = [[-27, -12], [-31, -40], [-23, -63], [8, -68], [27, -54], [29, -26], [23, -12]];
-  blob(g, torso, vgrad(g, -68, -12, '#f1efee', '#a8928e'), 2.1);
+  const torso = [[-28, -12], [-34, -40], [-26, -64], [8, -70], [32, -54], [35, -26], [27, -12]];
+  blob(g, torso, vgrad(g, -68, -12, '#f1efee', '#a07e78'), 2.1);
   // overlapping plates over the back and shoulders
   for (const [x, y, w, h, rot, fill] of [
     [-27, -62, 22, 12, -0.42, lite],
@@ -549,12 +549,22 @@ function mechazord(g, st) {
   for (const [x, y, w, h, fill] of [[-8, -74, 26, 8, lite], [-4, -68, 28, 8, white]]) box(x, y, w, h, fill, 2.4);
   // ---- the big skull head with blocky teeth
   g.save();
-  g.translate(4, -82);
+  g.translate(0, -80);
   g.rotate(0.07);
+  g.scale(1.35, 1.35);
   // lower jaw
   g.save();
   g.translate(10, 4);
-  g.rotate(st.open ? 0.6 : 0.03);
+  g.rotate(st.open ? 0.62 : 0.3);
+  if (!st.open) {
+    g.fillStyle = '#4a2a26';
+    g.beginPath();
+    g.moveTo(4, -1);
+    g.lineTo(58, -1);
+    g.lineTo(36, -12);
+    g.closePath();
+    g.fill();
+  }
   if (st.open) {
     g.fillStyle = '#ff7a2a';
     g.beginPath();
@@ -648,8 +658,8 @@ function mechazord(g, st) {
   const arm = (ox, shade, far) => {
     g.save();
     g.translate(ox, 0);
-    ribbon(g, [[16, -56], [30, -38]], 26, 24, vgrad(g, -64, -30, shade[0], shade[1]), 1.9);
-    ribbon(g, [[30, -38], [38, -16]], 24, 18, vgrad(g, -42, -10, shade[0], shade[1]), 1.9);
+    ribbon(g, [[16, -56], [30, -38]], 32, 28, vgrad(g, -64, -30, shade[0], shade[1]), 1.9);
+    ribbon(g, [[30, -38], [38, -16]], 28, 21, vgrad(g, -42, -10, shade[0], shade[1]), 1.9);
     box(18, -62, 14, 11, far ? '#86726f' : white, 2.2);
     bolt(21, -59);
     bolt(29, -59);
@@ -668,8 +678,8 @@ function mechazord(g, st) {
     g.fill();
     g.stroke();
     bolt(30, -38, 1.4);
-    blob(g, [[32, -16], [44, -18], [47, -9], [40, -3], [32, -6]], far ? '#7a6663' : '#8a7571', 1.5);
-    for (const [dx, dy, len] of [[44, -14, 11], [46, -9, 12], [42, -4, 11]]) claw(dx, dy, len, 1, far ? '#b2a29e' : white);
+    blob(g, [[31, -18], [46, -20], [50, -8], [42, 0], [31, -4]], far ? '#6e5a56' : '#7d6864', 1.5);
+    for (const [dx, dy, len] of [[46, -16, 13], [49, -9, 14], [44, -2, 13]]) claw(dx, dy, len, 1, far ? '#b2a29e' : white);
     g.restore();
   };
   arm(-5, [warmDark, '#4f403d'], true);
@@ -684,5 +694,5 @@ export const MYTHIC = {
   slime: { draw: slime, box: [-32, -34, 32, 30] },
   giant: { draw: giant, box: [-34, -72, 86, 30] },
   dragon: { draw: dragon, box: [-82, -60, 66, 30] },
-  mechazord: { draw: mechazord, box: [-268, -312, 192, 38] },
+  mechazord: { draw: mechazord, box: [-272, -336, 262, 38] },
 };
