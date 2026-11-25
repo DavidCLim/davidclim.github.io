@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=158';
-import { drawLayer, OUT } from './sprites.js?v=158';
-import { drawDrop } from './art_units.js?v=158';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=158';
-import { EGG_DROPS } from './art_eggs.js?v=158';
+import { TAU, K, UNIT, FEET } from './config.js?v=160';
+import { drawLayer, OUT } from './sprites.js?v=160';
+import { drawDrop } from './art_units.js?v=160';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=160';
+import { EGG_DROPS } from './art_eggs.js?v=160';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -174,16 +174,6 @@ export function drawHitFlash(ctx, u, rx, ry) {
   }
 }
 
-function drawGunBot(ctx, dpr, sprites, u) {
-  const A = sprites[u.species];
-  const dd = u.def;
-  eggBase(ctx, dpr, sprites, A, u);
-  const pose = u.pose;
-  ctx.translate(lerp(8 * K, dd.pivot.x, pose) - u.recoil * 1.2 * K, lerp(11 * K, dd.pivot.y, pose) + (u.flash > 0 ? (Math.random() - 0.5) * 0.7 : 0));
-  ctx.rotate(lerp(0.06, u.aim, pose));
-  drawLayer(ctx, u.flash > 0 ? A.gunFire : A.gun);
-}
-
 function drawFlamethrower(ctx, dpr, sprites, u) {
   const A = sprites[u.species];
   const dd = u.def;
@@ -353,10 +343,6 @@ const DRAWERS = {
   necromancer: (ctx, dpr, sprites, u) => drawStaffUnit(ctx, dpr, sprites, u, 'necromancer'),
   ...Object.fromEntries(CREATURE_IDS.map((id) => [id, (ctx, dpr, sprites, u) => drawCreature(ctx, dpr, sprites, u, burnOverlay)])),
   flamethrower: drawFlamethrower,
-  boltbot: drawGunBot,
-  bruiser: drawRoman,
-  rocketbot: drawGrenadier,
-  torchbot: drawFlamethrower,
   roman: drawRoman,
   grenadier: drawGrenadier,
   archer: drawArcher,
@@ -694,25 +680,6 @@ const ICONS = {
     g.translate(8 * K, 11 * K);
     g.rotate(0.03);
     drawLayer(g, S.gun);
-  }],
-  boltbot: [84, 34, 39, (g, S) => {
-    g.translate(8 * K, 11 * K);
-    g.rotate(0.03);
-    drawLayer(g, S.gun);
-  }],
-  torchbot: [84, 34, 39, (g, S) => {
-    g.translate(8 * K, 11 * K);
-    g.rotate(0.03);
-    drawLayer(g, S.gun);
-  }],
-  bruiser: [84, 32, 39, (g, S) => {
-    g.translate(5.4 * K, 23.3 * K);
-    g.rotate(-1.32);
-    drawLayer(g, S.spear);
-  }],
-  rocketbot: [84, 32.3, 39, (g, S) => {
-    g.translate(17 * K, 12 * K);
-    drawLayer(g, S.bombLit);
   }],
   roman: [84, 32, 39, (g, S) => {
     g.translate(5.4 * K, 23.3 * K);

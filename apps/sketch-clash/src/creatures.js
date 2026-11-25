@@ -1,7 +1,7 @@
-import { TAU, K, FEET, UNIT } from './config.js?v=158';
-import { makeLayer, drawLayer } from './sprites.js?v=158';
-import { ANIMALS } from './art_animals.js?v=158';
-import { MYTHIC } from './art_mythic.js?v=158';
+import { TAU, K, FEET, UNIT } from './config.js?v=160';
+import { makeLayer, drawLayer } from './sprites.js?v=160';
+import { ANIMALS } from './art_animals.js?v=160';
+import { MYTHIC } from './art_mythic.js?v=160';
 
 // Sprites and drawing for the creatures that aren't egg-shaped: every animal,
 // the slime, giant and dragon. Each gets 8 walk frames, a few idle (breathing)
@@ -9,8 +9,8 @@ import { MYTHIC } from './art_mythic.js?v=158';
 const DEFS = { ...ANIMALS, ...MYTHIC };
 export const CREATURE_IDS = Object.keys(DEFS);
 
-const POSES = { ape: ['raise'], giant: ['raise', 'slam'], snake: ['strike'], dragon: ['breath'] };
-const GAIT = { boar: 8, rat: 15, ant: 15, ape: 7, alligator: 7, piranha: 11, snake: 7, cheetah: 13, slime: 6, giant: 5, dragon: 7 };
+const POSES = { ape: ['raise'], giant: ['raise', 'slam'], snake: ['strike'], dragon: ['breath'], mechazord: ['breath'] };
+const GAIT = { boar: 8, rat: 15, ant: 15, ape: 7, alligator: 7, piranha: 11, snake: 7, cheetah: 13, slime: 6, giant: 5, dragon: 7, mechazord: 7 };
 
 function silhouette(layer, fill) {
   const c = document.createElement('canvas');
@@ -47,7 +47,7 @@ export function buildCreatureArt() {
     for (let i = 0; i < 4; i++) A.idle.push(mk({ ph: i / 4, moving: false }));
     A.open = mk({ ph: 0.1, moving: false, open: true });
     for (const p of POSES[id] || []) A.poses[p] = mk({ ph: 0.1, moving: false, pose: p, open: p === 'breath' });
-    if (id === 'dragon') {
+    if (id === 'dragon' || id === 'mechazord') {
       A.walkBreath = [];
       for (let i = 0; i < 8; i++) A.walkBreath.push(mk({ ph: i / 8, moving: true, pose: 'breath', open: true }));
     }
@@ -74,7 +74,7 @@ function pickFrame(u, A) {
   if (id === 'giant' && atk > 0) return atk > 0.5 ? A.poses.raise : A.poses.slam;
   if (id === 'ape' && atk > 0.45) return A.poses.raise;
   if (id === 'snake' && atk > 0) return A.poses.strike;
-  if (id === 'dragon' && u.firing) return u.moving ? A.walkBreath[(u.anim | 0) & 7] : A.poses.breath;
+  if ((id === 'dragon' || id === 'mechazord') && u.firing) return u.moving ? A.walkBreath[(u.anim | 0) & 7] : A.poses.breath;
   if (u.moving) return A.walk[(u.anim | 0) & 7];
   if (atk > 0.25 && atk < 0.95 && id !== 'slime' && id !== 'piranha') return A.open;
   if (id === 'piranha' && atk > 0) return A.open;
