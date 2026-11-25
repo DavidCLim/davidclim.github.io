@@ -1,6 +1,6 @@
-import { TAU } from './config.js?v=162';
-import { OUT } from './sprites.js?v=162';
-import { G, vgrad, fs, ell, circ, blob, poly, stick, ribbon, eye, shadow, leg } from './art_kit.js?v=162';
+import { TAU } from './config.js?v=163';
+import { OUT } from './sprites.js?v=163';
+import { G, vgrad, fs, ell, circ, blob, poly, stick, ribbon, eye, shadow, leg } from './art_kit.js?v=163';
 
 // Mythical creatures that aren't egg-shaped: slime, giant, dragon.
 
@@ -371,7 +371,7 @@ function mechazord(g, st) {
   // everything is drawn big, scaled about the ground line
   g.save();
   g.translate(0, G);
-  g.scale(1.7, 1.7);
+  g.scale(2.4, 2.4);
   g.translate(0, -G);
   // ground shadow
   g.save();
@@ -396,6 +396,9 @@ function mechazord(g, st) {
     g.lineTo(x + 2, y + h + tw);
     g.stroke();
   }
+  for (const [x, y, h] of [[-26, 3, 12], [-42, 7, 11], [-58, 10, 9.5], [-74, 11, 8], [-90, 8, 6]]) {
+    poly(g, [[x - 3.4, y + h - 1 + tw], [x + 1, y + h + 6 + tw], [x + 4.4, y + h - 1 + tw]], mid, 1.1);
+  }
   poly(g, [[-100, 1 + tw * 2.6], [-118, -8 + tw * 2.8], [-106, 8 + tw * 2.6]], lite, 1.5);
   // the far leg, then the torso, arm, head and near leg
   const legAt = (hx, off, shade, foot) => {
@@ -414,6 +417,18 @@ function mechazord(g, st) {
     g.lineTo(knee[0] - 3, knee[1] - 3);
     g.stroke();
     joint(knee[0], knee[1], 5.4);
+    poly(g, [[knee[0] + 3, knee[1] - 5], [knee[0] + 11, knee[1] - 1], [knee[0] + 3, knee[1] + 3.4]], lite, 1.2);
+    g.strokeStyle = 'rgba(24, 28, 40, 0.75)';
+    g.lineWidth = 1.2;
+    g.beginPath();
+    for (const k of [0.45, 0.6, 0.75]) {
+      const vx = knee[0] + (ankle[0] - knee[0]) * k;
+      const vy = knee[1] + (ankle[1] - knee[1]) * k;
+      g.moveTo(vx - 4, vy);
+      g.lineTo(vx + 3, vy);
+    }
+    g.stroke();
+    bolt(hip[0] + 4, hip[1] + 6);
     // a three-toed claw foot
     g.save();
     g.translate(ankle[0], ankle[1]);
@@ -446,6 +461,14 @@ function mechazord(g, st) {
     g.strokeStyle = OUT;
     g.lineWidth = 1.5;
     g.stroke();
+    g.strokeStyle = 'rgba(24, 28, 42, 0.55)';
+    g.lineWidth = 0.9;
+    g.beginPath();
+    g.moveTo(-1 * s, -1 * s);
+    g.lineTo(-4.5 * s, -9 * s);
+    g.moveTo(3 * s, -1 * s);
+    g.lineTo(3.6 * s, -10 * s);
+    g.stroke();
     g.strokeStyle = red;
     g.lineWidth = 1.3;
     g.beginPath();
@@ -464,6 +487,14 @@ function mechazord(g, st) {
   fin(-14, -43, 1.2, -0.38);
   // pelvis and a lean, forward-set torso
   blob(g, [[-20, -4], [-19, 10], [-4, 14], [12, 9], [14, -4]], vgrad(g, -4, 14, '#c3cad7', '#6d778c'), 2);
+  g.strokeStyle = orange;
+  g.lineWidth = 1.6;
+  g.beginPath();
+  for (let k = 0; k < 4; k++) {
+    g.moveTo(-14 + k * 6, 10);
+    g.lineTo(-10 + k * 6, 2);
+  }
+  g.stroke();
   const torso = [[-22, -4], [-27, -20], [-23, -38], [-8, -50], [14, -47], [27, -31], [26, -12], [14, 4], [-6, 8]];
   blob(g, torso, vgrad(g, -50, 8, '#e9edf3', '#7c869b'), 2.1);
   g.save();
@@ -500,6 +531,27 @@ function mechazord(g, st) {
   g.stroke();
   g.restore();
   for (const [x, y] of [[-18, -30], [-17, -12], [20, -40], [22, -20], [10, 0], [-6, 4]]) bolt(x, y);
+  for (const [x, y, c] of [[-12, -42, '#ff4a3a'], [-8, -42, '#54e07a'], [-4, -42, '#ffc23a'], [-12, -38, '#54e07a'], [-8, -38, '#ff4a3a']]) {
+    g.fillStyle = c;
+    g.strokeStyle = OUT;
+    g.lineWidth = 0.7;
+    g.beginPath();
+    g.arc(x, y, 1.5, 0, TAU);
+    g.fill();
+    g.stroke();
+  }
+  g.strokeStyle = 'rgba(255, 150, 60, 0.9)';
+  g.lineWidth = 1.2;
+  g.beginPath();
+  g.arc(13, -28, 8.4, 0, TAU);
+  g.stroke();
+  g.beginPath();
+  for (let k = 0; k < 10; k++) {
+    const a = (k / 10) * TAU;
+    g.moveTo(13 + Math.cos(a) * 5.8, -28 + Math.sin(a) * 5.8);
+    g.lineTo(13 + Math.cos(a) * 8.4, -28 + Math.sin(a) * 8.4);
+  }
+  g.stroke();
   // the glowing core
   const core = g.createRadialGradient(13, -28, 0.5, 13, -28, 11);
   core.addColorStop(0, '#fff3d6');
@@ -524,7 +576,7 @@ function mechazord(g, st) {
   ribbon(g, [[4, -42], [14, -54], [24, -62]], 26, 18, vgrad(g, -66, -38, '#dde2eb', '#7c869b'), 1.9);
   g.strokeStyle = 'rgba(24, 28, 42, 0.7)';
   g.lineWidth = 1.1;
-  for (const [x, y] of [[8, -46], [14, -53], [20, -59]]) {
+  for (const [x, y] of [[6, -44], [10, -49], [14, -53], [17, -57], [21, -60]]) {
     g.beginPath();
     g.moveTo(x - 6, y + 6);
     g.lineTo(x + 5, y - 6);
@@ -547,6 +599,20 @@ function mechazord(g, st) {
   g.stroke();
   bolt(8, -41);
   bolt(20, -37);
+  g.fillStyle = iron;
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.3;
+  for (let k = 0; k < 4; k++) {
+    g.beginPath();
+    g.arc(-1 + k * 5.2, -51 + (k % 2) * 3, 2.6, 0, TAU);
+    g.fill();
+    g.stroke();
+    g.fillStyle = red;
+    g.beginPath();
+    g.arc(-1 + k * 5.2, -51 + (k % 2) * 3, 1.2, 0, TAU);
+    g.fill();
+    g.fillStyle = iron;
+  }
   // the short arm: upper arm, a bent forearm and a hand of finger missiles
   g.save();
   g.translate(14, -34);
@@ -568,6 +634,7 @@ function mechazord(g, st) {
   g.lineTo(21, 7);
   g.stroke();
   joint(9, 11, 3.8);
+  poly(g, [[5, 9], [4, 1], [12, 8]], lite, 1.2);
   for (const [dx, dy] of [[9, -4.4], [11, 1.4], [8, 7]]) {
     g.strokeStyle = OUT;
     g.lineWidth = 3.4;
@@ -635,6 +702,24 @@ function mechazord(g, st) {
   g.beginPath();
   g.ellipse(5, -8.6, 2.6, 1, -0.1, 0, TAU);
   g.fill();
+  g.strokeStyle = 'rgba(24, 28, 42, 0.8)';
+  g.lineWidth = 1.2;
+  g.beginPath();
+  for (const k of [0, 1, 2, 3]) {
+    g.moveTo(-8 + k * 2.6, -3);
+    g.lineTo(-9.4 + k * 2.6, 3);
+  }
+  g.stroke();
+  for (const [x, y, c] of [[24, -14, '#ffc23a'], [30, -11, '#ff4a3a'], [14, -17, '#54e07a']]) {
+    g.fillStyle = c;
+    g.strokeStyle = OUT;
+    g.lineWidth = 0.7;
+    g.beginPath();
+    g.arc(x, y, 1.3, 0, TAU);
+    g.fill();
+    g.stroke();
+  }
+  for (const x of [0, 8, 16]) poly(g, [[x, -15], [x + 4, -23], [x + 8, -16]], lite, 1.1);
   g.fillStyle = iron;
   g.beginPath();
   g.ellipse(36, -3, 1.7, 1.2, 0, 0, TAU);
@@ -683,5 +768,5 @@ export const MYTHIC = {
   slime: { draw: slime, box: [-32, -34, 32, 30] },
   giant: { draw: giant, box: [-34, -72, 86, 30] },
   dragon: { draw: dragon, box: [-82, -60, 66, 30] },
-  mechazord: { draw: mechazord, box: [-210, -190, 122, 34] },
+  mechazord: { draw: mechazord, box: [-292, -276, 172, 42] },
 };
