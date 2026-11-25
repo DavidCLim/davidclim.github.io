@@ -1,6 +1,6 @@
-import { TAU } from './config.js?v=166';
-import { OUT } from './sprites.js?v=166';
-import { G, vgrad, fs, ell, circ, blob, poly, stick, ribbon, eye, shadow, leg } from './art_kit.js?v=166';
+import { TAU } from './config.js?v=167';
+import { OUT } from './sprites.js?v=167';
+import { G, vgrad, fs, ell, circ, blob, poly, stick, ribbon, eye, shadow, leg } from './art_kit.js?v=167';
 
 // Mythical creatures that aren't egg-shaped: slime, giant, dragon.
 
@@ -331,25 +331,25 @@ function dragon(g, st) {
 }
 
 function mechazord(g, st) {
-  // MechaZord drawn after a chibi Mechagodzilla: a hunched, stocky silver-and-brown armoured biped with a big skull-like head
-  // (exposed teeth, a black eye socket with a red eye), a hood of plates over the back with a row of red blade plates down
-  // it, huge forward-hanging arms with curved claws, thick panelled legs with three-toed claw feet and a ringed tail that
-  // curls up into a pincer.
+  // MechaZord, my own drawing built from the chibi Mechagodzilla reference: a tall, boxy, upright armoured biped in white and
+  // warm grey with red accents: a big skull head with blocky teeth, stacked neck plates, red-and-white blade plates down the
+  // back, a chest with three square windows and a grid panel, huge blocky arms with hooked claws, heavy panelled legs with
+  // three-toed claw feet, and a thick ringed tail that rises into a three-pronged pincer.
   const ph = st.ph;
   const mv = st.moving;
   const bob = mv ? Math.abs(Math.sin(ph * TAU * 2)) * 1.2 : Math.sin(ph * TAU) * 0.4;
   const sway = mv ? Math.sin(ph * TAU * 2) * 1.6 : Math.sin(ph * TAU) * 0.8;
-  const lite = '#eceff3';
-  const silver = '#cdd2da';
-  const mid = '#a4aab5';
-  const warm = '#a59490';
-  const warmDark = '#7d6c69';
-  const line = 'rgba(50, 40, 42, 0.8)';
-  const red = '#e2432c';
-  const redDark = '#a82a1b';
-  const iron = '#2b2528';
-  const bolt = (x, y, r = 1.2) => {
-    g.fillStyle = '#f1f3f6';
+  const white = '#f3f2f1';
+  const lite = '#dcdada';
+  const grey = '#bdb9b9';
+  const warm = '#a08a86';
+  const warmDark = '#6f5b58';
+  const line = 'rgba(45, 34, 35, 0.85)';
+  const red = '#e5432b';
+  const redDark = '#a62a19';
+  const iron = '#2b2224';
+  const bolt = (x, y, r = 1.1) => {
+    g.fillStyle = '#f6f5f4';
     g.strokeStyle = OUT;
     g.lineWidth = 0.7;
     g.beginPath();
@@ -357,31 +357,41 @@ function mechazord(g, st) {
     g.fill();
     g.stroke();
   };
-  const panel = (x, y, w, h, fill) => {
+  const box = (x, y, w, h, fill, r = 1.6) => {
     g.fillStyle = fill;
     g.strokeStyle = OUT;
-    g.lineWidth = 1.2;
+    g.lineWidth = 1.3;
     g.beginPath();
-    g.roundRect(x, y, w, h, 1.6);
+    g.roundRect(x, y, w, h, r);
     g.fill();
     g.stroke();
   };
-  const slash = (x, y, w, h) => {
+  const window4 = (x, y, w, h) => {
+    box(x, y, w, h, white, 1.4);
     g.strokeStyle = line;
     g.lineWidth = 1;
     g.beginPath();
-    g.moveTo(x + 1, y + h - 1);
-    g.lineTo(x + w - 1, y + 1);
+    g.moveTo(x + 1.4, y + h - 1.4);
+    g.lineTo(x + w - 1.4, y + 1.4);
     g.stroke();
+  };
+  const claw = (x, y, len, dir, fill) => {
+    // a hooked claw curling forward and down
+    g.beginPath();
+    g.moveTo(x - 3, y - 2.6);
+    g.quadraticCurveTo(x + len * 0.8 * dir, y - 5, x + len * dir, y + 5);
+    g.quadraticCurveTo(x + len * 0.4 * dir, y + 0.6, x - 2.6, y + 2.8);
+    g.closePath();
+    fs(g, fill, 1.2);
   };
   // drawn big, scaled about the ground line
   g.save();
   g.translate(0, G);
-  g.scale(2.9, 2.9);
+  g.scale(2.4, 2.4);
   g.translate(0, -G);
-  // ---- the ringed tail, curling up into a pincer
-  const tail = [[-14, 4], [-36, 11 + sway * 0.3], [-58, 14 + sway * 0.7], [-76, 6 + sway], [-86, -10 + sway], [-88, -28 + sway]];
-  ribbon(g, tail, 30, 10, vgrad(g, -30, 20, '#e4e7ec', '#8d8683'), 1.9);
+  // ---- the thick ringed tail that rises into a pincer
+  const tail = [[-18, 0], [-42, 10 + sway * 0.3], [-66, 14 + sway * 0.6], [-86, 6 + sway * 0.9], [-98, -12 + sway], [-99, -30 + sway]];
+  ribbon(g, tail, 36, 15, vgrad(g, -30, 20, '#f0efee', warm), 1.9);
   g.strokeStyle = line;
   g.lineWidth = 1.2;
   for (let i = 0; i < tail.length - 1; i++) {
@@ -392,100 +402,92 @@ function mechazord(g, st) {
     const L = Math.hypot(dx, dy);
     const nx = -dy / L;
     const ny = dx / L;
-    for (let k = 0; k < 3; k++) {
-      const f = (k + 0.5) / 3;
+    const n = Math.round(L / 5.5);
+    for (let k = 0; k < n; k++) {
+      const f = (k + 0.5) / n;
       const px = ax + dx * f;
       const py = ay + dy * f;
-      const w = (30 - 20 * ((i + f) / (tail.length - 1))) / 2;
+      const w = (36 - 21 * ((i + f) / (tail.length - 1))) / 2;
       g.beginPath();
       g.moveTo(px - nx * w, py - ny * w);
-      g.quadraticCurveTo(px + dx * 0.04, py + dy * 0.04 + 1.4, px + nx * w, py + ny * w);
+      g.quadraticCurveTo(px + dx * 0.05, py + dy * 0.05 + 1.4, px + nx * w, py + ny * w);
       g.stroke();
     }
   }
-  // the pincer: three curved claws
-  for (const [pts, fill] of [
-    [[[-90, -26 + sway], [-104, -40 + sway], [-98, -58 + sway], [-93, -42 + sway], [-87, -28 + sway]], silver],
-    [[[-88, -28 + sway], [-90, -44 + sway], [-85, -60 + sway], [-82, -44 + sway], [-83, -28 + sway]], lite],
-    [[[-84, -26 + sway], [-76, -40 + sway], [-76, -56 + sway], [-71, -42 + sway], [-79, -26 + sway]], mid],
-  ]) {
+  // the three-pronged claw on the tip
+  for (const [x0, x1, x2, lean, fill] of [[-103, -108, -100, -1, lite], [-99, -99, -96, 0, white], [-95, -88, -92, 1, grey]]) {
+    const tx = -99 + sway;
     g.beginPath();
-    g.moveTo(pts[0][0], pts[0][1]);
-    g.quadraticCurveTo(pts[1][0], pts[1][1], pts[2][0], pts[2][1]);
-    g.quadraticCurveTo(pts[3][0], pts[3][1], pts[4][0], pts[4][1]);
+    g.moveTo(x0, -34 + sway);
+    g.quadraticCurveTo(x1 + lean * 3, -48 + sway, x2 + lean * 6, -68 + sway);
+    g.quadraticCurveTo(x2 + lean * 2, -50 + sway, x0 + 8, -32 + sway);
     g.closePath();
     fs(g, fill, 1.6);
+    void tx;
   }
-  // ---- a leg: a panelled thigh, a heavy knee, a shin and a big three-toed claw foot
+  // ---- a leg: a heavy panelled thigh, a knee block, a shin and a three-toed claw foot
   const legAt = (hx, off, far) => {
     const t = (ph + off) * TAU;
-    const swing = mv ? Math.sin(t) * 7 : 0;
-    const lift = mv ? Math.max(0, Math.cos(t)) * 6 : 0;
-    const hip = [hx, 0];
-    const knee = [hx + 12 + swing * 0.4, 12 - lift * 0.4];
+    const swing = mv ? Math.sin(t) * 6 : 0;
+    const lift = mv ? Math.max(0, Math.cos(t)) * 5.5 : 0;
+    const knee = [hx + 10 + swing * 0.4, 10 - lift * 0.4];
     const ankle = [hx + 4 + swing, 20 - lift];
-    const body = far ? [warmDark, '#5d504d'] : [silver, warm];
-    ribbon(g, [hip, knee], 28, 20, vgrad(g, -6, 16, body[0], body[1]), 1.9);
-    ribbon(g, [knee, ankle], 20, 13, vgrad(g, 8, 22, body[0], body[1]), 1.9);
-    // panels and bolts on the thigh and shin
-    panel(hx + 1, -2, 9, 7, far ? '#8b7a77' : '#e9ecf0');
-    bolt(hx + 3, 0);
-    bolt(hx + 8, 3);
+    const shade = far ? [warmDark, '#4f403d'] : [white, warm];
+    ribbon(g, [[hx, -6], knee], 32, 24, vgrad(g, -10, 14, shade[0], shade[1]), 1.9);
+    ribbon(g, [knee, ankle], 22, 15, vgrad(g, 6, 22, shade[0], shade[1]), 1.9);
+    box(hx - 8, -8, 12, 9, far ? '#86726f' : lite);
+    bolt(hx - 6, -6);
+    bolt(hx + 2, -1);
     g.strokeStyle = line;
     g.lineWidth = 1;
     g.beginPath();
-    g.moveTo(hx + 12, 4);
+    g.moveTo(hx + 4, 2);
     g.lineTo(knee[0] + 2, knee[1] - 4);
-    g.moveTo(knee[0] - 4, knee[1] + 2);
+    g.moveTo(knee[0] - 5, knee[1] + 3);
     g.lineTo(ankle[0] - 3, ankle[1] - 2);
     g.stroke();
-    // the knee pad with a spike
-    g.fillStyle = far ? '#8b7a77' : '#dfe3e9';
+    g.fillStyle = far ? '#86726f' : lite;
     g.strokeStyle = OUT;
     g.lineWidth = 1.5;
     g.beginPath();
-    g.ellipse(knee[0] + 1, knee[1], 7.4, 6, -0.3, 0, TAU);
+    g.ellipse(knee[0] + 1, knee[1], 8, 6.6, -0.2, 0, TAU);
     g.fill();
     g.stroke();
-    poly(g, [[knee[0] + 5, knee[1] - 4], [knee[0] + 13, knee[1] - 1], [knee[0] + 5, knee[1] + 3]], far ? '#9a8a86' : lite, 1.2);
-    bolt(knee[0], knee[1] - 1);
-    // the foot: a wide wedge with three long curved claws
+    bolt(knee[0], knee[1] - 1, 1.3);
+    // the foot, with three long spiked claws
     g.save();
     g.translate(ankle[0], ankle[1]);
-    blob(g, [[-8, -1], [8, -2], [18, 2], [21, 5], [-6, 5]], vgrad(g, -2, 5, far ? '#8b7a77' : '#d4d8df', iron), 1.7);
-    for (const [dx, dy, len] of [[20, 5, 9], [16, 3, 9], [11, 1.4, 8]]) {
+    blob(g, [[-9, -1], [8, -2], [18, 2], [22, 5], [-7, 5]], vgrad(g, -2, 5, far ? '#86726f' : lite, iron), 1.7);
+    for (const [dx, dy, len] of [[21, 5, 10], [17, 3, 10], [12, 1.4, 9]]) {
       g.beginPath();
       g.moveTo(dx - 3, dy - 2);
-      g.quadraticCurveTo(dx + len * 0.7, dy - 1.4, dx + len, dy + 3.6);
+      g.quadraticCurveTo(dx + len * 0.7, dy - 1.4, dx + len, dy + 3.4);
       g.quadraticCurveTo(dx + len * 0.4, dy + 1.4, dx - 2, dy + 2.4);
       g.closePath();
-      fs(g, far ? '#b4a7a3' : lite, 1.1);
+      fs(g, far ? '#b2a29e' : white, 1.1);
     }
     g.restore();
   };
-  legAt(8, 0.5, true);
+  legAt(6, 0.5, true);
   g.save();
   g.translate(0, -bob);
-  // ---- the hunched torso, with the hood of plates over the back
-  const torso = [[-22, 0], [-29, -16], [-25, -36], [-8, -49], [14, -48], [28, -35], [30, -12], [20, 5], [-2, 10]];
-  blob(g, torso, vgrad(g, -44, 10, '#e9ecf0', '#9b8f8c'), 2.1);
-  // overlapping armour plates along the back and shoulder
+  // ---- the pelvis and a tall boxy torso
+  box(-26, -14, 48, 16, '#cfc9c8', 3);
+  for (const x of [-20, -8, 4, 14]) bolt(x, -6);
+  const torso = [[-27, -12], [-31, -40], [-23, -63], [8, -68], [27, -54], [29, -26], [23, -12]];
+  blob(g, torso, vgrad(g, -68, -12, '#f1efee', '#a8928e'), 2.1);
+  // overlapping plates over the back and shoulders
   for (const [x, y, w, h, rot, fill] of [
-    [-22, -34, 22, 12, -0.5, silver],
-    [-26, -24, 22, 12, -0.32, lite],
-    [-28, -13, 20, 12, -0.18, silver],
-    [-27, -3, 18, 10, -0.08, mid],
+    [-27, -62, 22, 12, -0.42, lite],
+    [-31, -52, 24, 12, -0.28, white],
+    [-34, -41, 24, 12, -0.14, lite],
+    [-34, -30, 22, 12, -0.06, white],
+    [-32, -19, 20, 10, 0, grey],
   ]) {
     g.save();
     g.translate(x, y);
     g.rotate(rot);
-    g.fillStyle = fill;
-    g.strokeStyle = OUT;
-    g.lineWidth = 1.5;
-    g.beginPath();
-    g.roundRect(0, 0, w, h, 3);
-    g.fill();
-    g.stroke();
+    box(0, 0, w, h, fill, 2.6);
     g.strokeStyle = line;
     g.lineWidth = 0.9;
     g.beginPath();
@@ -496,220 +498,185 @@ function mechazord(g, st) {
     bolt(w - 3, 3);
     g.restore();
   }
-  // the chest: a column of three window plates and a grid panel
-  for (let k = 0; k < 3; k++) {
-    panel(6, -37 + k * 9, 9, 7.4, '#f3f5f8');
-    slash(6, -37 + k * 9, 9, 7.4);
-  }
-  panel(17, -30, 8, 14, '#e2e6ec');
+  // the chest: three square windows in a column and a grid panel beside them
+  for (let k = 0; k < 3; k++) window4(4, -62 + k * 11.4, 10.4, 9.4);
+  box(17, -58, 9, 24, lite);
   g.strokeStyle = line;
   g.lineWidth = 0.9;
   g.beginPath();
-  for (const y of [-26, -22, -18]) {
-    g.moveTo(18, y);
-    g.lineTo(24, y);
+  for (const y of [-52, -46, -40]) {
+    g.moveTo(18.4, y);
+    g.lineTo(24.6, y);
   }
-  g.moveTo(21, -29);
-  g.lineTo(21, -17);
+  g.moveTo(21.5, -57);
+  g.lineTo(21.5, -35);
   g.stroke();
   // belly plates
   for (let k = 0; k < 3; k++) {
-    panel(-2 + k * 0, -12 + k * 6, 22, 5.4, k % 2 ? '#d6dae1' : '#e8ebef');
-    bolt(1, -9.6 + k * 6);
-    bolt(18, -9.6 + k * 6);
+    box(-2, -26 + k * 7, 22, 6, k % 2 ? lite : white, 1.4);
+    bolt(1, -23 + k * 7);
+    bolt(17, -23 + k * 7);
   }
-  // ---- the red blade plates down the back, neck to tail
-  const spine = [[4, -56], [-4, -52], [-12, -47], [-19, -40], [-25, -31], [-29, -22], [-31, -12], [-31, -2], [-38, 4 + sway * 0.2], [-50, 7 + sway * 0.5], [-62, 6 + sway * 0.8], [-72, -1 + sway]];
+  // ---- the red blade plates with white rims, from the head down the back and along the tail
+  const spine = [[-6, -82], [-14, -74], [-22, -66], [-29, -57], [-33, -47], [-35, -37], [-35, -26], [-35, -15], [-42, -2 + sway * 0.2], [-54, 6 + sway * 0.5], [-68, 8 + sway * 0.8], [-80, 2 + sway]];
   spine.forEach(([x, y], i) => {
-    const s = 1.15 - i * 0.045;
-    const a = -0.5 - i * 0.12;
+    const s = 1.2 - i * 0.045;
+    const a = -0.55 - i * 0.1;
     g.save();
     g.translate(x, y);
     g.rotate(a);
     g.beginPath();
-    g.moveTo(-5 * s, 0);
-    g.lineTo(-4 * s, -13 * s);
-    g.lineTo(2 * s, -15 * s);
-    g.lineTo(6 * s, -2 * s);
-    g.lineTo(5 * s, 2 * s);
+    g.moveTo(-5.4 * s, 1);
+    g.lineTo(-4.6 * s, -14 * s);
+    g.lineTo(3 * s, -15.6 * s);
+    g.lineTo(6.4 * s, -1 * s);
+    g.lineTo(5.6 * s, 3 * s);
     g.closePath();
-    g.fillStyle = vgrad(g, -15 * s, 2 * s, '#ff6a4e', redDark);
+    g.fillStyle = vgrad(g, -15 * s, 3 * s, '#ff6d50', redDark);
     g.fill();
     g.strokeStyle = OUT;
     g.lineWidth = 1.5;
     g.stroke();
-    g.fillStyle = lite;
+    g.strokeStyle = white;
+    g.lineWidth = 1.6;
     g.beginPath();
-    g.moveTo(-5 * s, 0);
-    g.lineTo(-5.4 * s, 3 * s);
-    g.lineTo(5 * s, 3.6 * s);
-    g.lineTo(5 * s, 2 * s);
-    g.closePath();
-    g.fill();
+    g.moveTo(-4.8 * s, -13.4 * s);
+    g.lineTo(2.6 * s, -14.9 * s);
     g.stroke();
     g.restore();
   });
-  // ---- the neck and the big skull-like head
-  ribbon(g, [[6, -40], [13, -49], [20, -57]], 26, 20, vgrad(g, -56, -34, '#e6e9ee', '#9b8f8c'), 1.9);
-  g.strokeStyle = line;
-  g.lineWidth = 1.1;
-  for (const [x, y] of [[8, -42], [13, -46], [18, -49]]) {
-    g.beginPath();
-    g.moveTo(x - 4, y + 7);
-    g.lineTo(x + 3, y - 7);
-    g.stroke();
-  }
+  // ---- the neck: a stack of plates under the head
+  for (const [x, y, w, h, fill] of [[-8, -74, 26, 8, lite], [-4, -68, 28, 8, white]]) box(x, y, w, h, fill, 2.4);
+  // ---- the big skull head with blocky teeth
   g.save();
-  g.translate(8, -57);
-  g.rotate(0.05);
-  g.scale(1.25, 1.25);
-  // the lower jaw swings open
+  g.translate(4, -82);
+  g.rotate(0.07);
+  // lower jaw
   g.save();
-  g.translate(8, 6);
-  g.rotate(st.open ? 0.55 : 0.02);
+  g.translate(10, 4);
+  g.rotate(st.open ? 0.6 : 0.03);
   if (st.open) {
     g.fillStyle = '#ff7a2a';
     g.beginPath();
-    g.moveTo(4, 0);
-    g.lineTo(46, 0);
-    g.lineTo(26, -10);
+    g.moveTo(4, -1);
+    g.lineTo(60, -1);
+    g.lineTo(34, -14);
     g.closePath();
     g.fill();
     g.fillStyle = '#ffd36a';
     g.beginPath();
-    g.moveTo(14, -0.4);
-    g.lineTo(40, -0.4);
-    g.lineTo(26, -6);
+    g.moveTo(14, -1);
+    g.lineTo(52, -1);
+    g.lineTo(34, -8);
     g.closePath();
     g.fill();
   }
-  blob(g, [[-2, -2], [34, -3], [50, -2], [54, 2], [44, 6], [14, 8], [0, 5]], vgrad(g, -3, 8, '#e1e4e9', '#8c8582'), 1.8);
+  blob(g, [[-2, -2], [50, -3], [66, -1], [70, 4], [58, 9], [14, 10], [0, 6]], vgrad(g, -3, 10, white, warm), 1.8);
   g.strokeStyle = line;
   g.lineWidth = 1;
   g.beginPath();
-  g.moveTo(6, 2);
-  g.lineTo(40, 1);
+  g.moveTo(4, 3);
+  g.lineTo(56, 2);
   g.stroke();
-  g.fillStyle = '#f7f8fa';
+  g.fillStyle = white;
   g.strokeStyle = OUT;
-  g.lineWidth = 0.9;
-  for (const x of [14, 21, 28, 35, 42, 49]) {
+  g.lineWidth = 1;
+  for (const x of [18, 28, 38, 48, 58]) {
     g.beginPath();
-    g.moveTo(x - 2.6, -2.2);
-    g.lineTo(x, -8.6);
-    g.lineTo(x + 2.6, -2);
-    g.closePath();
+    g.rect(x - 3.2, -9.6, 6.4, 7.8);
     g.fill();
     g.stroke();
   }
   g.restore();
-  // the skull: stacked plates running back from a long flat snout
-  blob(g, [[-8, 2], [-6, -12], [6, -18], [24, -17], [44, -12], [56, -5], [57, 0], [40, 3], [14, 5]], vgrad(g, -18, 5, '#f1f3f6', '#a79d9a'), 1.9);
-  for (const [x, y, w, h] of [[-4, -14, 14, 7], [8, -17, 16, 7], [22, -16, 16, 7], [36, -12, 16, 7]]) {
-    g.fillStyle = '#e4e7ec';
-    g.strokeStyle = OUT;
-    g.lineWidth = 1.1;
-    g.beginPath();
-    g.roundRect(x, y, w, h, 1.6);
-    g.fill();
-    g.stroke();
-  }
+  // the skull, made of stacked plates
+  blob(g, [[-10, 4], [-8, -14], [6, -24], [26, -28], [48, -24], [66, -13], [72, -4], [70, 2], [42, 4], [10, 6]], vgrad(g, -28, 6, white, '#a8928e'), 1.9);
+  for (const [x, y, w, h] of [[-6, -20, 15, 8], [8, -26, 17, 8], [24, -27, 17, 8], [40, -22, 17, 8], [54, -14, 15, 8]]) box(x, y, w, h, lite, 2);
   g.strokeStyle = line;
   g.lineWidth = 1;
   g.beginPath();
-  g.moveTo(-4, -4);
-  g.lineTo(52, -2);
+  g.moveTo(-2, -2);
+  g.lineTo(60, 0);
   g.stroke();
-  // the black eye socket with a glowing red eye
+  // the black eye socket and the red eye
   g.fillStyle = iron;
   g.strokeStyle = OUT;
-  g.lineWidth = 1.2;
+  g.lineWidth = 1.3;
   g.beginPath();
-  g.roundRect(2, -12, 15, 11, 3);
+  g.roundRect(2, -16, 17, 13, 3);
   g.fill();
   g.stroke();
-  const eg = g.createRadialGradient(9, -6, 0.5, 9, -6, 9);
+  const eg = g.createRadialGradient(10, -9, 0.5, 10, -9, 10);
   eg.addColorStop(0, 'rgba(255, 90, 60, 0.9)');
   eg.addColorStop(1, 'rgba(255, 40, 30, 0)');
   g.fillStyle = eg;
   g.beginPath();
-  g.arc(9, -6, 9, 0, TAU);
+  g.arc(10, -9, 10, 0, TAU);
   g.fill();
   g.fillStyle = red;
   g.beginPath();
-  g.arc(9, -6, 3.6, 0, TAU);
+  g.arc(10, -9, 4, 0, TAU);
   g.fill();
-  g.fillStyle = '#fff1d0';
+  g.fillStyle = '#fff2d2';
   g.beginPath();
-  g.arc(8, -7, 1.2, 0, TAU);
+  g.arc(9, -10.4, 1.3, 0, TAU);
   g.fill();
-  // a side vent behind the eye and the nostril
+  // the side vent and the nostril
   g.strokeStyle = line;
   g.lineWidth = 1.2;
   g.beginPath();
   for (const k of [0, 1, 2]) {
-    g.moveTo(-3 + k * 2.4, -6);
-    g.lineTo(-4 + k * 2.4, 0);
+    g.moveTo(-3 + k * 2.6, -10);
+    g.lineTo(-4 + k * 2.6, -2);
   }
   g.stroke();
   g.fillStyle = iron;
   g.beginPath();
-  g.ellipse(52, -4, 1.8, 1.2, 0, 0, TAU);
+  g.ellipse(66, -6, 2, 1.4, 0, 0, TAU);
   g.fill();
   // the upper teeth
-  g.fillStyle = '#f7f8fa';
+  g.fillStyle = white;
   g.strokeStyle = OUT;
-  g.lineWidth = 0.9;
-  for (const x of [18, 25, 32, 39, 46, 52]) {
+  g.lineWidth = 1;
+  for (const x of [26, 36, 46, 56, 65]) {
     g.beginPath();
-    g.moveTo(x - 2.4, 2.4);
-    g.lineTo(x + 0.4, 8.6);
-    g.lineTo(x + 2.8, 2.2);
-    g.closePath();
+    g.rect(x - 3.2, 3.6, 6.4, 8);
     g.fill();
     g.stroke();
   }
   g.restore();
-  // ---- the huge forward-hanging arms, with panelled sleeves and three big curved claws
+  // ---- the arms: boxy and huge, bent forward, ending in hooked claws
   const arm = (ox, shade, far) => {
     g.save();
     g.translate(ox, 0);
-    ribbon(g, [[16, -28], [27, -14]], 22, 20, vgrad(g, -34, -8, shade[0], shade[1]), 1.9);
-    ribbon(g, [[27, -14], [31, 0]], 20, 15, vgrad(g, -16, 6, shade[0], shade[1]), 1.9);
-    panel(19, -26, 9, 7, far ? '#8b7a77' : '#eef0f4');
-    slash(19, -26, 9, 7);
-    bolt(21, -23);
-    g.fillStyle = far ? '#8b7a77' : '#dfe3e9';
-    g.strokeStyle = OUT;
-    g.lineWidth = 1.5;
-    g.beginPath();
-    g.ellipse(27, -14, 7.6, 6.4, 0, 0, TAU);
-    g.fill();
-    g.stroke();
-    bolt(27, -14);
+    ribbon(g, [[16, -56], [30, -38]], 26, 24, vgrad(g, -64, -30, shade[0], shade[1]), 1.9);
+    ribbon(g, [[30, -38], [38, -16]], 24, 18, vgrad(g, -42, -10, shade[0], shade[1]), 1.9);
+    box(18, -62, 14, 11, far ? '#86726f' : white, 2.2);
+    bolt(21, -59);
+    bolt(29, -59);
+    box(24, -50, 11, 9, far ? '#86726f' : lite, 1.8);
     g.strokeStyle = line;
     g.lineWidth = 1;
     g.beginPath();
-    g.moveTo(27, -8);
-    g.lineTo(30, -2);
+    g.moveTo(34, -34);
+    g.lineTo(38, -22);
     g.stroke();
-    // the hand: a knuckle block and three long claws curling forward
-    blob(g, [[26, -2], [36, -4], [40, 3], [32, 8], [25, 5]], far ? '#9a8a86' : '#d9dde4', 1.5);
-    for (const [dx, dy, len] of [[36, -2, 12], [38, 2, 12], [34, 6, 11]]) {
-      g.beginPath();
-      g.moveTo(dx - 3, dy - 2.4);
-      g.quadraticCurveTo(dx + len * 0.6, dy - 4, dx + len, dy + 4);
-      g.quadraticCurveTo(dx + len * 0.4, dy, dx - 2, dy + 2.4);
-      g.closePath();
-      fs(g, far ? '#b4a7a3' : lite, 1.1);
-    }
+    g.fillStyle = far ? '#86726f' : lite;
+    g.strokeStyle = OUT;
+    g.lineWidth = 1.5;
+    g.beginPath();
+    g.ellipse(30, -38, 9, 7.6, 0, 0, TAU);
+    g.fill();
+    g.stroke();
+    bolt(30, -38, 1.4);
+    blob(g, [[32, -16], [44, -18], [47, -9], [40, -3], [32, -6]], far ? '#7a6663' : '#8a7571', 1.5);
+    for (const [dx, dy, len] of [[44, -14, 11], [46, -9, 12], [42, -4, 11]]) claw(dx, dy, len, 1, far ? '#b2a29e' : white);
     g.restore();
   };
-  arm(-6, [warmDark, '#5d504d'], true);
-  arm(0, [silver, warm], false);
+  arm(-5, [warmDark, '#4f403d'], true);
+  arm(0, [white, warm], false);
   g.restore();
   // ---- the near leg in front
-  legAt(-12, 0, false);
+  legAt(-14, 0, false);
   g.restore();
 }
 
@@ -717,5 +684,5 @@ export const MYTHIC = {
   slime: { draw: slime, box: [-32, -34, 32, 30] },
   giant: { draw: giant, box: [-34, -72, 86, 30] },
   dragon: { draw: dragon, box: [-82, -60, 66, 30] },
-  mechazord: { draw: mechazord, box: [-312, -288, 240, 38] },
+  mechazord: { draw: mechazord, box: [-268, -312, 192, 38] },
 };

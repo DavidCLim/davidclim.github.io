@@ -333,7 +333,7 @@ export const MECHAZORD = {
   stomp: { radius: 60, dmg: 70, cd: 2.6, knock: 460 }, // on the ground, a shockwave under his feet
   ring: 5,
   body: [108, 62, 22],
-  pivot: { x: 212 * K, y: -205 * K },
+  pivot: { x: 172 * K, y: -216 * K },
   muzzleLen: 8 * K,
 };
 
