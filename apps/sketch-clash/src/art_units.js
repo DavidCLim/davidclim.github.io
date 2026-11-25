@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=138';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=138';
+import { TAU, K } from './config.js?v=139';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=139';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -496,24 +496,132 @@ function drawSpear(g) {
 
 // Origin: the middle of the shield.
 // ---------------------------------------------------------------- grenadier
-function drawGrenBody(g, front, gz) {
-  // a canvas satchel of spare bombs on the back
-  g.fillStyle = '#6b7a4a';
+// A handlebar mustache, like the cowboy's, centred on cx.
+function stache(g, cx, y, color) {
+  g.fillStyle = color;
   g.strokeStyle = OUT;
-  g.lineWidth = 1.5;
-  rr(g, -27.4, 0, 10.4, 15, 2.6);
+  g.lineWidth = 1.2;
+  g.lineJoin = 'round';
+  for (const sx of [1, -1]) {
+    g.save();
+    g.translate(cx, y);
+    g.scale(sx, 1);
+    g.beginPath();
+    g.moveTo(0, -1.2);
+    g.quadraticCurveTo(4, -3, 9, -1.4);
+    g.quadraticCurveTo(14.4, 0.4, 13.6, 5.6);
+    g.quadraticCurveTo(10.6, 2.8, 6, 3.6);
+    g.quadraticCurveTo(2.6, 4.4, 0, 2.4);
+    g.closePath();
+    g.fill();
+    g.stroke();
+    g.restore();
+  }
+}
+
+// A wide-brimmed hat in the cowboy's shape; origin: the bottom edge of the crown.
+function westernHat(g, c0, c1, band, feather) {
+  g.lineJoin = 'round';
+  g.lineCap = 'round';
+  const felt = g.createLinearGradient(0, -20, 0, 4);
+  felt.addColorStop(0, c0);
+  felt.addColorStop(1, c1);
+  g.fillStyle = felt;
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.7;
+  g.beginPath();
+  g.moveTo(-31, -9);
+  g.quadraticCurveTo(-30, -1, -18, 1.6);
+  g.quadraticCurveTo(0, 5.6, 18, 1.6);
+  g.quadraticCurveTo(30, -1, 31, -9);
+  g.quadraticCurveTo(26, -3.4, 16, -3.6);
+  g.quadraticCurveTo(0, -4.6, -16, -3.6);
+  g.quadraticCurveTo(-26, -3.4, -31, -9);
+  g.closePath();
   g.fill();
   g.stroke();
-  g.strokeStyle = 'rgba(24, 32, 14, 0.6)';
-  g.lineWidth = 1;
   g.beginPath();
-  g.moveTo(-27, 6);
-  g.lineTo(-17.6, 6);
-  g.stroke();
-  g.fillStyle = '#e5b94d';
-  g.beginPath();
-  g.arc(-22.2, 6, 1.3, 0, TAU);
+  g.moveTo(-12.4, -3.4);
+  g.quadraticCurveTo(-13.4, -14, -9, -17.6);
+  g.quadraticCurveTo(-4.6, -21, -1.2, -16.6);
+  g.quadraticCurveTo(0, -15.2, 1.2, -16.6);
+  g.quadraticCurveTo(4.6, -21, 9, -17.6);
+  g.quadraticCurveTo(13.4, -14, 12.4, -3.4);
+  g.quadraticCurveTo(0, -1.6, -12.4, -3.4);
+  g.closePath();
   g.fill();
+  g.stroke();
+  g.fillStyle = band;
+  g.beginPath();
+  g.moveTo(-12.6, -3.4);
+  g.quadraticCurveTo(0, -1.4, 12.6, -3.4);
+  g.lineTo(12.4, -7.6);
+  g.quadraticCurveTo(0, -5.6, -12.6, -7.6);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  if (feather) {
+    g.fillStyle = feather;
+    g.lineWidth = 1.1;
+    g.beginPath();
+    g.moveTo(8, -5.6);
+    g.quadraticCurveTo(20, -9, 19.4, -21);
+    g.quadraticCurveTo(13, -13, 7, -4);
+    g.closePath();
+    g.fill();
+    g.stroke();
+  }
+  g.strokeStyle = 'rgba(255, 255, 255, 0.28)';
+  g.lineWidth = 1.2;
+  g.beginPath();
+  g.moveTo(-9, -12);
+  g.quadraticCurveTo(-7, -16.4, -3.4, -17);
+  g.stroke();
+}
+
+// A round black bowler with a red band; origin: the bottom edge of the crown.
+function drawBowler(g) {
+  g.lineJoin = 'round';
+  g.lineCap = 'round';
+  const bg = g.createLinearGradient(0, -20, 0, 2);
+  bg.addColorStop(0, '#3c3c46');
+  bg.addColorStop(1, '#16161c');
+  g.fillStyle = bg;
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.7;
+  g.beginPath();
+  g.moveTo(-14.4, -2.4);
+  g.bezierCurveTo(-15.6, -22, 15.6, -22, 14.4, -2.4);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.beginPath();
+  g.moveTo(-23.4, -1.2);
+  g.quadraticCurveTo(-22, -6, -14, -5);
+  g.quadraticCurveTo(0, -3.6, 14, -5);
+  g.quadraticCurveTo(22, -6, 23.4, -1.2);
+  g.quadraticCurveTo(0, 5.4, -23.4, -1.2);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#c8302f';
+  g.beginPath();
+  g.moveTo(-14.2, -4.6);
+  g.quadraticCurveTo(0, -2.4, 14.2, -4.6);
+  g.lineTo(14.4, -9);
+  g.quadraticCurveTo(0, -6.8, -14.4, -9);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.strokeStyle = 'rgba(255, 255, 255, 0.28)';
+  g.lineWidth = 1.2;
+  g.beginPath();
+  g.moveTo(-9, -13);
+  g.quadraticCurveTo(-6, -17.6, -1, -17.8);
+  g.stroke();
+}
+
+function drawGrenBody(g, front, gz) {
   eggBody(g, '#66b1bd', '#4f95a2');
   g.save();
   g.beginPath();
@@ -547,64 +655,16 @@ function drawGrenBody(g, front, gz) {
   g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
   g.stroke();
 
-  // a spare grenade clipped to the hip
-  const hx = front ? -12.6 : -10.4;
-  g.fillStyle = '#4b5a3a';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.3;
-  g.beginPath();
-  g.ellipse(hx, 14, 4.4, 5, 0, 0, TAU);
-  g.fill();
-  g.stroke();
-  g.strokeStyle = 'rgba(20, 28, 12, 0.7)';
-  g.lineWidth = 0.8;
-  g.beginPath();
-  g.moveTo(hx - 3.6, 12);
-  g.lineTo(hx + 3.6, 16);
-  g.moveTo(hx - 3.6, 16);
-  g.lineTo(hx + 3.6, 12);
-  g.stroke();
-  g.fillStyle = '#e5b94d';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1;
-  rr(g, hx - 2, 8.2, 4, 2.6, 0.8);
-  g.fill();
-  g.stroke();
   bigEyes(g, front ? [-8.4, 8.4] : [-2.4, 11], gz, -2, 4.5, 4.6, 1.9, 2.7);
-  if (front) smile(g, 0, 3.8, 3.4);
-  else smile(g, 4.6, 4.4, 3.2);
-
-  // a squat dark-green helmet with a thin black brim, sitting low on the head
-  dome(g, '#323f30', 16.8, 9.8, -7.2);
-  g.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-  g.lineWidth = 1.3;
-  g.beginPath();
-  g.ellipse(0, -7.2, 13.4, 7.6, 0, Math.PI * 1.1, Math.PI * 1.42);
-  g.stroke();
-  g.fillStyle = '#17151b';
-  rr(g, -22.4, -8.9, 44.8, 3.4, 1.7);
-  g.fill();
-  // flying goggles pushed up on the helmet: a tan strap and two round glass lenses
-  const gx = front ? 0 : 3;
-  g.fillStyle = '#a67a45';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.1;
-  rr(g, -14 + gx, -13.2, 28, 3.2, 1.4);
-  g.fill();
-  g.stroke();
-  for (const x of [-5.4, 5.4]) {
-    g.fillStyle = '#9fe0ee';
-    g.strokeStyle = OUT;
-    g.lineWidth = 1.3;
-    g.beginPath();
-    g.arc(x + gx, -11.6, 3.3, 0, TAU);
-    g.fill();
-    g.stroke();
-    g.fillStyle = 'rgba(255, 255, 255, 0.7)';
-    g.beginPath();
-    g.arc(x + gx - 1, -12.6, 0.9, 0, TAU);
-    g.fill();
-  }
+  const mx = front ? 0 : 5;
+  stache(g, mx, 5, '#3b2a1b');
+  if (front) smile(g, 0, 10.4, 2.8);
+  else smile(g, 5, 10.6, 2.6);
+  // a black bowler hat
+  g.save();
+  g.translate(0, -8.4);
+  drawBowler(g);
+  g.restore();
 }
 
 // Origin: the middle of the bomb.
@@ -646,53 +706,7 @@ function drawBomb(g, lit) {
 // Origin: the bottom edge of the cap. Used on the head and for the dropped hat.
 // The original's cap is a soft green hood with a bent-over point.
 function drawBushHat(g) {
-  g.lineJoin = 'round';
-  g.lineCap = 'round';
-  // a rounded brown leather hood
-  const gr = g.createLinearGradient(-10, -22, 10, 4);
-  gr.addColorStop(0, '#a8744a');
-  gr.addColorStop(1, '#6a4126');
-  g.fillStyle = gr;
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.8;
-  g.beginPath();
-  g.moveTo(-19.6, 2.4);
-  g.bezierCurveTo(-21.4, -9, -13, -19.4, 0, -19.8);
-  g.bezierCurveTo(13, -19.4, 21.4, -9, 19.6, 2.4);
-  g.quadraticCurveTo(0, 6.2, -19.6, 2.4);
-  g.closePath();
-  g.fill();
-  g.stroke();
-  g.fillStyle = 'rgba(255, 255, 255, 0.2)';
-  g.beginPath();
-  g.ellipse(-8, -12.4, 6, 2.2, -0.5, 0, TAU);
-  g.fill();
-  // a stitched seam over the top
-  g.strokeStyle = 'rgba(50, 28, 14, 0.7)';
-  g.lineWidth = 1;
-  g.setLineDash([2, 2]);
-  g.beginPath();
-  g.moveTo(0, -19.4);
-  g.lineTo(0, 3);
-  g.stroke();
-  g.setLineDash([]);
-  // a cream feather tucked in at the side
-  g.fillStyle = '#f2eddc';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.1;
-  g.beginPath();
-  g.moveTo(10.6, -4.6);
-  g.quadraticCurveTo(22.6, -9.4, 20.4, -20.6);
-  g.quadraticCurveTo(14.4, -12.4, 8.2, -3);
-  g.closePath();
-  g.fill();
-  g.stroke();
-  g.strokeStyle = '#7ba05a';
-  g.lineWidth = 0.9;
-  g.beginPath();
-  g.moveTo(10, -4.2);
-  g.quadraticCurveTo(17.4, -9.6, 19.6, -18.4);
-  g.stroke();
+  westernHat(g, '#9a7448', '#664a28', '#3f7a3a', '#f2eddc');
 }
 
 function drawArcherBody(g, front, gz, squint) {
@@ -733,45 +747,14 @@ function drawArcherBody(g, front, gz, squint) {
   g.stroke();
 
   bigEyes(g, front ? [-8.4, 8.4] : [-2.2, 12.6], gz, -3.8, 4.5, 4.7, 1.1, 3, !!squint);
-  if (front) smile(g, 0, 6.6, 3.2);
-  else smile(g, 5.2, 7, 2.8);
-
-  // a leather baldric across the chest with a brass buckle
+  stache(g, front ? 0 : 5.2, 3.8, '#5a3a1e');
+  if (front) smile(g, 0, 10, 2.8);
+  else smile(g, 5.2, 10, 2.6);
+  // a wide hat with a feather
   g.save();
-  g.beginPath();
-  g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
-  g.clip();
-  g.strokeStyle = OUT;
-  g.lineWidth = 6.4;
-  g.beginPath();
-  g.moveTo(-22, 0);
-  g.lineTo(18, 24);
-  g.stroke();
-  g.strokeStyle = '#7a4a2a';
-  g.lineWidth = 4;
-  g.stroke();
-  g.restore();
-  g.fillStyle = '#e5b94d';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1;
-  g.beginPath();
-  g.rect(front ? -2.6 : 0.8, 8.4, 4.6, 4.6);
-  g.fill();
-  g.stroke();
-  g.save();
-  g.translate(0, -11.8);
+  g.translate(0, -11.2);
   drawBushHat(g);
   g.restore();
-  // the hood's cheek flaps hang down beside the face
-  g.fillStyle = '#7e5232';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.5;
-  for (const x of front ? [-17.4, 17.4] : [-17.4]) {
-    g.beginPath();
-    g.ellipse(x, 2, 3.4, 8.4, 0, 0, TAU);
-    g.fill();
-    g.stroke();
-  }
 }
 
 // Origin: the grip. A wooden recurve: the bow bulges toward +x; the string is on the left.
