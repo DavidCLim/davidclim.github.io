@@ -108,36 +108,29 @@ export const TROOPER = {
 export const JUGGERNAUT = {
   kind: 'jugger',
   hp: 4600,
-  radius: 28,
-  scale: 1.8, // drawn this much bigger than its parts, about the feet
-  sep: 58,
-  speed: 42,
-  // riflemen back away from him, so every couple of seconds he fires his boilers and charges, flattening whoever is in the way
-  charge: { time: 1.1, boost: 3.4, rest: 1.8, from: 66, damage: 90, knock: 520 },
+  radius: 13,
+  scale: 2, // still the big one: drawn this much bigger than a soldier-sized body, about the feet
+  sep: 23,
+  speed: 46,
+  // riflemen back away from him, so now and then he fires his jets to catch up
+  charge: { time: 0.9, boost: 2.7, rest: 1.6, from: 46 },
   sight: 640,
-  reach: 62, // from his middle to the edge of whoever he's swinging at
-  windup: 0.66, // heaving the axe up and bringing it down
-  recover: 0.62,
-  rest: 0.25,
+  reach: 36, // from his middle to the edge of whoever he's swinging at
+  windup: 0.5,
+  recover: 0.42,
+  rest: 0.3,
   damage: 300,
-  // every other swing is a quicker swipe across the front with the claw
-  claw: { windup: 0.4, recover: 0.46, damage: 190, at: 46, radius: 42 },
-  // out of reach? he levels his arm and lobs a burst of plasma
-  cannon: { windup: 0.85, recover: 0.55, damage: 240, radius: 48, speed: 330, rest: 3.6, min: 95, max: 400 },
-  // mobbed? he whirls round with the axe out
-  spin: { windup: 0.5, time: 1.05, recover: 0.35, tick: 0.17, damage: 80, radius: 78, need: 4, rest: 6.5 },
-  // badly hurt, he roars and turns faster and meaner for the rest of the fight
-  rage: { at: 0.4, haste: 1.35, damage: 90, radius: 100 },
-  slamAt: 50, // how far in front of him the blade lands
-  slamRadius: 48,
-  knock: 580,
+  slamAt: 29, // how far in front of him the blade lands
+  slamRadius: 29,
+  knock: 430,
+  // crowded? one quick spin of the axe
+  spin: { windup: 0.22, recover: 0.56, damage: 200, radius: 46, need: 3, rest: 3.5 },
   armor: 0.45,
   noKnock: true,
   noDrop: true,
-  explodes: true,
-  meltdown: true, // he splits and pops for a second before he blows
-  parts: ['jugshell', 'jugshell', 'jugshell', 'jugpipe', 'jugpipe', 'jugpipe', 'jugspike', 'jugspike', 'jugspike', 'juggernaut'],
-  ring: 5.2,
+  explodes: true, // goes to pieces like Robo Trooper
+  parts: ['botplate', 'botplate', 'botpod', 'jugaxe', 'juggernaut'],
+  ring: 2.2,
   pivot: { x: 0, y: 0 },
   muzzleLen: 0,
 };

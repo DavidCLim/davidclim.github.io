@@ -1,13 +1,12 @@
-import { drawJugGround, drawJugTop } from './jug_fx.js?v=209';
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=209';
-import { buildCreatureArt } from './creatures.js?v=209';
-import { buildEggArt } from './art_eggs.js?v=209';
-import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=209';
-import { Sfx } from './sfx.js?v=209';
-import { World } from './world.js?v=209';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=209';
-import { buildUnitArt, drawDrop } from './art_units.js?v=209';
-import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=209';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=211';
+import { buildCreatureArt } from './creatures.js?v=211';
+import { buildEggArt } from './art_eggs.js?v=211';
+import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=211';
+import { Sfx } from './sfx.js?v=211';
+import { World } from './world.js?v=211';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=211';
+import { buildUnitArt, drawDrop } from './art_units.js?v=211';
+import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=211';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -181,7 +180,7 @@ function teamAt(x) {
 const LATTICE = {
   default: [15.5, 12.5, true],
   trooper: [28, 22, true],
-  juggernaut: [112, 80, true],
+  juggernaut: [52, 38, true],
   roman: [17.4, 17.6, false],
   cavalry: [34, 22, true],
   boar: [22, 15, true],
@@ -1108,18 +1107,6 @@ function drawBody(u) {
 
 const GHOST_START = 0.33;
 
-// heavy blows jolt the whole battlefield (not the buttons), unless the visitor prefers less motion
-const calm = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
-let shaken = false;
-function shakeScreen() {
-  const s = paused || calm.matches ? 0 : world.shake || 0;
-  if (!s && !shaken) return;
-  shaken = !!s;
-  const shift = s ? `translate(${((Math.random() - 0.5) * s * 1.7).toFixed(1)}px, ${((Math.random() - 0.5) * s * 1.3).toFixed(1)}px)` : '';
-  ctx.canvas.style.transform = shift;
-  gctx.canvas.style.transform = shift;
-}
-
 function drawSpirit(g, t, alpha) {
   const px = 1 / 1.613;
   const face = g.facing || 1;
@@ -1216,7 +1203,6 @@ function render() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   drawMarks(ctx, dpr, marks);
-  drawJugGround(ctx, dpr, world, sprites);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   for (const c of world.corpses) {
@@ -1471,8 +1457,6 @@ function render() {
   }
 
   drawFx(ctx, dpr, sprites, world);
-  drawJugTop(ctx, dpr, world, sprites);
-  shakeScreen();
 
   // Ghosts, as measured frame by frame in the original: one rises out of the body a third of a second after the
   // fall, fades in, floats straight up faster and faster with the unit's hat on, and is gone 1.5s after the death.
