@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=220';
-import { buildCreatureArt } from './creatures.js?v=220';
-import { buildEggArt } from './art_eggs.js?v=220';
-import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=220';
-import { Sfx } from './sfx.js?v=220';
-import { World } from './world.js?v=220';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=220';
-import { buildUnitArt, drawDrop } from './art_units.js?v=220';
-import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=220';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=221';
+import { buildCreatureArt } from './creatures.js?v=221';
+import { buildEggArt } from './art_eggs.js?v=221';
+import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=221';
+import { Sfx } from './sfx.js?v=221';
+import { World } from './world.js?v=221';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=221';
+import { buildUnitArt, drawDrop } from './art_units.js?v=221';
+import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=221';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -326,6 +326,12 @@ function dab(x, y) {
   // Units scatter loosely inside the ring, as in the original: no two closer than a unit's width,
   // so a tap with a big brush fills the whole circle and a drag leaves a band as wide as the ring.
   const { sp } = stroke;
+  // a one-of-a-kind goes down singly, right where you tap, however big the ring; and not at all if he's already out
+  if (SPECIES[sp].def.unique) {
+    const team = teamAt(x);
+    if (!world.atLimit(sp) && canPlace(x, y, team)) stroke.made.push(world.addUnit(sp, team, x, y));
+    return;
+  }
   const D = (LATTICE[sp] || LATTICE.default)[1] * 0.72;
   const pts = stroke.pts || (stroke.pts = []);
   // a tap with the ring small (the default) drops exactly one unit where you tap, as in the original
@@ -805,6 +811,19 @@ function buildStats() {
   }
 }
 
+// A one-of-a-kind's palette picture fades while he is already on the field.
+function syncLimits() {
+  for (const b of unitButtons) {
+    const def = SPECIES[b.dataset.species] && SPECIES[b.dataset.species].def;
+    if (!def || !def.unique) continue;
+    const used = world.atLimit(b.dataset.species);
+    if (b.classList.contains('used') !== used) {
+      b.classList.toggle('used', used);
+      b.setAttribute('aria-label', used ? `${labelOf(b.dataset.species)} (only one at a time)` : labelOf(b.dataset.species));
+    }
+  }
+}
+
 // Bottom-left legend: how many of each unit are on the field.
 const legendRows = new Map();
 const LEGEND_MAX = 7;
@@ -866,6 +885,7 @@ banner.style.textShadow = outlineShadow('#1f1c24', 0.075, 0.05, 0.09);
 
 function syncUi() {
   syncLegend();
+  syncLimits();
   if (world.mode !== 'team') return;
   const red = world.counts.red || 0;
   const blue = world.counts.blue || 0;

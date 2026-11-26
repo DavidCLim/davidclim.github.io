@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=220';
-import { drawLayer, OUT } from './sprites.js?v=220';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_TAIL, ZORD_JAW, ZORD_EYE, zordEye, drawZordTail, drawZordSpine } from './art_units.js?v=220';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=220';
-import { EGG_DROPS } from './art_eggs.js?v=220';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=221';
+import { drawLayer, OUT } from './sprites.js?v=221';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_TAIL, ZORD_JAW, ZORD_EYE, zordEye, drawZordTail, drawZordSpine } from './art_units.js?v=221';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=221';
+import { EGG_DROPS } from './art_eggs.js?v=221';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -757,7 +757,7 @@ function drawZordRig(ctx, A, m, eyes) {
     const g = m.glow(i, n);
     if (g <= 0.5) continue;
     const [x, y, a, len] = blades[i];
-    botGlow(ctx, (x + Math.cos(a) * len * 0.6) * K, (y + Math.sin(a) * len * 0.6) * K, len * 0.62 * K, '255, 90, 50', 0.55 * g);
+    botGlow(ctx, (x + Math.cos(a) * len * 0.6) * K, (y + Math.sin(a) * len * 0.6) * K, len * 0.62 * K, '70, 255, 205', 0.55 * g);
   }
   fixed(A.body, -m.bob);
   ctx.save();
@@ -829,7 +829,7 @@ function drawMechaZord(ctx, dpr, sprites, u) {
   if (stomp < 0.4) {
     const q = stomp / 0.4;
     ring(0, FEET + 1, d.stomp.radius * (0.35 + 0.75 * q), `rgba(150, 148, 160, ${0.8 * (1 - q)})`, 4 * (1 - q) + 0.4);
-    ring(0, FEET + 1, d.stomp.radius * (0.2 + 0.55 * q), `rgba(255, 100, 80, ${0.7 * (1 - q)})`, 2 * (1 - q) + 0.3);
+    ring(0, FEET + 1, d.stomp.radius * (0.2 + 0.55 * q), `rgba(112, 232, 214, ${0.7 * (1 - q)})`, 2 * (1 - q) + 0.3);
   }
   // each heavy footfall puffs out under the foot that lands
   if (moving && alt < 0.1) {
@@ -895,7 +895,7 @@ function drawMechaZord(ctx, dpr, sprites, u) {
     g.scale(K, K);
     zordEye(g, { lx: angry ? 1 : Math.sin(t * 0.8) * 0.8, ly: angry ? 0.2 : Math.sin(t * 1.5) * 0.5, lid: blink, angry, power, dead });
     g.restore();
-    if (!dead && power > 0.5) botGlow(g, ZORD_EYE.x * K, ZORD_EYE.y * K, (angry ? 16 : 12) * K, '255, 70, 55', angry ? 0.5 : 0.24);
+    if (!dead && power > 0.5) botGlow(g, ZORD_EYE.x * K, ZORD_EYE.y * K, (angry ? 16 : 12) * K, '70, 255, 205', angry ? 0.5 : 0.24);
     if (firing || charge > 0.4) botGlow(g, 66 * K, -97 * K, (firing ? 20 + 3 * Math.sin(t * 40) : 14 * charge) * K, '255, 170, 60', firing ? 0.75 : 0.6 * charge);
   });
 

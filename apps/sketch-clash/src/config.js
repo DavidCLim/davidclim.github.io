@@ -413,6 +413,7 @@ export const GAIT = { boar: 8, rat: 15, ant: 15, ape: 7, alligator: 7, piranha: 
 export const MECHAZORD = {
   ...DRAGON,
   robot: true,
+  unique: true, // only one on the whole map at a time, whichever team he is on
   flying: false,
   airborne: true, // like the dragon, he sometimes takes off and breathes fire from the air, sometimes he stays on the ground
   hoverH: 24,

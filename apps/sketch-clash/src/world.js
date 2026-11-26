@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=220';
-import { TerrainMap, WALL } from './terrain.js?v=220';
-import { installBeasts } from './beasts.js?v=220';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=221';
+import { TerrainMap, WALL } from './terrain.js?v=221';
+import { installBeasts } from './beasts.js?v=221';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -362,6 +362,11 @@ export class World {
   }
 
   // `team` is only meaningful in team battle (null in free-for-all).
+  // some are one of a kind: no second one while the first is still standing
+  atLimit(species) {
+    return !!SPECIES[species].def.unique && this.units.some((u) => u.species === species && !u.dead);
+  }
+
   addUnit(species, team, x, y) {
     const def = SPECIES[species].def;
     const side = this.mode === 'team' ? team : def.faction || species;
