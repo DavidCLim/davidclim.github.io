@@ -1,5 +1,5 @@
-import { TAU, FEET, GAIT } from './config.js?v=229';
-import { WATER, ICE, WALL } from './terrain.js?v=229';
+import { TAU, FEET, GAIT } from './config.js?v=230';
+import { WATER, ICE, WALL } from './terrain.js?v=230';
 
 // Everything the Animals and Mythical tabs add to the world, plus the terrain physics:
 // the beast brain, the mage's bolts, the necromancer's skeletons, zombie infection,
@@ -444,46 +444,59 @@ export function installBeasts(World) {
     }
   };
 
-  // ------------------------------------------------------------ the mage
+  // ------------------------------------------------------------ the wizard
   P.stepMage = function (u, dt) {
     const d = u.def;
     const t = this.acquire(u, dt);
     const speed = d.speed * u.speedMul;
     u.cdT -= dt;
     u.castT = Math.max(0, u.castT - dt);
+    u.castFlash = Math.max(0, (u.castFlash || 0) - dt);
     if (t) {
       const dx = t.x - u.x;
       const dy = t.y - u.y;
       const dist = Math.hypot(dx, dy) || 1;
       if (Math.abs(dx) > 3) u.facing = dx > 0 ? 1 : -1;
-      if (dist > d.holdDist) {
-        u.x += (dx / dist) * speed * dt;
-        u.y += (dy / dist) * speed * dt;
-        u.moving = true;
-      } else if (dist < d.holdDist * 0.5) {
-        u.x -= (dx / dist) * speed * 0.7 * dt;
-        u.y -= (dy / dist) * speed * 0.7 * dt;
-        u.moving = true;
+      // he stands his ground while he casts
+      if (u.castT <= 0) {
+        if (dist > d.holdDist) {
+          u.x += (dx / dist) * speed * dt;
+          u.y += (dy / dist) * speed * dt;
+          u.moving = true;
+        } else if (dist < d.holdDist * 0.5) {
+          u.x -= (dx / dist) * speed * 0.7 * dt;
+          u.y -= (dy / dist) * speed * 0.7 * dt;
+          u.moving = true;
+        }
       }
       if (u.cdT <= 0 && dist <= d.range && u.castT <= 0) {
         u.castT = d.castTime;
         u.castFire = true;
-        u.cdT = rand(d.cooldownMin, d.cooldownMax);
+        u.spell = Math.random() < 0.5 ? 'burst' : 'chain';
+        u.cdT = d.castTime + rand(d.cooldownMin, d.cooldownMax);
       }
-      if (u.castFire && u.castT <= d.castTime * 0.45) {
+      if (u.castFire && u.castT <= 0) {
         u.castFire = false;
-        this.castOrb(u, t);
+        u.castFlash = 0.24;
+        if (u.spell === 'chain') this.castChain(u, t);
+        else this.castOrb(u, t);
       }
-    } else this.marchStep(u, dt, speed * 0.85);
+    } else {
+      u.castFire = false;
+      this.marchStep(u, dt, speed * 0.85);
+    }
     if (u.moving) u.anim += dt * 7.3;
     u.pose = u.target || u.moving ? Math.min(1, u.pose + dt * 6) : Math.max(0, u.pose - dt * 5);
   };
 
+  // where the orb on his staff is as he lets a spell go
+  const staffTip = (u) => [u.x + u.facing * 38 * 0.31, u.y - 24 * 0.31];
+
   P.castOrb = function (u, t) {
     const d = u.def;
-    const sx = u.x + u.facing * 22 * 0.31 * 1.3;
-    const sy = u.y - 40 * 0.31;
-    const ang = Math.atan2(t.y - sy, t.x - sx);
+    const [sx, sy] = staffTip(u);
+    const dist = Math.hypot(t.x - sx, t.y - 2 - sy);
+    const ang = Math.atan2(t.y - 2 - sy, t.x - sx);
     this.orbs.push({
       x: sx,
       y: sy,
@@ -491,8 +504,9 @@ export function installBeasts(World) {
       vy: Math.sin(ang) * d.orbSpeed,
       side: u.side,
       owner: u,
-      damage: d.damage,
-      slow: d.slow,
+      burst: d.burst,
+      far: dist + 6, // it bursts here even if whoever it was meant for has stepped aside
+      gone: 0,
       age: 0,
       dead: false,
     });
@@ -505,37 +519,74 @@ export function installBeasts(World) {
       o.age += dt;
       o.x += o.vx * dt;
       o.y += o.vy * dt;
-      if (o.age > 2 || o.x < -10 || o.x > this.w + 10 || o.y < -10 || o.y > this.h + 10) {
-        o.dead = true;
-        gone = true;
-        continue;
-      }
-      if (Math.random() < 0.6) {
-        this.sparks.push({ x: o.x, y: o.y, vx: (Math.random() - 0.5) * 18, vy: (Math.random() - 0.5) * 18, life: 0.3, max: 0.3, cyan: true });
-      }
-      if (this.shotBlocked(o.x, o.y + 6, 12)) {
-        o.dead = true;
-        gone = true;
-        continue;
-      }
-      let hit = null;
-      this.eachEnemyNear(o.side, o.x, o.y, 10, (u) => {
-        if (hit) return;
+      o.gone += Math.hypot(o.vx, o.vy) * dt;
+      let hit = false;
+      this.eachEnemyNear(o.side, o.x, o.y, 12, (u) => {
         const r = u.def.radius + 2.5;
-        if ((u.x - o.x) ** 2 + (u.y - 2 - o.y) ** 2 <= r * r) hit = u;
+        if ((u.x - o.x) ** 2 + (u.y - 2 - o.y) ** 2 <= r * r) hit = true;
       });
-      if (hit) {
+      if (hit || o.gone >= o.far || o.age > 2.5 || this.shotBlocked(o.x, o.y + 6, 12)) {
         o.dead = true;
         gone = true;
-        this.hurt(hit, o.damage, hit.x, hit.y, 'magic', o.owner);
-        hit.slow = Math.max(hit.slow || 0, o.slow);
-        for (let i = 0; i < 6; i++) {
-          const a = Math.random() * TAU;
-          this.sparks.push({ x: hit.x, y: hit.y - 2, vx: Math.cos(a) * 60, vy: Math.sin(a) * 60, life: 0.4, max: 0.4, cyan: true });
-        }
+        this.magicBurst(o);
       }
     }
     if (gone) this.orbs = this.orbs.filter((o) => !o.dead);
+  };
+
+  P.magicBurst = function (o) {
+    const m = o.burst;
+    this.bursts.push({ x: o.x, y: o.y, r: m.radius, age: 0, life: 0.5 });
+    this.eachEnemyNear(o.side, o.x, o.y, m.radius + 24, (u) => {
+      const dx = u.x - o.x;
+      const dy = u.y - 2 - o.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      if (dist > m.radius + u.def.radius) return;
+      if (!u.def.noKnock) {
+        u.kx += (dx / dist) * m.knock;
+        u.ky += (dy / dist) * m.knock * 0.7;
+      }
+      this.hurt(u, m.damage * (1 - 0.3 * Math.min(1, dist / m.radius)), u.x, u.y, 'magic', o.owner);
+    });
+    this.hitProps(o.x, o.y + 4, m.radius * 0.8, m.damage);
+    if (this.sfx) this.sfx('whoosh', o.x);
+  };
+
+  P.castChain = function (u, t) {
+    const m = u.def.chain;
+    const pts = [staffTip(u)];
+    const done = new Set();
+    let cur = t;
+    for (let i = 0; i < m.jumps && cur; i++) {
+      done.add(cur);
+      const x = cur.x;
+      const y = cur.y - 2;
+      pts.push([x, y]);
+      // the next one is whoever stands nearest to this one
+      let next = null;
+      let best = m.hop;
+      this.eachEnemyNear(u.side, x, y, m.hop, (o) => {
+        if (done.has(o) || o.dead) return;
+        const dd = Math.hypot(o.x - x, o.y - 2 - y);
+        if (dd < best) {
+          best = dd;
+          next = o;
+        }
+      });
+      cur.burn = Math.max(cur.burn || 0, m.burn);
+      cur.burnSrc = u;
+      this.hurt(cur, m.damage, x, y, 'magic', u);
+      this.hitProps(x, y + 4, 8, m.damage);
+      cur = next;
+    }
+    this.arcs.push({ pts, age: 0, life: 0.36 });
+    if (this.sfx) this.sfx('zap', u.x);
+  };
+
+  P.stepSpells = function (dt) {
+    for (const list of [this.bursts, this.arcs]) for (const e of list) e.age += dt;
+    if (this.bursts.some((e) => e.age > e.life)) this.bursts = this.bursts.filter((e) => e.age <= e.life);
+    if (this.arcs.some((e) => e.age > e.life)) this.arcs = this.arcs.filter((e) => e.age <= e.life);
   };
 
   // ------------------------------------------------------------ the necromancer

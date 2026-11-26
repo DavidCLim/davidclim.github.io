@@ -1,6 +1,6 @@
-import { TAU } from './config.js?v=229';
-import { makeLayer, rr, OUT } from './sprites.js?v=229';
-import { eggBody, bigEyes, feetSet, eggSet, ghostBody } from './art_units.js?v=229';
+import { TAU } from './config.js?v=230';
+import { makeLayer, rr, OUT } from './sprites.js?v=230';
+import { eggBody, bigEyes, feetSet, eggSet, ghostBody, GAZE3 } from './art_units.js?v=230';
 
 // The egg-shaped mythical units: zombie, mage, necromancer and the necromancer's skeletons.
 
@@ -73,107 +73,165 @@ function drawZombieBody(g, front, gz) {
   arm(4.6, '#83a352', '#5a7538');
 }
 
-// ------------------------------------------------------------ mage
-function drawMageBody(g, front, gz) {
-  const cx = front ? 0 : 4.6;
-  eggBody(g, '#9356bf', '#6b3694');
-  // white beard
-  g.fillStyle = '#f6f5ef';
+// ------------------------------------------------------------ the wizard
+// The original's mage: a purple egg with a gold band, a wide-brimmed navy hat with a gold star, and a staff with a
+// glowing orb. Older and wiser here: heavy lids, bushy white brows, a drooping moustache and a beard down to his feet.
+function drawWizardBody(g, front, gz) {
+  const cx = front ? 0 : 5;
+  eggBody(g, '#a655c0', '#87359f');
+  g.save();
+  g.beginPath();
+  g.ellipse(0, 0, 20.2, 22.5, 0, 0, TAU);
+  g.clip();
+  g.fillStyle = '#f0bd38';
+  g.beginPath();
+  g.moveTo(-24, 11);
+  g.quadraticCurveTo(0, 17, 24, 10);
+  g.lineTo(24, 15);
+  g.quadraticCurveTo(0, 22, -24, 16);
+  g.closePath();
+  g.fill();
+  g.restore();
+
+  // eyes half hidden under the brim, their lids heavy and unhurried
+  const xs = [cx - 6.4, cx + 7.6];
+  bigEyes(g, xs, gz, -3.8, 4.6, 4.8, 1.9, 2.6);
+  for (const x of xs) {
+    g.beginPath();
+    g.ellipse(x, -3.8, 4.6, 4.8, 0, Math.PI * 1.08, Math.PI * 1.92);
+    g.quadraticCurveTo(x, -4.8, x - 4.4, -5.4);
+    g.closePath();
+    g.fillStyle = '#8b3fa6';
+    g.fill();
+    g.strokeStyle = OUT;
+    g.lineWidth = 1.2;
+    g.stroke();
+  }
+
+  // the beard: long, soft and tapering past his body to his toes, with a little curl at the end
+  g.fillStyle = vg(g, -2, 31, '#fdfcf7', '#e2e0d8');
   g.strokeStyle = OUT;
   g.lineWidth = 1.5;
+  g.lineJoin = 'round';
   g.beginPath();
-  g.moveTo(cx - 12, 2);
-  g.quadraticCurveTo(cx, 6, cx + 12, 0);
-  g.quadraticCurveTo(cx + 15, 12, cx + 5, 24);
-  g.quadraticCurveTo(cx, 27, cx - 5, 23);
-  g.quadraticCurveTo(cx - 14, 14, cx - 12, 2);
+  g.moveTo(cx - 9.5, 0);
+  g.quadraticCurveTo(cx + 1, -3.4, cx + 11.5, 0);
+  g.bezierCurveTo(cx + 15, 7, cx + 10, 13, cx + 8.6, 17);
+  g.quadraticCurveTo(cx + 12, 19, cx + 6.6, 21.4);
+  g.bezierCurveTo(cx + 6, 26, cx + 3, 29, cx + 6.5, 32.5);
+  g.bezierCurveTo(cx - 1, 33, cx - 3.4, 28, cx - 4.4, 22.6);
+  g.quadraticCurveTo(cx - 10, 22, cx - 7.4, 17.4);
+  g.bezierCurveTo(cx - 11.5, 12, cx - 13, 6, cx - 9.5, 0);
   g.closePath();
   g.fill();
   g.stroke();
-  g.strokeStyle = 'rgba(120, 120, 130, 0.5)';
+  g.strokeStyle = 'rgba(130, 128, 140, 0.55)';
   g.lineWidth = 0.9;
+  g.lineCap = 'round';
   g.beginPath();
-  g.moveTo(cx - 3, 8);
-  g.quadraticCurveTo(cx - 5, 15, cx - 1, 21);
-  g.moveTo(cx + 4, 7);
-  g.quadraticCurveTo(cx + 6, 14, cx + 3, 20);
+  g.moveTo(cx - 4, 6);
+  g.quadraticCurveTo(cx - 6, 14, cx - 1.6, 22);
+  g.moveTo(cx + 2.4, 8);
+  g.quadraticCurveTo(cx + 3.6, 17, cx + 0.4, 27);
+  g.moveTo(cx + 7, 5);
+  g.quadraticCurveTo(cx + 8.4, 11, cx + 4.6, 17);
   g.stroke();
-  const xs = front ? [-7.4, 7.4] : [-2.8, 11.2];
-  bigEyes(g, xs, gz, -4.8, 3.6, 3.9, 1.4, 2.2);
-  // wizard hat: wide brim, bent cone, star and a gold band
-  g.fillStyle = '#2f3b8c';
+  // moustache, drooping out to both sides
+  g.fillStyle = '#ffffff';
   g.strokeStyle = OUT;
-  g.lineWidth = 1.7;
+  g.lineWidth = 1.2;
+  for (const side of [-1, 1]) {
+    g.beginPath();
+    g.moveTo(cx + 1, 0);
+    g.quadraticCurveTo(cx + 1 + side * 7, -2.6, cx + 1 + side * 14, 5.4);
+    g.quadraticCurveTo(cx + 1 + side * 8, 3.6, cx + 1 + side * 5.4, 4.6);
+    g.quadraticCurveTo(cx + 1 + side * 2, 4, cx + 1, 2.4);
+    g.closePath();
+    g.fill();
+    g.stroke();
+  }
+  // a round nose over it
   g.beginPath();
-  g.ellipse(cx, -11.4, 25, 6.2, 0, 0, TAU);
+  g.ellipse(cx + 1, 0.4, 3, 2.6, 0, 0, TAU);
+  g.fillStyle = '#b86cc9';
   g.fill();
   g.stroke();
-  g.beginPath();
-  g.moveTo(cx - 14, -12);
-  g.quadraticCurveTo(cx - 8, -30, cx - 1, -40);
-  g.quadraticCurveTo(cx + 5, -47, cx + 14, -43);
-  g.quadraticCurveTo(cx + 6, -37, cx + 12, -12);
-  g.quadraticCurveTo(cx, -8, cx - 14, -12);
-  g.closePath();
-  g.fillStyle = vg(g, -46, -10, '#4352bd', '#2b367e');
-  g.fill();
-  g.stroke();
-  g.fillStyle = '#e8b94a';
-  rr(g, cx - 13, -15, 26, 3.4, 1.4);
-  g.fill();
-  g.fillStyle = '#f2cd5a';
+
+  drawWizardHat(g, cx);
+
+  // bushy white brows, poking out from under the brim and trailing at the ends
+  g.fillStyle = '#ffffff';
   g.strokeStyle = OUT;
-  g.lineWidth = 0.8;
-  star5(g, cx + 1.5, -26, 4.2, 1.8);
-  g.fill();
-  g.stroke();
+  g.lineWidth = 1.1;
+  for (const [x, side] of [[xs[0], -1], [xs[1], 1]]) {
+    g.beginPath();
+    g.moveTo(x - side * 4, -9.8);
+    g.quadraticCurveTo(x + side * 1.5, -12.4, x + side * 6.4, -9);
+    g.quadraticCurveTo(x + side * 9.4, -6.6, x + side * 9.8, -2.6);
+    g.quadraticCurveTo(x + side * 6.6, -7.4, x + side * 3, -7.8);
+    g.quadraticCurveTo(x - side * 1, -8.8, x - side * 4, -8);
+    g.closePath();
+    g.fill();
+    g.stroke();
+  }
 }
 
-// A wooden staff with a glowing cyan orb. Origin: the hand, standing upright.
-function drawMageStaff(g, glow) {
-  g.lineCap = 'round';
+// the wide flat brim and a straight cone leaning back, with a gold band and star
+function drawWizardHat(g, cx) {
   g.strokeStyle = OUT;
-  g.lineWidth = 4.6;
+  g.lineWidth = 1.7;
+  g.lineJoin = 'round';
   g.beginPath();
-  g.moveTo(0, -38);
-  g.lineTo(0.4, 26);
-  g.stroke();
-  g.strokeStyle = '#a8763c';
-  g.lineWidth = 2.8;
-  g.beginPath();
-  g.moveTo(0, -38);
-  g.lineTo(0.4, 26);
-  g.stroke();
-  g.strokeStyle = OUT;
-  g.lineWidth = 3.2;
-  g.beginPath();
-  g.moveTo(-4, -38);
-  g.quadraticCurveTo(-5, -45, -1, -47);
-  g.moveTo(4, -38);
-  g.quadraticCurveTo(5, -45, 1, -47);
-  g.stroke();
-  const r = glow ? 8.4 : 6.2;
-  const R = r + (glow ? 10 : 5);
-  const gr = g.createRadialGradient(0, -45, 1, 0, -45, R);
-  gr.addColorStop(0, 'rgba(180, 245, 255, 0.95)');
-  gr.addColorStop(0.45, 'rgba(120, 220, 245, 0.55)');
-  gr.addColorStop(1, 'rgba(120, 220, 245, 0)');
-  g.fillStyle = gr;
-  g.beginPath();
-  g.arc(0, -45, R, 0, TAU);
-  g.fill();
-  g.fillStyle = '#c8f4fb';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.5;
-  g.beginPath();
-  g.arc(0, -45, r * 0.78, 0, TAU);
+  g.moveTo(cx - 14.5, -13);
+  g.lineTo(cx - 12, -42);
+  g.quadraticCurveTo(cx + 3, -31, cx + 14.5, -13);
+  g.closePath();
+  g.fillStyle = '#2b3474';
   g.fill();
   g.stroke();
-  g.fillStyle = 'rgba(255, 255, 255, 0.85)';
+  g.fillStyle = '#f0bd38';
   g.beginPath();
-  g.arc(-1.6, -46.6, 1.7, 0, TAU);
+  g.moveTo(cx - 14.2, -18.2);
+  g.lineTo(cx + 11.6, -17.6);
+  g.lineTo(cx + 14, -13.6);
+  g.lineTo(cx - 14.5, -14);
+  g.closePath();
+  g.fill();
+  g.beginPath();
+  g.ellipse(cx, -13.4, 28, 5.4, 0, 0, TAU);
+  g.fillStyle = '#2b3474';
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#f5c63e';
+  star5(g, cx - 3.6, -26, 4.6, 2);
   g.fill();
 }
+
+// A plain wooden staff topped by an orb in the colour of the spell. Origin: its foot.
+function drawWizardStaff(g, orb) {
+  g.lineCap = 'round';
+  for (const [col, wide] of [[OUT, 4.8], ['#c8964e', 2.8]]) {
+    g.strokeStyle = col;
+    g.lineWidth = wide;
+    g.beginPath();
+    g.moveTo(0, 0);
+    g.lineTo(0, -WIZ_STAFF);
+    g.stroke();
+  }
+  g.beginPath();
+  g.arc(0, -WIZ_STAFF, 6.4, 0, TAU);
+  g.fillStyle = orb;
+  g.fill();
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.7;
+  g.stroke();
+  g.beginPath();
+  g.arc(2, -WIZ_STAFF + 1.8, 1.8, 0, TAU);
+  g.fillStyle = '#ffffff';
+  g.fill();
+}
+
+export const WIZ_STAFF = 52;
 
 // ------------------------------------------------------------ necromancer
 function drawNecroBody(g, front, gz) {
@@ -363,20 +421,9 @@ function drawBoneSword(g) {
 // What a mage drops, and the ghosts all four leave behind.
 export const EGG_DROPS = {
   mage(g) {
-    g.fillStyle = '#2f3b8c';
-    g.strokeStyle = OUT;
-    g.lineWidth = 1;
-    g.beginPath();
-    g.ellipse(0, 3, 14, 3.6, 0, 0, TAU);
-    g.fill();
-    g.stroke();
-    g.beginPath();
-    g.moveTo(-7, 3);
-    g.quadraticCurveTo(-3, -9, 0, -13);
-    g.quadraticCurveTo(3, -9, 7, 3);
-    g.closePath();
-    g.fill();
-    g.stroke();
+    g.scale(0.55, 0.55);
+    g.translate(0, 20);
+    drawWizardHat(g, 0);
   },
 };
 
@@ -433,9 +480,12 @@ export function buildEggArt() {
     zombie: { feet: feetSet('#4d6630'), ...eggSet(drawZombieBody) },
     mage: {
       feet: feetSet('#25232e'),
-      ...eggSet(drawMageBody),
-      staff: makeLayer(-12, -56, 12, 28, (g) => drawMageStaff(g, false)),
-      staffGlow: makeLayer(-22, -66, 22, 28, (g) => drawMageStaff(g, true)),
+      // taller layers than the other eggs, for his hat above and his beard below
+      torso: makeLayer(-40, -48, 40, 36, (g) => drawWizardBody(g, false, GAZE3[0])),
+      torsoAngry: makeLayer(-40, -48, 40, 36, (g) => drawWizardBody(g, false, GAZE3[0])),
+      torsoSide: GAZE3.map((gz) => makeLayer(-40, -48, 40, 36, (g) => drawWizardBody(g, false, gz))),
+      staff: makeLayer(-10, -62, 10, 6, (g) => drawWizardStaff(g, '#8ff0fb')),
+      staffPink: makeLayer(-10, -62, 10, 6, (g) => drawWizardStaff(g, '#ff62ea')),
     },
     necromancer: {
       feet: feetSet('#1c1430'),

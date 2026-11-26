@@ -383,8 +383,13 @@ export const SLIME = {
   split: true, creature: true, body: [25, 17, 12], ring: 1.3,
 };
 export const MAGE = {
-  kind: 'mage', hp: 72, ...BODY, speed: 33, sight: 400, range: 240, holdDist: 150,
-  damage: 20, orbSpeed: 250, slow: 1.8, cooldownMin: 1.4, cooldownMax: 2, castTime: 0.45, egg: true,
+  kind: 'mage', hp: 140, ...BODY, speed: 33, sight: 400, range: 240, holdDist: 150,
+  cooldownMin: 0.7, cooldownMax: 1.1, castTime: 0.55, egg: true,
+  // two spells, as the original's mage casts them:
+  // a pink bolt that bursts, hurting and throwing back everyone close to where it lands,
+  orbSpeed: 200, burst: { damage: 45, radius: 18, knock: 150 },
+  // and lightning that leaps from enemy to enemy, leaving each one alight
+  chain: { damage: 28, jumps: 5, hop: 62, burn: 2.2 },
 };
 export const GIANT = {
   ...BEAST, hp: 560, radius: 15, sep: 17, speed: 24, reach: 26, damage: 68, cooldownMin: 1.9, cooldownMax: 2.5, atkTime: 0.95,
@@ -468,7 +473,7 @@ export const SPECIES = {
   cheetah: { id: 'cheetah', label: 'Cheetah', def: CHEETAH },
   zombie: { id: 'zombie', label: 'Zombie', def: ZOMBIE },
   slime: { id: 'slime', label: 'Slime', def: SLIME },
-  mage: { id: 'mage', label: 'Mage', def: MAGE },
+  mage: { id: 'mage', label: 'Wizard', def: MAGE },
   giant: { id: 'giant', label: 'Giant', def: GIANT },
   dragon: { id: 'dragon', label: 'Dragon', def: DRAGON },
   necromancer: { id: 'necromancer', label: 'Necromancer', def: NECROMANCER },
@@ -482,9 +487,9 @@ export const SPECIES = {
 export const TABS = [
   { id: 'army', label: 'Army', items: ['soldier', 'flamethrower', 'sniper', 'grenadier', 'archer', 'cowboy', 'ninja'] },
   { id: 'robots', label: 'Robots', items: ['trooper', 'jettrooper', 'mechazord'] }, // the Juggernaut's code is kept, but he isn't in the palette
-  { id: 'magic', label: 'Magic', items: [] }, // nothing in it yet
+  { id: 'magic', label: 'Magic', items: ['mage'] },
   { id: 'terrain', label: 'Terrain', items: ['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower'] },
 ];
 export const TERRAIN_LABELS = { wall: 'Wall', water: 'Water', ice: 'Ice', mine: 'Mines', barrel: 'Barrel', tree: 'Tree', tower: 'Wizard Tower' };
 export const PALETTE_ORDER = TABS[0].items;
-export const SPECIES_ORDER = [...TABS[0].items, ...TABS[1].items, 'barrel', 'tree', 'tower'];
+export const SPECIES_ORDER = [...TABS[0].items, ...TABS[1].items, ...TABS[2].items, 'barrel', 'tree', 'tower'];

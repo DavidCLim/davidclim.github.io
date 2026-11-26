@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=229';
-import { drawLayer, OUT } from './sprites.js?v=229';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_TAIL, ZORD_JAW, ZORD_EYE, ZORD_CORE, zordEye, drawZordTail, drawZordSpine } from './art_units.js?v=229';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=229';
-import { EGG_DROPS } from './art_eggs.js?v=229';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=230';
+import { drawLayer, OUT } from './sprites.js?v=230';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_TAIL, ZORD_JAW, ZORD_EYE, ZORD_CORE, zordEye, drawZordTail, drawZordSpine } from './art_units.js?v=230';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=230';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=230';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -1209,10 +1209,123 @@ function drawStaffUnit(ctx, dpr, sprites, u, id) {
   drawLayer(ctx, u.castT > 0 ? A.staffGlow : A.staff);
 }
 
+// The wizard: as he casts, his staff tips forward and a six-pointed light swells round the orb, pink for the bursting
+// bolt, pale blue for lightning; as the spell leaves, the staff swings back and the light flashes.
+function drawWizard(ctx, dpr, sprites, u) {
+  const A = sprites.mage;
+  eggBase(ctx, dpr, sprites, A, u);
+  const casting = u.castT > 0 && u.castFire;
+  const p = casting ? 1 - u.castT / u.def.castTime : 0;
+  const flash = (u.castFlash || 0) / 0.24;
+  const clock = performance.now() / 1000 + (u.id || 0);
+  const tilt = 0.07 + (casting ? 0.4 * (1 - (1 - p) ** 2) : flash > 0.6 ? 0.2 * ((flash - 0.6) / 0.4) : 0);
+  ctx.translate(lerp(21 * K, 20 * K, u.pose), 21 * K);
+  ctx.rotate(tilt);
+  const pink = casting && u.spell === 'burst';
+  const rgb = pink ? '255, 100, 232' : '140, 235, 255';
+  const oy = -WIZ_STAFF * K;
+  const power = casting ? p : flash;
+  if (power > 0.02) {
+    botGlow(ctx, 0, oy, (11 + 9 * power) * K, rgb, 0.75);
+    const r = (8 + 8 * power) * K;
+    ctx.fillStyle = `rgba(${rgb}, ${0.55 * Math.min(1, power * 1.6)})`;
+    ctx.beginPath();
+    for (let i = 0; i < 12; i++) {
+      const an = (i / 12) * TAU + clock * 1.5;
+      const rr = i % 2 ? r * 0.62 : r * 1.2;
+      if (i) ctx.lineTo(Math.cos(an) * rr, oy + Math.sin(an) * rr);
+      else ctx.moveTo(Math.cos(an) * rr, oy + Math.sin(an) * rr);
+    }
+    ctx.closePath();
+    ctx.fill();
+  } else botGlow(ctx, 0, oy, 10 * K, rgb, 0.4 + 0.1 * Math.sin(clock * 2.5));
+  drawLayer(ctx, pink ? A.staffPink : A.staff);
+}
+
+// his spells: pink bolts with a soft tail, the round pink burst where one lands, and the lightning
+function drawSpells(ctx, world) {
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  for (const o of world.orbs) {
+    const len = Math.hypot(o.vx, o.vy) || 1;
+    const ux = o.vx / len;
+    const uy = o.vy / len;
+    const tail = Math.min(11, o.gone);
+    const gr = ctx.createLinearGradient(o.x - ux * tail, o.y - uy * tail, o.x, o.y);
+    gr.addColorStop(0, 'rgba(240, 110, 245, 0)');
+    gr.addColorStop(1, 'rgba(240, 110, 245, 0.9)');
+    ctx.strokeStyle = gr;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(o.x - ux * tail, o.y - uy * tail);
+    ctx.lineTo(o.x - ux * 2, o.y - uy * 2);
+    ctx.stroke();
+    botGlow(ctx, o.x, o.y, 7.5, '245, 120, 250', 0.5);
+    ctx.fillStyle = '#ffe2ff';
+    ctx.strokeStyle = '#e866f2';
+    ctx.lineWidth = 1.9;
+    ctx.beginPath();
+    ctx.arc(o.x, o.y, 2.6, 0, TAU);
+    ctx.fill();
+    ctx.stroke();
+  }
+  for (const e of world.bursts) {
+    const q = e.age / e.life;
+    const r = e.r * (0.4 + 0.9 * (1 - (1 - q) ** 2));
+    const fade = 1 - q;
+    const gr = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, r);
+    gr.addColorStop(0, `rgba(255, 255, 255, ${0.95 * fade})`);
+    gr.addColorStop(0.45, `rgba(245, 130, 250, ${0.65 * fade * fade})`);
+    gr.addColorStop(1, `rgba(240, 150, 250, ${0.18 * fade})`);
+    ctx.fillStyle = gr;
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, r, 0, TAU);
+    ctx.fill();
+    ctx.strokeStyle = `rgba(214, 120, 235, ${0.7 * fade})`;
+    ctx.lineWidth = 1.1;
+    ctx.stroke();
+  }
+  for (const a of world.arcs) {
+    const fade = Math.min(1, (a.life - a.age) / 0.2);
+    // each leap bends gently two or three times, and the bends shift as it burns
+    let seed = Math.floor(a.age * 24) * 31 + Math.floor(a.pts[0][0] * 7) + 5;
+    const rnd = () => {
+      seed = (seed * 16807) % 2147483647;
+      return seed / 2147483647;
+    };
+    rnd();
+    const path = [a.pts[0]];
+    for (let i = 1; i < a.pts.length; i++) {
+      const [x0, y0] = a.pts[i - 1];
+      const [x1, y1] = a.pts[i];
+      const len = Math.hypot(x1 - x0, y1 - y0) || 1;
+      const n = Math.max(2, Math.round(len / 18));
+      for (let k = 1; k < n; k++) {
+        const off = (rnd() - 0.5) * 6;
+        path.push([x0 + ((x1 - x0) * k) / n - ((y1 - y0) / len) * off, y0 + ((y1 - y0) * k) / n + ((x1 - x0) / len) * off]);
+      }
+      path.push([x1, y1]);
+    }
+    for (const [col, wide] of [
+      [`rgba(150, 190, 255, ${0.22 * fade})`, 6.5],
+      [`rgba(160, 200, 255, ${0.55 * fade})`, 3],
+      [`rgba(255, 255, 255, ${fade})`, 1.1],
+    ]) {
+      ctx.strokeStyle = col;
+      ctx.lineWidth = wide;
+      ctx.beginPath();
+      path.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
 const DRAWERS = {
   zombie: drawZombie,
   skeleton: drawSkeleton,
-  mage: (ctx, dpr, sprites, u) => drawStaffUnit(ctx, dpr, sprites, u, 'mage'),
+  mage: drawWizard,
   necromancer: (ctx, dpr, sprites, u) => drawStaffUnit(ctx, dpr, sprites, u, 'necromancer'),
   ...Object.fromEntries(CREATURE_IDS.map((id) => [id, (ctx, dpr, sprites, u) => drawCreature(ctx, dpr, sprites, u, burnOverlay)])),
   flamethrower: drawFlamethrower,
@@ -1446,6 +1559,7 @@ export function drawFlames(ctx, world, under) {
     ctx.drawImage(spr, f.x - r, f.y - r, r * 2, r * 2);
   }
   ctx.globalAlpha = 1;
+  if (!under) drawSpells(ctx, world);
 }
 
 // the Jet Trooper's rockets: a stubby grey rocket with a red nose (its fire trail is ordinary flame)
@@ -1803,8 +1917,9 @@ const ICONS = {
     g.rotate(-0.8);
     drawLayer(g, S.sword);
   }],
-  mage: [128, 54, 68, (g, S) => {
-    g.translate(25 * K, 0);
+  mage: [84, 37, 49, (g, S) => {
+    g.translate(21 * K, 21 * K);
+    g.rotate(0.07);
     drawLayer(g, S.staff);
   }],
   necromancer: [128, 54, 68, (g, S) => {

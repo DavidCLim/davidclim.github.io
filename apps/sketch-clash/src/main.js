@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=229';
-import { buildCreatureArt } from './creatures.js?v=229';
-import { buildEggArt } from './art_eggs.js?v=229';
-import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=229';
-import { Sfx } from './sfx.js?v=229';
-import { World } from './world.js?v=229';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=229';
-import { buildUnitArt, drawDrop } from './art_units.js?v=229';
-import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=229';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=230';
+import { buildCreatureArt } from './creatures.js?v=230';
+import { buildEggArt } from './art_eggs.js?v=230';
+import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=230';
+import { Sfx } from './sfx.js?v=230';
+import { World } from './world.js?v=230';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=230';
+import { buildUnitArt, drawDrop } from './art_units.js?v=230';
+import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=230';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -930,20 +930,6 @@ function drawBrushRing() {
 
 const GHOST_LIFE = 1.5;
 
-const orbSprite = (() => {
-  const c = document.createElement('canvas');
-  c.width = c.height = 64;
-  const g = c.getContext('2d');
-  const gr = g.createRadialGradient(32, 32, 2, 32, 32, 32);
-  gr.addColorStop(0, 'rgba(235, 255, 255, 1)');
-  gr.addColorStop(0.28, 'rgba(150, 232, 250, 0.95)');
-  gr.addColorStop(0.6, 'rgba(100, 200, 240, 0.4)');
-  gr.addColorStop(1, 'rgba(100, 200, 240, 0)');
-  g.fillStyle = gr;
-  g.fillRect(0, 0, 64, 64);
-  return c;
-})();
-
 const smokeSprite = (() => {
   const c = document.createElement('canvas');
   c.width = c.height = 96;
@@ -1330,11 +1316,6 @@ function render() {
     ctx.moveTo(tx, ty);
     ctx.lineTo(b.x, b.y);
     ctx.stroke();
-  }
-
-  // the mage's frost bolts: a glowing cyan orb
-  for (const o of world.orbs) {
-    ctx.drawImage(orbSprite, o.x - 9, o.y - 9, 18, 18);
   }
 
   // sniper rounds: a long thin dark bullet over one thin pale smoke line along its whole path, which lingers

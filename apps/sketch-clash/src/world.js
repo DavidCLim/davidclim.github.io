@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=229';
-import { TerrainMap, WALL } from './terrain.js?v=229';
-import { installBeasts } from './beasts.js?v=229';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=230';
+import { TerrainMap, WALL } from './terrain.js?v=230';
+import { installBeasts } from './beasts.js?v=230';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -83,7 +83,9 @@ export class World {
     this.corpses = []; // units knocked over, seeing stars, before the ghost takes over
     this.terrain = new TerrainMap(); // painted wall / water / ice
     this.props = []; // mines, barrels, trees
-    this.orbs = []; // the mage's frost bolts
+    this.orbs = []; // the wizard's bolts
+    this.bursts = []; // where they burst
+    this.arcs = []; // and his chain lightning
     this.rises = []; // the fallen getting back up as zombies
     this.sfx = null; // sound hook: (name, x)
     this.onArrowLand = null;
@@ -460,6 +462,8 @@ export class World {
     this.corpses = [];
     this.props = [];
     this.orbs = [];
+    this.bursts = [];
+    this.arcs = [];
     this.rises = [];
     this.terrain.clear();
     this.groups = [];
@@ -2116,6 +2120,7 @@ export class World {
     this.stepArrows(dt);
     this.stepBombs(dt);
     this.stepOrbs(dt);
+    this.stepSpells(dt);
     this.stepRises(dt);
     this.stepProps(dt);
     this.stepDebris(dt);
