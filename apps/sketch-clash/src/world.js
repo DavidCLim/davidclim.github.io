@@ -1,7 +1,8 @@
-import { addJugFx, jugShake, stepJugFx } from './jug_fx.js?v=204';
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=204';
-import { TerrainMap, WALL } from './terrain.js?v=204';
-import { installBeasts } from './beasts.js?v=204';
+import { JUG_MUZZLE } from './jug_rig.js?v=209';
+import { addJugFx, jugShake, stepJugFx } from './jug_fx.js?v=209';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=209';
+import { TerrainMap, WALL } from './terrain.js?v=209';
+import { installBeasts } from './beasts.js?v=209';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -1296,6 +1297,7 @@ export class World {
     const haste = u.rage ? d.rage.haste : 1;
     u.swingCd = Math.max(0, (u.swingCd || 0) - dt);
     u.chargeT = Math.max(0, (u.chargeT || 0) - dt);
+    u.roarT = Math.max(0, (u.roarT || 0) - dt);
     // he opens with the cannon from range, then charges in
     u.chargeCd = Math.max(0, (u.chargeCd === undefined ? 2.6 : u.chargeCd) - dt * haste);
     u.cannonCd = Math.max(0, (u.cannonCd === undefined ? 0.35 : u.cannonCd) - dt * haste);
@@ -1366,7 +1368,7 @@ export class World {
         u.trailT = (u.trailT || 0) - dt;
         if (u.trailT <= 0) {
           u.trailT = 0.07;
-          addJugFx(this, { type: 'after', x: u.x, y: u.y, facing: u.facing, life: 0.34 });
+          addJugFx(this, { type: 'after', x: u.x, y: u.y, facing: u.facing, anim: u.anim, life: 0.34 });
         }
       }
     }
@@ -1417,18 +1419,18 @@ export class World {
   jugRage(u) {
     const r = u.def.rage;
     u.rage = true;
+    u.roarT = 1.2;
     this.jugBlow(u, u.x, u.y, r.radius, r.damage, 620);
     addJugFx(this, { type: 'roar', x: u.x, y: u.y + FEET + 1, life: 1.35, r: r.radius });
     jugShake(this, 11);
     if (this.sfx) this.sfx('boom', u.x);
   }
 
-  // the plasma leaves the end of his raised arm (the drawing puts it at 61, -46 in his own art units)
+  // the plasma leaves the end of his levelled arm, where the skeleton puts it
   jugFire(u) {
     const d = u.def;
-    const k = 0.31 * d.scale;
-    const x = u.x + u.facing * 61 * k;
-    const y = u.y + FEET + (-46 * 0.31 - FEET) * d.scale;
+    const x = u.x + u.facing * JUG_MUZZLE[0] * 0.31 * d.scale;
+    const y = u.y + FEET + (JUG_MUZZLE[1] * 0.31 - FEET) * d.scale;
     const tx = u.aimAtX === undefined ? u.x + u.facing * 200 : u.aimAtX;
     const ty = u.aimAtY === undefined ? u.y : u.aimAtY;
     const dur = Math.max(0.14, Math.hypot(tx - x, ty - y) / d.cannon.speed);

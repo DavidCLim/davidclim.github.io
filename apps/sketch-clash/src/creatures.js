@@ -1,7 +1,7 @@
-import { TAU, K, FEET, UNIT } from './config.js?v=204';
-import { makeLayer, drawLayer } from './sprites.js?v=204';
-import { ANIMALS } from './art_animals.js?v=204';
-import { MYTHIC } from './art_mythic.js?v=204';
+import { TAU, K, FEET, UNIT } from './config.js?v=209';
+import { makeLayer, drawLayer } from './sprites.js?v=209';
+import { ANIMALS } from './art_animals.js?v=209';
+import { MYTHIC } from './art_mythic.js?v=209';
 
 // Sprites and drawing for the creatures that aren't egg-shaped: every animal,
 // the slime, giant and dragon. Each gets 8 walk frames, a few idle (breathing)

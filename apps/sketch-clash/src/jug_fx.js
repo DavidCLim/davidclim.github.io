@@ -1,8 +1,8 @@
 // The Robot Juggernaut's effects: the crater, shockwaves, lightning and rubble of his axe, the claw slashes, the dust
 // under his feet, the ghostly trail of his charge, and the meltdown and explosion when he finally goes down.
 // World code only adds events to world.jfx; everything is drawn from each event's age and seed.
-import { TAU, K, FEET, JUGGERNAUT } from './config.js?v=204';
-import { drawLayer } from './sprites.js?v=204';
+import { solve, chargePose, droopPose, drawRig } from './jug_rig.js?v=209';
+import { TAU, K, FEET, JUGGERNAUT } from './config.js?v=209';
 
 const BIG = JUGGERNAUT.scale;
 
@@ -133,22 +133,6 @@ function groundRing(ctx, x, y, r, col, w) {
   ctx.stroke();
 }
 
-function drawJugParts(ctx, A, clawAngle, axeAngle) {
-  const at = (pivot, angle, layer) => {
-    ctx.save();
-    ctx.translate(pivot[0] * K, pivot[1] * K);
-    ctx.rotate(angle);
-    ctx.translate(-pivot[0] * K, -pivot[1] * K);
-    drawLayer(ctx, layer);
-    ctx.restore();
-  };
-  drawLayer(ctx, A.legB);
-  drawLayer(ctx, A.legA);
-  at([-46.2, -40], clawAngle, A.clawArm);
-  drawLayer(ctx, A.body);
-  at([27.7, -38.4], axeAngle, A.axeArm);
-}
-
 // Under everyone: craters, the rings racing out across the floor, footfall dust and the charge trail.
 export function drawJugGround(ctx, dpr, world, sprites) {
   if (!world.jfx.length) return;
@@ -201,11 +185,10 @@ export function drawJugGround(ctx, dpr, world, sprites) {
       ctx.save();
       ctx.setTransform(e.facing * dpr, 0, 0, dpr, e.x * dpr, e.y * dpr);
       ctx.translate(0, FEET);
-      ctx.rotate(0.15);
       ctx.scale(BIG, BIG);
       ctx.translate(0, -FEET);
       ctx.globalAlpha = 0.26 * (1 - q);
-      drawJugParts(ctx, sprites.juggernaut, 0, 0);
+      drawRig(ctx, sprites.juggernaut, solve(chargePose(e.anim || 0)));
       ctx.restore();
     }
   }
@@ -542,10 +525,9 @@ function drawMeltdown(ctx, dpr, e, sprites) {
   ctx.save();
   ctx.setTransform(e.facing * dpr, 0, 0, dpr, (e.x + (Math.random() - 0.5) * 3.4 * q) * dpr, (e.y + (Math.random() - 0.5) * 1.6 * q) * dpr);
   ctx.translate(0, FEET + q * 2.4);
-  ctx.rotate(-0.1 * q);
   ctx.scale(BIG, BIG);
   ctx.translate(0, -FEET);
-  drawJugParts(ctx, sprites.juggernaut, -0.4 * easeOut(q), 0.55 * easeOut(q));
+  drawRig(ctx, sprites.juggernaut, solve(droopPose(q)));
   // seams splitting with light
   for (let i = 0; i < 6; i++) {
     if (q < i * 0.12) continue;
