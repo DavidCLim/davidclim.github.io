@@ -79,6 +79,28 @@ export const SNIPER = {
   prone: { cy: 12 * K, mx: 52 * K, my: 6.4 * K },
 };
 
+// Robo Trooper: a stocky walking armour with a big rifle. Slower and far tougher than a soldier, firing in threes.
+export const TROOPER = {
+  ...SOLDIER,
+  hp: 360,
+  radius: 14 * UNIT,
+  sep: 24 * UNIT,
+  speed: 48,
+  sight: 400,
+  range: 300,
+  holdDist: 150,
+  burst: 3,
+  burstGap: 0.12,
+  cooldownMin: 1.2,
+  cooldownMax: 1.8,
+  damage: 24,
+  spread: 0.07,
+  ring: 1.4,
+  pivot: { x: 7.8 * K, y: 4.2 * K }, // the drawing is scaled up 1.3 about the feet
+
+  muzzleLen: 52 * K,
+};
+
 const BODY = { radius: 11 * UNIT, sep: 17 * UNIT }; // crowds spread to about 14 screen px between bodies, as in the original
 
 // The flamethrower: a firefighter-style trooper with a fuel tank on his back who hoses a jet of fire.
@@ -351,6 +373,7 @@ export const SPECIES = {
   cowboy: { id: 'cowboy', label: 'Cowboy', def: COWBOY },
   ninja: { id: 'ninja', label: 'Samurai', def: NINJA },
   mechazord: { id: 'mechazord', label: 'MechaZord', def: MECHAZORD },
+  trooper: { id: 'trooper', label: 'Robo Trooper', def: TROOPER },
   boar: { id: 'boar', label: 'Boar', def: BOAR },
   rat: { id: 'rat', label: 'Rat', def: RAT },
   ant: { id: 'ant', label: 'Ant', def: ANT },
@@ -373,8 +396,8 @@ export const SPECIES = {
 };
 // The order of the palette (the knight only ever comes from a cavalry).
 export const TABS = [
-  { id: 'army', label: 'Army', items: ['soldier', 'flamethrower', 'sniper', 'roman', 'grenadier', 'archer', 'cowboy', 'ninja'] },
-  { id: 'robots', label: 'Robots', items: ['mechazord'], locked: true }, // MechaZord is kept but the tab is switched off
+  { id: 'army', label: 'Army', items: ['soldier', 'flamethrower', 'sniper', 'grenadier', 'archer', 'cowboy', 'ninja'] },
+  { id: 'robots', label: 'Robots', items: ['trooper'] }, // MechaZord's code is kept, but he isn't in the palette
   { id: 'terrain', label: 'Terrain', items: ['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower'] },
 ];
 export const TERRAIN_LABELS = { wall: 'Wall', water: 'Water', ice: 'Ice', mine: 'Mines', barrel: 'Barrel', tree: 'Tree', tower: 'Wizard Tower' };

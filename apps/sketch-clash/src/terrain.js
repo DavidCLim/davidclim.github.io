@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=178';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=178';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=178';
+import { TAU, K } from './config.js?v=182';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=182';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=182';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask
@@ -8,8 +8,8 @@ import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=1
 export const WATER = 1;
 export const ICE = 2;
 export const WALL = 4;
-export const STROKE_W = { wall: 14.5, water: 24, ice: 21 };
-export const WALL_H = 5.2; // the front face of a wall hangs this far below its top
+export const STROKE_W = { wall: 11.5, water: 22, ice: 22 };
+export const WALL_H = 4.6; // the front face of a wall hangs this far below its top
 
 export class TerrainMap {
   constructor() {
@@ -148,14 +148,14 @@ export function renderGround(ctx, W, H, strokes, clock) {
     }
   };
   for (const [kind, edge, fill] of [
-    ['water', '#76bccb', '#8dd3de'],
-    ['ice', '#b4d4e6', '#dcecf9'],
+    ['water', '#72bcc8', '#93d8e0'],
+    ['ice', '#c0d9ee', '#dff0fb'],
   ]) {
     const list = of(kind);
     if (!list.length) continue;
     ctx.fillStyle = edge;
     for (const s of list) {
-      blobPath(s, 0.7);
+      blobPath(s, 0.6);
       ctx.fill();
     }
     ctx.fillStyle = fill;
@@ -163,31 +163,47 @@ export function renderGround(ctx, W, H, strokes, clock) {
       blobPath(s, 0);
       ctx.fill();
     }
-    // the original's water is a smooth cyan that is lightest along the middle of the stroke and darker toward the banks;
-    // ice is flat pale blue with soft white sheen at the ends
+    // as in the original: water has big soft patches, lighter and darker by turns, with no stripe down the middle;
+    // ice is flat pale blue crossed here and there by a soft white glint
     for (const s of list) {
       ctx.save();
       blobPath(s, 0);
       ctx.clip();
-      ctx.filter = 'blur(5px)';
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      if (kind === 'water') {
-        ctx.strokeStyle = 'rgba(196, 248, 250, 0.85)';
-        ctx.lineWidth = s.w * 0.5;
-        ctx.beginPath();
-        s.pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
-        if (s.pts.length === 1) ctx.lineTo(s.pts[0][0] + 0.1, s.pts[0][1]);
-        ctx.stroke();
-      } else {
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
-        ctx.lineWidth = s.w * 0.34;
-        for (const [x, y] of [s.pts[0], s.pts[s.pts.length - 1]]) {
-          ctx.beginPath();
-          ctx.moveTo(x - s.w * 0.22, y + s.w * 0.28);
-          ctx.lineTo(x + s.w * 0.22, y - s.w * 0.28);
-          ctx.stroke();
+      const marks = [];
+      let walked = 0;
+      let next = 18;
+      for (let i = 0; i < s.pts.length; i++) {
+        if (i) walked += Math.hypot(s.pts[i][0] - s.pts[i - 1][0], s.pts[i][1] - s.pts[i - 1][1]);
+        else marks.push(s.pts[0]);
+        if (walked >= next) {
+          marks.push(s.pts[i]);
+          next += 36;
         }
+      }
+      if (kind === 'water') {
+        marks.forEach(([x, y], i) => {
+          const light = i % 2 === 0;
+          const r = s.w * (light ? 0.95 : 0.85);
+          const gr = ctx.createRadialGradient(x, y, 0, x, y, r);
+          gr.addColorStop(0, light ? 'rgba(168, 244, 247, 0.9)' : 'rgba(126, 188, 197, 0.55)');
+          gr.addColorStop(1, light ? 'rgba(168, 244, 247, 0)' : 'rgba(126, 188, 197, 0)');
+          ctx.fillStyle = gr;
+          ctx.fillRect(x - r, y - r, r * 2, r * 2);
+        });
+      } else {
+        ctx.filter = 'blur(1.6px)';
+        ctx.lineCap = 'butt';
+        marks.forEach(([x, y], i) => {
+          if (i % 3 !== 1) return;
+          for (const [off, wide, al] of [[0, 0.3, 0.8], [s.w * 0.34, 0.1, 0.65]]) {
+            ctx.strokeStyle = `rgba(255, 255, 255, ${al})`;
+            ctx.lineWidth = s.w * wide;
+            ctx.beginPath();
+            ctx.moveTo(x + off - s.w * 0.36, y - s.w * 0.72);
+            ctx.lineTo(x + off + s.w * 0.36, y + s.w * 0.72);
+            ctx.stroke();
+          }
+        });
       }
       ctx.restore();
     }
@@ -207,41 +223,29 @@ export function renderGround(ctx, W, H, strokes, clock) {
     ctx.stroke();
   }
   ctx.restore();
-  // the front face, with rows of bricks
+  // the front face: a plain dark stone edge with one faint seam
   ctx.strokeStyle = '#1e1e22';
   for (const s of walls) {
-    ctx.lineWidth = s.w + 1.8;
+    ctx.lineWidth = s.w + 1.6;
     path(s, WALL_H);
     ctx.stroke();
     path(s, 0);
     ctx.stroke();
   }
-  ctx.strokeStyle = '#4b4b4f';
+  ctx.strokeStyle = '#413f40';
   for (const s of walls) {
     ctx.lineWidth = s.w;
     path(s, WALL_H);
     ctx.stroke();
   }
-  // two rows of bricks along the front: a seam between the rows and staggered upright joints
-  ctx.strokeStyle = 'rgba(150, 150, 158, 0.75)';
+  ctx.strokeStyle = 'rgba(20, 18, 20, 0.45)';
   for (const s of walls) {
     ctx.lineWidth = 0.6;
-    path(s, s.w * 0.5 + WALL_H * 0.52);
+    path(s, s.w * 0.5 + WALL_H * 0.5);
     ctx.stroke();
-    ctx.lineWidth = WALL_H * 0.42;
-    ctx.lineCap = 'butt';
-    ctx.setLineDash([0.7, 6.3]);
-    path(s, s.w * 0.5 + WALL_H * 0.27);
-    ctx.stroke();
-    ctx.lineDashOffset = 3.5;
-    path(s, s.w * 0.5 + WALL_H * 0.77);
-    ctx.stroke();
-    ctx.lineDashOffset = 0;
-    ctx.setLineDash([]);
-    ctx.lineCap = 'round';
   }
   // the flagstone top
-  ctx.strokeStyle = '#7e7c7b';
+  ctx.strokeStyle = '#78736f';
   for (const s of walls) {
     ctx.lineWidth = s.w;
     path(s, 0);
@@ -280,16 +284,16 @@ export function renderGround(ctx, W, H, strokes, clock) {
       y1 = Math.max(y1, y + s.w);
     }
   }
-  pg.strokeStyle = 'rgba(84, 82, 82, 0.5)';
-  pg.lineWidth = 0.75;
-  const cell = 13.5;
+  pg.strokeStyle = 'rgba(78, 72, 68, 0.55)';
+  pg.lineWidth = 0.7;
+  const cell = 11;
   for (let j = Math.floor(y0 / cell) - 1; j <= Math.ceil(y1 / cell) + 1; j++) {
     for (let i = Math.floor(x0 / cell) - 1; i <= Math.ceil(x1 / cell) + 1; i++) {
       const cx = (i + (j & 1 ? 0.5 : 0)) * cell + (hash2(i, j) - 0.5) * 5;
       const cy = j * cell * 0.9 + (hash2(j, i + 9) - 0.5) * 5;
       for (let k = 0; k < 6; k++) {
-        const a = (k / 6) * TAU + hash2(i + k, j) * 0.5;
-        const r = cell * (0.52 + hash2(k, i * 3 + j) * 0.1);
+        const a = (k / 6) * TAU + hash2(i + k, j) * 0.8;
+        const r = cell * (0.46 + hash2(k, i * 3 + j) * 0.24);
         const px = cx + Math.cos(a) * r;
         const py = cy + Math.sin(a) * r;
         if (k === 0) {
@@ -298,8 +302,8 @@ export function renderGround(ctx, W, H, strokes, clock) {
         } else pg.lineTo(px, py);
       }
       pg.closePath();
-      const v = 112 + Math.floor(hash2(i * 7 + 3, j * 5 + 1) * 22);
-      pg.fillStyle = `rgb(${v}, ${v - 1}, ${v - 2})`;
+      const v = 110 + Math.floor(hash2(i * 7 + 3, j * 5 + 1) * 17);
+      pg.fillStyle = `rgb(${v + 4}, ${v}, ${v - 3})`;
       pg.fill();
       pg.stroke();
     }
@@ -352,13 +356,13 @@ function drawMine(g, lit) {
   // the thick olive side
   g.beginPath();
   g.ellipse(0, -4.5, 22.5, 9.6, 0, 0, TAU);
-  g.fillStyle = '#4e5b35';
+  g.fillStyle = '#3b3f2f';
   g.fill();
   g.stroke();
   // the lighter top with two rings and a dark red button
   g.beginPath();
   g.ellipse(0, -12, 22, 9.4, 0, 0, TAU);
-  g.fillStyle = vgrad(g, -22, -2, '#808d58', '#6c794a');
+  g.fillStyle = vgrad(g, -22, -2, '#646a4e', '#4f553d');
   g.fill();
   g.stroke();
   g.strokeStyle = 'rgba(38, 48, 26, 0.7)';
@@ -369,9 +373,9 @@ function drawMine(g, lit) {
   g.beginPath();
   g.ellipse(0, -12, 9.6, 4, 0, 0, TAU);
   g.stroke();
-  g.fillStyle = lit ? '#ff4b2e' : '#7c2318';
+  g.fillStyle = lit ? '#ff6a3c' : '#cf4a2b';
   g.beginPath();
-  g.ellipse(0, -12, 3.8, 2, 0, 0, TAU);
+  g.ellipse(0, -12, 6.2, 3, 0, 0, TAU);
   g.fill();
 }
 
@@ -441,89 +445,79 @@ function drawBarrel(g, glow) {
   g.fill();
 }
 
-// A tree: one lumpy green crown on a slim brown trunk with flared roots.
+// A tree: one rounded dome of leaves with a scalloped underside, a couple of twigs showing, on a slim dark trunk.
 function drawTree(g) {
-  // measured off the original: a big lumpy crown with a dark outline, light patches up on the left, a darker underside
-  // with a few brown speckles, and a trunk that flares into two roots, with a soft shadow beside it
-  g.save();
-  g.translate(-6, 0);
-  shadowEll(g, 28, 5.6, 1);
-  g.restore();
+  shadowEll(g, 27, 5.6, 1);
   g.beginPath();
-  g.moveTo(-13, 2);
-  g.quadraticCurveTo(-6, -2, -6, -13);
-  g.lineTo(-5, -46);
-  g.lineTo(5.4, -46);
-  g.lineTo(6.2, -13);
-  g.quadraticCurveTo(6.6, -2, 13, 2);
-  g.quadraticCurveTo(0, 5, -13, 2);
+  g.moveTo(-12, 2);
+  g.quadraticCurveTo(-4.4, -2, -4.4, -14);
+  g.lineTo(-4, -50);
+  g.lineTo(4, -50);
+  g.lineTo(4.6, -14);
+  g.quadraticCurveTo(4.8, -2, 12, 2);
+  g.quadraticCurveTo(5, 0.5, 2.5, 3);
+  g.quadraticCurveTo(0, 0, -3, 3);
+  g.quadraticCurveTo(-6, 0.5, -12, 2);
   g.closePath();
-  const tg = g.createLinearGradient(-6, 0, 7, 0);
-  tg.addColorStop(0, '#a87343');
-  tg.addColorStop(0.55, '#7d5230');
-  tg.addColorStop(1, '#5a3a1f');
+  const tg = g.createLinearGradient(-6, 0, 6, 0);
+  tg.addColorStop(0, '#8a6342');
+  tg.addColorStop(1, '#4a321f');
   g.fillStyle = tg;
   g.fill();
-  ink(g, 2.2);
+  ink(g, 1.8);
   g.stroke();
-  g.strokeStyle = 'rgba(255, 220, 170, 0.35)';
-  g.lineWidth = 1.2;
-  g.beginPath();
-  g.moveTo(-2.6, -42);
-  g.lineTo(-3.2, -10);
-  g.stroke();
-  g.strokeStyle = 'rgba(40, 20, 8, 0.45)';
-  g.lineWidth = 1;
-  g.beginPath();
-  g.moveTo(2.6, -40);
-  g.lineTo(3, -12);
-  g.stroke();
-  const crown = [[0, -66, 25], [-21, -58, 17], [21, -58, 17], [-13, -80, 17], [13, -79, 18], [0, -48, 19]];
-  ink(g, 4.6);
-  for (const [x, y, r] of crown) {
+  const crown = () => {
     g.beginPath();
-    g.arc(x, y, r, 0, TAU);
+    g.moveTo(-34, -61);
+    g.bezierCurveTo(-41, -74, -33, -87, -23, -89);
+    g.bezierCurveTo(-22, -101, -10, -110, 1, -108);
+    g.bezierCurveTo(13, -110, 25, -101, 24, -91);
+    g.bezierCurveTo(35, -87, 41, -74, 35, -62);
+    g.bezierCurveTo(36, -50, 23, -43, 13, -48);
+    g.bezierCurveTo(7, -39, -7, -39, -13, -47);
+    g.bezierCurveTo(-23, -42, -37, -49, -34, -61);
+    g.closePath();
+  };
+  crown();
+  g.fillStyle = vgrad(g, -108, -42, '#5f9252', '#3e6b37');
+  g.fill();
+  g.save();
+  crown();
+  g.clip();
+  const spot = (x, y, r, rgb, al) => {
+    const gr = g.createRadialGradient(x, y, 0, x, y, r);
+    gr.addColorStop(0, `rgba(${rgb}, ${al})`);
+    gr.addColorStop(1, `rgba(${rgb}, 0)`);
+    g.fillStyle = gr;
+    g.fillRect(x - r, y - r, r * 2, r * 2);
+  };
+  spot(-14, -90, 26, '150, 196, 112', 0.75);
+  spot(20, -52, 30, '28, 62, 28', 0.6);
+  spot(-24, -52, 20, '28, 62, 28', 0.45);
+  // leaf clumps picked out with short arcs
+  g.strokeStyle = 'rgba(30, 64, 30, 0.45)';
+  g.lineWidth = 1.5;
+  g.lineCap = 'round';
+  for (const [x, y, r] of [[-20, -74, 9], [2, -86, 11], [18, -70, 9], [-6, -60, 10], [14, -97, 7], [-27, -57, 6]]) {
+    g.beginPath();
+    g.arc(x, y, r, Math.PI * 0.2, Math.PI * 0.82);
     g.stroke();
   }
-  for (const [x, y, r] of crown) {
-    g.fillStyle = vgrad(g, y - r, y + r, '#5fae4f', '#3f8236');
-    g.beginPath();
-    g.arc(x, y, r, 0, TAU);
-    g.fill();
-  }
-  g.save();
+  // twigs showing through
+  g.strokeStyle = '#5a3c24';
+  g.lineWidth = 2;
   g.beginPath();
-  for (const [x, y, r] of crown) {
-    g.moveTo(x + r, y);
-    g.arc(x, y, r, 0, TAU);
-  }
-  g.clip();
-  g.fillStyle = 'rgba(176, 226, 140, 0.42)';
-  for (const [x, y, rx, ry] of [[-14, -78, 22, 13], [8, -88, 16, 8], [-22, -60, 12, 9]]) {
-    g.beginPath();
-    g.ellipse(x, y, rx, ry, -0.3, 0, TAU);
-    g.fill();
-  }
-  g.fillStyle = 'rgba(28, 82, 34, 0.5)';
-  for (const [x, y, rx, ry] of [[14, -46, 28, 11], [-16, -50, 20, 8], [24, -66, 10, 14]]) {
-    g.beginPath();
-    g.ellipse(x, y, rx, ry, 0.2, 0, TAU);
-    g.fill();
-  }
-  g.fillStyle = 'rgba(122, 74, 38, 0.8)';
-  for (const [x, y] of [[12, -52], [-4, -46], [22, -62]]) {
-    g.beginPath();
-    g.ellipse(x, y, 4.4, 1.7, 0.1, 0, TAU);
-    g.fill();
-  }
+  g.moveTo(-9, -66);
+  g.lineTo(-1, -61);
+  g.moveTo(-5, -63.5);
+  g.lineTo(-5, -68);
+  g.moveTo(10, -80);
+  g.lineTo(17, -85);
+  g.stroke();
   g.restore();
-  g.fillStyle = 'rgba(214, 240, 196, 0.85)';
-  g.beginPath();
-  g.arc(-14, -84, 4.6, 0, TAU);
-  g.fill();
-  g.beginPath();
-  g.arc(8, -78, 4, 0, TAU);
-  g.fill();
+  crown();
+  ink(g, 2);
+  g.stroke();
 }
 
 // A wizard tower, kept simple: a round stone tower with a door and two windows, a ring under the roof, and a
@@ -669,7 +663,7 @@ export function buildTerrainArt() {
     mineLit: makeLayer(-30, -28, 30, 8, (g) => drawMine(g, true)),
     barrel: makeLayer(-26, -64, 26, 8, (g) => drawBarrel(g, false)),
     barrelHot: makeLayer(-26, -64, 26, 8, (g) => drawBarrel(g, true)),
-    tree: makeLayer(-46, -106, 46, 8, drawTree),
+    tree: makeLayer(-46, -118, 46, 8, drawTree),
     tower: makeLayer(-44, -156, 44, 12, drawTower),
   };
 }

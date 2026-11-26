@@ -191,7 +191,7 @@ canvas {
 }
 
 /* ---------- Brush size meter ---------- */
-.brush-box[hidden] { display: none !important; }
+.brush-box[hidden], .setting-row[hidden] { display: none !important; }
 .brush-box {
   position: absolute;
   top: 52px;

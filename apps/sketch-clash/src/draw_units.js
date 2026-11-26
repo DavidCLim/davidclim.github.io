@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=178';
-import { drawLayer, OUT } from './sprites.js?v=178';
-import { drawDrop } from './art_units.js?v=178';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=178';
-import { EGG_DROPS } from './art_eggs.js?v=178';
+import { TAU, K, UNIT, FEET } from './config.js?v=182';
+import { drawLayer, OUT } from './sprites.js?v=182';
+import { drawDrop } from './art_units.js?v=182';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=182';
+import { EGG_DROPS } from './art_eggs.js?v=182';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -174,6 +174,32 @@ export function drawHitFlash(ctx, u, rx, ry) {
   }
 }
 
+// Robo Trooper: legs, a hull that bobs a little, and the rifle swinging from his hand toward the target.
+function drawTrooper(ctx, dpr, sprites, u) {
+  const A = sprites.trooper;
+  placeUnit(ctx, dpr, u, u.hit > 0 ? (Math.random() - 0.5) * 2 : 0);
+  // a big fella: scaled up about his feet
+  ctx.translate(0, FEET);
+  ctx.scale(1.3, 1.3);
+  ctx.translate(0, -FEET);
+  drawLayer(ctx, A.feet[u.moving ? (u.anim | 0) & 3 : 0]);
+  if (u.moving) ctx.translate(0, -Math.abs(Math.sin((u.anim * Math.PI) / 2)) * 1.2);
+  else ctx.translate(0, Math.sin(u.breath * 2.2) * 0.4);
+  drawLayer(ctx, A.torso);
+  burnGlow(ctx, u, 22 * K, 26 * K);
+  if (u.hit > 0.13) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.beginPath();
+    ctx.ellipse(1 * K, -5 * K, 21 * K, 24 * K, 0, 0, TAU);
+    ctx.fill();
+  }
+  const pose = u.pose;
+  ctx.translate(lerp(8 * K, 6 * K, pose), lerp(12 * K, 9 * K, pose));
+  ctx.rotate(lerp(0.5, u.aim, pose));
+  ctx.translate(-u.recoil * 2 * K, 0);
+  drawLayer(ctx, u.flash > 0 ? A.gunFire : A.gun);
+}
+
 function drawFlamethrower(ctx, dpr, sprites, u) {
   const A = sprites[u.species];
   const dd = u.def;
@@ -343,6 +369,7 @@ const DRAWERS = {
   necromancer: (ctx, dpr, sprites, u) => drawStaffUnit(ctx, dpr, sprites, u, 'necromancer'),
   ...Object.fromEntries(CREATURE_IDS.map((id) => [id, (ctx, dpr, sprites, u) => drawCreature(ctx, dpr, sprites, u, burnOverlay)])),
   flamethrower: drawFlamethrower,
+  trooper: drawTrooper,
   roman: drawRoman,
   grenadier: drawGrenadier,
   archer: drawArcher,
@@ -685,6 +712,11 @@ export function drawMarks(ctx, dpr, marks) {
 // ------------------------------------------------------------- palette icons
 // [canvas width in art px, body x, body y, drawing]
 const ICONS = {
+  trooper: [100, 54, 62, (g, S) => {
+    g.translate(8 * K, 12 * K);
+    g.rotate(0.3);
+    drawLayer(g, S.gun);
+  }],
   flamethrower: [84, 34, 39, (g, S) => {
     g.translate(8 * K, 11 * K);
     g.rotate(0.03);
