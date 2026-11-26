@@ -1,10 +1,10 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=186';
-import { TerrainMap, WALL } from './terrain.js?v=186';
-import { installBeasts } from './beasts.js?v=186';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=192';
+import { TerrainMap, WALL } from './terrain.js?v=192';
+import { installBeasts } from './beasts.js?v=192';
 
 export const CELL = 32;
 const SEP_CELL = 20;
-const GHOST_LIFE = 1.7;
+const GHOST_LIFE = 1.5;
 
 function pickGaze() {
   let r = Math.random();
@@ -615,7 +615,8 @@ export class World {
     if (u.dead) return;
     if (u.def.armor && (kind === 'bullet' || kind === 'arrow')) dmg *= u.def.armor;
     u.hp -= dmg;
-    u.hit = 0.2;
+    // a bullet or a blast flashes the body white; burning and poison just tint it
+    if (kind !== 'burn' && kind !== 'poison' && kind !== 'drown') u.hit = 0.2;
     if (kind !== 'burn' && kind !== 'poison' && kind !== 'drown') {
       for (let i = 0; i < 3; i++) {
         const a = Math.random() * Math.PI * 2;
@@ -701,17 +702,9 @@ export class World {
     // a real, fast bullet: it flies down the line leaving a smoke trail, and the hits land as it passes them
     if (this.sfx) this.sfx('snipe', m.x);
     this.streaks.push({ x0: m.x, y0: m.y, ang, dist: 0, total: shot.len, hits: shot.hits, owner: u, trail: 0, age: 0 });
-    for (let i = 0; i < 2; i++) {
-      this.puffs.push({
-        x: m.x - Math.cos(ang) * i * 2,
-        y: m.y - Math.sin(ang) * i * 2,
-        vx: Math.cos(ang) * (8 + Math.random() * 8) + (Math.random() - 0.5) * 6,
-        vy: -3 - Math.random() * 5,
-        age: 0,
-        life: 1.2 + Math.random() * 0.4,
-        size: 1.1 + i * 0.3 + Math.random() * 0.3,
-      });
-    }
+    // the same yellow ring as any gun, and a bigger puff that hangs at the muzzle
+    this.muzzleFx(m, ang);
+    this.puffs.push({ star: true, x: m.x + Math.cos(ang) * 6, y: m.y + Math.sin(ang) * 6 - 1, vx: Math.cos(ang) * 3, vy: -2.5, age: 0, life: 1.3, size: 3.4, rot: Math.random() * TAU });
     const o = this.rifleOrigin(u);
     this.casings.push({
       x: o.x,
@@ -808,7 +801,8 @@ export class World {
         this.hurt(u, u.def.burnDps ? u.def.burnDps * 0.25 : 2.2, u.x, u.y, 'burn', u.burnSrc);
         if (u.dead) return;
       }
-      if (Math.random() < 0.25) {
+      // little flames lick off him only once nobody is hosing him any more
+      if (u.burn < 2.5 && Math.random() < 0.14) {
         this.flames.push({
           x: u.x + (Math.random() - 0.5) * 12,
           y: u.y - 4 - Math.random() * 12,
@@ -1154,20 +1148,23 @@ export class World {
     const d = u.def;
     const m = this.muzzleOf(u);
     const ang = u.facing > 0 ? u.aim : Math.PI - u.aim;
-    for (let i = 0; i < 3; i++) {
-      if (Math.random() < 0.25) continue;
-      const a = ang + (Math.random() - 0.5) * 0.3;
-      const sp = 70 + Math.random() * 60;
+    // as in the original: separate soft puffs, about seventeen a second, each swelling from a small pale-yellow dot
+    // into a big orange smudge that ends up brown
+    u.flameAcc = (u.flameAcc || 0) + dt;
+    while (u.flameAcc >= 0.058) {
+      u.flameAcc -= 0.058;
+      const a = ang + (Math.random() - 0.5) * 0.22;
+      const sp = 165 + Math.random() * 30;
       this.flames.push({
         x: m.x,
         y: m.y,
         vx: Math.cos(a) * sp,
         vy: Math.sin(a) * sp,
         age: 0,
-        life: 0.42 + Math.random() * 0.2,
-        size: 1.1 + Math.random() * 0.9,
-        grow: 1.4 + Math.random() * 1.4,
-        dark: Math.random() < 0.3,
+        life: 0.42 + Math.random() * 0.08,
+        size: 2.4,
+        grow: 5.4 + Math.random() * 2,
+        dark: Math.random() < 0.65,
       });
     }
     if (this.sfx) this.sfx('flame', m.x);
@@ -1382,8 +1379,8 @@ export class World {
           x1: tx,
           y1: ty,
           age: 0,
-          dur: 0.7 + flight / 170, // a long, slow lob
-          h: 30 + flight * 0.12,
+          dur: 0.35 + flight / 330, // under a second in the air, as measured in the original
+          h: 8 + flight * 0.17,
           side: u.side,
           owner: u,
           damage: d.damage,

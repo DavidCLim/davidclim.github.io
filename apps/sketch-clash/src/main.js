@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=186';
-import { buildCreatureArt } from './creatures.js?v=186';
-import { buildEggArt } from './art_eggs.js?v=186';
-import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=186';
-import { Sfx } from './sfx.js?v=186';
-import { World } from './world.js?v=186';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=186';
-import { buildUnitArt } from './art_units.js?v=186';
-import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=186';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=192';
+import { buildCreatureArt } from './creatures.js?v=192';
+import { buildEggArt } from './art_eggs.js?v=192';
+import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=192';
+import { Sfx } from './sfx.js?v=192';
+import { World } from './world.js?v=192';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=192';
+import { buildUnitArt, drawDrop } from './art_units.js?v=192';
+import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=192';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -898,7 +898,7 @@ function drawBrushRing() {
   ctx.stroke();
 }
 
-const GHOST_LIFE = 1.7;
+const GHOST_LIFE = 1.5;
 
 const orbSprite = (() => {
   const c = document.createElement('canvas');
@@ -1104,6 +1104,59 @@ function drawBody(u) {
   else drawUnit(ctx, dpr, sprites, u);
 }
 
+const GHOST_START = 0.33;
+
+function drawSpirit(g, t, alpha) {
+  const px = 1 / 1.613;
+  const face = g.facing || 1;
+  const rise = 86 * (0.55 * t + 0.45 * t * t);
+  ctx.save();
+  ctx.globalAlpha = Math.max(0, alpha);
+  ctx.translate(g.x, g.y);
+  ctx.scale(px, px);
+  ctx.translate(face * (15 - 6 * t), -6 - rise);
+  const grow = 0.86 + 0.14 * Math.min(1, t / 0.2);
+  ctx.scale(grow, grow);
+  // a pale periwinkle sheet: rounded shoulders, nearly straight sides, three little waves along the hem
+  ctx.beginPath();
+  ctx.moveTo(-10.6, 9);
+  ctx.lineTo(-9.6, -4);
+  ctx.quadraticCurveTo(-9, -11.5, 0, -11.5);
+  ctx.quadraticCurveTo(9, -11.5, 9.6, -4);
+  ctx.lineTo(10.6, 9);
+  ctx.quadraticCurveTo(8.2, 12.6, 5.2, 9.6);
+  ctx.quadraticCurveTo(2.6, 7.4, 0, 9.8);
+  ctx.quadraticCurveTo(-2.8, 12.8, -5.4, 9.8);
+  ctx.quadraticCurveTo(-8, 7.4, -10.6, 9);
+  ctx.closePath();
+  ctx.fillStyle = '#ccd9f6';
+  ctx.fill();
+  ctx.strokeStyle = '#6a6f85';
+  ctx.lineWidth = 1.1;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.ellipse(-4.6 * face, -3.4, 1.9, 1.5, 0, 0, TAU);
+  ctx.fill();
+  ctx.fillStyle = '#3d4256';
+  for (const ex of [-2.4, 4.8]) {
+    ctx.beginPath();
+    ctx.ellipse(face * ex, -0.6, 1.5, 2.3, 0, 0, TAU);
+    ctx.fill();
+  }
+  ctx.beginPath();
+  ctx.arc(face * 1.6, 4.1, 1.2, 0, TAU);
+  ctx.fill();
+  // still wearing the hat, a touch askew
+  ctx.translate(0, -8.6);
+  ctx.rotate(-0.09 * face);
+  ctx.scale(face * 0.82, 0.82);
+  ctx.globalAlpha = Math.max(0, alpha * 0.86);
+  drawDrop(ctx, g.species);
+  ctx.restore();
+}
+
 const PROP_SCALE = { tree: 1.3, barrel: 0.9, mine: 1.0, tower: 1.05 };
 function drawProp(p) {
   const k = PROP_SCALE[p.type];
@@ -1155,7 +1208,7 @@ function render() {
     // knocked over backwards, dizzy stars circling, then fading as the ghost rises
     const k = c.age;
     const fall = 1 - (1 - Math.min(1, k / 0.2)) ** 2;
-    const a = k < 0.9 ? 1 : Math.max(0, 1 - (k - 0.9) / 0.6);
+    const a = k < 0.75 ? 1 : Math.max(0, 1 - (k - 0.75) / 0.38);
     c.u.tilt = -1.45 * fall;
     c.u.breath = 0;
     ctx.globalAlpha = a;
@@ -1263,10 +1316,15 @@ function render() {
     }
     ctx.stroke();
     if (sk.dist < sk.total) {
-      ctx.strokeStyle = '#26262f';
-      ctx.lineWidth = 1.1;
+      // a long streak, about 100 screen px in the original, fading out toward its tail
+      const len = Math.min(60, sk.dist);
+      const sg = ctx.createLinearGradient(x - c * len, y - sn * len, x, y);
+      sg.addColorStop(0, 'rgba(38, 38, 47, 0)');
+      sg.addColorStop(1, 'rgba(38, 38, 47, 1)');
+      ctx.strokeStyle = sg;
+      ctx.lineWidth = 0.95;
       ctx.beginPath();
-      ctx.moveTo(x - c * 12, y - sn * 12);
+      ctx.moveTo(x - c * len, y - sn * len);
       ctx.lineTo(x, y);
       ctx.stroke();
     }
@@ -1381,21 +1439,13 @@ function render() {
 
   drawFx(ctx, dpr, sprites, world);
 
-  // Ghosts drift up and fade where a unit fell, keeping their headgear.
-  // In the original the ghost pops up about 0.4s after the fall, floats up beside the body, sways and fades out.
+  // Ghosts, as measured frame by frame in the original: one rises out of the body a third of a second after the
+  // fall, fades in, floats straight up faster and faster with the unit's hat on, and is gone 1.5s after the death.
   for (const g of world.ghosts) {
-    const gl = sprites[g.species].ghost;
-    const t = (g.age - 0.4) / (GHOST_LIFE - 0.4);
-    if (t < 0) continue;
-    ctx.globalAlpha = Math.min(1, t * 6) * Math.min(1, (1 - t) * 2.2) * 0.95;
-    const rise = 1 - (1 - Math.min(1, t * 1.6)) ** 2;
-    const sway = Math.sin(g.age * 3 + g.seed * 6) * 2;
-    ctx.save();
-    ctx.translate(g.x - g.facing * 4 + sway, g.y - 6 - rise * 22);
-    ctx.rotate(Math.sin(g.age * 3 + g.seed * 6) * 0.12);
-    ctx.scale(-g.facing * UNIT, UNIT);
-    ctx.drawImage(gl.canvas, gl.x, gl.y, gl.w, gl.h);
-    ctx.restore();
+    const t = (g.age - GHOST_START) / (GHOST_LIFE - GHOST_START);
+    if (t < 0 || t > 1) continue;
+    const alpha = Math.min(1, t / 0.17) * (t < 0.57 ? 1 : 1 - (t - 0.57) / 0.43) * 0.96;
+    drawSpirit(g, t, alpha);
   }
   ctx.globalAlpha = 1;
 

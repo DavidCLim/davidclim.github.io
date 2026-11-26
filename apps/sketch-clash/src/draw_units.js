@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=186';
-import { drawLayer, OUT } from './sprites.js?v=186';
-import { drawDrop } from './art_units.js?v=186';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=186';
-import { EGG_DROPS } from './art_eggs.js?v=186';
+import { TAU, K, UNIT, FEET } from './config.js?v=192';
+import { drawLayer, OUT } from './sprites.js?v=192';
+import { drawDrop } from './art_units.js?v=192';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=192';
+import { EGG_DROPS } from './art_eggs.js?v=192';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -483,28 +483,43 @@ export function drawFx(ctx, dpr, sprites, world) {
   // small pale-yellow dots, swell into orange smudges, and end up charred brown
   for (const f of world.flames) {
     const t = f.age / f.life;
-    const r = f.size + f.grow * t;
-    const spr = t < 0.22 ? blobs.yellow : f.dark && t > 0.5 ? blobs.brown : blobs.orange;
-    ctx.globalAlpha = Math.max(0, (t < 0.12 ? 0.55 + t * 3 : 0.8) * (1 - t * t));
+    const r = (f.size + f.grow * t) * (f.small ? 1 : 1.12);
+    const spr = t < 0.3 ? blobs.yellow : f.dark && t > 0.62 ? blobs.brown : blobs.orange;
+    ctx.globalAlpha = Math.max(0, (t < 0.1 ? 0.75 + t * 2 : 0.92) * (1 - t * t * t));
     ctx.drawImage(spr, f.x - r, f.y - r, r * 2, r * 2);
   }
   ctx.globalAlpha = 1;
 
-  // bombs in the air
-  const bomb = sprites.grenadier.bombLit;
+  // bombs in the air: a round black bomb with a glint and a yellow fuse spark, looking bigger at the top of its arc,
+  // with a small grey shadow sliding along the ground below
   for (const b of world.bombs) {
     const p = b.age / b.dur;
     const gx = lerp(b.x0, b.x1, p);
     const gy = lerp(b.y0, b.y1, p);
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.16)';
+    ctx.fillStyle = 'rgba(80, 82, 94, 0.34)';
     ctx.beginPath();
-    ctx.ellipse(gx, gy + FEET * 0.6, 5, 2, 0, 0, TAU);
+    ctx.ellipse(gx, gy + FEET * 0.8, 2.2, 1.3, 0, 0, TAU);
     ctx.fill();
+    const lift = 4 * p * (1 - p);
+    const r = 2.3 + 1.4 * lift;
     ctx.save();
-    ctx.translate(gx, gy - 4 * b.h * p * (1 - p));
+    ctx.translate(gx, gy - b.h * lift);
     ctx.rotate(b.age * b.spin);
-    ctx.scale(0.62, 0.62);
-    drawLayer(ctx, bomb);
+    ctx.fillStyle = '#26252d';
+    ctx.strokeStyle = '#0f0e14';
+    ctx.lineWidth = 0.6;
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, TAU);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.beginPath();
+    ctx.arc(-r * 0.35, -r * 0.35, r * 0.24, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = (b.age * 18) % 2 < 1 ? '#ffd23f' : '#ffab2e';
+    ctx.beginPath();
+    ctx.arc(r * 0.85, -r * 0.85, r * 0.34, 0, TAU);
+    ctx.fill();
     ctx.restore();
   }
 
@@ -549,19 +564,19 @@ export function drawFx(ctx, dpr, sprites, world) {
     if (a.kind === 'star') {
       if (a.age < 0) continue;
       // a four-pointed silver throwing star, spinning, with a shadow on the ground
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.14)';
+      ctx.fillStyle = 'rgba(80, 82, 94, 0.3)';
       ctx.beginPath();
-      ctx.ellipse(gx, gy + FEET * 0.5, 2.6, 1, 0, 0, TAU);
+      ctx.ellipse(gx, gy + FEET * 0.8, 2.6, 1, 0, 0, TAU);
       ctx.fill();
       ctx.save();
       ctx.translate(gx, gy - 4 * a.h * p * (1 - p));
       ctx.rotate(a.age * 22);
-      ctx.fillStyle = '#c9cedb';
-      ctx.strokeStyle = '#464a5a';
-      ctx.lineWidth = 0.7;
+      ctx.fillStyle = '#858a99';
+      ctx.strokeStyle = '#3c3f4c';
+      ctx.lineWidth = 0.55;
       ctx.beginPath();
       for (let i = 0; i < 8; i++) {
-        const r = i % 2 === 0 ? 3.4 : 1.1;
+        const r = i % 2 === 0 ? 2.5 : 0.6;
         const ang = (i / 8) * TAU;
         if (i === 0) ctx.moveTo(Math.cos(ang) * r, Math.sin(ang) * r);
         else ctx.lineTo(Math.cos(ang) * r, Math.sin(ang) * r);
