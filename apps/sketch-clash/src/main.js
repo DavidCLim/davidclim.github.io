@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=223';
-import { buildCreatureArt } from './creatures.js?v=223';
-import { buildEggArt } from './art_eggs.js?v=223';
-import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=223';
-import { Sfx } from './sfx.js?v=223';
-import { World } from './world.js?v=223';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=223';
-import { buildUnitArt, drawDrop } from './art_units.js?v=223';
-import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=223';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=224';
+import { buildCreatureArt } from './creatures.js?v=224';
+import { buildEggArt } from './art_eggs.js?v=224';
+import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=224';
+import { Sfx } from './sfx.js?v=224';
+import { World } from './world.js?v=224';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=224';
+import { buildUnitArt, drawDrop } from './art_units.js?v=224';
+import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=224';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -201,7 +201,7 @@ const LATTICE = {
 
 // Terrain: walls, water and ice are painted as strokes; the rest are dropped along the drag.
 const TERRAIN_SET = new Set(['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower']);
-const DISCRETE = { mine: { gap: 84, off: 2 }, barrel: { gap: 20, off: 7 }, tree: { gap: 42, off: 15 }, tower: { gap: 68, off: 15 } };
+const DISCRETE = { mine: { gap: 84, off: 2 }, barrel: { gap: 20, off: 7 }, tree: { gap: 42, off: 15 }, tower: { gap: 84, off: 18 } };
 let tstroke = null;
 const STROKE_BASE = { wall: 13.5, water: 24.5, ice: 24.5 };
 
