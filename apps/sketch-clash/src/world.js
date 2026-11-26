@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=218';
-import { TerrainMap, WALL } from './terrain.js?v=218';
-import { installBeasts } from './beasts.js?v=218';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=219';
+import { TerrainMap, WALL } from './terrain.js?v=219';
+import { installBeasts } from './beasts.js?v=219';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -611,7 +611,7 @@ export class World {
     u.jetT = 0.07;
     const k = d.thrusters === 'walk' ? 1.15 : d.scale;
     const wide = d.bulk || 1;
-    for (const [jx, jy] of [[-33, -15], [-32, 11]]) {
+    for (const [jx, jy] of d.jets || [[-33, -15], [-32, 11]]) {
       this.jetFlame(u.x + u.facing * jx * 0.31 * k * wide, u.y + FEET + (jy * 0.31 - FEET) * k, -u.facing * 48, 6, d.thrusters === 'walk' ? 0.62 : 0.95);
     }
   }

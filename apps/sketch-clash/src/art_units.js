@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=218';
-import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=218';
+import { TAU, K } from './config.js?v=219';
+import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=219';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -1818,8 +1818,6 @@ function drawTrooperGun(g) {
 }
 
 // ---------------------------------------------------------------- Robot Juggernaut
-// Robo Trooper's big brother: the same armoured egg, only broader, with two big iron fists. A few traces of the war
-// machine he came from remain: two exhaust stacks, the hood plate with its triangle, and spiked shoulders.
 const JUGC = { steel: '#d3d8e3', band: '#4f6a62', pale: '#b4ced8' };
 
 function jugSpikeSmall(g, x0, y0, tx, ty, w) {
@@ -1827,51 +1825,141 @@ function jugSpikeSmall(g, x0, y0, tx, ty, w) {
   botPoly(g, JUGC.steel, [[x0 + Math.cos(a) * w, y0 + Math.sin(a) * w], [tx, ty], [x0 - Math.cos(a) * w, y0 - Math.sin(a) * w]], 1.3);
 }
 
-// Robo Trooper's big brother: the same armoured egg, only broader, with two big iron fists. A few traces of the war
-// machine he came from remain: two exhaust stacks, the hood plate with its triangle, and spiked shoulders. There is a
-// touch of the ape about him too: short, thick arms that carry his fists low, near enough to knuckle the ground.
+// Robot Juggernaut: Robo Trooper's armour and iron fists on a gorilla's frame. A high hump of shoulders slopes away
+// to a low rump, his legs are short and bent, his head is carried forward under a heavy brow, and he walks on long
+// arms with his knuckles down. Origin: the same as Robo Trooper's, with the ground about 28 below. This is the torso, back and all.
 function drawJugBody(g) {
-  for (const [x, y, w] of [[-11, -35, 8], [-21, -30, 8]]) {
-    botPoly(g, JUGC.pale, [[x, y], [x + w, y - 0.6], [x + w + 2, y + 17], [x + 2, y + 18]], 1.6);
+  g.lineJoin = 'round';
+  g.lineCap = 'round';
+  // two exhaust stacks rising out of the hump
+  for (const [x, y, w] of [[-15, -49, 7.5], [-27, -43, 7.5]]) {
+    botPoly(g, JUGC.pale, [[x, y], [x + w, y - 0.8], [x + w + 5, y + 18], [x + 5, y + 19]], 1.6);
     g.fillStyle = '#1f2730';
     g.strokeStyle = OUT;
     g.lineWidth = 1.4;
     g.beginPath();
-    g.ellipse(x + w / 2, y - 0.3, w / 2 + 0.6, 2.6, -0.08, 0, TAU);
+    g.ellipse(x + w / 2, y - 0.4, w / 2 + 0.6, 2.5, -0.1, 0, TAU);
     g.fill();
     g.stroke();
   }
-  drawTrooperBody(g);
-  botPoly(g, BOT.lite, [[-10, -25], [-7, -32.5], [9, -33], [14, -26.5], [11, -23], [-8, -22.6]], 1.6);
-  botPoly(g, JUGC.pale, [[-3.5, -30.6], [8, -30.8], [2, -24.8]], 1.1);
-  botPoly(g, BOT.tealDark, [[-0.6, -29.4], [5, -29.5], [2.1, -26.6]], 0);
-  // two heavy shoulders that give him his bulk
-  jugSpikeSmall(g, -23, -3, -34, -10, 3.8);
-  jugSpikeSmall(g, -24, 6, -36, 6, 3.8);
-  botPart(g, JUGC.band, 2, () => {
-    g.moveTo(-28, 13);
-    g.bezierCurveTo(-31, -12, -3, -13, -4, 11);
-    g.quadraticCurveTo(-15, 19, -28, 13);
-  });
-  g.fillStyle = 'rgba(206, 234, 224, 0.5)';
+  const torso = () => {
+    g.moveTo(11, 2);
+    g.bezierCurveTo(4, 6, -8, 9, -17, 6);
+    g.bezierCurveTo(-21, 9, -28, 9, -31, 6);
+    g.bezierCurveTo(-39, 3, -40, -11, -35, -19);
+    g.bezierCurveTo(-30, -28, -21, -34, -10, -36);
+    g.bezierCurveTo(-2, -39, 8, -38, 13, -31);
+    g.bezierCurveTo(19, -21, 18, -6, 11, 2);
+  };
+  const gr = g.createLinearGradient(0, -37, 0, 9);
+  gr.addColorStop(0, BOT.lite);
+  gr.addColorStop(1, BOT.dark);
+  botPart(g, gr, 0, torso);
+  g.save();
   g.beginPath();
-  g.ellipse(-20, -3.6, 5, 2.2, -0.5, 0, TAU);
-  g.fill();
+  torso();
+  g.closePath();
+  g.clip();
+  // the armour's seams round his haunch, and the darker underside
+  botPoly(g, BOT.dark, [[-33, 1], [16, -3], [16, 12], [-31, 14]], 1.2);
+  g.strokeStyle = 'rgba(40, 34, 58, 0.55)';
+  g.lineWidth = 1.4;
+  g.beginPath();
+  g.moveTo(-14, -35);
+  g.bezierCurveTo(-26, -26, -29, -13, -26, 1);
+  g.stroke();
+  // a chest plate between his arms, and two seams along his flank
+  botPart(g, BOT.teal, 1.4, () => {
+    g.moveTo(-4, -10);
+    g.quadraticCurveTo(10, -18, 22, -9);
+    g.quadraticCurveTo(18, 5, 5, 4);
+    g.quadraticCurveTo(-6, 2, -4, -10);
+  });
+  g.strokeStyle = 'rgba(40, 34, 58, 0.6)';
+  g.lineWidth = 1.2;
+  g.beginPath();
+  g.moveTo(-11, -1);
+  g.lineTo(-14, 5);
+  g.moveTo(-6, 1);
+  g.lineTo(-8.4, 6);
+  g.stroke();
+  g.restore();
+  g.strokeStyle = OUT;
+  g.lineWidth = 2;
+  g.beginPath();
+  torso();
+  g.closePath();
+  g.stroke();
 }
 
-// his other shoulder, on the side he faces; drawn over the top of that arm
-function drawJugCuff(g) {
-  g.lineJoin = 'round';
-  jugSpikeSmall(g, 24, 6, 33, 1, 3);
-  botPart(g, JUGC.band, 1.9, () => {
-    g.moveTo(10, 4);
-    g.quadraticCurveTo(26, -8, 29, 12);
-    g.quadraticCurveTo(21, 18, 13, 13);
+// the head: Robo Trooper's, set forward on the hump. His helmet rises to a crest toward the back, like a gorilla's
+// crown, and carries the old hood plate. No nose and no mouth, only the one eye (drawn live).
+// Drawn in Robo Trooper's own coordinates, then shrunk into place by JUG_HEAD.
+export const JUG_HEAD = { x: 21, y: -17, k: 0.76 };
+function inJugHead(g, draw) {
+  g.save();
+  g.translate(JUG_HEAD.x, JUG_HEAD.y);
+  g.scale(JUG_HEAD.k, JUG_HEAD.k);
+  draw();
+  g.restore();
+}
+
+function drawJugHead(g) {
+  inJugHead(g, () => {
+    g.lineJoin = 'round';
+    g.lineCap = 'round';
+    const skull = () => g.ellipse(0, -1, 21, 20, 0, 0, TAU);
+    const gr = g.createLinearGradient(0, -21, 0, 19);
+    gr.addColorStop(0, BOT.lite);
+    gr.addColorStop(1, BOT.dark);
+    botPart(g, gr, 0, skull);
+    g.save();
+    g.beginPath();
+    skull();
+    g.clip();
+    botPart(g, BOT.teal, 1.5, () => {
+      g.moveTo(-24, -13);
+      g.quadraticCurveTo(2, -16, 26, -13);
+      g.lineTo(26, 7);
+      g.quadraticCurveTo(2, 12, -24, 6);
+    });
+    g.restore();
+    g.strokeStyle = OUT;
+    g.lineWidth = 2.3;
+    g.beginPath();
+    skull();
+    g.stroke();
+    // the helmet, peaked toward the back
+    const hg = g.createLinearGradient(0, -36, 0, -12);
+    hg.addColorStop(0, '#a99cc4');
+    hg.addColorStop(1, '#675a88');
+    botPart(g, hg, 2.3, () => {
+      g.moveTo(-20, -11);
+      g.bezierCurveTo(-20, -27, -14, -36, -5, -38);
+      g.bezierCurveTo(8, -34, 21, -27, 22, -12);
+      g.quadraticCurveTo(1, -16, -20, -11);
+    });
+    botPoly(g, BOT.lite, [[-13, -27], [-10, -37.5], [4, -37], [13, -28.5], [8, -25], [-10, -25]], 2);
+    botPoly(g, JUGC.pale, [[-6, -34.5], [6, -34], [-0.5, -27.6]], 1.4);
+    g.fillStyle = 'rgba(232, 226, 255, 0.55)';
+    g.beginPath();
+    g.ellipse(-13, -20, 4, 2, -0.7, 0, TAU);
+    g.fill();
   });
-  g.fillStyle = 'rgba(206, 234, 224, 0.5)';
-  g.beginPath();
-  g.ellipse(19.5, 1.4, 3.8, 1.8, 0.3, 0, TAU);
-  g.fill();
+}
+
+// the helmet's brim, heavy as a gorilla's brow and jutting out over his eye (drawn after the eye)
+function drawJugBrow(g) {
+  inJugHead(g, () => {
+    g.lineJoin = 'round';
+    botPart(g, '#58497a', 2.3, () => {
+      g.moveTo(-22, -14.5);
+      g.quadraticCurveTo(0, -19, 23, -15.5);
+      g.quadraticCurveTo(29, -13.5, 28, -8.5);
+      g.quadraticCurveTo(15, -11.5, 2, -11);
+      g.quadraticCurveTo(-10, -10.6, -22, -9);
+    });
+  });
 }
 
 // the outline of one tapered length of limb, thick at one end and thinner at the other
@@ -1885,35 +1973,76 @@ function jugTaper(g, x0, y0, r0, x1, y1, r1) {
   g.closePath();
 }
 
-// A short thick arm from the shoulder (sx, sy) to the wrist (wx, wy), the elbow bowed down. Both lengths are outlined
-// before either is filled, so it reads as one smooth limb. `far` is the one behind his body.
-export function drawJugArm(g, sx, sy, wx, wy, far) {
-  const d = Math.hypot(wx - sx, wy - sy) || 0.01;
-  const bow = Math.max(0, 22 - d) * 0.35 + 2.5;
-  let nx = -(wy - sy) / d;
-  let ny = (wx - sx) / d;
-  if (ny < 0) {
-    nx = -nx;
-    ny = -ny;
-  }
-  const ex = (sx + wx) / 2 + nx * bow;
-  const ey = (sy + wy) / 2 + ny * bow;
-  const parts = [
-    [sx, sy, 7, ex, ey, 5.8],
-    [ex, ey, 5.8, wx, wy, 6.6],
-  ];
+// a limb of several lengths drawn as one smooth shape: every part outlined first, then all filled over, so only the
+// outer edge of the whole shows. `parts` are [x0, y0, r0, x1, y1, r1].
+function jugLimbShape(g, parts, fill) {
   g.strokeStyle = OUT;
-  g.lineWidth = 3.6;
+  g.lineWidth = 3.8;
   g.lineJoin = 'round';
   for (const p of parts) {
     jugTaper(g, ...p);
     g.stroke();
   }
-  g.fillStyle = far ? BOT.dark : BOT.mid;
+  g.fillStyle = fill;
   for (const p of parts) {
     jugTaper(g, ...p);
     g.fill();
   }
+}
+
+// A long thick arm from shoulder (sx, sy) to wrist (wx, wy), nearly straight like a gorilla's, the elbow easing out
+// behind. Returns the way the forearm points, for the fist on the end of it. `far` is the arm behind his body.
+export const JUG_ARM = { upper: 14.4, fore: 14.4 };
+export function drawJugArm(g, sx, sy, wx, wy, far) {
+  const dx = wx - sx;
+  const dy = wy - sy;
+  const d = Math.hypot(dx, dy) || 0.01;
+  const stretch = Math.max(1, d / (JUG_ARM.upper + JUG_ARM.fore - 0.3)); // a punch stretches a little, as cartoons do
+  const l1 = JUG_ARM.upper * stretch;
+  const l2 = JUG_ARM.fore * stretch;
+  const reach = Math.max(Math.abs(l1 - l2) + 0.5, d);
+  const bend = Math.acos(Math.max(-1, Math.min(1, (l1 * l1 + reach * reach - l2 * l2) / (2 * l1 * reach))));
+  const base = Math.atan2(dy, dx);
+  const e1 = [sx + Math.cos(base + bend) * l1, sy + Math.sin(base + bend) * l1];
+  const e2 = [sx + Math.cos(base - bend) * l1, sy + Math.sin(base - bend) * l1];
+  const [ex, ey] = e1[0] < e2[0] ? e1 : e2; // whichever elbow sticks out backwards
+  const gr = g.createLinearGradient(sx, sy, wx, wy);
+  gr.addColorStop(0, far ? '#6f618f' : BOT.mid);
+  gr.addColorStop(1, far ? '#7d6f9f' : BOT.lite);
+  jugLimbShape(g, [
+    [sx, sy, far ? 8.6 : 10, ex, ey, 7],
+    [ex, ey, 7.2, wx, wy, 8],
+  ], gr);
+  return { fore: Math.atan2(wy - ey, wx - ex), upper: Math.atan2(ey - sy, ex - sx) };
+}
+
+// the great spiked armour over a shoulder, with the shoulder joint at the origin
+function drawJugShoulder(g) {
+  g.lineJoin = 'round';
+  jugSpikeSmall(g, -7, -7, -16, -20, 4.4);
+  jugSpikeSmall(g, -11, 0, -26, -4, 4.4);
+  jugSpikeSmall(g, 2, -9, 1, -22, 3.8);
+  botPart(g, JUGC.band, 2.1, () => {
+    g.moveTo(-14, 6);
+    g.bezierCurveTo(-17, -16, 16, -17, 13.5, 5);
+    g.quadraticCurveTo(0, 11, -14, 6);
+  });
+  g.fillStyle = 'rgba(206, 234, 224, 0.5)';
+  g.beginPath();
+  g.ellipse(-5.5, -7, 5.4, 2.3, -0.45, 0, TAU);
+  g.fill();
+}
+
+// a short back leg: a round thigh, a bent shin and a flat foot reaching forward; (ax, ay) is the ankle
+export function drawJugLeg(g, hx, hy, ax, ay, far) {
+  const kx = (hx + ax) / 2 + 4.5;
+  const ky = (hy + ay) / 2 + 2;
+  const fill = far ? '#6f618f' : BOT.mid;
+  jugLimbShape(g, [
+    [hx, hy, far ? 9 : 11, kx, ky, 6.6],
+    [kx, ky, 6.4, ax, ay, 5.6],
+  ], fill);
+  jugLimbShape(g, [[ax, ay + 0.6, 5.2, ax + 12, ay + 3.4, 3.8]], far ? '#3d4766' : '#4a5478');
 }
 
 // Origin: the middle of the fist. A big blunt armoured gauntlet with a teal cuff; knuckles toward +x.
@@ -2037,10 +2166,11 @@ export function buildUnitArt() {
   };
 
   art.juggernaut = {
-    feet: feetSet('#4a5478'),
     pack: art.trooper.pack,
-    torso: makeLayer(-40, -42, 36, 32, drawJugBody),
-    cuff: makeLayer(4, -12, 40, 22, drawJugCuff),
+    torso: makeLayer(-52, -56, 26, 14, drawJugBody),
+    head: makeLayer(0, -50, 46, 2, drawJugHead),
+    brow: makeLayer(0, -36, 46, -18, drawJugBrow),
+    shoulder: makeLayer(-30, -26, 18, 14, drawJugShoulder),
     fist: makeLayer(-18, -15, 18, 15, drawJugFist),
     ghost: makeLayer(-26, -30, 26, 26, (g) => ghostBody(g)),
   };

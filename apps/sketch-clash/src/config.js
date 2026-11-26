@@ -114,7 +114,8 @@ export const JUGGERNAUT = {
   robot: true,
   hp: 480,
   radius: 17 * UNIT,
-  scale: 1.48, // well bigger than Robo Trooper; his bulk comes from the size, shoulders and fists
+  scale: 1.36, // well bigger than Robo Trooper, and built much broader
+  jets: [[-46, -30], [-45, -4]], // his thruster pack, on the back of the hump
   bulk: 1,
   sep: 30 * UNIT,
   speed: 48,
@@ -137,7 +138,7 @@ export const JUGGERNAUT = {
   boom: 15,
   thrusters: 'boost',
   parts: ['botplate', 'botplate', 'botpod', 'jugfist', 'juggernaut'],
-  ring: 1.7,
+  ring: 1.8,
   pivot: { x: 0, y: 0 },
   muzzleLen: 0,
 };
