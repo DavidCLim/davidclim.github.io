@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=230';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=230';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=230';
+import { TAU, K } from './config.js?v=231';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=231';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=231';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask
@@ -720,10 +720,19 @@ function drawTower(g) {
   ink(g, 1.3);
   g.stroke();
 
-  // ---- a small, battered roof: a knobbly ledge, a ragged edge of three tiles and a bent, notched point
-  slab(g, [[-20.5, -98], [-6, -99.5], [20, -99], [18.5, -92.5], [15, -91], [14, -88.5], [-14, -89], [-15.5, -92], [-19, -91.5]], TW.stone, 2.3);
+  // ---- a small, battered roof: a bent, notched point over a knobbly ledge and a ragged edge of three tiles
   slab(g, [[-33, -105], [-20, -116], [-21.5, -119], [-7, -131], [1, -139], [3, -112], [-11, -111]], TW.tile[0], 2.4);
   slab(g, [[1, -139], [14, -152], [9.5, -139.5], [14, -129], [11, -127.5], [24, -117], [34, -103], [13, -112], [3, -112]], TW.tile[2], 2.4);
+  drawTowerEave(g);
+  for (const pts of [
+    [[-12, -124], [-8.5, -121.5], [-9, -118]],
+    [[18, -121], [15.5, -118.5], [17, -115.5]],
+  ]) crease(g, pts, 'rgba(20, 14, 52, 0.8)', 1.5);
+}
+
+// The ledge and the ragged edge of the roof. Part of the tower, and drawn once more in front of whoever is up there.
+function drawTowerEave(g) {
+  slab(g, [[-20.5, -98], [-6, -99.5], [20, -99], [18.5, -92.5], [15, -91], [14, -88.5], [-14, -89], [-15.5, -92], [-19, -91.5]], TW.stone, 2.3);
   slab(g, [[-33, -105], [-11, -111], [-9.5, -94], [-17, -96.5], [-20, -92], [-24, -94.5], [-30, -91.5]], TW.tile[1], 2.5);
   slab(g, [[-11, -111], [13, -112], [14.5, -96.5], [6, -97.5], [3.5, -93.5], [-2, -96.5], [-9.5, -94]], TW.tile[0], 2.5);
   slab(g, [[13, -112], [34, -103], [32, -90], [26, -95], [22, -93], [14.5, -96.5]], TW.tileDark, 2.5);
@@ -731,9 +740,13 @@ function drawTower(g) {
   for (const pts of [
     [[-23, -108], [-21, -103.5], [-24, -100.5]],
     [[5, -111], [7.5, -106], [5.5, -103]],
-    [[-12, -124], [-8.5, -121.5], [-9, -118]],
-    [[18, -121], [15.5, -118.5], [17, -115.5]],
   ]) crease(g, pts, 'rgba(20, 14, 52, 0.8)', 1.5);
+}
+
+// The opening broken into the roof, that a wizard looks out of: dark inside, its edge jagged.
+function drawTowerHole(g) {
+  slab(g, [[-18, -111], [-19.5, -119], [-15, -121], [-16, -128], [-9, -130], [-6, -137], [0, -133.5], [6, -138], [10, -131], [16, -129], [14.5, -122], [20, -119], [18, -111]], '#231c4c', 2.2);
+
 }
 
 // The living part of it, drawn over every frame: lamplight breathing in its window. Same coordinates as drawTower.
@@ -751,6 +764,18 @@ export function drawTowerMagic(ctx, t) {
   glow(0, -68, 13, 0.16 + 0.2 * breathe);
 }
 
+// a flat one-colour copy of a layer, for flashing it
+function tinted(layer, colour) {
+  const g = layer.canvas.getContext('2d');
+  g.save();
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.globalCompositeOperation = 'source-in';
+  g.fillStyle = colour;
+  g.fillRect(0, 0, layer.canvas.width, layer.canvas.height);
+  g.restore();
+  return layer;
+}
+
 export function buildTerrainArt() {
   return {
     mine: makeLayer(-34, -26, 40, 22, (g) => drawMine(g, false)),
@@ -759,6 +784,9 @@ export function buildTerrainArt() {
     barrelHot: makeLayer(-30, -62, 36, 10, (g) => drawBarrel(g, true)),
     tree: makeLayer(-48, -128, 48, 10, drawTree),
     tower: makeLayer(-54, -172, 54, 20, drawTower),
+    towerHole: makeLayer(-54, -172, 54, 20, drawTowerHole),
+    towerEave: makeLayer(-54, -172, 54, 20, drawTowerEave),
+    towerFlash: tinted(makeLayer(-54, -172, 54, 20, drawTower), '#dce6ff'),
   };
 }
 

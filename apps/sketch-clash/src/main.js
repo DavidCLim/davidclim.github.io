@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=230';
-import { buildCreatureArt } from './creatures.js?v=230';
-import { buildEggArt } from './art_eggs.js?v=230';
-import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=230';
-import { Sfx } from './sfx.js?v=230';
-import { World } from './world.js?v=230';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=230';
-import { buildUnitArt, drawDrop } from './art_units.js?v=230';
-import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=230';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=231';
+import { buildCreatureArt } from './creatures.js?v=231';
+import { buildEggArt } from './art_eggs.js?v=231';
+import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=231';
+import { Sfx } from './sfx.js?v=231';
+import { World } from './world.js?v=231';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=231';
+import { buildUnitArt, drawDrop } from './art_units.js?v=231';
+import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=231';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -1174,12 +1174,44 @@ function drawSpirit(g, t, alpha) {
 }
 
 const PROP_SCALE = { tree: 1.22, barrel: 0.94, mine: 1.0, tower: 1.28 };
+// The wizard looking out of the top of his tower: the roof breaks open, he comes up from inside, and the roof's edge
+// hides the rest of him. When he is hit the whole tower flashes, as the original's trees do.
+function drawTowerGuest(p, k) {
+  const g = world.towerGuest(p);
+  if (!g || (g.perch.state !== 'rise' && g.perch.state !== 'up')) return;
+  const m = g.def.perch;
+  const place = () => ctx.setTransform(dpr * k, 0, 0, dpr * k, p.x * dpr, p.y * dpr);
+  place();
+  drawLayer(ctx, terrainArt.towerHole);
+  const q = g.perch.state === 'up' ? 1 : g.perch.t / m.rise;
+  if (q > 0.3) {
+    const come = 1 - (1 - Math.min(1, (q - 0.3) / 0.7)) ** 2;
+    ctx.save();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.beginPath();
+    ctx.rect(p.x - 80, p.y - m.height - 60, 160, 60 + m.height - 40);
+    ctx.clip();
+    drawBody({ ...g, x: p.x, y: p.y - m.height + (1 - come) * 17, moving: false, perch: null });
+    ctx.restore();
+  }
+  place();
+  drawLayer(ctx, terrainArt.towerEave);
+  if (g.hit > 0) {
+    ctx.globalAlpha = Math.min(0.6, g.hit * 3.4);
+    drawLayer(ctx, terrainArt.towerFlash);
+    ctx.globalAlpha = 1;
+  }
+}
+
 function drawProp(p) {
   const k = PROP_SCALE[p.type];
   ctx.setTransform(dpr * k, 0, 0, dpr * k, p.x * dpr, p.y * dpr);
   if (p.type === 'tree' || p.type === 'tower') {
     drawLayer(ctx, terrainArt[p.type]);
-    if (p.type === 'tower') drawTowerMagic(ctx, performance.now() / 1000 + p.x);
+    if (p.type === 'tower') {
+      drawTowerMagic(ctx, performance.now() / 1000 + p.x);
+      drawTowerGuest(p, k);
+    }
     return;
   }
   // a barrel about to go off rattles and glows
@@ -1295,7 +1327,15 @@ function render() {
       if (rs !== 1) ctx.scale(rs, rs * 0.85);
       drawLayer(ctx, sprites.ring[u.team]);
     }
-    drawBody(u);
+    const inside = u.perch && u.perch.state !== 'walk';
+    if (!inside) drawBody(u);
+    else if (u.perch.state === 'enter') {
+      // slipping in at the door
+      const q = Math.min(1, u.perch.t / u.def.perch.enter);
+      ctx.globalAlpha = 1 - q;
+      drawBody({ ...u, y: u.y - 5 * q, perch: null });
+      ctx.globalAlpha = 1;
+    }
   }
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);

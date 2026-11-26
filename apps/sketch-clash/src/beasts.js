@@ -1,5 +1,5 @@
-import { TAU, FEET, GAIT } from './config.js?v=230';
-import { WATER, ICE, WALL } from './terrain.js?v=230';
+import { TAU, FEET, GAIT } from './config.js?v=231';
+import { WATER, ICE, WALL } from './terrain.js?v=231';
 
 // Everything the Animals and Mythical tabs add to the world, plus the terrain physics:
 // the beast brain, the mage's bolts, the necromancer's skeletons, zombie infection,
@@ -59,6 +59,7 @@ export function installBeasts(World) {
 
   // Terrain acts on how far the unit moved this step.
   P.applyTerrain = function (u, ox, oy, dt) {
+    if (u.perch && u.perch.state !== 'walk') return;
     const d = u.def;
     const T = this.terrain;
     let dx = u.x - ox;
@@ -153,7 +154,7 @@ export function installBeasts(World) {
         const ddy = fy - p.y;
         if (ddx > 34 || ddx < -34 || ddy > 34 || ddy < -34) continue;
         if (p.type === 'tree' || p.type === 'barrel' || p.type === 'tower') {
-          if (fly) continue;
+          if (fly || (u.perch && u.perch.p === p)) continue;
           const r = (p.type === 'tower' ? TOWER_R : p.type === 'tree' ? TREE_R : BARREL_R) + 3;
           const dd = Math.hypot(ddx, ddy) || 0.01;
           if (dd < r) {
@@ -236,6 +237,10 @@ export function installBeasts(World) {
     if (this.terrain.at(x, y + 4) & WALL) return true;
     for (const p of this.props) {
       if (p.dead || (p.type !== 'tree' && p.type !== 'barrel' && p.type !== 'tower')) continue;
+      if (p.type === 'tower') {
+        const g = this.towerGuest(p);
+        if (g && g.perch.state !== 'walk') continue;
+      }
       const cy = p.type === 'tower' ? p.y - 16 : p.y - (p.type === 'tree' ? 6 : 7);
       const r = p.type === 'tower' ? 11 : p.type === 'tree' ? 4 : 5;
       if (Math.abs(x - p.x) > r + 6 || Math.abs(y - cy) > 24) continue;
@@ -445,20 +450,98 @@ export function installBeasts(World) {
   };
 
   // ------------------------------------------------------------ the wizard
+  // ------------------------------------------------------------ wizard towers
+  // whose tower it is, if anyone's (from the moment he sets off for it)
+  P.towerGuest = function (p) {
+    const g = p.guest;
+    return g && !g.dead && g.perch && g.perch.p === p ? g : null;
+  };
+
+  const isUp = (u) => !!u.perch && u.perch.state === 'up';
+
+  // Takes the nearest free tower, walks to its door, goes in and comes up through the roof. Returns true while he is
+  // still on his way; once he is up (or has no tower) he gets on with casting.
+  P.stepPerch = function (u, dt) {
+    const d = u.def;
+    const m = d.perch;
+    if (u.perch && (u.perch.p.dead || !this.props.includes(u.perch.p))) u.perch = null; // the tower is gone
+    if (!u.perch) {
+      let best = null;
+      let bd = m.reach;
+      for (const p of this.props) {
+        if (p.type !== 'tower' || p.dead || this.towerGuest(p)) continue;
+        const dd = Math.hypot(p.x - u.x, p.y - (u.y + FEET));
+        if (dd < bd) {
+          bd = dd;
+          best = p;
+        }
+      }
+      if (!best) return false;
+      u.perch = { p: best, state: 'walk', t: 0 };
+      best.guest = u;
+    }
+    const q = u.perch;
+    const doorX = q.p.x;
+    const doorY = q.p.y + 4 - FEET;
+    if (q.state === 'walk') {
+      const dx = doorX - u.x;
+      const dy = doorY - u.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > 2.5) {
+        if (Math.abs(dx) > 3) u.facing = dx > 0 ? 1 : -1;
+        const step = Math.min(dist, d.speed * u.speedMul * 1.15 * dt);
+        u.x += (dx / dist) * step;
+        u.y += (dy / dist) * step;
+        u.moving = true;
+        return true;
+      }
+      q.state = 'enter';
+      q.t = 0;
+    }
+    // from the door on, he stays put at the foot of the tower: nothing shoves him about
+    u.x = doorX;
+    u.y = doorY;
+    u.kx = u.ky = 0;
+    if (q.state === 'up') return false;
+    q.t += dt;
+    if (q.state === 'enter' && q.t >= m.enter) {
+      q.state = 'rise';
+      q.t = 0;
+    } else if (q.state === 'rise' && q.t >= m.rise) {
+      q.state = 'up';
+      // a little shower of sparks as he comes out at the top
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * TAU;
+        this.sparks.push({ x: q.p.x + Math.cos(a) * 7, y: q.p.y - m.height + Math.sin(a) * 5, vx: Math.cos(a) * 38, vy: Math.sin(a) * 30 - 14, life: 0.45, max: 0.45, cyan: true });
+      }
+      if (this.sfx) this.sfx('magic', u.x);
+    }
+    return true;
+  };
+
   P.stepMage = function (u, dt) {
     const d = u.def;
-    const t = this.acquire(u, dt);
+    let t = this.acquire(u, dt);
     const speed = d.speed * u.speedMul;
     u.cdT -= dt;
     u.castT = Math.max(0, u.castT - dt);
     u.castFlash = Math.max(0, (u.castFlash || 0) - dt);
+    if (d.perch && this.stepPerch(u, dt)) {
+      u.castFire = false;
+      u.castT = 0;
+      if (u.moving) u.anim += dt * 7.3;
+      u.pose = 1;
+      return;
+    }
+    const up = isUp(u);
+    if (up && !t) t = this.nearestEnemy(u); // from the top he can see the whole field
     if (t) {
       const dx = t.x - u.x;
       const dy = t.y - u.y;
       const dist = Math.hypot(dx, dy) || 1;
       if (Math.abs(dx) > 3) u.facing = dx > 0 ? 1 : -1;
       // he stands his ground while he casts
-      if (u.castT <= 0) {
+      if (u.castT <= 0 && !up) {
         if (dist > d.holdDist) {
           u.x += (dx / dist) * speed * dt;
           u.y += (dy / dist) * speed * dt;
@@ -469,7 +552,7 @@ export function installBeasts(World) {
           u.moving = true;
         }
       }
-      if (u.cdT <= 0 && dist <= d.range && u.castT <= 0) {
+      if (u.cdT <= 0 && dist <= (up ? d.perch.range : d.range) && u.castT <= 0) {
         u.castT = d.castTime;
         u.castFire = true;
         u.spell = Math.random() < 0.5 ? 'burst' : 'chain';
@@ -483,14 +566,14 @@ export function installBeasts(World) {
       }
     } else {
       u.castFire = false;
-      this.marchStep(u, dt, speed * 0.85);
+      if (!up) this.marchStep(u, dt, speed * 0.85);
     }
     if (u.moving) u.anim += dt * 7.3;
     u.pose = u.target || u.moving ? Math.min(1, u.pose + dt * 6) : Math.max(0, u.pose - dt * 5);
   };
 
   // where the orb on his staff is as he lets a spell go
-  const staffTip = (u) => [u.x + u.facing * 38 * 0.31, u.y - 24 * 0.31];
+  const staffTip = (u) => [u.x + u.facing * 38 * 0.31, (isUp(u) ? u.perch.p.y - u.def.perch.height : u.y) - 24 * 0.31];
 
   P.castOrb = function (u, t) {
     const d = u.def;
@@ -506,6 +589,7 @@ export function installBeasts(World) {
       owner: u,
       burst: d.burst,
       far: dist + 6, // it bursts here even if whoever it was meant for has stepped aside
+      high: isUp(u), // thrown from a tower top, it sails over walls and trees
       gone: 0,
       age: 0,
       dead: false,
@@ -525,7 +609,7 @@ export function installBeasts(World) {
         const r = u.def.radius + 2.5;
         if ((u.x - o.x) ** 2 + (u.y - 2 - o.y) ** 2 <= r * r) hit = true;
       });
-      if (hit || o.gone >= o.far || o.age > 2.5 || this.shotBlocked(o.x, o.y + 6, 12)) {
+      if (hit || o.gone >= o.far || o.age > 2.5 || (!o.high && this.shotBlocked(o.x, o.y + 6, 12))) {
         o.dead = true;
         gone = true;
         this.magicBurst(o);

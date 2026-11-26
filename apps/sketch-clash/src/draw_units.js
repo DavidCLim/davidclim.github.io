@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=230';
-import { drawLayer, OUT } from './sprites.js?v=230';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_TAIL, ZORD_JAW, ZORD_EYE, ZORD_CORE, zordEye, drawZordTail, drawZordSpine } from './art_units.js?v=230';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=230';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=230';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=231';
+import { drawLayer, OUT } from './sprites.js?v=231';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_TAIL, ZORD_JAW, ZORD_EYE, ZORD_CORE, zordEye, drawZordTail, drawZordSpine } from './art_units.js?v=231';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=231';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=231';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the

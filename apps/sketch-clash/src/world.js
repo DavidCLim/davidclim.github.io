@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=230';
-import { TerrainMap, WALL } from './terrain.js?v=230';
-import { installBeasts } from './beasts.js?v=230';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=231';
+import { TerrainMap, WALL } from './terrain.js?v=231';
+import { installBeasts } from './beasts.js?v=231';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -784,6 +784,8 @@ export class World {
   hurt(u, dmg, x, y, kind, src) {
     if (u.dead) return;
     if (u.def.armor && (kind === 'bullet' || kind === 'arrow')) dmg *= u.def.armor;
+    // inside a tower, its stone takes most of the knocks
+    if (u.perch && u.perch.state !== 'walk' && kind !== 'burn' && kind !== 'poison') dmg *= u.def.perch.cover;
     u.hp -= dmg;
     // a bullet or a blast flashes the body white; burning and poison just tint it
     if (kind !== 'burn' && kind !== 'poison' && kind !== 'drown') u.hit = 0.2;
@@ -808,8 +810,10 @@ export class World {
       }
       // (a short-circuit holds him upright a moment first, so his ghost waits for him to drop)
       const zapped = kind === 'zap';
-      this.ghosts.push({ x: u.x, y: u.y, age: zapped ? -ZAP_TIME : 0, seed: Math.random(), species: u.species, facing: u.facing || 1 });
-      this.corpses.push({ u: { ...u, dead: false, moving: false, hit: 0, flash: 0, burn: 0, charred: kind === 'burn' }, age: 0, zap: zapped });
+      // killed at the top of a tower, his ghost rises from up there and nothing falls to the ground
+      const aloft = u.perch && (u.perch.state === 'up' || u.perch.state === 'rise');
+      this.ghosts.push({ x: u.x, y: aloft ? u.perch.p.y - u.def.perch.height : u.y, age: zapped ? -ZAP_TIME : 0, seed: Math.random(), species: u.species, facing: u.facing || 1 });
+      if (!aloft) this.corpses.push({ u: { ...u, dead: false, moving: false, hit: 0, flash: 0, burn: 0, charred: kind === 'burn' }, age: 0, zap: zapped });
       if (u.def.smoke) {
         for (let i = 0; i < 2; i++) {
           this.puffs.push({
