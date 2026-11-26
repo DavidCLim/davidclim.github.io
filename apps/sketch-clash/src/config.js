@@ -391,7 +391,7 @@ export const MAGE = {
   // reach: how far he'll walk to one. height: how far above its foot he stands. range: how far he can cast from there.
   // enter / rise: seconds going in at the door and coming up through the roof
   // cover: how much of any hit gets through its stone walls and roof to him (fire gets him in full)
-  perch: { reach: 300, height: 47, range: 440, enter: 0.4, rise: 0.55, cover: 0.5 },
+  perch: { reach: 300, height: 40.5, range: 440, enter: 0.4, rise: 0.55, cover: 0.5 },
   orbSpeed: 200, burst: { damage: 45, radius: 18, knock: 150 },
   // and lightning that leaps from enemy to enemy, leaving each one alight
   chain: { damage: 28, jumps: 5, hop: 62, burn: 2.2 },

@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=231';
-import { drawLayer, OUT } from './sprites.js?v=231';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_TAIL, ZORD_JAW, ZORD_EYE, ZORD_CORE, zordEye, drawZordTail, drawZordSpine } from './art_units.js?v=231';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=231';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=231';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=232';
+import { drawLayer, OUT } from './sprites.js?v=232';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_TAIL, ZORD_JAW, ZORD_EYE, ZORD_CORE, zordEye, drawZordTail, drawZordSpine } from './art_units.js?v=232';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=232';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=232';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -1858,7 +1858,7 @@ export function drawMarks(ctx, dpr, marks) {
 // ------------------------------------------------------------- palette icons
 // [canvas width in art px, body x, body y, drawing]
 const ICONS = {
-  jettrooper: [104, 54, 62, (g, S) => {
+  jettrooper: [106, 55, 52, (g, S) => {
     g.save();
     g.scale(K, K);
     trooperEyes(g, { lx: 0.7, ly: 0.2 });
@@ -1868,8 +1868,8 @@ const ICONS = {
     drawLayer(g, S.gunLoaded);
   }],
   juggernaut: [104, 52, 68, null],
-  mechazord: [240, 162, 176, null],
-  trooper: [92, 44, 50, (g, S) => {
+  mechazord: [258, 167, 173, null],
+  trooper: [96, 45, 44, (g, S) => {
     g.save();
     g.scale(K, K);
     trooperEyes(g, { lx: 0.7, ly: 0.2 });
@@ -1917,7 +1917,7 @@ const ICONS = {
     g.rotate(-0.8);
     drawLayer(g, S.sword);
   }],
-  mage: [84, 37, 49, (g, S) => {
+  mage: [104, 48, 48, (g, S) => {
     g.translate(21 * K, 21 * K);
     g.rotate(0.07);
     drawLayer(g, S.staff);

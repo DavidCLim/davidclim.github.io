@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=231';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=231';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=231';
+import { TAU, K } from './config.js?v=232';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=232';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=232';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask
@@ -592,16 +592,23 @@ function drawTree(g) {
 // shaft with jutting and loose stones, one barred window, a door in a plain stone arch and a rough-hewn step.
 // Origin: the middle of the ground.
 const TW = {
-  tile: ['#8b7fc6', '#7a6eb8', '#695da6', '#9a8fd2'],
-  tileDark: '#4a4189',
-  stone: '#d3c9b2',
-  stoneLite: '#e4dcc6',
-  stoneShade: '#a79c86',
-  base: '#b3b0aa',
-  baseShade: '#8f8c88',
-  wood: '#a8723f',
-  woodDark: '#6e4524',
+  tile: ['#8077b8', '#7067a8', '#605896', '#8e85c4'],
+  tileDark: '#4c4480',
+  stone: '#ccc4b0',
+  stoneLite: '#dbd4c1',
+  stoneShade: '#a39a86',
+  base: '#b1aea8',
+  baseShade: '#908d87',
+  wood: '#82562f',
+  woodDark: '#5c3b22',
+  ink: '#242129',
 };
+
+// its outline: finer and softer than a unit's, to sit with the trees and barrels
+function twInk(g, lw) {
+  ink(g, lw * 0.77);
+  g.strokeStyle = TW.ink;
+}
 
 // one flat-sided piece, outlined
 function slab(g, pts, fill, lw = 1.7) {
@@ -611,13 +618,13 @@ function slab(g, pts, fill, lw = 1.7) {
   g.fillStyle = fill;
   g.fill();
   if (!lw) return;
-  ink(g, lw);
+  twInk(g, lw);
   g.stroke();
 }
 
 function crease(g, pts, col = 'rgba(55, 44, 30, 0.4)', lw = 0.9) {
   g.strokeStyle = col;
-  g.lineWidth = lw;
+  g.lineWidth = lw * 0.74;
   g.lineCap = 'round';
   g.beginPath();
   pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
@@ -641,7 +648,7 @@ function drum(g, cx, top, rx, ry, h, side, face) {
   g.closePath();
   g.fillStyle = side;
   g.fill();
-  ink(g, 1.9);
+  twInk(g, 1.9);
   g.stroke();
   g.beginPath();
   g.ellipse(cx, top, rx, ry, 0, 0, TAU);
@@ -664,19 +671,22 @@ function pointed(g, x, y, w, h) {
   lamp.addColorStop(1, '#b7641c');
   g.fillStyle = lamp;
   g.fill();
-  ink(g, 1.5);
+  twInk(g, 1.5);
   g.stroke();
   crease(g, [[x - w * 0.18, y - h * 0.28], [x - w * 0.18, y + h * 0.4]], 'rgba(60, 30, 6, 0.55)', 0.8);
 }
 
 function drawTower(g) {
-  shadowEll(g, 36, 8, 3);
+  g.save();
+  g.translate(3, 0);
+  shadowEll(g, 38, 9, 2);
+  g.restore();
 
   // ---- the step: a rough-hewn round of stone, its edge uneven
   slab(g, [[-28.5, -11], [-22, -6.5], [-7, -4], [8, -5.5], [20, -5], [28.5, -11], [28, -1], [20, 6], [9, 5.5], [5, 8.5], [-9, 7.5], [-22, 4.5], [-28, 0]], across(g, -29, 29, '#b2afa8', '#7d7a75'), 2.3);
   slab(g, [[-28.5, -11], [-19, -17], [-4, -18], [9, -19.5], [22, -16], [28.5, -11], [20, -5], [8, -5.5], [-7, -4], [-22, -6.5]], '#c2bfb8', 2.3);
-  crease(g, [[-7, -4], [-8.5, 1], [-6.5, 3.5]], '#17141a', 1.5);
-  crease(g, [[20, -5], [18.5, -0.5], [20, 6]], '#17141a', 1.5);
+  crease(g, [[-7, -4], [-8.5, 1], [-6.5, 3.5]], TW.ink, 1.5);
+  crease(g, [[20, -5], [18.5, -0.5], [20, 6]], TW.ink, 1.5);
 
   // ---- the stone shaft: crooked, with stones jutting out of its sides
   slab(g, [[-18, -14], [-17, -29], [-19.5, -31.5], [-18.5, -40], [-16, -41], [-14.5, -62], [-17.5, -64], [-17, -73], [-14.5, -74.5], [-15.5, -93], [15, -93], [14.5, -81], [17, -79], [16, -71], [14, -69.5], [15.5, -46], [18.5, -44], [18.5, -35], [16.5, -33], [18, -14]],
@@ -686,12 +696,12 @@ function drawTower(g) {
     slab(g, [[x, y], [x + w, y - 0.8], [x + w - 0.7, y + 4.2], [x + 0.5, y + 4.8]], 'rgba(255, 250, 235, 0.25)', 0);
     crease(g, [[x, y], [x + w, y - 0.8], [x + w - 0.7, y + 4.2], [x + 0.5, y + 4.8], [x, y]], 'rgba(55, 44, 30, 0.6)', 1.2);
   }
-  crease(g, [[-8, -90], [-5.5, -85.5], [-9, -82], [-7, -77.5]], 'rgba(45, 36, 24, 0.75)', 1.4);
+  crease(g, [[-8, -90], [-5.5, -85.5], [-9, -82], [-7, -77.5]], 'rgba(60, 50, 36, 0.55)', 1.4);
 
   // ---- the window, with a bar across it and a stone sill
   pointed(g, 0, -68, 11, 16);
-  crease(g, [[-5.5, -66.5], [5.5, -66.5]], '#17141a', 1.5);
-  slab(g, [[-8, -60.5], [7.5, -61], [6.8, -57], [-7.2, -56.6]], '#efe8d4', 1.8);
+  crease(g, [[-5.5, -66.5], [5.5, -66.5]], TW.ink, 1.5);
+  slab(g, [[-8, -60.5], [7.5, -61], [6.8, -57], [-7.2, -56.6]], '#ded9cc', 1.8);
 
   // ---- the door in a plain stone arch
   const arch = (half, top, spring) => {
@@ -703,21 +713,21 @@ function drawTower(g) {
     g.closePath();
   };
   arch(12.5, -45, -28);
-  g.fillStyle = '#efe8d4';
+  g.fillStyle = '#ded9cc';
   g.fill();
-  ink(g, 2.3);
+  twInk(g, 2.3);
   g.stroke();
   arch(8, -37, -26);
-  g.fillStyle = across(g, -8, 8, '#b57c46', '#7a4b26');
+  g.fillStyle = across(g, -8, 8, TW.wood, TW.woodDark);
   g.fill();
-  ink(g, 2);
+  twInk(g, 2);
   g.stroke();
   crease(g, [[0, -34.2], [0, -11.5]], 'rgba(50, 26, 8, 0.7)', 1.2);
   g.beginPath();
   g.arc(4.4, -21, 2.1, 0, TAU);
-  g.fillStyle = '#f0c25a';
+  g.fillStyle = '#d9b257';
   g.fill();
-  ink(g, 1.3);
+  twInk(g, 1.3);
   g.stroke();
 
   // ---- a small, battered roof: a bent, notched point over a knobbly ledge and a ragged edge of three tiles
@@ -727,7 +737,7 @@ function drawTower(g) {
   for (const pts of [
     [[-12, -124], [-8.5, -121.5], [-9, -118]],
     [[18, -121], [15.5, -118.5], [17, -115.5]],
-  ]) crease(g, pts, 'rgba(20, 14, 52, 0.8)', 1.5);
+  ]) crease(g, pts, 'rgba(38, 30, 70, 0.6)', 1.5);
 }
 
 // The ledge and the ragged edge of the roof. Part of the tower, and drawn once more in front of whoever is up there.
@@ -740,7 +750,7 @@ function drawTowerEave(g) {
   for (const pts of [
     [[-23, -108], [-21, -103.5], [-24, -100.5]],
     [[5, -111], [7.5, -106], [5.5, -103]],
-  ]) crease(g, pts, 'rgba(20, 14, 52, 0.8)', 1.5);
+  ]) crease(g, pts, 'rgba(38, 30, 70, 0.6)', 1.5);
 }
 
 // The opening broken into the roof, that a wizard looks out of: dark inside, its edge jagged.
@@ -911,7 +921,7 @@ const ICON_DRAW = {
     drawTree(g);
   },
   tower: (g) => {
-    g.scale(0.3, 0.3);
+    g.scale(0.29, 0.29);
     drawTower(g);
   },
 };

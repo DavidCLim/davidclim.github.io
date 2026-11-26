@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=231';
-import { buildCreatureArt } from './creatures.js?v=231';
-import { buildEggArt } from './art_eggs.js?v=231';
-import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=231';
-import { Sfx } from './sfx.js?v=231';
-import { World } from './world.js?v=231';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=231';
-import { buildUnitArt, drawDrop } from './art_units.js?v=231';
-import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=231';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=232';
+import { buildCreatureArt } from './creatures.js?v=232';
+import { buildEggArt } from './art_eggs.js?v=232';
+import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=232';
+import { Sfx } from './sfx.js?v=232';
+import { World } from './world.js?v=232';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=232';
+import { buildUnitArt, drawDrop } from './art_units.js?v=232';
+import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=232';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -207,7 +207,7 @@ const LATTICE = {
 
 // Terrain: walls, water and ice are painted as strokes; the rest are dropped along the drag.
 const TERRAIN_SET = new Set(['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower']);
-const DISCRETE = { mine: { gap: 84, off: 2 }, barrel: { gap: 20, off: 7 }, tree: { gap: 42, off: 15 }, tower: { gap: 84, off: 18 } };
+const DISCRETE = { mine: { gap: 84, off: 2 }, barrel: { gap: 20, off: 7 }, tree: { gap: 42, off: 15 }, tower: { gap: 74, off: 16 } };
 let tstroke = null;
 const STROKE_BASE = { wall: 13.5, water: 24.5, ice: 24.5 };
 
@@ -1173,7 +1173,7 @@ function drawSpirit(g, t, alpha) {
   ctx.restore();
 }
 
-const PROP_SCALE = { tree: 1.22, barrel: 0.94, mine: 1.0, tower: 1.28 };
+const PROP_SCALE = { tree: 1.22, barrel: 0.94, mine: 1.0, tower: 1.1 };
 // The wizard looking out of the top of his tower: the roof breaks open, he comes up from inside, and the roof's edge
 // hides the rest of him. When he is hit the whole tower flashes, as the original's trees do.
 function drawTowerGuest(p, k) {
@@ -1189,7 +1189,7 @@ function drawTowerGuest(p, k) {
     ctx.save();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.beginPath();
-    ctx.rect(p.x - 80, p.y - m.height - 60, 160, 60 + m.height - 40);
+    ctx.rect(p.x - 80, p.y - m.height - 60, 160, 60 + m.height - 101 * K * k); // down to the middle of the eave
     ctx.clip();
     drawBody({ ...g, x: p.x, y: p.y - m.height + (1 - come) * 17, moving: false, perch: null });
     ctx.restore();
