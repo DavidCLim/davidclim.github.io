@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=195';
-import { TerrainMap, WALL } from './terrain.js?v=195';
-import { installBeasts } from './beasts.js?v=195';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=198';
+import { TerrainMap, WALL } from './terrain.js?v=198';
+import { installBeasts } from './beasts.js?v=198';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -863,6 +863,7 @@ export class World {
       case 'sniper': this.stepSniper(u, dt); break;
       case 'flame': this.stepFlame(u, dt); break;
       case 'melee': this.stepMelee(u, dt); break;
+      case 'jugger': this.stepJugger(u, dt); break;
       case 'grenade': this.stepGrenade(u, dt); break;
       case 'archer': this.stepArcher(u, dt); break;
       case 'cavalry': this.stepCavalry(u, dt); break;
@@ -1230,6 +1231,68 @@ export class World {
     }
   }
 
+  // The Juggernaut: march up, plant his feet, heave the axe up and slam it down. Once a swing starts he's committed.
+  stepJugger(u, dt) {
+    const d = u.def;
+    const t = this.acquire(u, dt);
+    u.swingCd = Math.max(0, (u.swingCd || 0) - dt);
+    u.chargeT = Math.max(0, (u.chargeT || 0) - dt);
+    u.chargeCd = Math.max(0, (u.chargeCd === undefined ? 1.2 : u.chargeCd) - dt);
+    if (u.swing > 0) {
+      u.chargeT = 0;
+      const before = u.swing;
+      u.swing += dt;
+      u.pose = 1;
+      if (before < d.windup && u.swing >= d.windup) this.slam(u);
+      if (u.swing >= d.windup + d.recover) u.swing = 0;
+      return;
+    }
+    if (t) {
+      const dx = t.x - u.x;
+      const dy = t.y - u.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      if (Math.abs(dx) > 3) u.facing = dx > 0 ? 1 : -1;
+      const gap = dist - t.def.radius;
+      if (gap <= d.reach) {
+        if (u.swingCd <= 0) {
+          u.swing = 0.0001;
+          u.swingCd = d.windup + d.recover + d.rest;
+        }
+      } else {
+        const c = d.charge;
+        if (gap > c.from && u.chargeCd <= 0) {
+          u.chargeT = c.time;
+          u.chargeCd = c.time + c.rest;
+        }
+        const speed = d.speed * u.speedMul * (u.chargeT > 0 ? c.boost : 1);
+        u.x += (dx / dist) * speed * dt;
+        u.y += (dy / dist) * speed * dt;
+        u.moving = true;
+      }
+    } else this.marchStep(u, dt, d.speed * u.speedMul * 0.85);
+    this.readyUp(u, dt);
+  }
+
+  // the axe lands: everyone near the blade is hurt and thrown outward
+  slam(u) {
+    const d = u.def;
+    const x = u.x + u.facing * d.slamAt;
+    const y = u.y;
+    this.eachEnemyNear(u.side, x, y, d.slamRadius + 24, (o) => {
+      const dx = o.x - x;
+      const dy = o.y - y;
+      const dist = Math.hypot(dx, dy) || 1;
+      if (dist > d.slamRadius + o.def.radius) return;
+      if (!o.def.noKnock) {
+        o.kx += (dx / dist) * d.knock;
+        o.ky += (dy / dist) * d.knock * 0.7;
+      }
+      this.hurt(o, d.damage, o.x, o.y, 'blast', u);
+    });
+    this.hitProps(x, y, d.slamRadius, d.damage);
+    if (this.sfx) this.sfx('boom', x);
+  }
+
   stepMelee(u, dt) {
     const d = u.def;
     const t = this.acquire(u, dt);
@@ -1571,7 +1634,7 @@ export class World {
       const sp = 50 + Math.random() * 130;
       this.sparks.push({ x: u.x, y: u.y - 3, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 30, life: 0.3 + Math.random() * 0.35, max: 0.65, cyan: i % 2 === 0 });
     }
-    for (const part of ['botpod', 'botpod', 'botlens', 'botplate', 'botplate', 'trooper']) {
+    for (const part of u.def.parts || ['botpod', 'botpod', 'botlens', 'botplate', 'botplate', 'trooper']) {
       this.debris.push({ x: u.x, y: u.y, z: 12, vx: (Math.random() - 0.5) * 150, vy: (Math.random() - 0.5) * 80, vz: 170 + Math.random() * 180, rot: Math.random() * 6, spin: (Math.random() < 0.5 ? -1 : 1) * (7 + Math.random() * 10), age: 0, species: part });
     }
     for (let i = 0; i < 4; i++) {

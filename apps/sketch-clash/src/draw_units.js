@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=195';
-import { drawLayer, OUT } from './sprites.js?v=195';
-import { drawDrop, trooperEyes, BOT_JETS } from './art_units.js?v=195';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=195';
-import { EGG_DROPS } from './art_eggs.js?v=195';
+import { TAU, K, UNIT, FEET } from './config.js?v=198';
+import { drawLayer, OUT } from './sprites.js?v=198';
+import { drawDrop, trooperEyes, BOT_JETS, JUG_AXE_PIVOT, JUG_CLAW_PIVOT, JUG_EYE } from './art_units.js?v=198';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=198';
+import { EGG_DROPS } from './art_eggs.js?v=198';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -444,6 +444,226 @@ function drawTrooper(ctx, dpr, sprites, u) {
   }
 }
 
+// Robot Juggernaut. His legs, body and two arms are separate pieces so he can stomp along, heave the axe up over his
+// head and bring it down hard enough to crack the ground.
+function jugSwingAngle(u) {
+  const d = u.def;
+  const s = u.swing || 0;
+  if (s <= 0) return null;
+  const strike = 0.11;
+  if (s < d.windup - strike) {
+    const q = s / (d.windup - strike);
+    return -1.75 * (1 - (1 - q) ** 2);
+  }
+  if (s < d.windup) return -1.75 + 2.4 * ((s - (d.windup - strike)) / strike) ** 2;
+  const after = (s - d.windup) / d.recover;
+  return after < 0.42 ? 0.65 : 0.65 * (1 - ((after - 0.42) / 0.58));
+}
+
+function jugAt(ctx, pivot, angle, layer) {
+  ctx.save();
+  ctx.translate(pivot[0] * K, pivot[1] * K);
+  ctx.rotate(angle);
+  ctx.translate(-pivot[0] * K, -pivot[1] * K);
+  drawLayer(ctx, layer);
+  ctx.restore();
+}
+
+function jugPuffs(ctx, x, y, t, n, size, rise, rgb, a, rate) {
+  for (let i = 0; i < n; i++) {
+    const q = (t * rate + i / n) % 1;
+    ctx.fillStyle = `rgba(${rgb}, ${a * (1 - q)})`;
+    ctx.beginPath();
+    ctx.arc((x + Math.sin(q * 6 + i * 2) * 3 - q * 8) * K, (y - rise * q) * K, size * (0.5 + q) * K, 0, TAU);
+    ctx.fill();
+  }
+}
+
+function drawJuggernaut(ctx, dpr, sprites, u) {
+  const A = sprites.juggernaut;
+  const d = u.def;
+  const dead = !!u.tilt;
+  const clock = performance.now() / 1000;
+  const t = clock + (u.id || 0) * 0.613;
+  if (u.born === undefined) u.born = clock;
+  const age = dead ? 9 : clock - u.born;
+  const moving = u.moving && !dead;
+  const ph = u.anim * 0.52;
+  const s = dead ? 0 : u.swing || 0;
+  const swing = dead ? null : jugSwingAngle(u);
+
+  placeUnit(ctx, dpr, u, u.hit > 0.16 ? (Math.random() - 0.5) * 1.2 : 0);
+
+  // ---- on the ground: his landing ring, the dust under each footfall and the crater of an axe blow
+  const ring = (x, q, rx, ry, rgb, a, w) => {
+    ctx.strokeStyle = `rgba(${rgb}, ${a * (1 - q)})`;
+    ctx.lineWidth = w * (1 - q) + 0.5;
+    ctx.beginPath();
+    ctx.ellipse(x, FEET + 2, rx * (0.35 + q), ry * (0.35 + q), 0, 0, TAU);
+    ctx.stroke();
+  };
+  const dust = (x, q, spread, n) => {
+    ctx.fillStyle = `rgba(188, 182, 184, ${0.75 * (1 - q)})`;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * TAU + (u.id || 0);
+      ctx.beginPath();
+      ctx.arc(x + Math.cos(a) * spread * (0.3 + q), FEET + 2 + Math.sin(a) * spread * 0.32 * (0.3 + q) - 5 * q, 3.4 * (1 - q) + 0.7, 0, TAU);
+      ctx.fill();
+    }
+  };
+  if (age > 0.34 && age < 1) {
+    const q = (age - 0.34) / 0.66;
+    ring(0, q, 36, 11, '140, 136, 150', 0.65, 4);
+    dust(0, q, 32, 12);
+  }
+  if (moving) {
+    const half = ph / Math.PI;
+    const q = (half % 1) / 0.45;
+    if (q < 1) dust(Math.floor(half) % 2 === 0 ? 24 * K * 3.4 : -32 * K * 3.4, q, 9, 6);
+  }
+  if (s >= d.windup && s < d.windup + 0.5) {
+    const q = (s - d.windup) / 0.5;
+    const ix = d.slamAt;
+    ring(ix, q, d.slamRadius * 1.15, d.slamRadius * 0.42, '90, 225, 205', 0.9, 4.5);
+    ring(ix, Math.min(1, q * 1.5), d.slamRadius * 0.75, d.slamRadius * 0.27, '255, 255, 255', 0.85, 3);
+    dust(ix, q, d.slamRadius, 14);
+    // cracks splitting out from the blow
+    ctx.strokeStyle = `rgba(60, 56, 70, ${0.75 * (1 - q)})`;
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    for (let i = 0; i < 7; i++) {
+      const a = (i / 7) * TAU + 0.4;
+      const r = d.slamRadius * (0.55 + (i % 3) * 0.17);
+      ctx.moveTo(ix, FEET + 2);
+      ctx.lineTo(ix + Math.cos(a + 0.18) * r * 0.55, FEET + 2 + Math.sin(a + 0.18) * r * 0.2);
+      ctx.lineTo(ix + Math.cos(a) * r, FEET + 2 + Math.sin(a) * r * 0.36);
+    }
+    ctx.stroke();
+  }
+
+  // ---- he drops in heavily and squashes on landing
+  if (age < 0.36) ctx.translate(0, -85 * (1 - (age / 0.36) ** 2));
+  const squash = age >= 0.36 && age < 0.66 ? Math.sin(((age - 0.36) / 0.3) * Math.PI) : 0;
+  if (squash) {
+    ctx.translate(0, FEET);
+    ctx.scale(1 + 0.12 * squash, 1 - 0.14 * squash);
+    ctx.translate(0, -FEET);
+  }
+
+  // ---- legs lift and plant one at a time
+  const stepA = moving ? Math.sin(ph) : 0;
+  const leg = (layer, v) => {
+    ctx.save();
+    ctx.translate(v * 5 * K, -Math.max(0, v) * 9 * K);
+    drawLayer(ctx, layer);
+    ctx.restore();
+  };
+  leg(A.legB, -stepA);
+  leg(A.legA, stepA);
+
+  // ---- the hull heaves with each step, breathes at rest, and throws its weight into the swing
+  const bob = moving ? Math.abs(Math.cos(ph)) * 3.4 - 2.2 : Math.sin(t * 1.7) * 0.8;
+  let lean = moving ? 0.03 + Math.sin(ph) * 0.045 : 0;
+  const charging = moving && u.chargeT > 0;
+  if (charging) lean += 0.15;
+  if (swing !== null) lean = swing < 0 ? swing * 0.085 : swing * 0.3;
+  ctx.translate(0, FEET);
+  ctx.rotate(lean);
+  ctx.translate(0, -FEET + bob * K);
+
+  if (charging) {
+    // boilers wide open: jets roaring out of his back and speed lines trailing
+    for (const [jx, jy, len] of [[-48, -62, 34], [-44, -42, 26]]) {
+      botGlow(ctx, (jx - 8) * K, jy * K, 22 * K, '80, 230, 215', 0.55);
+      botJet(ctx, jx, jy, len, 7, t);
+    }
+    ctx.strokeStyle = 'rgba(150, 156, 172, 0.55)';
+    ctx.lineWidth = 0.9;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+      const q = (t * 3.4 + i / 5) % 1;
+      const y = (-78 + i * 21) * K;
+      ctx.moveTo((-60 - 44 * q) * K, y);
+      ctx.lineTo((-90 - 44 * q) * K, y);
+    }
+    ctx.stroke();
+  }
+  const idleArm = dead ? 0.25 : Math.sin(t * 1.7 + 1) * 0.03;
+  jugAt(ctx, JUG_CLAW_PIVOT, swing !== null ? -swing * 0.32 : moving ? Math.sin(ph) * 0.17 : -idleArm, A.clawArm);
+  drawLayer(ctx, A.body);
+
+  // ---- the glowing slit in his mask
+  const [ex, ey] = JUG_EYE;
+  if (!dead) {
+    const charging = swing !== null && s < d.windup;
+    const flick = age < 0.75 ? 0 : age < 1.2 ? (Math.sin(age * 60) > 0 ? 1 : 0.1) : 1;
+    const hot = charging ? 1 : 0.62 + 0.18 * Math.sin(t * 3);
+    ctx.strokeStyle = `rgba(140, 255, 225, ${flick * hot})`;
+    ctx.lineWidth = 1.7 * K;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo((ex + 4.6) * K, (ey - 3.8) * K);
+    ctx.lineTo(ex * K, (ey + 0.6) * K);
+    ctx.lineTo((ex - 6.6) * K, (ey - 3.4) * K);
+    ctx.moveTo(ex * K, (ey + 0.6) * K);
+    ctx.lineTo((ex - 0.5) * K, (ey + 6) * K);
+    ctx.stroke();
+    botGlow(ctx, ex * K, ey * K, (charging ? 22 : 12) * K, '70, 255, 210', flick * (charging ? 0.7 : 0.32));
+  }
+
+  // ---- the stacks on his back chug: soft puffs at rest, thick smoke on the march, a blast after a blow
+  if (!dead) {
+    const blast = s >= d.windup && s < d.windup + d.recover;
+    const heavy = blast || moving;
+    jugPuffs(ctx, -22, -97, t, heavy ? 5 : 3, blast ? 9 : heavy ? 6.5 : 4.5, blast ? 40 : heavy ? 30 : 20, blast ? '226, 230, 238' : '150, 150, 164', blast ? 0.75 : 0.5, heavy ? 1.3 : 0.55);
+    if (swing !== null && s < d.windup) botGlow(ctx, -22 * K, -96 * K, 20 * K, '80, 255, 210', 0.55 * (s / d.windup));
+  }
+
+  // ---- the axe arm, with a bright arc trailing the blade as it comes down
+  if (swing !== null && s > d.windup - 0.1 && s < d.windup + 0.16) {
+    const fade = s < d.windup ? 1 : 1 - (s - d.windup) / 0.16;
+    ctx.save();
+    ctx.translate(JUG_AXE_PIVOT[0] * K, JUG_AXE_PIVOT[1] * K);
+    for (const [r, w, col] of [[48, 17, `rgba(110, 235, 215, ${0.45 * fade})`], [55, 5, `rgba(255, 255, 255, ${0.9 * fade})`]]) {
+      ctx.strokeStyle = col;
+      ctx.lineWidth = w * K;
+      ctx.beginPath();
+      ctx.arc(0, 0, r * K, -1.5, 0.5 + Math.min(0, swing));
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  // the whole shoulder heaves up as the axe goes back
+  ctx.save();
+  if (swing !== null && swing < 0) ctx.translate(swing * 2.5 * K, swing * 9 * K);
+  jugAt(ctx, JUG_AXE_PIVOT, swing !== null ? swing : moving ? -Math.sin(ph) * 0.13 : idleArm, A.axeArm);
+  ctx.restore();
+
+  // ---- damage: a white wince when struck, then smoke and sparks once he's badly hurt
+  if (!dead && u.hit > 0.15) botGlow(ctx, 0, -38 * K, 52 * K, '255, 255, 255', 0.5);
+  burnGlow(ctx, u, 40 * K, 42 * K);
+  if (!dead && u.hp < d.hp * 0.5) {
+    jugPuffs(ctx, 12, -62, t + 0.3, 4, 6, 34, '70, 68, 78', 0.6, 0.9);
+    if (Math.sin(t * 9) > 0.75) {
+      for (const [col, w] of [['rgba(80, 200, 255, 0.8)', 2.6], ['#ffffff', 1]]) {
+        ctx.strokeStyle = col;
+        ctx.lineWidth = w * K;
+        ctx.beginPath();
+        let x = (Math.random() - 0.5) * 50;
+        let y = -40 + (Math.random() - 0.5) * 40;
+        ctx.moveTo(x * K, y * K);
+        for (let i = 0; i < 4; i++) {
+          x += (Math.random() - 0.5) * 20;
+          y += (Math.random() - 0.5) * 20;
+          ctx.lineTo(x * K, y * K);
+        }
+        ctx.stroke();
+      }
+    }
+  }
+}
+
 function drawFlamethrower(ctx, dpr, sprites, u) {
   const A = sprites[u.species];
   const dd = u.def;
@@ -614,6 +834,7 @@ const DRAWERS = {
   ...Object.fromEntries(CREATURE_IDS.map((id) => [id, (ctx, dpr, sprites, u) => drawCreature(ctx, dpr, sprites, u, burnOverlay)])),
   flamethrower: drawFlamethrower,
   trooper: drawTrooper,
+  juggernaut: drawJuggernaut,
   roman: drawRoman,
   grenadier: drawGrenadier,
   archer: drawArcher,
@@ -986,6 +1207,7 @@ export function drawMarks(ctx, dpr, marks) {
 // ------------------------------------------------------------- palette icons
 // [canvas width in art px, body x, body y, drawing]
 const ICONS = {
+  juggernaut: [172, 88, 118, null],
   trooper: [92, 44, 50, (g, S) => {
     g.save();
     g.scale(K, K);
@@ -1066,6 +1288,11 @@ export function paintUnitIcon(canvas, sprites, species) {
   g.save();
   g.translate((ox * canvas.width) / w, (oy * canvas.width) / w);
   g.scale(m, m);
+  if (species === 'juggernaut') {
+    for (const part of ['legB', 'legA', 'clawArm', 'body', 'axeArm']) drawLayer(g, S[part]);
+    g.restore();
+    return;
+  }
   if (species === 'trooper') drawLayer(g, S.pack);
   if (species === 'cavalry') {
     drawLayer(g, S.shadow);

@@ -103,6 +103,35 @@ export const TROOPER = {
   explodes: true, // and goes to pieces when he dies
 };
 
+// Robot Juggernaut: a huge, slow, armoured brute. He wades in and brings a great axe down, flattening everyone near
+// where it lands. Bullets and arrows only do part of their damage, and nothing knocks him back.
+export const JUGGERNAUT = {
+  kind: 'jugger',
+  hp: 2400,
+  radius: 17,
+  sep: 34,
+  speed: 36,
+  // riflemen back away from him, so every few seconds he fires his boilers and charges
+  charge: { time: 1.1, boost: 3.3, rest: 2.6, from: 50 },
+  sight: 460,
+  reach: 36, // from his middle to the edge of whoever he's swinging at
+  windup: 0.66, // heaving the axe up and bringing it down
+  recover: 0.62,
+  rest: 0.45,
+  damage: 130,
+  slamAt: 27, // how far in front of him the blade lands
+  slamRadius: 31,
+  knock: 430,
+  armor: 0.6,
+  noKnock: true,
+  noDrop: true,
+  explodes: true,
+  parts: ['jugshell', 'jugshell', 'jugpipe', 'jugpipe', 'jugspike', 'jugspike', 'botplate', 'botlens', 'juggernaut'],
+  ring: 3.1,
+  pivot: { x: 0, y: 0 },
+  muzzleLen: 0,
+};
+
 const BODY = { radius: 11 * UNIT, sep: 17 * UNIT }; // crowds spread to about 14 screen px between bodies, as in the original
 
 // The flamethrower: a firefighter-style trooper with a fuel tank on his back who hoses a jet of fire.
@@ -376,6 +405,7 @@ export const SPECIES = {
   ninja: { id: 'ninja', label: 'Samurai', def: NINJA },
   mechazord: { id: 'mechazord', label: 'MechaZord', def: MECHAZORD },
   trooper: { id: 'trooper', label: 'Robo Trooper', def: TROOPER },
+  juggernaut: { id: 'juggernaut', label: 'Robot Juggernaut', def: JUGGERNAUT },
   boar: { id: 'boar', label: 'Boar', def: BOAR },
   rat: { id: 'rat', label: 'Rat', def: RAT },
   ant: { id: 'ant', label: 'Ant', def: ANT },
@@ -399,7 +429,7 @@ export const SPECIES = {
 // The order of the palette (the knight only ever comes from a cavalry).
 export const TABS = [
   { id: 'army', label: 'Army', items: ['soldier', 'flamethrower', 'sniper', 'grenadier', 'archer', 'cowboy', 'ninja'] },
-  { id: 'robots', label: 'Robots', items: ['trooper'] }, // MechaZord's code is kept, but he isn't in the palette
+  { id: 'robots', label: 'Robots', items: ['trooper', 'juggernaut'] }, // MechaZord's code is kept, but he isn't in the palette
   { id: 'terrain', label: 'Terrain', items: ['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower'] },
 ];
 export const TERRAIN_LABELS = { wall: 'Wall', water: 'Water', ice: 'Ice', mine: 'Mines', barrel: 'Barrel', tree: 'Tree', tower: 'Wizard Tower' };

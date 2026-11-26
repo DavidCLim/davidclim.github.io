@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=195';
-import { buildCreatureArt } from './creatures.js?v=195';
-import { buildEggArt } from './art_eggs.js?v=195';
-import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=195';
-import { Sfx } from './sfx.js?v=195';
-import { World } from './world.js?v=195';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=195';
-import { buildUnitArt, drawDrop } from './art_units.js?v=195';
-import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=195';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=198';
+import { buildCreatureArt } from './creatures.js?v=198';
+import { buildEggArt } from './art_eggs.js?v=198';
+import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=198';
+import { Sfx } from './sfx.js?v=198';
+import { World } from './world.js?v=198';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=198';
+import { buildUnitArt, drawDrop } from './art_units.js?v=198';
+import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=198';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -180,6 +180,7 @@ function teamAt(x) {
 const LATTICE = {
   default: [15.5, 12.5, true],
   trooper: [28, 22, true],
+  juggernaut: [64, 46, true],
   roman: [17.4, 17.6, false],
   cavalry: [34, 22, true],
   boar: [22, 15, true],
@@ -1213,7 +1214,7 @@ function render() {
     c.u.breath = 0;
     ctx.globalAlpha = a;
     drawBody(c.u);
-    if (c.u.species !== 'sniper' && c.u.species !== 'trooper') {
+    if (c.u.species !== 'sniper' && c.u.species !== 'trooper' && c.u.species !== 'juggernaut') {
       placeUnit(ctx, dpr, c.u);
       ctx.globalAlpha = a;
       drawDizzyEyes(ctx, c.u);
