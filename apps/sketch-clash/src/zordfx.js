@@ -1,7 +1,8 @@
-// MechaZord's effects in the world: the shockwave as he lets loose, the embers and heat rings in his breath, the ground
-// it leaves burning, and the great blast when he goes. All of it is for show: none of it hurts anyone.
-import { TAU, FEET } from './config.js?v=235';
-import { WATER } from './terrain.js?v=235';
+// MechaZord's own part of the world: his missiles, and the effects that go with him (the shockwave as he lets loose, the
+// embers and heat rings in his breath, the ground it leaves burning, the great blast when he goes). Only the missiles
+// hurt anyone; the rest is for show.
+import { TAU, K, FEET } from './config.js?v=236';
+import { WATER } from './terrain.js?v=236';
 
 const TEAL = '70, 245, 200';
 const GOLD = '255, 196, 80';
@@ -11,6 +12,8 @@ export function resetZordFx(world) {
   world.embers = [];
   world.novas = [];
   world.scorches = [];
+  world.missiles = [];
+  world.trails = [];
 }
 
 // a ring racing outward. flat: lying on the ground. ang: squashed along a direction, as the heat rings in his breath are
@@ -77,7 +80,203 @@ export function zordDeath(world, u) {
   }
 }
 
+// ---------------------------------------------------------------- his second attack
+// A salvo of little homing missiles out of his back. Each is lobbed high, over walls and heads, chases the enemy it has
+// marked and bursts where it comes down. It reaches further than his fire does.
+
+// where they leave from: the mouth of his upper thruster pod, in Robo Trooper's coordinates
+const RACK = { x: -30, y: -20 };
+
+function rackOf(u) {
+  const d = u.def;
+  return {
+    x: u.x + u.facing * RACK.x * K * d.scale,
+    y: u.y + FEET + (RACK.y * K - FEET) * d.scale - (u.alt || 0) * d.hoverH,
+  };
+}
+
+// who they go for: the one he is after and whoever is bunched around them, shared out so each missile has its own mark
+function marksFor(world, u, m) {
+  const t = u.target;
+  const near = [];
+  world.eachEnemyNear(u.side, u.x, u.y, m.range, (o) => {
+    if (Math.hypot(o.x - u.x, o.y - u.y) <= m.range) near.push(o);
+  });
+  if (!near.length) near.push(t);
+  near.sort((a, b) => Math.hypot(a.x - t.x, a.y - t.y) - Math.hypot(b.x - t.x, b.y - t.y));
+  return Array.from({ length: m.count }, (_, i) => near[i % near.length]);
+}
+
+function launch(world, u, i) {
+  const m = u.def.missiles;
+  const s = rackOf(u);
+  const o = u.marks[i] && !u.marks[i].dead ? u.marks[i] : u.target;
+  if (!o) return;
+  const spread = () => (Math.random() - 0.5) * 9;
+  const off = { x: spread(), y: spread() * 0.6 };
+  world.missiles.push({
+    x: s.x, y: s.y, px: s.x, py: s.y, sx: s.x, sy: s.y, o, off, tx: o.x + off.x, ty: o.y + off.y,
+    age: 0, dur: m.flight * (0.9 + Math.random() * 0.28), h: 50 + Math.random() * 38, back: -u.facing * (18 + Math.random() * 22),
+    ang: -Math.PI / 2, trail: 0, side: u.side, owner: u,
+  });
+  u.launch = 1;
+  for (let k = 0; k < 3; k++) {
+    world.puffs.push({ x: s.x, y: s.y, vx: -u.facing * (14 + Math.random() * 30), vy: -6 - Math.random() * 22, age: 0, life: 0.5 + Math.random() * 0.3, size: 2.4 + Math.random() * 1.6 });
+  }
+  nova(world, { x: s.x, y: s.y, r: 9, life: 0.2, rgb: TEAL, wide: 2 });
+  if (world.sfx) world.sfx('snipe', s.x);
+}
+
+// every frame he is alive and fighting
+export function stepZordSalvo(world, u, dt) {
+  const m = u.def.missiles;
+  if (u.missileT === undefined) u.missileT = m.first;
+  u.launch = Math.max(0, (u.launch || 0) - dt * 6);
+  if (u.salvo > 0) {
+    u.salvoT -= dt;
+    if (u.salvoT <= 0) {
+      u.salvoT += m.gap;
+      launch(world, u, m.count - u.salvo);
+      u.salvo--;
+    }
+    return;
+  }
+  u.missileT -= dt;
+  const t = u.target;
+  if (u.missileT > 0 || !t || t.dead || Math.hypot(t.x - u.x, t.y - u.y) > m.range) return;
+  u.marks = marksFor(world, u, m);
+  u.salvo = m.count;
+  u.salvoT = 0;
+  u.missileT = m.every * (0.85 + Math.random() * 0.3);
+}
+
+function burst(world, k) {
+  const m = k.owner.def.missiles;
+  const x = k.tx;
+  const y = k.ty;
+  world.blasts.push({ x, y: y - 2, age: 0, life: 1.7, r: m.blast, seed: Math.random() });
+  world.eachEnemyNear(k.side, x, y, m.blast + 20, (o) => {
+    const dx = o.x - x;
+    const dy = o.y - y;
+    const dist = Math.hypot(dx, dy) || 1;
+    const reach = m.blast + o.def.radius;
+    if (dist > reach) return;
+    const share = 1 - 0.5 * (dist / reach);
+    if (!o.def.noKnock) {
+      o.kx += (dx / dist) * 230 * share;
+      o.ky += (dy / dist) * 230 * share;
+    }
+    world.hurt(o, m.damage * share, o.x, o.y, 'blast', k.owner);
+  });
+  world.hitProps(x, y, m.blast, m.damage);
+  nova(world, { x, y: y + FEET, r: m.blast * 1.7, life: 0.4, rgb: TEAL, wide: 2.4, flat: true });
+  embers(world, x, y - 2, 9, -Math.PI / 2, Math.PI * 1.5, 150);
+  scorch(world, x, y + FEET, 4.5 + Math.random() * 3, 1.8 + Math.random());
+  if (world.sfx) world.sfx('boom', x);
+}
+
+function stepMissiles(world, dt) {
+  for (const k of world.missiles) {
+    k.age += dt;
+    const p = Math.min(1, k.age / k.dur);
+    // it follows its mark until it starts to dive
+    if (!k.o.dead && p < 0.75) {
+      const f = Math.min(1, dt * 9);
+      k.tx += (k.o.x + k.off.x - k.tx) * f;
+      k.ty += (k.o.y + k.off.y - k.ty) * f;
+    }
+    const go = p * p * 0.55 + p * 0.45; // slow off the rack, then it tears in
+    k.px = k.x;
+    k.py = k.y;
+    k.x = k.sx + (k.tx - k.sx) * go + k.back * Math.sin(Math.PI * Math.min(1, p * 1.5)) * (1 - p);
+    k.y = k.sy + (k.ty - k.sy) * go - k.h * 4 * p * (1 - p);
+    if (k.x !== k.px || k.y !== k.py) k.ang = Math.atan2(k.y - k.py, k.x - k.px);
+    k.trail -= dt;
+    if (k.trail <= 0) {
+      k.trail = 0.018;
+      world.trails.push({ x: k.x - Math.cos(k.ang) * 5, y: k.y - Math.sin(k.ang) * 5, age: 0, life: 0.34 });
+    }
+    if (p >= 1) {
+      k.dead = true;
+      burst(world, k);
+    }
+  }
+  if (world.missiles.some((k) => k.dead)) world.missiles = world.missiles.filter((k) => !k.dead);
+}
+
+// the lock-on ring on the ground under each mark, closing in as the missile comes down
+function drawLock(ctx, k) {
+  const p = k.age / k.dur;
+  const r = 15 - 8 * p;
+  const y = k.ty + FEET;
+  ctx.strokeStyle = `rgba(255, 74, 58, ${Math.min(0.9, 0.35 + p)})`;
+  ctx.lineWidth = 1.1;
+  ctx.beginPath();
+  ctx.ellipse(k.tx, y, r, r * 0.42, 0, 0, TAU);
+  ctx.stroke();
+  ctx.beginPath();
+  for (let i = 0; i < 4; i++) {
+    const a = k.age * 6 + (i / 4) * TAU;
+    ctx.moveTo(k.tx + Math.cos(a) * r * 0.62, y + Math.sin(a) * r * 0.26);
+    ctx.lineTo(k.tx + Math.cos(a) * r * 1.35, y + Math.sin(a) * r * 0.57);
+  }
+  ctx.stroke();
+}
+
+function drawTrails(ctx, world) {
+  for (const t of world.trails) {
+    const q = t.age / t.life;
+    ctx.fillStyle = q < 0.3 ? `rgba(55, 232, 196, ${0.85 * (1 - q)})` : `rgba(165, 178, 196, ${0.6 * (1 - q)})`;
+    ctx.beginPath();
+    ctx.arc(t.x, t.y, 1.5 + 2.6 * q, 0, TAU);
+    ctx.fill();
+  }
+}
+
+function drawMissile(ctx, k) {
+  ctx.save();
+  ctx.translate(k.x, k.y);
+  ctx.rotate(k.ang);
+  const flick = 3 + Math.random() * 3;
+  for (const [col, len, wide] of [['#ff9a2e', 4 + flick, 2.1], ['#fff0a8', 2 + flick * 0.5, 1.1]]) {
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.moveTo(-4, -wide);
+    ctx.lineTo(-4 - len, 0);
+    ctx.lineTo(-4, wide);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.lineWidth = 0.8;
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = '#15131b';
+  ctx.fillStyle = '#1fbc9c';
+  ctx.beginPath();
+  ctx.moveTo(-1, 0);
+  ctx.lineTo(-5, -3.8);
+  ctx.lineTo(-4, 0);
+  ctx.lineTo(-5, 3.8);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = '#d3d8e3';
+  ctx.beginPath();
+  ctx.roundRect(-4.4, -1.9, 7.4, 3.8, 1.2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = '#e0523c';
+  ctx.beginPath();
+  ctx.moveTo(3, -1.9);
+  ctx.quadraticCurveTo(7.8, 0, 3, 1.9);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
 export function stepZordFx(world, dt) {
+  stepMissiles(world, dt);
+  for (const t of world.trails) t.age += dt;
   for (const e of world.embers) {
     e.age += dt;
     e.x += e.vx * dt;
@@ -95,6 +294,7 @@ export function stepZordFx(world, dt) {
   if (!world.embers.every(live)) world.embers = world.embers.filter(live);
   if (!world.novas.every(live)) world.novas = world.novas.filter(live);
   if (!world.scorches.every(live)) world.scorches = world.scorches.filter(live);
+  if (!world.trails.every(live)) world.trails = world.trails.filter(live);
 }
 
 function drawNova(ctx, n) {
@@ -148,10 +348,13 @@ export function drawZordGround(ctx, world) {
     ctx.globalAlpha = 1;
   }
   for (const n of world.novas) if (n.flat) drawNova(ctx, n);
+  for (const k of world.missiles) drawLock(ctx, k);
 }
 
 // over the units: the rings in the air and the embers
 export function drawZordAir(ctx, world) {
+  drawTrails(ctx, world);
+  for (const k of world.missiles) drawMissile(ctx, k);
   for (const n of world.novas) if (!n.flat) drawNova(ctx, n);
   ctx.lineCap = 'round';
   for (const e of world.embers) {

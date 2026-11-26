@@ -1,7 +1,7 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=235';
-import { TerrainMap, WALL } from './terrain.js?v=235';
-import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordFx } from './zordfx.js?v=235';
-import { installBeasts } from './beasts.js?v=235';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=236';
+import { TerrainMap, WALL } from './terrain.js?v=236';
+import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordFx } from './zordfx.js?v=236';
+import { installBeasts } from './beasts.js?v=236';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -621,7 +621,7 @@ export class World {
     u.jetT = (u.jetT || 0) - dt;
     if (u.jetT > 0) return;
     u.jetT = 0.07;
-    const k = d.thrusters === 'walk' ? 1.15 : d.scale;
+    const k = d.thrusters === 'walk' ? d.scale || 1.15 : d.scale;
     const wide = d.bulk || 1;
     for (const [jx, jy] of d.jets || [[-33, -15], [-32, 11]]) {
       this.jetFlame(u.x + u.facing * jx * 0.31 * k * wide, u.y + FEET + (jy * 0.31 - FEET) * k, -u.facing * 48, 6, d.thrusters === 'walk' ? 0.62 : 0.95);
@@ -861,8 +861,9 @@ export class World {
     });
     u.flash = 0.07;
     if (this.sfx) this.sfx('shot', m.x);
-    this.muzzleFx(m, a);
-    if (d.smoke || d.kick) u.recoil = 1;
+    if (!d.rapid) this.muzzleFx(m, a);
+    else if ((u.shots = (u.shots || 0) + 1) % 4 === 0) this.muzzleFx(m, a);
+    if (d.smoke || (d.kick && !d.rapid)) u.recoil = 1;
     if (d.kick) u.heat = Math.min(1, (u.heat || 0) + 0.36);
     if (d.casing) {
       this.casings.push({ x: u.x + u.facing * 5, y: u.y - 1, vx: -u.facing * (22 + Math.random() * 30), vy: -62 - Math.random() * 30, rot: Math.random() * 3, spin: (Math.random() - 0.5) * 26, age: 0, life: 0.75 });
@@ -1253,6 +1254,7 @@ export class World {
     const d = u.def;
     const t = this.acquire(u, dt);
     if (d.airborne) this.airMode(u, dt);
+    if (d.missiles) stepZordSalvo(this, u, dt);
     const speed = d.speed * u.speedMul * (u.air ? 1.7 : 1);
     u.firing = false;
     if (t) {

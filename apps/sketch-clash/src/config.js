@@ -107,6 +107,35 @@ export const TROOPER = {
   thrusters: 'walk',
 };
 
+// Gatling Trooper: between the Jet Trooper and MechaZord. A heavier Robo Trooper whose rotary cannon pours out a long
+// stream of rounds, then winds down for a moment. He doesn't back away from anyone.
+export const GATLING = {
+  ...TROOPER,
+  hp: 520,
+  radius: 17 * UNIT,
+  sep: 27 * UNIT,
+  speed: 40,
+  sight: 440,
+  range: 300,
+  holdDist: 160,
+  kite: 0,
+  burst: 22,
+  burstGap: 0.065,
+  cooldownMin: 1.2,
+  cooldownMax: 1.7,
+  damage: 9,
+  spread: 0.1,
+  armor: 0.85,
+  scale: 1.42, // of Robo Trooper's drawing; the trooper himself is 1.15
+  rapid: true,
+  noDrop: true,
+  ring: 1.55,
+  pivot: { x: 8.5 * K, y: 8 * K }, // the drawing is scaled up 1.42 about the feet
+  muzzleLen: 64 * K,
+  boom: 19,
+  parts: ['botplate', 'botplate', 'botpod', 'botpod', 'gatlingbarrel', 'trooper'],
+};
+
 // Robot Juggernaut: a broad armoured brute with great iron fists. He wades in and brings his fists down, flattening everyone
 // near where they land. Bullets and arrows only do part of their damage, and nothing knocks him back.
 export const JUGGERNAUT = {
@@ -418,8 +447,8 @@ export const SKELETON = {
 export const GAIT = { boar: 8, rat: 15, ant: 15, ape: 7, alligator: 7, piranha: 11, snake: 7, cheetah: 13, slime: 6, giant: 5, dragon: 7, mechazord: 7, zombie: 4.5, skeleton: 8 };
 
 // ------------------------------------------------------------------ terrain items
-// MechaZord: Robo Trooper built bulkier, with a dragon's head, and the biggest of the robots. His one attack is
-// his fire breath; he walks, and now and then lifts off on jets and breathes from the air.
+// MechaZord: Robo Trooper built bulkier, with a dragon's head, and the biggest of the robots. He has two attacks,
+// his fire breath and a salvo of homing missiles; he walks, and now and then lifts off on jets and breathes from the air.
 export const MECHAZORD = {
   ...DRAGON,
   robot: true,
@@ -428,7 +457,7 @@ export const MECHAZORD = {
   airborne: true, // like the dragon, he sometimes takes off and breathes fire from the air, sometimes he stays on the ground
   hoverH: 24,
   scale: 1.75, // of Robo Trooper's drawing; the trooper himself is 1.15, and not as broad
-  hp: 1400,
+  hp: 2200,
   mega: true, // his breath and his end come with their own effects (zordfx.js)
   radius: 13,
   sep: 21,
@@ -443,6 +472,9 @@ export const MECHAZORD = {
   offTime: 0.85,
   explodes: true, // and goes to pieces when he dies, like the other robots
   boom: 30,
+  // his second attack: a salvo of homing missiles. first: seconds before the first one; every: between salvos;
+  // range: further than his fire; flight: seconds each is in the air
+  missiles: { first: 2.4, every: 5.5, count: 6, gap: 0.09, damage: 48, blast: 17, range: 390, flight: 0.9 },
   parts: ['botplate', 'botplate', 'botpod', 'botpod', 'zordhorn', 'zordhorn', 'zordhead'],
   ring: 2,
   body: [42, 40, -19],
@@ -468,6 +500,7 @@ export const SPECIES = {
   mechazord: { id: 'mechazord', label: 'MechaZord', def: MECHAZORD },
   trooper: { id: 'trooper', label: 'Robo Trooper', def: TROOPER },
   jettrooper: { id: 'jettrooper', label: 'Jet Trooper', def: JETTROOPER },
+  gatlingtrooper: { id: 'gatlingtrooper', label: 'Gatling Trooper', def: GATLING },
   juggernaut: { id: 'juggernaut', label: 'Robot Juggernaut', def: JUGGERNAUT },
   boar: { id: 'boar', label: 'Boar', def: BOAR },
   rat: { id: 'rat', label: 'Rat', def: RAT },
@@ -492,7 +525,7 @@ export const SPECIES = {
 // The order of the palette (the knight only ever comes from a cavalry).
 export const TABS = [
   { id: 'army', label: 'Army', items: ['soldier', 'flamethrower', 'sniper', 'grenadier', 'archer', 'cowboy', 'ninja'] },
-  { id: 'robots', label: 'Robots', items: ['trooper', 'jettrooper', 'mechazord'] }, // the Juggernaut's code is kept, but he isn't in the palette
+  { id: 'robots', label: 'Robots', items: ['trooper', 'jettrooper', 'gatlingtrooper', 'mechazord'] }, // the Juggernaut's code is kept, but he isn't in the palette
   { id: 'magic', label: 'Magic', items: ['mage'] },
   { id: 'terrain', label: 'Terrain', items: ['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower'] },
 ];

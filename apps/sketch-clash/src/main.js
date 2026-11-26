@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=235';
-import { buildCreatureArt } from './creatures.js?v=235';
-import { buildEggArt } from './art_eggs.js?v=235';
-import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=235';
-import { Sfx } from './sfx.js?v=235';
-import { World } from './world.js?v=235';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=235';
-import { buildUnitArt, drawDrop } from './art_units.js?v=235';
-import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=235';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=236';
+import { buildCreatureArt } from './creatures.js?v=236';
+import { buildEggArt } from './art_eggs.js?v=236';
+import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=236';
+import { Sfx } from './sfx.js?v=236';
+import { World } from './world.js?v=236';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=236';
+import { buildUnitArt, drawDrop } from './art_units.js?v=236';
+import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=236';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -187,6 +187,7 @@ const LATTICE = {
   default: [15.5, 12.5, true],
   trooper: [28, 22, true],
   jettrooper: [28, 22, true],
+  gatlingtrooper: [36, 28, true],
   juggernaut: [43, 31, true],
   roman: [17.4, 17.6, false],
   cavalry: [34, 22, true],
@@ -1272,7 +1273,7 @@ function render() {
       ctx.ellipse(0, 0, 20.5 * 0.31, 22.8 * 0.31, 0, 0, TAU);
       ctx.fill();
     }
-    if (c.u.species !== 'sniper' && c.u.species !== 'trooper' && c.u.species !== 'jettrooper' && c.u.species !== 'juggernaut' && c.u.species !== 'mechazord') {
+    if (c.u.species !== 'sniper' && c.u.species !== 'trooper' && c.u.species !== 'jettrooper' && c.u.species !== 'gatlingtrooper' && c.u.species !== 'juggernaut' && c.u.species !== 'mechazord') {
       placeUnit(ctx, dpr, c.u);
       ctx.globalAlpha = a;
       drawDizzyEyes(ctx, c.u);

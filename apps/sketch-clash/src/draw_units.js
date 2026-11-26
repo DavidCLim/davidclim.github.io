@@ -1,9 +1,9 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=235';
-import { drawLayer, OUT } from './sprites.js?v=235';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS } from './art_units.js?v=235';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=235';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=235';
-import { drawZordGround, drawZordAir } from './zordfx.js?v=235';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=236';
+import { drawLayer, OUT } from './sprites.js?v=236';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels } from './art_units.js?v=236';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=236';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=236';
+import { drawZordGround, drawZordAir } from './zordfx.js?v=236';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -190,6 +190,62 @@ function botGlow(ctx, x, y, r, rgb, a) {
   ctx.fill();
 }
 
+// The Gatling Trooper's cannon. Its barrels wind up before a volley, scream round while he fires and coast down after.
+function drawCannon(ctx, A, u, s) {
+  const { dead, moving, aiming, ph, pose, kick, t, clock } = s;
+  const firing = !dead && u.burstLeft > 0;
+  const winding = !dead && aiming && !firing && (u.cdT || 0) < 0.6;
+  const want = firing ? 34 : winding ? 6 + 28 * (1 - Math.max(0, u.cdT || 0) / 0.6) : 0;
+  const dt = Math.min(0.05, Math.max(0, clock - (u.spinAt === undefined ? clock : u.spinAt)));
+  u.spinAt = clock;
+  u.spinRate = (u.spinRate || 0) + (want - (u.spinRate || 0)) * Math.min(1, dt * (want > (u.spinRate || 0) ? 9 : 2.2));
+  u.spinA = ((u.spinA || 0) + u.spinRate * dt) % TAU;
+  const heat = dead ? 0 : u.heat || 0;
+  ctx.save();
+  ctx.translate(6 * K, lerp(14, 13, pose) * K);
+  ctx.rotate(dead ? 0.8 : lerp(0.24 + (moving ? Math.sin(ph) * 0.08 : 0), u.aim, pose));
+  // it shudders in his grip while it runs
+  if (firing) ctx.translate((Math.random() - 0.7) * 1.6 * K * 2, (Math.random() - 0.5) * 1.4 * K * 2);
+  ctx.save();
+  ctx.scale(K, K);
+  drawGatlingBarrels(ctx, u.spinA, heat);
+  ctx.restore();
+  drawLayer(ctx, A.gun);
+  drawLayer(ctx, A.hand);
+  if (heat > 0.4) botGlow(ctx, 41 * K, 0, 10 * K, '255, 120, 40', (heat - 0.4) * 0.9);
+  // a ragged star of flame jumps at the muzzle with every round
+  if (u.flash > 0.02) {
+    const turn = Math.random() * TAU;
+    botGlow(ctx, 49 * K, 0, 13 * K, '255, 190, 60', 0.75);
+    for (const [col, k] of [['#ffb02e', 1], ['#fff3b0', 0.55]]) {
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      for (let i = 0; i < 12; i++) {
+        const an = turn + (i / 12) * TAU;
+        const r = (i % 2 ? 3 : 8 + Math.random() * 3) * k;
+        const stretch = Math.cos(an) > 0 ? 1.7 : 0.8;
+        const x = (49 + Math.cos(an) * r * stretch) * K;
+        const y = Math.sin(an) * r * 0.8 * K;
+        if (i) ctx.lineTo(x, y);
+        else ctx.moveTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+  // and the barrels smoke once he lets up
+  if (heat > 0.3 && !firing && kick < 0.1) {
+    for (let i = 0; i < 5; i++) {
+      const q = (t * 1.5 + i / 5) % 1;
+      ctx.fillStyle = `rgba(170, 172, 184, ${0.6 * heat * (1 - q)})`;
+      ctx.beginPath();
+      ctx.arc((45 + Math.sin(q * 7 + i) * 3) * K, (-4 - 22 * q) * K, (1.8 + 3.4 * q) * K, 0, TAU);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
 // a springy antenna whose tip lags behind whatever the body is doing
 function botAntennae(ctx, sway, blinkOn) {
   ctx.lineCap = 'round';
@@ -216,8 +272,10 @@ function botAntennae(ctx, sway, blinkOn) {
 }
 
 function drawTrooper(ctx, dpr, sprites, u) {
-  const A = sprites.trooper;
+  const heavy = u.species === 'gatlingtrooper';
+  const A = sprites[u.species];
   const d = u.def;
+  const size = d.scale || BOT_SCALE;
   const dead = !!u.tilt;
   const clock = performance.now() / 1000;
   const t = clock + (u.id || 0) * 0.737;
@@ -259,7 +317,7 @@ function drawTrooper(ctx, dpr, sprites, u) {
   if (age < 0.28) ctx.translate(0, -46 * (1 - (age / 0.28) ** 2));
   ctx.translate(0, FEET);
   const squash = age >= 0.28 && age < 0.55 ? Math.sin(((age - 0.28) / 0.27) * Math.PI) : 0;
-  ctx.scale(BOT_SCALE * (1 + 0.2 * squash), BOT_SCALE * (1 - 0.22 * squash));
+  ctx.scale(size * (1 + 0.2 * squash), size * (1 - 0.22 * squash));
   ctx.translate(0, -FEET);
 
   drawLayer(ctx, A.feet[moving ? (u.anim | 0) & 3 : 0]);
@@ -306,9 +364,10 @@ function drawTrooper(ctx, dpr, sprites, u) {
   const look = aiming ? [1, Math.sin(u.aim) * 1.2] : [Math.sin(t * 0.9) * 0.9 + 0.2, Math.sin(t * 1.7) * 0.5];
   ctx.save();
   ctx.scale(K, K);
+  if (heavy) ctx.translate(10.6 * (GATLING_WIDE - 1), 0);
   trooperEyes(ctx, { lx: look[0], ly: look[1], lid, angry: aiming, spin: aiming ? t * 5 : Math.sin(t * 0.6) * 0.4, power, dead });
   ctx.restore();
-  if (!dead && power > 0.5) botGlow(ctx, 10.6 * K, -4.6 * K, (11 + (aiming ? 3 * Math.sin(t * 14) : Math.sin(t * 3))) * K, '70, 255, 205', aiming ? 0.34 : 0.18);
+  if (!dead && power > 0.5) botGlow(ctx, (heavy ? 11.4 : 10.6) * K, -4.6 * K, (11 + (aiming ? 3 * Math.sin(t * 14) : Math.sin(t * 3))) * K, '70, 255, 205', aiming ? 0.34 : 0.18);
   // a green scanning beam sweeps about while there's nobody to shoot
   if (!dead && !moving && pose < 0.35 && age > 0.9) {
     const sa = Math.sin(t * 1.25) * 0.5 + 0.05;
@@ -331,7 +390,9 @@ function drawTrooper(ctx, dpr, sprites, u) {
   burnGlow(ctx, u, 20.7 * K, 23 * K);
   if (!dead) drawHitFlash(ctx, u, 20.9 * K, 23.2 * K);
 
-  // ---- the blaster
+  // ---- the blaster, or the cannon
+  if (heavy) drawCannon(ctx, A, u, { dead, moving, aiming, ph, pose, kick, t, clock });
+  else {
   ctx.save();
   ctx.translate(lerp(8 * K, 8 * K, pose), lerp(12 * K, 11 * K, pose));
   ctx.rotate(dead ? 0.9 : lerp(0.3 + (moving ? Math.sin(ph) * 0.12 : 0), u.aim - kick * 0.34, pose));
@@ -368,6 +429,7 @@ function drawTrooper(ctx, dpr, sprites, u) {
     }
   }
   ctx.restore();
+  }
 
   // ---- electricity crawls over him when he's hit, and a badly damaged one keeps sparking
   const zap = !dead && (u.hit > 0.02 || (u.hp < d.hp * 0.45 && Math.sin(t * 7.3) > 0.9));
@@ -722,6 +784,33 @@ function drawZordRig(ctx, A, m, eyes) {
   ctx.scale(1.1, 1.1);
   drawLayer(ctx, A.pack);
   ctx.restore();
+  // before a salvo the noses of his missiles rise out of the top of the pack
+  if (m.rack > 0.01) {
+    art(() => {
+      ctx.lineJoin = 'round';
+      for (let i = 0; i < 3; i++) {
+        ctx.save();
+        ctx.translate(-34 + i * 6.4, -20 - i * 2.6);
+        ctx.rotate(-0.5);
+        ctx.translate(0, -9 * m.rack);
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = OUT;
+        ctx.fillStyle = '#d3d8e3';
+        ctx.beginPath();
+        ctx.rect(-2.8, 0, 5.6, 9);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#e0523c';
+        ctx.beginPath();
+        ctx.moveTo(-2.8, 0);
+        ctx.quadraticCurveTo(0, -9, 2.8, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+    });
+  }
   // head and body tip together, as a trooper's do
   ctx.save();
   ctx.translate(0, 18 * K);
@@ -758,7 +847,7 @@ function drawZordRig(ctx, A, m, eyes) {
   ctx.restore();
 }
 
-const ZORD_STILL = { jaw: 0.16, headTilt: 0, sway: 0, beacon: false, hand: 0, lit: 0 };
+const ZORD_STILL = { jaw: 0.16, headTilt: 0, sway: 0, beacon: false, hand: 0, lit: 0, rack: 0 };
 const ZORD_MOUTH = { x: 39, y: 14 };
 
 // a thin four-pointed glint
@@ -934,6 +1023,8 @@ function drawMechaZord(ctx, dpr, sprites, u) {
   ctx.translate(0, FEET);
   ctx.scale(d.scale * (1 + 0.16 * squash), d.scale * (1 - 0.18 * squash));
   ctx.translate(0, -FEET);
+  // each missile leaving shoves him forward
+  if (!dead && u.launch > 0) ctx.translate(2.2 * u.launch, 0);
   // roaring he shudders
   if (roar > 0) ctx.translate(Math.sin(t * 62) * 0.5 * roar, 0);
 
@@ -964,6 +1055,7 @@ function drawMechaZord(ctx, dpr, sprites, u) {
     beacon: !dead && t % 1.1 < 0.22,
     hand: dead ? 0 : roar > 0 ? 7 * roar : charge * 3 + (moving ? Math.sin(ph) * 1.4 : Math.sin(t * 2.1) * 0.5),
     lit: dead ? 0 : firing ? 0.8 + 0.2 * Math.sin(t * 16) : Math.max(charge, roar),
+    rack: dead ? 0 : u.salvo > 0 ? 1 : u.missileT !== undefined && u.missileT < 0.7 && u.target ? 1 - Math.max(0, u.missileT) / 0.7 : 0,
   };
   if (!dead && (firing || charge > 0.15)) zordVents(ctx, firing ? 1 : charge, t);
   drawZordRig(ctx, A, m, (g) => {
@@ -1527,6 +1619,7 @@ const DRAWERS = {
   ...Object.fromEntries(CREATURE_IDS.map((id) => [id, (ctx, dpr, sprites, u) => drawCreature(ctx, dpr, sprites, u, burnOverlay)])),
   flamethrower: drawFlamethrower,
   trooper: drawTrooper,
+  gatlingtrooper: drawTrooper,
   jettrooper: drawJetTrooper,
   juggernaut: drawJuggernaut,
   mechazord: drawMechaZord,
@@ -2081,6 +2174,21 @@ const ICONS = {
     drawLayer(g, S.gunLoaded);
   }],
   juggernaut: [104, 52, 68, null],
+  gatlingtrooper: [108, 47, 48, (g, S) => {
+    g.save();
+    g.scale(K, K);
+    g.translate(10.6 * (GATLING_WIDE - 1), 0);
+    trooperEyes(g, { lx: 0.7, ly: 0.2 });
+    g.restore();
+    g.translate(6 * K, 13 * K);
+    g.rotate(0.16);
+    g.save();
+    g.scale(K, K);
+    drawGatlingBarrels(g, 0.5, 0);
+    g.restore();
+    drawLayer(g, S.gun);
+    drawLayer(g, S.hand);
+  }],
   mechazord: [108, 51, 50, null],
   trooper: [96, 45, 44, (g, S) => {
     g.save();
@@ -2163,7 +2271,7 @@ export function paintUnitIcon(canvas, sprites, species) {
   g.save();
   g.translate((ox * canvas.width) / w, (oy * canvas.width) / w);
   g.scale(m, m);
-  if (species === 'trooper' || species === 'jettrooper') drawLayer(g, S.pack);
+  if (species === 'trooper' || species === 'jettrooper' || species === 'gatlingtrooper') drawLayer(g, S.pack);
   if (species === 'mechazord') {
     g.save();
     g.translate(0, FEET);
