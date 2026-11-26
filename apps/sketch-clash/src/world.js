@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=222';
-import { TerrainMap, WALL } from './terrain.js?v=222';
-import { installBeasts } from './beasts.js?v=222';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=223';
+import { TerrainMap, WALL } from './terrain.js?v=223';
+import { installBeasts } from './beasts.js?v=223';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -1212,15 +1212,13 @@ export class World {
     if (u.moving) u.anim += dt * 7.3;
   }
 
-  // MechaZord alternates between walking and flying, like the dragon: he lifts off for a few seconds, then lands
-  // and stomps the ground.
+  // MechaZord alternates between walking and flying, like the dragon: he lifts off for a few seconds, then lands.
   airMode(u, dt) {
     const d = u.def;
     if (u.airT === undefined) {
       u.airT = 2 + Math.random() * 3;
       u.air = false;
       u.alt = 0;
-      u.stompCd = 1;
     }
     u.airT -= dt;
     if (u.airT <= 0 && u.target) {
@@ -1238,42 +1236,6 @@ export class World {
         if (this.sfx && Math.random() < 0.2) this.sfx('flame', u.x);
       }
     }
-    if (d.stomp && !u.air && u.alt < 0.12) {
-      u.stompCd -= dt;
-      if (u.stompCd <= 0) {
-        const m = d.stomp;
-        let hit = false;
-        this.eachEnemyNear(u.side, u.x, u.y, m.radius, (o) => {
-          const dx = o.x - u.x;
-          const dy = o.y - u.y;
-          const dist = Math.hypot(dx, dy) || 1;
-          if (dist > m.radius + o.def.radius) return;
-          hit = true;
-          if (!o.def.noKnock) {
-            o.kx += (dx / dist) * m.knock;
-            o.ky += (dy / dist) * m.knock * 0.6;
-          }
-          this.hurt(o, m.dmg, o.x, o.y, 'blast', u);
-        });
-        if (hit) {
-          u.stompCd = m.cd;
-          if (this.sfx) this.sfx('boom', u.x);
-          for (let i = 0; i < 18; i++) {
-            const a = (i / 18) * TAU;
-            this.puffs.push({
-              x: u.x + Math.cos(a) * 8,
-              y: u.y + FEET + Math.sin(a) * 3,
-              vx: Math.cos(a) * 34,
-              vy: Math.sin(a) * 10 - 2,
-              age: 0,
-              life: 0.7 + Math.random() * 0.4,
-              size: 2 + Math.random() * 1.2,
-              dust: true,
-            });
-          }
-        } else u.stompCd = 0.3;
-      }
-    }
   }
 
   stepFlame(u, dt) {
@@ -1282,12 +1244,6 @@ export class World {
     if (d.airborne) this.airMode(u, dt);
     const speed = d.speed * u.speedMul * (u.air ? 1.7 : 1);
     u.firing = false;
-    if (u.beamT !== undefined) {
-      // he plants himself while he gathers the beam and lets it go
-      this.stepBeam(u, dt, t);
-      this.readyUp(u, dt);
-      return;
-    }
     if (t) {
       const dx = t.x - u.x;
       const dy = t.y - u.y;
@@ -1310,9 +1266,6 @@ export class World {
           u.burstLeft = 0;
           u.burstT = d.offTime * (0.7 + Math.random() * 0.6);
         }
-      } else if (u.burstT <= 0 && dist <= d.range && d.beam && (u.breaths = (u.breaths || 0) + 1) % d.beam.every === 2) {
-        u.beamT = 0;
-        if (this.sfx) this.sfx('magic', u.x);
       } else if (u.burstT <= 0 && dist <= d.range) {
         u.burstLeft = 1;
         u.burstT = d.onTime * (0.8 + Math.random() * 0.4);
@@ -1323,56 +1276,6 @@ export class World {
       this.marchStep(u, dt, speed * 0.85);
     }
     this.readyUp(u, dt);
-  }
-
-  // The plasma beam: gathered while he tracks his target, then a straight line from his mouth that burns everyone on it.
-  // It can only swing slowly once it is out.
-  stepBeam(u, dt, t) {
-    const d = u.def;
-    const b = d.beam;
-    const before = u.beamT;
-    u.beamT += dt;
-    const out = u.beamT >= b.charge && u.beamT < b.charge + b.fire;
-    if (t) {
-      if (u.beamT < b.charge && Math.abs(t.x - u.x) > 3) u.facing = t.x > u.x ? 1 : -1;
-      this.aimAt(u, t, u.beamT < b.charge ? dt : dt * 0.12);
-    }
-    if (before < b.charge && u.beamT >= b.charge && this.sfx) {
-      this.sfx('zap', u.x);
-      this.sfx('boom', u.x);
-    }
-    if (out) {
-      const m = this.muzzleOf(u);
-      const ang = u.facing > 0 ? u.aim : Math.PI - u.aim;
-      const cos = Math.cos(ang);
-      const sin = Math.sin(ang);
-      u.beam = { x: m.x, y: m.y, ang, len: b.range };
-      // how far a point is from the line of the beam
-      const off = (x, y) => {
-        const along = Math.max(0, Math.min(b.range, (x - m.x) * cos + (y - m.y) * sin));
-        return Math.hypot(x - m.x - cos * along, y - m.y - sin * along);
-      };
-      this.eachEnemyNear(u.side, m.x + (cos * b.range) / 2, m.y + (sin * b.range) / 2, b.range / 2 + 40, (o) => {
-        if (off(o.x, o.y) > b.width + o.def.radius) return;
-        o.burn = Math.max(o.burn, 1.2);
-        o.burnSrc = u;
-        o.hit = 0.1;
-        if (!o.def.noKnock) {
-          o.kx += cos * 420 * dt;
-          o.ky += sin * 420 * dt;
-        }
-        this.hurt(o, b.dps * dt, o.x, o.y, 'burn', u);
-      });
-      for (const p of this.props) {
-        if (!p.dead && p.type === 'barrel' && off(p.x, p.y - 8) <= b.width + 7) this.damageProp(p, b.dps * dt);
-      }
-    } else u.beam = null;
-    if (u.beamT >= b.charge + b.fire + b.rest) {
-      u.beamT = undefined;
-      u.beam = null;
-      u.burstLeft = 0;
-      u.burstT = d.offTime * (0.7 + Math.random() * 0.6);
-    }
   }
 
   // A stream of fire: visual particles plus a cone that burns everything in it.
@@ -1411,7 +1314,10 @@ export class World {
       let da = Math.atan2(dy, dx) - ang;
       while (da > Math.PI) da -= TAU;
       while (da < -Math.PI) da += TAU;
-      if (Math.abs(da) > cone + (o.def.radius / Math.max(dist, 1)) * 0.9) return;
+      // a tall breather's mouth is high and well out in front, so someone pressed up against him is outside the cone:
+      // the fire pouring down catches them all the same
+      const under = d.footFire && (o.x - u.x) * u.facing > -d.radius * 0.7 && Math.hypot(o.x - u.x, o.y - u.y) <= d.radius + o.def.radius + d.footFire;
+      if (!under && Math.abs(da) > cone + (o.def.radius / Math.max(dist, 1)) * 0.9) return;
       o.burn = d.burnTime;
       o.burnSrc = u;
       this.hurt(o, d.dps * (u.air && d.airborne ? 1.5 : 1) * dt, o.x, o.y, 'burn', u);

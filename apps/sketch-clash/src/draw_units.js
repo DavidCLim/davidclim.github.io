@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=222';
-import { drawLayer, OUT } from './sprites.js?v=222';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_TAIL, ZORD_JAW, ZORD_EYE, ZORD_CORE, zordEye, drawZordTail, drawZordSpine } from './art_units.js?v=222';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=222';
-import { EGG_DROPS } from './art_eggs.js?v=222';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=223';
+import { drawLayer, OUT } from './sprites.js?v=223';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_TAIL, ZORD_JAW, ZORD_EYE, ZORD_CORE, zordEye, drawZordTail, drawZordSpine } from './art_units.js?v=223';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=223';
+import { EGG_DROPS } from './art_eggs.js?v=223';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -698,9 +698,8 @@ function drawJuggernaut(ctx, dpr, sprites, u) {
   if (!dead && (u.hit > 0.14 || (u.hp < d.hp * 0.4 && Math.sin(t * 7.3) > 0.9))) drawZaps(ctx, 2);
 }
 
-// MechaZord: stomps forward with his tail swinging; the blades down his back light up from the tail to his head, then
-// his jaw drops and he pours out fire. Now and then he lifts off on jets under his feet, and landing he shakes the
-// ground.
+// MechaZord: tramps forward with his tail swinging; the blades down his back light up from the tail to his head, with
+// lightning jumping between them, then his jaw drops and he pours out fire. Now and then he lifts off on jets.
 // the blades along his back: [x, y, which way they point, length]; the rest ride on the tail
 const ZORD_BACK = [[22, -118, -2.2, 14], [9, -103, -2.34, 20], [-5, -88, -2.46, 26], [-17, -73, -2.52, 31], [-27, -58, -2.52, 34]];
 const ZORD_ON_TAIL = [[0, 0.2, -2.4, 33], [0, 0.75, -2.25, 29], [1, 0.3, -2.14, 24], [1, 0.85, -2.06, 20], [2, 0.45, -2.0, 17], [3, 0.1, -1.96, 13], [3, 0.75, -1.9, 10], [4, 0.4, -1.84, 8]];
@@ -803,25 +802,14 @@ function drawMechaZord(ctx, dpr, sprites, u) {
   const firing = !!u.firing && !dead;
   // the moment before he breathes, the light runs up his back
   const inRange = u.target && Math.hypot(u.target.x - u.x, u.target.y - u.y) <= d.range;
-  const bm = d.beam;
-  const bt = !dead ? u.beamT : undefined;
-  const gather = bt !== undefined && bt < bm.charge ? bt / bm.charge : 0; // 0..1 while the beam builds
-  const blasting = bt !== undefined && bt >= bm.charge && bt < bm.charge + bm.fire;
-  const charge = !dead && !firing && bt === undefined && inRange && !(u.burstLeft > 0) && u.burstT !== undefined && u.burstT < 0.8 ? Math.max(0, Math.min(1, 1 - u.burstT / 0.8)) : 0;
+  const charge = !dead && !firing && inRange && !(u.burstLeft > 0) && u.burstT !== undefined && u.burstT < 0.8 ? Math.max(0, Math.min(1, 1 - u.burstT / 0.8)) : 0;
   // he roars once he has landed, and now and then while he waits for a fight
-  const idleFor = !dead && !moving && !u.target && bt === undefined && age > 4 ? t % 8 : 9;
+  const idleFor = !dead && !moving && !u.target && age > 4 ? t % 8 : 9;
   const roarAt = age > 0.75 && age < 2.1 ? (age - 0.75) / 1.35 : idleFor < 1.35 ? idleFor / 1.35 : 1;
   const roar = roarAt < 1 ? Math.min(1, roarAt * 5, (1 - roarAt) * 4) : 0;
   const ph = u.anim * 0.9;
   const sn = Math.sin(ph);
   const cs = Math.cos(ph);
-
-  // a stomp has just gone off when its cooldown jumps back up
-  if (u.stompCd !== undefined) {
-    if (u.stompSeen !== undefined && u.stompCd > u.stompSeen + 0.5) u.stompAt = clock;
-    u.stompSeen = u.stompCd;
-  }
-  const stomp = u.stompAt !== undefined && !dead ? clock - u.stompAt : 9;
 
   placeUnit(ctx, dpr, u, u.hit > 0.16 ? (Math.random() - 0.5) * 1.4 : 0);
   const ring = (x, y, rx, col, width) => {
@@ -834,11 +822,6 @@ function drawMechaZord(ctx, dpr, sprites, u) {
   if (age > 0.28 && age < 0.9) {
     const q = (age - 0.28) / 0.62;
     ring(0, FEET + 1, 22 + 46 * q, `rgba(150, 148, 160, ${0.65 * (1 - q)})`, 3.6 * (1 - q) + 0.5);
-  }
-  if (stomp < 0.4) {
-    const q = stomp / 0.4;
-    ring(0, FEET + 1, d.stomp.radius * (0.35 + 0.75 * q), `rgba(150, 148, 160, ${0.8 * (1 - q)})`, 4 * (1 - q) + 0.4);
-    ring(0, FEET + 1, d.stomp.radius * (0.2 + 0.55 * q), `rgba(112, 232, 214, ${0.7 * (1 - q)})`, 2 * (1 - q) + 0.3);
   }
   // each heavy footfall puffs out under the foot that lands
   if (moving && alt < 0.1) {
@@ -863,7 +846,7 @@ function drawMechaZord(ctx, dpr, sprites, u) {
 
   if (age < 0.3) ctx.translate(0, -90 * (1 - (age / 0.3) ** 2));
   if (alt > 0.01) ctx.translate(0, -alt * (d.hoverH + Math.sin(t * 3.2) * 1.4));
-  const squash = age >= 0.3 && age < 0.6 ? Math.sin(((age - 0.3) / 0.3) * Math.PI) : stomp < 0.25 ? Math.sin((stomp / 0.25) * Math.PI) * 0.6 : 0;
+  const squash = age >= 0.3 && age < 0.6 ? Math.sin(((age - 0.3) / 0.3) * Math.PI) : 0;
   ctx.translate(0, FEET);
   ctx.scale(d.scale * (1 + 0.1 * squash), d.scale * (1 - 0.12 * squash));
   ctx.translate(0, -FEET);
@@ -872,14 +855,8 @@ function drawMechaZord(ctx, dpr, sprites, u) {
     ctx.rotate(0.025 + sn * 0.025);
     ctx.translate(0, -FEET);
   }
-  // roaring he shudders; the beam's kick shoves him back on his heels
+  // roaring he shudders
   if (roar > 0) ctx.translate(Math.sin(t * 62) * 0.5 * roar, 0);
-  if (blasting) {
-    ctx.translate((-5 + Math.sin(t * 70) * 0.9) * K, 0);
-    ctx.translate(0, FEET);
-    ctx.rotate(-0.035);
-    ctx.translate(0, -FEET);
-  }
 
   const swing = moving && alt < 0.1 ? 1 : 0;
   const breathe = dead ? 0 : Math.sin(t * 1.7);
@@ -894,24 +871,23 @@ function drawMechaZord(ctx, dpr, sprites, u) {
       { a: -swing * sn * 0.16 + alt * 0.14, lift: swing * Math.max(0, -cs) * 8 },
     ],
     arms: [
-      blasting ? 0.42 : roar > 0 ? -0.55 * roar : firing ? -0.22 + Math.sin(t * 30) * 0.03 : swing * -sn * 0.14 + breathe * 0.04 - charge * 0.2 + gather * 0.4,
-      blasting ? 0.3 : roar > 0 ? -0.45 * roar : firing ? -0.16 : swing * sn * 0.14 - breathe * 0.03 - charge * 0.14 + gather * 0.28,
+      roar > 0 ? -0.55 * roar : firing ? -0.22 + Math.sin(t * 30) * 0.03 : swing * -sn * 0.14 + breathe * 0.04 - charge * 0.2,
+      roar > 0 ? -0.45 * roar : firing ? -0.16 : swing * sn * 0.14 - breathe * 0.03 - charge * 0.14,
     ],
-    bob: swing * Math.abs(cs) * 3.4 + breathe * 1.1 - gather * 3,
-    jaw: blasting ? 0.74 + Math.sin(t * 52) * 0.03 : bt !== undefined ? 0.2 + 0.4 * gather : roar > 0 ? 0.78 * roar + Math.sin(t * 40) * 0.04 * roar : firing ? 0.55 + Math.sin(t * 38) * 0.04 : charge * 0.3,
+    bob: swing * Math.abs(cs) * 3.4 + breathe * 1.1,
+    jaw: roar > 0 ? 0.78 * roar + Math.sin(t * 40) * 0.04 * roar : firing ? 0.55 + Math.sin(t * 38) * 0.04 : charge * 0.3,
     // he braces: head thrown back to roar or drawn back to charge, then dipped toward whoever he is burning
-    headTilt: firing || blasting ? Math.max(-0.2, Math.min(0.34, u.aim * 0.6)) + Math.sin(t * 34) * 0.012 : roar > 0 ? -0.34 * roar : -0.18 * Math.max(charge, gather),
+    headTilt: firing ? Math.max(-0.2, Math.min(0.34, u.aim * 0.6)) + Math.sin(t * 34) * 0.012 : roar > 0 ? -0.34 * roar : -0.18 * charge,
     glow: dead
       ? () => 0
-      : firing || blasting ? (i) => 0.75 + 0.25 * Math.sin(t * (blasting ? 30 : 16) - i * 0.9)
-        : bt !== undefined && bt < bm.charge ? (i, n) => (gather * 1.12 > (n - 1 - i) / n ? 1 : 0)
-          : roar > 0 ? (i) => (Math.sin(t * 22 - i * 0.8) > -0.2 ? roar : 0)
-            : charge > 0 ? (i, n) => (charge * 1.15 > (n - 1 - i) / n ? 1 : 0)
-              : () => 0,
+      : firing ? (i) => 0.75 + 0.25 * Math.sin(t * 16 - i * 0.9)
+        : roar > 0 ? (i) => (Math.sin(t * 22 - i * 0.8) > -0.2 ? roar : 0)
+          : charge > 0 ? (i, n) => (charge * 1.15 > (n - 1 - i) / n ? 1 : 0)
+            : () => 0,
   };
 
   const power = age < 0.55 ? 0 : age < 0.9 ? (Math.sin(age * 70) > 0 ? 1 : 0.15) : 1;
-  const angry = firing || charge > 0 || bt !== undefined || roar > 0.3;
+  const angry = firing || charge > 0 || roar > 0.3;
   const blink = !angry && t % 3.7 < 0.16 ? Math.sin(((t % 3.7) / 0.16) * Math.PI) : 0;
   drawZordRig(ctx, A, m, (g) => {
     g.save();
@@ -922,9 +898,9 @@ function drawMechaZord(ctx, dpr, sprites, u) {
     if (firing || charge > 0.4) botGlow(g, 66 * K, -97 * K, (firing ? 20 + 3 * Math.sin(t * 40) : 14 * charge) * K, '255, 170, 60', firing ? 0.75 : 0.6 * charge);
   });
 
-  // the core in his chest beats, and blazes while the beam builds
+  // the core in his chest beats, and blazes while he breathes
   if (!dead && power > 0.5) {
-    const hot = blasting ? 1 : gather;
+    const hot = firing ? 1 : charge;
     const beat = 0.5 + 0.5 * Math.sin(t * (3 + hot * 22));
     const cx = ZORD_CORE.x * K;
     const cy = (ZORD_CORE.y - m.bob) * K;
@@ -934,9 +910,9 @@ function drawMechaZord(ctx, dpr, sprites, u) {
     ctx.arc(cx, cy, (2.2 + 1.8 * hot) * K, 0, TAU);
     ctx.fill();
   }
-  // while it builds, lightning jumps from blade to blade up his back
-  if (gather > 0.12 || blasting) {
-    const lit = m.blades.filter((_, i) => blasting || gather * 1.12 > (m.blades.length - 1 - i) / m.blades.length);
+  // as the fire builds, lightning jumps from blade to blade up his back
+  if (charge > 0.12) {
+    const lit = m.blades.filter((_, i) => charge * 1.15 > (m.blades.length - 1 - i) / m.blades.length);
     ctx.save();
     ctx.scale(K, K);
     ctx.lineCap = 'round';
@@ -959,28 +935,6 @@ function drawMechaZord(ctx, dpr, sprites, u) {
       }
     }
     ctx.restore();
-  }
-  // the beam gathering in his jaws: a swelling ball of light with motes rushing into it
-  if (gather > 0) {
-    const ox = 75 * K;
-    const oy = (-95 - m.bob) * K;
-    ctx.fillStyle = '#9ffbe4';
-    for (let i = 0; i < 10; i++) {
-      const q = (t * 2.4 + i / 10) % 1;
-      const an = (i / 10) * TAU + i * 1.7;
-      const far = (1 - q) * 34 * K;
-      ctx.globalAlpha = q * gather;
-      ctx.beginPath();
-      ctx.arc(ox + Math.cos(an) * far, oy + Math.sin(an) * far, (1 + 1.6 * q) * K, 0, TAU);
-      ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-    const r = (3 + 9 * gather + Math.sin(t * 46) * 1.2 * gather) * K;
-    botGlow(ctx, ox, oy, r * 2.4, '70, 255, 205', 0.85);
-    ctx.fillStyle = '#f2fffc';
-    ctx.beginPath();
-    ctx.arc(ox, oy, r * 0.6, 0, TAU);
-    ctx.fill();
   }
   // each roar rings out from his mouth
   if (roar > 0) {
@@ -1492,83 +1446,6 @@ export function drawFlames(ctx, world, under) {
     ctx.drawImage(spr, f.x - r, f.y - r, r * 2, r * 2);
   }
   ctx.globalAlpha = 1;
-  if (!under) drawBeams(ctx, world);
-}
-
-// MechaZord's plasma beam: a wide teal glow round a bright core with a white heart, rippling as it pours, crackling
-// along its length, with a flare at his mouth and a burst where it ends.
-function drawBeams(ctx, world) {
-  for (const u of world.units) {
-    const m = u.beam;
-    if (!m || u.dead) continue;
-    const b = u.def.beam;
-    const age = u.beamT - b.charge;
-    // it punches out fast, then thins away at the end
-    const reach = m.len * Math.min(1, age / 0.1);
-    const fat = Math.max(0, Math.min(1, age / 0.08, (b.fire - age) / 0.18));
-    if (fat <= 0) continue;
-    const clock = world.clock;
-    ctx.save();
-    ctx.translate(m.x, m.y);
-    ctx.rotate(m.ang);
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    for (const [col, wide] of [
-      ['rgba(50, 225, 190, 0.28)', 3],
-      ['rgba(40, 215, 180, 0.8)', 1.7],
-      ['#8ffbe0', 1.05],
-      ['#ffffff', 0.5],
-    ]) {
-      ctx.strokeStyle = col;
-      ctx.beginPath();
-      ctx.lineWidth = b.width * wide * fat * (1 + 0.12 * Math.sin(clock * 55 + wide * 3));
-      ctx.moveTo(0, 0);
-      ctx.lineTo(reach, 0);
-      ctx.stroke();
-    }
-    // two strands of lightning twisting round it
-    for (const side of [1, -1]) {
-      ctx.strokeStyle = 'rgba(235, 255, 250, 0.9)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      for (let x = 0; x <= reach; x += 9) {
-        const y = side * Math.sin(x * 0.075 - clock * 34) * b.width * 1.15 * fat + (Math.random() - 0.5) * 3;
-        if (x) ctx.lineTo(x, y);
-        else ctx.moveTo(x, y);
-      }
-      ctx.stroke();
-    }
-    // rings of force travelling down it
-    for (let i = 0; i < 4; i++) {
-      const q = (clock * 2.6 + i / 4) % 1;
-      ctx.strokeStyle = `rgba(190, 255, 240, ${0.75 * (1 - q) * fat})`;
-      ctx.lineWidth = 1.2;
-      ctx.beginPath();
-      ctx.ellipse(q * reach, 0, 2.4, b.width * (1.1 + 0.5 * q) * fat, 0, 0, TAU);
-      ctx.stroke();
-    }
-    const flare = (x, r) => {
-      botGlow(ctx, x, 0, r * 2.2, '70, 255, 205', 0.8 * fat);
-      ctx.fillStyle = '#f2fffc';
-      ctx.beginPath();
-      ctx.arc(x, 0, r * 0.55 * fat, 0, TAU);
-      ctx.fill();
-    };
-    flare(0, b.width * 1.15);
-    flare(reach, b.width * (1.35 + 0.25 * Math.sin(clock * 40)));
-    ctx.strokeStyle = `rgba(150, 255, 230, ${0.9 * fat})`;
-    ctx.lineWidth = 1.3;
-    ctx.beginPath();
-    for (let i = 0; i < 9; i++) {
-      const an = Math.random() * TAU;
-      const r0 = b.width * 0.8;
-      const r1 = r0 + 5 + Math.random() * 12;
-      ctx.moveTo(reach + Math.cos(an) * r0, Math.sin(an) * r0);
-      ctx.lineTo(reach + Math.cos(an) * r1, Math.sin(an) * r1);
-    }
-    ctx.stroke();
-    ctx.restore();
-  }
 }
 
 // the Jet Trooper's rockets: a stubby grey rocket with a red nose (its fire trail is ordinary flame)
