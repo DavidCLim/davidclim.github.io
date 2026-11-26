@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=198';
-import { drawLayer, OUT } from './sprites.js?v=198';
-import { drawDrop, trooperEyes, BOT_JETS, JUG_AXE_PIVOT, JUG_CLAW_PIVOT, JUG_EYE } from './art_units.js?v=198';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=198';
-import { EGG_DROPS } from './art_eggs.js?v=198';
+import { TAU, K, UNIT, FEET } from './config.js?v=201';
+import { drawLayer, OUT } from './sprites.js?v=201';
+import { drawDrop, trooperEyes, BOT_JETS, JUG_AXE_PIVOT, JUG_CLAW_PIVOT, JUG_EYE } from './art_units.js?v=201';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=201';
+import { EGG_DROPS } from './art_eggs.js?v=201';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -444,20 +444,35 @@ function drawTrooper(ctx, dpr, sprites, u) {
   }
 }
 
-// Robot Juggernaut. His legs, body and two arms are separate pieces so he can stomp along, heave the axe up over his
-// head and bring it down hard enough to crack the ground.
-function jugSwingAngle(u) {
+// Robot Juggernaut. His legs, body and two arms are separate pieces, so he can stomp along, heave the axe over his
+// head and smash it down, lunge across with the claw, charge, and show off while he waits. The big effects (craters,
+// shockwaves, slashes, the meltdown) are in jug_fx.js; here is everything that moves with him.
+function jugSwingAngle(u, s) {
   const d = u.def;
-  const s = u.swing || 0;
   if (s <= 0) return null;
   const strike = 0.11;
   if (s < d.windup - strike) {
     const q = s / (d.windup - strike);
-    return -1.75 * (1 - (1 - q) ** 2);
+    return -1.85 * (1 - (1 - q) ** 2.4);
   }
-  if (s < d.windup) return -1.75 + 2.4 * ((s - (d.windup - strike)) / strike) ** 2;
+  if (s < d.windup) return -1.85 + 2.55 * ((s - (d.windup - strike)) / strike) ** 2;
   const after = (s - d.windup) / d.recover;
-  return after < 0.42 ? 0.65 : 0.65 * (1 - ((after - 0.42) / 0.58));
+  // a small bounce as the blade bites, a held beat, then he hauls it back
+  if (after < 0.45) return 0.7 - 0.12 * Math.sin(Math.min(1, after / 0.16) * Math.PI);
+  return 0.7 * (1 - ((after - 0.45) / 0.55) ** 1.4);
+}
+
+// the claw's pose during a swipe: [turn, forward, up]
+function jugClawPose(u, s) {
+  const c = u.def.claw;
+  const mix = (a, b, q) => a.map((v, i) => v + (b[i] - v) * q);
+  const back = [0.62, -9, -3];
+  const out = [-1.38, 66, -13];
+  if (s < c.windup - 0.1) return mix([0, 0, 0], back, 1 - (1 - s / (c.windup - 0.1)) ** 2);
+  if (s < c.windup) return mix(back, out, ((s - (c.windup - 0.1)) / 0.1) ** 1.6);
+  const after = (s - c.windup) / c.recover;
+  if (after < 0.35) return out;
+  return mix(out, [0, 0, 0], ((after - 0.35) / 0.65) ** 1.3);
 }
 
 function jugAt(ctx, pivot, angle, layer) {
@@ -469,14 +484,27 @@ function jugAt(ctx, pivot, angle, layer) {
   ctx.restore();
 }
 
+// where a point on the axe arm ends up (art units) when the arm is turned
+function jugTurned(pivot, x, y, a) {
+  const dx = x - pivot[0];
+  const dy = y - pivot[1];
+  return [pivot[0] + dx * Math.cos(a) - dy * Math.sin(a), pivot[1] + dx * Math.sin(a) + dy * Math.cos(a)];
+}
+
 function jugPuffs(ctx, x, y, t, n, size, rise, rgb, a, rate) {
   for (let i = 0; i < n; i++) {
     const q = (t * rate + i / n) % 1;
-    ctx.fillStyle = `rgba(${rgb}, ${a * (1 - q)})`;
-    ctx.beginPath();
-    ctx.arc((x + Math.sin(q * 6 + i * 2) * 3 - q * 8) * K, (y - rise * q) * K, size * (0.5 + q) * K, 0, TAU);
-    ctx.fill();
+    botGlow(ctx, (x + Math.sin(q * 6 + i * 2) * 4 - q * 10) * K, (y - rise * q) * K, size * (0.6 + q * 1.2) * K, rgb, a * (1 - q));
   }
+}
+
+// a jet of cold fire pointing along `turn` from (x, y)
+function jugJet(ctx, x, y, turn, len, wide, t) {
+  ctx.save();
+  ctx.translate(x * K, y * K);
+  ctx.rotate(turn);
+  botJet(ctx, 0, 0, len, wide, t);
+  ctx.restore();
 }
 
 function drawJuggernaut(ctx, dpr, sprites, u) {
@@ -488,176 +516,269 @@ function drawJuggernaut(ctx, dpr, sprites, u) {
   if (u.born === undefined) u.born = clock;
   const age = dead ? 9 : clock - u.born;
   const moving = u.moving && !dead;
+  const charging = moving && u.chargeT > 0;
   const ph = u.anim * 0.52;
   const s = dead ? 0 : u.swing || 0;
-  const swing = dead ? null : jugSwingAngle(u);
+  const claw = u.atkKind === 'claw';
+  const atk = claw ? d.claw : d;
+  const swing = !dead && !claw ? jugSwingAngle(u, s) : null;
+  const swipe = !dead && claw && s > 0 ? jugClawPose(u, s) : null;
+  const winding = s > 0 && s < atk.windup;
+  const charge = winding ? s / atk.windup : 0;
+  const resting = !dead && !moving && s <= 0 && age > 1.4;
+  // every few seconds while waiting he revs his boilers, snaps the claw and flares his eye
+  const show = resting && t % 6.5 < 1.25 ? Math.sin(((t % 6.5) / 1.25) * Math.PI) : 0;
 
-  placeUnit(ctx, dpr, u, u.hit > 0.16 ? (Math.random() - 0.5) * 1.2 : 0);
+  placeUnit(ctx, dpr, u, u.hit > 0.16 ? (Math.random() - 0.5) * 1.4 : 0);
 
-  // ---- on the ground: his landing ring, the dust under each footfall and the crater of an axe blow
-  const ring = (x, q, rx, ry, rgb, a, w) => {
-    ctx.strokeStyle = `rgba(${rgb}, ${a * (1 - q)})`;
-    ctx.lineWidth = w * (1 - q) + 0.5;
-    ctx.beginPath();
-    ctx.ellipse(x, FEET + 2, rx * (0.35 + q), ry * (0.35 + q), 0, 0, TAU);
-    ctx.stroke();
-  };
-  const dust = (x, q, spread, n) => {
-    ctx.fillStyle = `rgba(188, 182, 184, ${0.75 * (1 - q)})`;
-    for (let i = 0; i < n; i++) {
-      const a = (i / n) * TAU + (u.id || 0);
+  // ---- the landing: rings and a burst of dust
+  if (age > 0.34 && age < 1.15) {
+    const q = (age - 0.34) / 0.81;
+    for (const [rx, rgb, w] of [[46, '90, 235, 205', 5], [34, '255, 255, 255', 3], [58, '140, 134, 150', 4]]) {
+      ctx.strokeStyle = `rgba(${rgb}, ${0.75 * (1 - q)})`;
+      ctx.lineWidth = w * (1 - q) + 0.4;
       ctx.beginPath();
-      ctx.arc(x + Math.cos(a) * spread * (0.3 + q), FEET + 2 + Math.sin(a) * spread * 0.32 * (0.3 + q) - 5 * q, 3.4 * (1 - q) + 0.7, 0, TAU);
-      ctx.fill();
+      ctx.ellipse(0, FEET + 2, rx * (0.2 + q), rx * 0.34 * (0.2 + q), 0, 0, TAU);
+      ctx.stroke();
     }
-  };
-  if (age > 0.34 && age < 1) {
-    const q = (age - 0.34) / 0.66;
-    ring(0, q, 36, 11, '140, 136, 150', 0.65, 4);
-    dust(0, q, 32, 12);
-  }
-  if (moving) {
-    const half = ph / Math.PI;
-    const q = (half % 1) / 0.45;
-    if (q < 1) dust(Math.floor(half) % 2 === 0 ? 24 * K * 3.4 : -32 * K * 3.4, q, 9, 6);
-  }
-  if (s >= d.windup && s < d.windup + 0.5) {
-    const q = (s - d.windup) / 0.5;
-    const ix = d.slamAt;
-    ring(ix, q, d.slamRadius * 1.15, d.slamRadius * 0.42, '90, 225, 205', 0.9, 4.5);
-    ring(ix, Math.min(1, q * 1.5), d.slamRadius * 0.75, d.slamRadius * 0.27, '255, 255, 255', 0.85, 3);
-    dust(ix, q, d.slamRadius, 14);
-    // cracks splitting out from the blow
-    ctx.strokeStyle = `rgba(60, 56, 70, ${0.75 * (1 - q)})`;
-    ctx.lineWidth = 0.9;
-    ctx.beginPath();
-    for (let i = 0; i < 7; i++) {
-      const a = (i / 7) * TAU + 0.4;
-      const r = d.slamRadius * (0.55 + (i % 3) * 0.17);
-      ctx.moveTo(ix, FEET + 2);
-      ctx.lineTo(ix + Math.cos(a + 0.18) * r * 0.55, FEET + 2 + Math.sin(a + 0.18) * r * 0.2);
-      ctx.lineTo(ix + Math.cos(a) * r, FEET + 2 + Math.sin(a) * r * 0.36);
+    for (let i = 0; i < 16; i++) {
+      const a = (i / 16) * TAU + (u.id || 0);
+      botGlow(ctx, Math.cos(a) * (14 + 34 * q), FEET + Math.sin(a) * (5 + 11 * q) - 8 * q, 7 + 5 * q, '180, 172, 180', 0.8 * (1 - q));
     }
-    ctx.stroke();
   }
 
-  // ---- he drops in heavily and squashes on landing
-  if (age < 0.36) ctx.translate(0, -85 * (1 - (age / 0.36) ** 2));
-  const squash = age >= 0.36 && age < 0.66 ? Math.sin(((age - 0.36) / 0.3) * Math.PI) : 0;
+  // ---- he drops in heavily, with a streak above him, and squashes as he lands
+  if (age < 0.36) {
+    const fall = 110 * (1 - (age / 0.36) ** 2);
+    const sg = ctx.createLinearGradient(0, -fall - 95, 0, -fall - 12);
+    sg.addColorStop(0, 'rgba(120, 245, 220, 0)');
+    sg.addColorStop(1, 'rgba(180, 255, 240, 0.75)');
+    ctx.fillStyle = sg;
+    ctx.fillRect(-12, -fall - 95, 24, 83);
+    ctx.translate(0, -fall);
+  }
+  const squash = age >= 0.36 && age < 0.68 ? Math.sin(((age - 0.36) / 0.32) * Math.PI) : 0;
   if (squash) {
     ctx.translate(0, FEET);
-    ctx.scale(1 + 0.12 * squash, 1 - 0.14 * squash);
+    ctx.scale(1 + 0.14 * squash, 1 - 0.17 * squash);
     ctx.translate(0, -FEET);
   }
+
+  ctx.translate(0, FEET);
+  ctx.scale(d.scale, d.scale);
+  ctx.translate(0, -FEET);
 
   // ---- legs lift and plant one at a time
   const stepA = moving ? Math.sin(ph) : 0;
   const leg = (layer, v) => {
     ctx.save();
-    ctx.translate(v * 5 * K, -Math.max(0, v) * 9 * K);
+    ctx.translate(v * 6 * K, -Math.max(0, v) * 11 * K);
     drawLayer(ctx, layer);
     ctx.restore();
   };
   leg(A.legB, -stepA);
   leg(A.legA, stepA);
 
-  // ---- the hull heaves with each step, breathes at rest, and throws its weight into the swing
-  const bob = moving ? Math.abs(Math.cos(ph)) * 3.4 - 2.2 : Math.sin(t * 1.7) * 0.8;
-  let lean = moving ? 0.03 + Math.sin(ph) * 0.045 : 0;
-  const charging = moving && u.chargeT > 0;
+  // ---- the hull heaves with each step, breathes at rest, and throws its weight into every blow
+  const bob = moving ? Math.abs(Math.cos(ph)) * 4.2 - 2.8 : Math.sin(t * 1.7) * 0.9 - show * 2.2;
+  let lean = moving ? 0.03 + Math.sin(ph) * 0.05 : -0.05 * show;
   if (charging) lean += 0.15;
-  if (swing !== null) lean = swing < 0 ? swing * 0.085 : swing * 0.3;
-  ctx.translate(0, FEET);
+  let lunge = 0;
+  if (swing !== null) lean = swing < 0 ? swing * 0.09 : swing * 0.3;
+  if (swipe) {
+    lean = swipe[0] > 0 ? -0.11 * (swipe[0] / 0.62) : -swipe[0] * 0.15;
+    lunge = swipe[1] * 0.16;
+  }
+  const tremble = winding ? (Math.random() - 0.5) * charge * 1.4 : 0;
+  ctx.translate(lunge * K * 3 + tremble * K, FEET);
   ctx.rotate(lean);
   ctx.translate(0, -FEET + bob * K);
 
+  // ---- charging: boilers wide open, with speed lines
   if (charging) {
-    // boilers wide open: jets roaring out of his back and speed lines trailing
-    for (const [jx, jy, len] of [[-48, -62, 34], [-44, -42, 26]]) {
-      botGlow(ctx, (jx - 8) * K, jy * K, 22 * K, '80, 230, 215', 0.55);
-      botJet(ctx, jx, jy, len, 7, t);
+    for (const [jx, jy, len] of [[-34, -90, 40], [-52, -62, 36], [-44, -40, 28]]) {
+      botGlow(ctx, (jx - 8) * K, jy * K, 24 * K, '80, 230, 215', 0.6);
+      jugJet(ctx, jx, jy, jy < -80 ? 0.5 : 0, len, 8, t);
     }
-    ctx.strokeStyle = 'rgba(150, 156, 172, 0.55)';
-    ctx.lineWidth = 0.9;
     ctx.lineCap = 'round';
-    ctx.beginPath();
-    for (let i = 0; i < 5; i++) {
-      const q = (t * 3.4 + i / 5) % 1;
-      const y = (-78 + i * 21) * K;
-      ctx.moveTo((-60 - 44 * q) * K, y);
-      ctx.lineTo((-90 - 44 * q) * K, y);
+    for (let i = 0; i < 8; i++) {
+      const q = (t * 3.6 + i / 8) % 1;
+      const y = (-92 + i * 16) * K;
+      ctx.strokeStyle = `rgba(${i % 2 ? '150, 156, 172' : '120, 240, 215'}, ${0.7 * (1 - q)})`;
+      ctx.lineWidth = 0.9;
+      ctx.beginPath();
+      ctx.moveTo((-56 - 60 * q) * K, y);
+      ctx.lineTo((-96 - 60 * q) * K, y);
+      ctx.stroke();
     }
-    ctx.stroke();
   }
-  const idleArm = dead ? 0.25 : Math.sin(t * 1.7 + 1) * 0.03;
-  jugAt(ctx, JUG_CLAW_PIVOT, swing !== null ? -swing * 0.32 : moving ? Math.sin(ph) * 0.17 : -idleArm, A.clawArm);
+
+  // ---- the arms
+  const idleArm = dead ? 0.25 : Math.sin(t * 1.7 + 1) * 0.035;
+  const clawTurn = swing !== null ? -swing * 0.32 : moving ? Math.sin(ph) * 0.19 : -idleArm + Math.sin(t * 27) * 0.13 * show;
+  if (!swipe) jugAt(ctx, JUG_CLAW_PIVOT, clawTurn, A.clawArm);
   drawLayer(ctx, A.body);
+
+  // ---- the furnace glowing through his chest vents, with embers drifting up
+  if (!dead) {
+    const heat = 0.5 + 0.28 * Math.sin(t * 4.4) + charge * 0.5 + show * 0.4;
+    botGlow(ctx, -17.6 * K, -31 * K, (9 + 6 * charge) * K, '80, 255, 210', 0.32 * heat);
+    for (let i = 0; i < 4; i++) {
+      const q = (t * 0.8 + i * 0.27) % 1;
+      ctx.fillStyle = `rgba(150, 255, 225, ${0.85 * (1 - q)})`;
+      ctx.beginPath();
+      ctx.arc((-17.6 + Math.sin(q * 9 + i * 3) * 6) * K, (-31 - 22 * q) * K, 0.9 * K * (1.6 - q), 0, TAU);
+      ctx.fill();
+    }
+  }
 
   // ---- the glowing slit in his mask
   const [ex, ey] = JUG_EYE;
   if (!dead) {
-    const charging = swing !== null && s < d.windup;
-    const flick = age < 0.75 ? 0 : age < 1.2 ? (Math.sin(age * 60) > 0 ? 1 : 0.1) : 1;
-    const hot = charging ? 1 : 0.62 + 0.18 * Math.sin(t * 3);
-    ctx.strokeStyle = `rgba(140, 255, 225, ${flick * hot})`;
-    ctx.lineWidth = 1.7 * K;
+    const flick = age < 0.8 ? 0 : age < 1.3 ? (Math.sin(age * 60) > 0 ? 1 : 0.1) : 1;
+    const hot = winding || charging ? 1 : 0.66 + 0.18 * Math.sin(t * 3) + show * 0.3;
     ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo((ex + 4.6) * K, (ey - 3.8) * K);
-    ctx.lineTo(ex * K, (ey + 0.6) * K);
-    ctx.lineTo((ex - 6.6) * K, (ey - 3.4) * K);
-    ctx.moveTo(ex * K, (ey + 0.6) * K);
-    ctx.lineTo((ex - 0.5) * K, (ey + 6) * K);
-    ctx.stroke();
-    botGlow(ctx, ex * K, ey * K, (charging ? 22 : 12) * K, '70, 255, 210', flick * (charging ? 0.7 : 0.32));
-  }
-
-  // ---- the stacks on his back chug: soft puffs at rest, thick smoke on the march, a blast after a blow
-  if (!dead) {
-    const blast = s >= d.windup && s < d.windup + d.recover;
-    const heavy = blast || moving;
-    jugPuffs(ctx, -22, -97, t, heavy ? 5 : 3, blast ? 9 : heavy ? 6.5 : 4.5, blast ? 40 : heavy ? 30 : 20, blast ? '226, 230, 238' : '150, 150, 164', blast ? 0.75 : 0.5, heavy ? 1.3 : 0.55);
-    if (swing !== null && s < d.windup) botGlow(ctx, -22 * K, -96 * K, 20 * K, '80, 255, 210', 0.55 * (s / d.windup));
-  }
-
-  // ---- the axe arm, with a bright arc trailing the blade as it comes down
-  if (swing !== null && s > d.windup - 0.1 && s < d.windup + 0.16) {
-    const fade = s < d.windup ? 1 : 1 - (s - d.windup) / 0.16;
-    ctx.save();
-    ctx.translate(JUG_AXE_PIVOT[0] * K, JUG_AXE_PIVOT[1] * K);
-    for (const [r, w, col] of [[48, 17, `rgba(110, 235, 215, ${0.45 * fade})`], [55, 5, `rgba(255, 255, 255, ${0.9 * fade})`]]) {
+    for (const [col, w] of [[`rgba(60, 235, 195, ${flick * hot})`, 2.2], [`rgba(225, 255, 246, ${flick * hot})`, 0.85]]) {
       ctx.strokeStyle = col;
       ctx.lineWidth = w * K;
       ctx.beginPath();
-      ctx.arc(0, 0, r * K, -1.5, 0.5 + Math.min(0, swing));
+      ctx.moveTo((ex + 4.6) * K, (ey - 3.6) * K);
+      ctx.lineTo(ex * K, (ey + 0.5) * K);
+      ctx.lineTo((ex - 6.4) * K, (ey - 3.2) * K);
+      ctx.moveTo(ex * K, (ey + 0.5) * K);
+      ctx.lineTo((ex - 0.4) * K, (ey + 6) * K);
       ctx.stroke();
     }
-    ctx.restore();
+    const big = winding || charging || show > 0.4;
+    botGlow(ctx, ex * K, ey * K, (big ? 21 : 11) * K, '70, 255, 210', flick * (big ? 0.68 : 0.3));
+    if (big) {
+      // a lens flare streaking out of his eye
+      const fl = (26 + 22 * Math.max(charge, show)) * K;
+      const fg = ctx.createLinearGradient(ex * K - fl, 0, ex * K + fl, 0);
+      fg.addColorStop(0, 'rgba(120, 255, 225, 0)');
+      fg.addColorStop(0.5, `rgba(235, 255, 250, ${flick * 0.9})`);
+      fg.addColorStop(1, 'rgba(120, 255, 225, 0)');
+      ctx.fillStyle = fg;
+      ctx.fillRect(ex * K - fl, (ey - 0.55) * K, fl * 2, 1.1 * K);
+    }
   }
-  // the whole shoulder heaves up as the axe goes back
+
+  // ---- the stacks: smoke at rest and on the march, jets of fire when he revs or lands a blow
+  if (!dead) {
+    const blast = s >= atk.windup && s < atk.windup + atk.recover * 0.6;
+    const heavy = blast || moving;
+    jugPuffs(ctx, -23, -99, t, heavy ? 6 : 4, blast ? 10 : heavy ? 7 : 5, blast ? 46 : heavy ? 34 : 24, blast ? '226, 232, 240' : '128, 126, 144', blast ? 0.85 : 0.6, heavy ? 1.35 : 0.55);
+    const fire = blast ? 1 - (s - atk.windup) / (atk.recover * 0.6) : Math.max(show, charge * 0.6);
+    if (fire > 0.05) {
+      for (const [sx, sy, turn] of [[-17.5, -95, 1.72], [-25, -96, 1.57], [-33, -91, 1.4]]) jugJet(ctx, sx, sy, turn, 30 * fire * (blast ? 1.4 : 1), 4.6, t + sx);
+      botGlow(ctx, -25 * K, -104 * K, 30 * K * fire, '90, 235, 220', 0.5 * fire);
+    }
+  }
+
+  // ---- winding up: power pours into the weapon and grit lifts off the floor
+  const heave = swing !== null && swing < 0 ? [swing * 2.4, swing * 10] : [0, 0];
+  if (winding) {
+    let tip;
+    if (claw) tip = [-60 + swipe[1], -12 + swipe[2]];
+    else {
+      const p = jugTurned(JUG_AXE_PIVOT, 62, -14, swing);
+      tip = [p[0] + heave[0], p[1] + heave[1]];
+    }
+    botGlow(ctx, tip[0] * K, tip[1] * K, (14 + 30 * charge) * K, '80, 255, 210', 0.35 + 0.4 * charge);
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 16; i++) {
+      const q = (t * 2.5 + i / 16) % 1;
+      const a = i * 2.399 + t;
+      const far = 46 * (1 - q) + 5;
+      const near = Math.max(3, far - 11);
+      ctx.strokeStyle = `rgba(${i % 3 === 0 ? '240, 255, 250' : '90, 250, 212'}, ${q * Math.min(1, charge * 2.2)})`;
+      ctx.lineWidth = 1.2 * K * 2;
+      ctx.beginPath();
+      ctx.moveTo((tip[0] + Math.cos(a) * far) * K, (tip[1] + Math.sin(a) * far) * K);
+      ctx.lineTo((tip[0] + Math.cos(a) * near) * K, (tip[1] + Math.sin(a) * near) * K);
+      ctx.stroke();
+    }
+    for (let i = 0; i < 9; i++) {
+      const q = (t * 1.3 + i * 0.37) % 1;
+      ctx.fillStyle = `rgba(104, 96, 114, ${charge * (1 - q)})`;
+      ctx.fillRect((-58 + i * 15) * K, (24 - 34 * q * charge) * K, 3.6 * K * (1 - q * 0.5), 3 * K * (1 - q * 0.5));
+    }
+  }
+
+  // ---- the axe arm: ghost images and a broad crescent of light follow the blade down
+  const axeTurn = swing !== null ? swing : swipe ? -0.4 * Math.min(1, s / atk.windup) : moving ? -Math.sin(ph) * 0.14 : idleArm - 0.05 * show;
   ctx.save();
-  if (swing !== null && swing < 0) ctx.translate(swing * 2.5 * K, swing * 9 * K);
-  jugAt(ctx, JUG_AXE_PIVOT, swing !== null ? swing : moving ? -Math.sin(ph) * 0.13 : idleArm, A.axeArm);
+  ctx.translate(heave[0] * K, heave[1] * K);
+  if (swing !== null && s > d.windup - 0.09 && s < d.windup + 0.2) {
+    const fade = s < d.windup ? 1 : 1 - (s - d.windup) / 0.2;
+    ctx.save();
+    ctx.translate(JUG_AXE_PIVOT[0] * K, JUG_AXE_PIVOT[1] * K);
+    const a1 = 0.42 + Math.min(0.3, swing);
+    const a0 = Math.max(-1.75, a1 - 2.1);
+    for (const [outer, inner, col] of [[70, 20, `rgba(70, 235, 205, ${0.3 * fade})`], [66, 40, `rgba(140, 255, 228, ${0.6 * fade})`], [63, 55, `rgba(255, 255, 255, ${0.95 * fade})`]]) {
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.arc(0, 0, outer * K, a0, a1);
+      ctx.arc(0, 0, inner * K, a1, a0 + (a1 - a0) * 0.12, true);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+    if (s < d.windup + 0.05) {
+      for (let k = 3; k >= 1; k--) {
+        const back = jugSwingAngle(u, s - k * 0.019);
+        if (back === null) continue;
+        ctx.globalAlpha = 0.34 / k;
+        jugAt(ctx, JUG_AXE_PIVOT, back, A.axeArm);
+      }
+      ctx.globalAlpha = 1;
+    }
+  }
+  jugAt(ctx, JUG_AXE_PIVOT, axeTurn, A.axeArm);
   ctx.restore();
 
-  // ---- damage: a white wince when struck, then smoke and sparks once he's badly hurt
-  if (!dead && u.hit > 0.15) botGlow(ctx, 0, -38 * K, 52 * K, '255, 255, 255', 0.5);
+  // ---- the claw swipe comes right across the front of him
+  if (swipe) {
+    if (s > atk.windup - 0.09 && s < atk.windup + 0.07) {
+      for (let k = 3; k >= 1; k--) {
+        const p = jugClawPose(u, Math.max(0, s - k * 0.02));
+        ctx.save();
+        ctx.globalAlpha = 0.32 / k;
+        ctx.translate(p[1] * K, p[2] * K);
+        jugAt(ctx, JUG_CLAW_PIVOT, p[0], A.clawArm);
+        ctx.restore();
+      }
+    }
+    ctx.save();
+    ctx.translate(swipe[1] * K, swipe[2] * K);
+    jugAt(ctx, JUG_CLAW_PIVOT, swipe[0], A.clawArm);
+    ctx.restore();
+  }
+
+  // ---- damage: a white wince when struck, then fire, smoke and sparks once he's badly hurt
+  if (!dead && u.hit > 0.185) botGlow(ctx, 0, -38 * K, 40 * K, '255, 255, 255', 0.2);
   burnGlow(ctx, u, 40 * K, 42 * K);
   if (!dead && u.hp < d.hp * 0.5) {
-    jugPuffs(ctx, 12, -62, t + 0.3, 4, 6, 34, '70, 68, 78', 0.6, 0.9);
-    if (Math.sin(t * 9) > 0.75) {
-      for (const [col, w] of [['rgba(80, 200, 255, 0.8)', 2.6], ['#ffffff', 1]]) {
+    jugPuffs(ctx, 12, -62, t + 0.3, 5, 7, 40, '62, 58, 72', 0.75, 0.9);
+    if (u.hp < d.hp * 0.25) {
+      jugJet(ctx, -38, -62, 1.2, 14 + Math.sin(t * 22) * 4, 3.4, t);
+      botGlow(ctx, -38 * K, -66 * K, 13 * K, '255, 150, 60', 0.6 + 0.25 * Math.sin(t * 31));
+    }
+    if (Math.sin(t * 9) > 0.7) {
+      ctx.lineCap = 'round';
+      let x = (Math.random() - 0.5) * 50;
+      let y = -40 + (Math.random() - 0.5) * 40;
+      const path = [[x, y]];
+      for (let i = 0; i < 4; i++) {
+        x += (Math.random() - 0.5) * 22;
+        y += (Math.random() - 0.5) * 22;
+        path.push([x, y]);
+      }
+      for (const [col, w] of [['rgba(80, 220, 255, 0.8)', 2.8], ['#ffffff', 1]]) {
         ctx.strokeStyle = col;
         ctx.lineWidth = w * K;
         ctx.beginPath();
-        let x = (Math.random() - 0.5) * 50;
-        let y = -40 + (Math.random() - 0.5) * 40;
-        ctx.moveTo(x * K, y * K);
-        for (let i = 0; i < 4; i++) {
-          x += (Math.random() - 0.5) * 20;
-          y += (Math.random() - 0.5) * 20;
-          ctx.lineTo(x * K, y * K);
-        }
+        path.forEach(([px, py], i) => (i ? ctx.lineTo(px * K, py * K) : ctx.moveTo(px * K, py * K)));
         ctx.stroke();
       }
     }

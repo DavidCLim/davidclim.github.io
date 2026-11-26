@@ -1,6 +1,7 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=198';
-import { TerrainMap, WALL } from './terrain.js?v=198';
-import { installBeasts } from './beasts.js?v=198';
+import { addJugFx, jugShake, stepJugFx } from './jug_fx.js?v=201';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=201';
+import { TerrainMap, WALL } from './terrain.js?v=201';
+import { installBeasts } from './beasts.js?v=201';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -73,6 +74,8 @@ export class World {
     this.streaks = []; // sniper shot trails
     this.puffs = []; // gun smoke
     this.casings = []; // ejected shells
+    this.jfx = []; // the Juggernaut's craters, shockwaves, slashes and meltdown
+    this.shake = 0;
     this.flames = []; // flamethrower stream
     this.bombs = []; // grenades in the air
     this.arrows = []; // arrows in the air
@@ -446,6 +449,8 @@ export class World {
     this.puffs = [];
     this.casings = [];
     this.flames = [];
+    this.jfx = [];
+    this.shake = 0;
     this.bombs = [];
     this.arrows = [];
     this.blasts = [];
@@ -636,8 +641,8 @@ export class World {
           killerTeam: src ? src.team : null,
         });
       }
-      this.ghosts.push({ x: u.x, y: u.y, age: 0, seed: Math.random(), species: u.species, facing: u.facing || 1 });
-      this.corpses.push({ u: { ...u, dead: false, moving: false, hit: 0, flash: 0 }, age: 0 });
+      this.ghosts.push({ x: u.x, y: u.y, age: u.def.meltdown ? -1.1 : 0, seed: Math.random(), species: u.species, facing: u.facing || 1 });
+      if (!u.def.meltdown) this.corpses.push({ u: { ...u, dead: false, moving: false, hit: 0, flash: 0 }, age: 0 });
       if (u.def.smoke) {
         for (let i = 0; i < 2; i++) {
           this.puffs.push({
@@ -660,7 +665,8 @@ export class World {
         k.cdT = 0.5;
       } else if ((kind === 'blast' || kind === 'snipe') && !u.def.noDrop && !u.def.creature) this.launchDrop(u);
       else if (this.onDeath) this.onDeath(u);
-      if (u.def.explodes) this.blowApart(u);
+      if (u.def.meltdown) addJugFx(this, { type: 'meltdown', x: u.x, y: u.y, facing: u.facing || 1, life: 1.2, unit: { ...u } });
+      else if (u.def.explodes) this.blowApart(u);
       this.afterDeath(u, kind, src);
     }
   }
@@ -1243,8 +1249,12 @@ export class World {
       const before = u.swing;
       u.swing += dt;
       u.pose = 1;
-      if (before < d.windup && u.swing >= d.windup) this.slam(u);
-      if (u.swing >= d.windup + d.recover) u.swing = 0;
+      const atk = u.atkKind === 'claw' ? d.claw : d;
+      if (before < atk.windup && u.swing >= atk.windup) {
+        if (u.atkKind === 'claw') this.clawSwipe(u);
+        else this.slam(u);
+      }
+      if (u.swing >= atk.windup + atk.recover) u.swing = 0;
       return;
     }
     if (t) {
@@ -1255,8 +1265,11 @@ export class World {
       const gap = dist - t.def.radius;
       if (gap <= d.reach) {
         if (u.swingCd <= 0) {
+          u.combo = (u.combo || 0) + 1;
+          u.atkKind = u.combo % 2 === 0 ? 'claw' : 'axe';
+          const atk = u.atkKind === 'claw' ? d.claw : d;
           u.swing = 0.0001;
-          u.swingCd = d.windup + d.recover + d.rest;
+          u.swingCd = atk.windup + atk.recover + d.rest;
         }
       } else {
         const c = d.charge;
@@ -1271,6 +1284,44 @@ export class World {
       }
     } else this.marchStep(u, dt, d.speed * u.speedMul * 0.85);
     this.readyUp(u, dt);
+    if (u.moving) {
+      const charging = u.chargeT > 0;
+      // each time a foot comes down: dust, and the ground jolts
+      const foot = Math.floor((u.anim * 0.52) / Math.PI);
+      if (foot !== u.foot) {
+        u.foot = foot;
+        addJugFx(this, { type: 'step', x: u.x + u.facing * (foot % 2 === 0 ? 8 : -10), y: u.y + FEET + 1, life: 0.6, big: charging });
+        jugShake(this, charging ? 2.4 : 1.2);
+      }
+      if (charging) {
+        u.trailT = (u.trailT || 0) - dt;
+        if (u.trailT <= 0) {
+          u.trailT = 0.075;
+          addJugFx(this, { type: 'after', x: u.x, y: u.y, facing: u.facing, life: 0.32 });
+        }
+      }
+    }
+  }
+
+  clawSwipe(u) {
+    const c = u.def.claw;
+    const x = u.x + u.facing * c.at;
+    const y = u.y;
+    this.eachEnemyNear(u.side, x, y, c.radius + 24, (o) => {
+      const dx = o.x - x;
+      const dy = o.y - y;
+      const dist = Math.hypot(dx, dy) || 1;
+      if (dist > c.radius + o.def.radius) return;
+      if (!o.def.noKnock) {
+        o.kx += u.facing * 380;
+        o.ky += (dy / dist) * 130;
+      }
+      this.hurt(o, c.damage, o.x, o.y, 'blast', u);
+    });
+    this.hitProps(x, y, c.radius, c.damage);
+    addJugFx(this, { type: 'slash', x: u.x + u.facing * 15, y: u.y - 6, facing: u.facing, life: 0.46 });
+    jugShake(this, 3.6);
+    if (this.sfx) this.sfx('shot', x);
   }
 
   // the axe lands: everyone near the blade is hurt and thrown outward
@@ -1290,6 +1341,9 @@ export class World {
       this.hurt(o, d.damage, o.x, o.y, 'blast', u);
     });
     this.hitProps(x, y, d.slamRadius, d.damage);
+    addJugFx(this, { type: 'crater', x, y: y + FEET + 1, life: 7, r: d.slamRadius });
+    addJugFx(this, { type: 'slam', x, y: y + FEET + 1, life: 1.55, r: d.slamRadius });
+    jugShake(this, 8.5);
     if (this.sfx) this.sfx('boom', x);
   }
 
@@ -1860,6 +1914,8 @@ export class World {
       p.vy *= 0.97;
     }
     if (this.puffs.some((p) => p.age > p.life)) this.puffs = this.puffs.filter((p) => p.age <= p.life);
+
+    stepJugFx(this, dt);
 
     for (const c of this.casings) {
       c.age += dt;

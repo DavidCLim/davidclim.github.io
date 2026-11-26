@@ -108,26 +108,30 @@ export const TROOPER = {
 export const JUGGERNAUT = {
   kind: 'jugger',
   hp: 2400,
-  radius: 17,
-  sep: 34,
+  radius: 20,
+  scale: 1.25, // drawn this much bigger than its parts, about the feet
+  sep: 42,
   speed: 36,
   // riflemen back away from him, so every few seconds he fires his boilers and charges
   charge: { time: 1.1, boost: 3.3, rest: 2.6, from: 50 },
   sight: 460,
-  reach: 36, // from his middle to the edge of whoever he's swinging at
+  reach: 43, // from his middle to the edge of whoever he's swinging at
   windup: 0.66, // heaving the axe up and bringing it down
   recover: 0.62,
   rest: 0.45,
   damage: 130,
-  slamAt: 27, // how far in front of him the blade lands
+  // every other swing is a quicker swipe across the front with the claw
+  claw: { windup: 0.4, recover: 0.46, damage: 75, at: 31, radius: 28 },
+  slamAt: 34, // how far in front of him the blade lands
   slamRadius: 31,
   knock: 430,
   armor: 0.6,
   noKnock: true,
   noDrop: true,
   explodes: true,
+  meltdown: true, // he splits and pops for a second before he blows
   parts: ['jugshell', 'jugshell', 'jugpipe', 'jugpipe', 'jugspike', 'jugspike', 'botplate', 'botlens', 'juggernaut'],
-  ring: 3.1,
+  ring: 3.8,
   pivot: { x: 0, y: 0 },
   muzzleLen: 0,
 };
