@@ -1,7 +1,7 @@
-import { addJugFx, jugShake, stepJugFx } from './jug_fx.js?v=201';
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=201';
-import { TerrainMap, WALL } from './terrain.js?v=201';
-import { installBeasts } from './beasts.js?v=201';
+import { addJugFx, jugShake, stepJugFx } from './jug_fx.js?v=204';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=204';
+import { TerrainMap, WALL } from './terrain.js?v=204';
+import { installBeasts } from './beasts.js?v=204';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -1237,24 +1237,88 @@ export class World {
     }
   }
 
-  // The Juggernaut: march up, plant his feet, heave the axe up and slam it down. Once a swing starts he's committed.
+  // The Juggernaut. In reach he alternates the axe slam and the claw swipe; mobbed, he spins; out of reach he
+  // charges or fires his arm cannon; and when badly hurt he rages. Once an attack starts he's committed to it.
+  jugAttack(u) {
+    const d = u.def;
+    if (u.atkKind === 'claw') return d.claw;
+    if (u.atkKind === 'cannon') return d.cannon;
+    if (u.atkKind === 'spin') return { windup: d.spin.windup, recover: d.spin.time + d.spin.recover };
+    return d;
+  }
+
+  jugStart(u, kind) {
+    const d = u.def;
+    u.atkKind = kind;
+    u.swing = 0.0001;
+    u.chargeT = 0;
+    const a = this.jugAttack(u);
+    u.swingCd = (a.windup + a.recover) / (u.rage ? d.rage.haste : 1) + d.rest;
+    if (kind === 'cannon') u.cannonCd = d.cannon.rest;
+    if (kind === 'spin') {
+      u.spinCd = d.spin.rest;
+      u.spinTick = 0;
+    }
+  }
+
+  // where a blow lands: `far` in front, leaning toward whoever he is swinging at (above or below as well)
+  jugStrikePoint(u, far) {
+    const t = u.target;
+    if (!t || t.dead) return { x: u.x + u.facing * far, y: u.y };
+    const dx = t.x - u.x;
+    const dy = t.y - u.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    const go = Math.min(far, dist);
+    return { x: u.x + (dx / dist) * go, y: u.y + (dy / dist) * go };
+  }
+
+  // hurt and throw everyone within `radius` of (x, y)
+  jugBlow(u, x, y, radius, damage, push) {
+    let count = 0;
+    this.eachEnemyNear(u.side, x, y, radius + 30, (o) => {
+      const dx = o.x - x;
+      const dy = o.y - y;
+      const dist = Math.hypot(dx, dy) || 1;
+      if (dist > radius + o.def.radius) return;
+      count++;
+      if (!o.def.noKnock && push) {
+        o.kx += (dx / dist) * push;
+        o.ky += (dy / dist) * push * 0.7;
+      }
+      if (damage) this.hurt(o, damage, o.x, o.y, 'blast', u);
+    });
+    return count;
+  }
+
   stepJugger(u, dt) {
     const d = u.def;
     const t = this.acquire(u, dt);
+    const haste = u.rage ? d.rage.haste : 1;
     u.swingCd = Math.max(0, (u.swingCd || 0) - dt);
     u.chargeT = Math.max(0, (u.chargeT || 0) - dt);
-    u.chargeCd = Math.max(0, (u.chargeCd === undefined ? 1.2 : u.chargeCd) - dt);
+    // he opens with the cannon from range, then charges in
+    u.chargeCd = Math.max(0, (u.chargeCd === undefined ? 2.6 : u.chargeCd) - dt * haste);
+    u.cannonCd = Math.max(0, (u.cannonCd === undefined ? 0.35 : u.cannonCd) - dt * haste);
+    u.spinCd = Math.max(0, (u.spinCd === undefined ? 1.5 : u.spinCd) - dt * haste);
+    if (!u.rage && u.hp < d.hp * d.rage.at) this.jugRage(u);
     if (u.swing > 0) {
-      u.chargeT = 0;
       const before = u.swing;
-      u.swing += dt;
+      u.swing += dt * haste;
       u.pose = 1;
-      const atk = u.atkKind === 'claw' ? d.claw : d;
-      if (before < atk.windup && u.swing >= atk.windup) {
-        if (u.atkKind === 'claw') this.clawSwipe(u);
-        else this.slam(u);
+      const a = this.jugAttack(u);
+      if (u.atkKind === 'cannon' && u.swing < a.windup && t) {
+        u.aimAtX = t.x;
+        u.aimAtY = t.y;
+        if (Math.abs(t.x - u.x) > 3) u.facing = t.x > u.x ? 1 : -1;
       }
-      if (u.swing >= atk.windup + atk.recover) u.swing = 0;
+      if (before < a.windup && u.swing >= a.windup) {
+        if (u.atkKind === 'claw') this.clawSwipe(u);
+        else if (u.atkKind === 'cannon') this.jugFire(u);
+        else if (u.atkKind === 'axe') this.slam(u);
+        else if (this.sfx) this.sfx('boom', u.x);
+      }
+      if (u.atkKind === 'spin') this.jugSpin(u, dt * haste, t);
+      if (u.swing >= a.windup + a.recover) u.swing = 0;
       return;
     }
     if (t) {
@@ -1263,24 +1327,29 @@ export class World {
       const dist = Math.hypot(dx, dy) || 1;
       if (Math.abs(dx) > 3) u.facing = dx > 0 ? 1 : -1;
       const gap = dist - t.def.radius;
-      if (gap <= d.reach) {
+      if (u.swingCd <= 0 && u.spinCd <= 0 && this.jugBlow(u, u.x, u.y, d.spin.radius, 0, 0) >= d.spin.need) {
+        this.jugStart(u, 'spin');
+      } else if (gap <= d.reach) {
         if (u.swingCd <= 0) {
           u.combo = (u.combo || 0) + 1;
-          u.atkKind = u.combo % 2 === 0 ? 'claw' : 'axe';
-          const atk = u.atkKind === 'claw' ? d.claw : d;
-          u.swing = 0.0001;
-          u.swingCd = atk.windup + atk.recover + d.rest;
+          this.jugStart(u, u.combo % 2 === 0 ? 'claw' : 'axe');
         }
+      } else if (u.swingCd <= 0 && u.cannonCd <= 0 && u.chargeT <= 0 && gap > d.cannon.min && gap < d.cannon.max) {
+        u.aimAtX = t.x;
+        u.aimAtY = t.y;
+        this.jugStart(u, 'cannon');
       } else {
         const c = d.charge;
         if (gap > c.from && u.chargeCd <= 0) {
           u.chargeT = c.time;
           u.chargeCd = c.time + c.rest;
+          u.charges = (u.charges || 0) + 1;
         }
-        const speed = d.speed * u.speedMul * (u.chargeT > 0 ? c.boost : 1);
+        const speed = d.speed * u.speedMul * (u.chargeT > 0 ? c.boost : 1) * (u.rage ? 1.2 : 1);
         u.x += (dx / dist) * speed * dt;
         u.y += (dy / dist) * speed * dt;
         u.moving = true;
+        if (u.chargeT > 0) this.jugTrample(u);
       }
     } else this.marchStep(u, dt, d.speed * u.speedMul * 0.85);
     this.readyUp(u, dt);
@@ -1290,60 +1359,124 @@ export class World {
       const foot = Math.floor((u.anim * 0.52) / Math.PI);
       if (foot !== u.foot) {
         u.foot = foot;
-        addJugFx(this, { type: 'step', x: u.x + u.facing * (foot % 2 === 0 ? 8 : -10), y: u.y + FEET + 1, life: 0.6, big: charging });
-        jugShake(this, charging ? 2.4 : 1.2);
+        addJugFx(this, { type: 'step', x: u.x + u.facing * (foot % 2 === 0 ? 12 : -15), y: u.y + FEET + 1, life: 0.65, big: charging });
+        jugShake(this, charging ? 3 : 1.7);
       }
       if (charging) {
         u.trailT = (u.trailT || 0) - dt;
         if (u.trailT <= 0) {
-          u.trailT = 0.075;
-          addJugFx(this, { type: 'after', x: u.x, y: u.y, facing: u.facing, life: 0.32 });
+          u.trailT = 0.07;
+          addJugFx(this, { type: 'after', x: u.x, y: u.y, facing: u.facing, life: 0.34 });
         }
       }
     }
   }
 
+  // whoever is in the way of a charge is run over, once per charge
+  jugTrample(u) {
+    const d = u.def;
+    const mark = `${u.id}:${u.charges}`;
+    const x = u.x + u.facing * 14;
+    this.eachEnemyNear(u.side, x, u.y, d.radius + 30, (o) => {
+      const dx = o.x - x;
+      const dy = o.y - u.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      if (o.trampled === mark || dist > d.radius + o.def.radius) return;
+      o.trampled = mark;
+      if (!o.def.noKnock) {
+        o.kx += u.facing * d.charge.knock;
+        o.ky += (dy >= 0 ? 1 : -1) * d.charge.knock * 0.5;
+      }
+      this.hurt(o, d.charge.damage, o.x, o.y, 'blast', u);
+      addJugFx(this, { type: 'impact', x: o.x, y: o.y - 4, life: 0.28 });
+      jugShake(this, 4);
+    });
+  }
+
+  // while the spin is going he grinds toward his prey, cutting everyone round him several times over
+  jugSpin(u, dt, t) {
+    const s = u.def.spin;
+    if (u.swing < s.windup || u.swing > s.windup + s.time) return;
+    if (t) {
+      const dx = t.x - u.x;
+      const dy = t.y - u.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      u.x += (dx / dist) * u.def.speed * 1.1 * dt;
+      u.y += (dy / dist) * u.def.speed * 1.1 * dt;
+    }
+    u.spinTick -= dt;
+    if (u.spinTick > 0) return;
+    u.spinTick = s.tick;
+    this.jugBlow(u, u.x, u.y, s.radius, s.damage, 240);
+    this.hitProps(u.x, u.y, s.radius, s.damage);
+    addJugFx(this, { type: 'whirl', x: u.x, y: u.y + FEET + 1, life: 0.42, r: s.radius });
+    jugShake(this, 3.6);
+    if (this.sfx) this.sfx('shot', u.x);
+  }
+
+  jugRage(u) {
+    const r = u.def.rage;
+    u.rage = true;
+    this.jugBlow(u, u.x, u.y, r.radius, r.damage, 620);
+    addJugFx(this, { type: 'roar', x: u.x, y: u.y + FEET + 1, life: 1.35, r: r.radius });
+    jugShake(this, 11);
+    if (this.sfx) this.sfx('boom', u.x);
+  }
+
+  // the plasma leaves the end of his raised arm (the drawing puts it at 61, -46 in his own art units)
+  jugFire(u) {
+    const d = u.def;
+    const k = 0.31 * d.scale;
+    const x = u.x + u.facing * 61 * k;
+    const y = u.y + FEET + (-46 * 0.31 - FEET) * d.scale;
+    const tx = u.aimAtX === undefined ? u.x + u.facing * 200 : u.aimAtX;
+    const ty = u.aimAtY === undefined ? u.y : u.aimAtY;
+    const dur = Math.max(0.14, Math.hypot(tx - x, ty - y) / d.cannon.speed);
+    addJugFx(this, { type: 'shell', x, y, tx, ty: ty - 3, dur, life: dur, owner: u });
+    jugShake(this, 5.5);
+    if (this.sfx) this.sfx('snipe', x);
+  }
+
+  jugPlasmaHit(e) {
+    const u = e.owner;
+    const c = u.def.cannon;
+    this.jugBlow(u, e.tx, e.ty, c.radius, c.damage, 430);
+    this.hitProps(e.tx, e.ty, c.radius, c.damage);
+    addJugFx(this, { type: 'crater', x: e.tx, y: e.ty + FEET + 3, life: 5, r: c.radius * 0.6 });
+    addJugFx(this, { type: 'plasma', x: e.tx, y: e.ty, life: 1.15, r: c.radius });
+    jugShake(this, 8);
+    if (this.sfx) this.sfx('boom', e.tx);
+  }
+
   clawSwipe(u) {
     const c = u.def.claw;
-    const x = u.x + u.facing * c.at;
-    const y = u.y;
-    this.eachEnemyNear(u.side, x, y, c.radius + 24, (o) => {
+    const { x, y } = this.jugStrikePoint(u, c.at);
+    this.eachEnemyNear(u.side, x, y, c.radius + 30, (o) => {
       const dx = o.x - x;
       const dy = o.y - y;
       const dist = Math.hypot(dx, dy) || 1;
       if (dist > c.radius + o.def.radius) return;
       if (!o.def.noKnock) {
-        o.kx += u.facing * 380;
-        o.ky += (dy / dist) * 130;
+        o.kx += u.facing * 480;
+        o.ky += (dy / dist) * 150;
       }
-      this.hurt(o, c.damage, o.x, o.y, 'blast', u);
+      this.hurt(o, c.damage * (u.rage ? 1.25 : 1), o.x, o.y, 'blast', u);
     });
     this.hitProps(x, y, c.radius, c.damage);
-    addJugFx(this, { type: 'slash', x: u.x + u.facing * 15, y: u.y - 6, facing: u.facing, life: 0.46 });
-    jugShake(this, 3.6);
+    addJugFx(this, { type: 'slash', x: u.x + u.facing * 22, y: u.y - 10, facing: u.facing, life: 0.5 });
+    jugShake(this, 5);
     if (this.sfx) this.sfx('shot', x);
   }
 
   // the axe lands: everyone near the blade is hurt and thrown outward
   slam(u) {
     const d = u.def;
-    const x = u.x + u.facing * d.slamAt;
-    const y = u.y;
-    this.eachEnemyNear(u.side, x, y, d.slamRadius + 24, (o) => {
-      const dx = o.x - x;
-      const dy = o.y - y;
-      const dist = Math.hypot(dx, dy) || 1;
-      if (dist > d.slamRadius + o.def.radius) return;
-      if (!o.def.noKnock) {
-        o.kx += (dx / dist) * d.knock;
-        o.ky += (dy / dist) * d.knock * 0.7;
-      }
-      this.hurt(o, d.damage, o.x, o.y, 'blast', u);
-    });
+    const { x, y } = this.jugStrikePoint(u, d.slamAt);
+    this.jugBlow(u, x, y, d.slamRadius, d.damage * (u.rage ? 1.25 : 1), d.knock);
     this.hitProps(x, y, d.slamRadius, d.damage);
     addJugFx(this, { type: 'crater', x, y: y + FEET + 1, life: 7, r: d.slamRadius });
-    addJugFx(this, { type: 'slam', x, y: y + FEET + 1, life: 1.55, r: d.slamRadius });
-    jugShake(this, 8.5);
+    addJugFx(this, { type: 'slam', x, y: y + FEET + 1, life: 1.6, r: d.slamRadius, facing: u.facing });
+    jugShake(this, 11);
     if (this.sfx) this.sfx('boom', x);
   }
 

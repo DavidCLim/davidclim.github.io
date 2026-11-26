@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=201';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=201';
+import { TAU, K } from './config.js?v=204';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=204';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -1478,8 +1478,6 @@ export const DROPS = {
   },
   jugshell(g) {
     botPoly(g, JUG.lite, [[-15, -3], [-4, -11], [13, -6], [15, 6], [-2, 11], [-13, 6]], 1.8);
-    botBall(g, JUG.steel, -6, 0, 2, 0.9);
-    botBall(g, JUG.steel, 7, 1, 2, 0.9);
   },
   botpod(g) {
     botPoly(g, BOT.noz, [[-4, -4], [-13, -8], [-12, 3], [-4, 4]]);
@@ -1868,7 +1866,7 @@ function jMetal(g, x0, y0, x1, y1) {
 
 // a bevelled armour plate: a soft shadow cast beneath it, light caught on its upper edges and shade along the lower
 function jArmor(g, fill, pts, o = {}) {
-  const lw = o.lw === undefined ? 8 : o.lw;
+  const lw = o.lw === undefined ? 5.5 : o.lw * 0.75;
   const bevel = o.bevel === undefined ? 11 : o.bevel;
   g.save();
   if (o.cast !== false) {
@@ -1883,6 +1881,24 @@ function jArmor(g, fill, pts, o = {}) {
   g.save();
   jPath(g, pts);
   g.clip();
+  const xs = pts.map((p) => p[0]);
+  const ys = pts.map((p) => p[1]);
+  const bx0 = Math.min(...xs);
+  const by0 = Math.min(...ys);
+  const bw = Math.max(...xs) - bx0;
+  const bh = Math.max(...ys) - by0;
+  const hx = bx0 + bw * 0.62;
+  const hy = by0 + bh * 0.24;
+  const bloom = g.createRadialGradient(hx, hy, 0, hx, hy, Math.max(bw, bh) * 0.62);
+  bloom.addColorStop(0, 'rgba(255, 250, 255, 0.34)');
+  bloom.addColorStop(1, 'rgba(255, 250, 255, 0)');
+  g.fillStyle = bloom;
+  g.fillRect(bx0, by0, bw, bh);
+  const grime = g.createLinearGradient(0, by0 + bh * 0.45, 0, by0 + bh);
+  grime.addColorStop(0, 'rgba(22, 10, 40, 0)');
+  grime.addColorStop(1, 'rgba(22, 10, 40, 0.36)');
+  g.fillStyle = grime;
+  g.fillRect(bx0, by0, bw, bh);
   const edge = (dx, dy, col, w) => {
     g.save();
     g.translate(dx, dy);
@@ -1926,17 +1942,6 @@ function jSeam(g, pts, w = 5) {
   jLine(g, 'rgba(232, 224, 255, 0.45)', w * 0.45, pts.map(([x, y]) => [x + 2, y + w * 0.75]));
 }
 
-function jRivets(g, list, r = 6.5) {
-  for (const [x, y] of list) {
-    jBall(g, 'rgba(30, 20, 56, 0.55)', x + 1.5, y + 3, r * 1.1, 0);
-    const gr = g.createRadialGradient(x - r * 0.4, y - r * 0.4, 0.5, x, y, r);
-    gr.addColorStop(0, '#ffffff');
-    gr.addColorStop(0.5, '#c2c8d8');
-    gr.addColorStop(1, '#666d85');
-    jBall(g, gr, x, y, r, 2.6);
-  }
-}
-
 // chips knocked out of the paint, showing bare steel, and a few scratches
 function jWear(g, spots) {
   for (const [x, y, s = 1] of spots) {
@@ -1968,7 +1973,6 @@ function jSpike(g, bx, by, tx, ty, w) {
   const a = Math.atan2(ty - by, tx - bx) + Math.PI / 2;
   const ax = Math.cos(a) * w;
   const ay = Math.sin(a) * w;
-  jBall(g, JUG.ironDark, bx, by, w * 0.92, 5);
   jPoly(g, '#e9ecf3', [[bx + ax, by + ay], [tx, ty], [bx, by]], 0);
   jPoly(g, '#737a92', [[bx, by], [tx, ty], [bx - ax, by - ay]], 0);
   jLine(g, JUG.line, 5, [[bx + ax, by + ay], [tx, ty], [bx - ax, by - ay]]);
@@ -1981,26 +1985,16 @@ function jStud(g, x, y, r) {
   for (const [c, [p, q]] of faces) jPoly(g, c, [p, q, [x - r * 0.15, y - r * 0.22]], 4);
 }
 
-function jBolt(g, x, y, r) {
-  jBall(g, 'rgba(22, 12, 40, 0.5)', x + 3, y + 5, r * 1.08, 0);
-  jBall(g, jMetal(g, x - r, y - r, x + r, y + r), x, y, r, 6);
-  jBall(g, jMetal(g, x + r, y + r, x - r, y - r), x, y, r * 0.66, 4);
-  jLine(g, JUG.line, r * 0.2, [[x - r * 0.46, y + r * 0.2], [x + r * 0.46, y - r * 0.2]]);
-  jLine(g, 'rgba(255, 255, 255, 0.7)', 3, [[x - r * 0.4, y + r * 0.34], [x + r * 0.5, y - r * 0.08]]);
-}
-
 // one hanging armour plate: a dark teal rim round a bevelled face, riveted
 function jTasset(g, outer, inner, rivets) {
   jArmor(g, jShade(g, outer[0][0], outer[0][1], outer[0][0] + 40, outer[0][1] + 180, JUG.teal, JUG.tealDark), outer, { bevel: 8 });
   jArmor(g, jShade(g, inner[0][0], inner[0][1], inner[0][0] + 50, inner[0][1] + 150, JUG.mid, JUG.deep), inner, { lw: 5, cast: false });
-  jRivets(g, rivets, 6);
 }
 
 // a wide round-toed iron boot
 function jBoot(g, pts, toeLine, rivets) {
   jArmor(g, jMetal(g, pts[1][0], pts[1][1] - 20, pts[0][0] + 60, pts[0][1] + 40), pts, { bevel: 9 });
   jSeam(g, toeLine, 6);
-  jRivets(g, rivets, 6);
 }
 
 // the leg on the axe side, and the one on the claw side
@@ -2009,9 +2003,7 @@ function drawJugLegA(g) {
   jRod(g, 440, 560, 428, 628, 16);
   jArmor(g, jShade(g, 360, 596, 450, 720), [[366, 612], [412, 584, 378, 586], [450, 616, 446, 592], [434, 724], [378, 720], [352, 654, 354, 700]]);
   jSeam(g, [[380, 624], [432, 618], [424, 704]]);
-  jRivets(g, [[382, 636], [384, 700], [426, 704]]);
   jWear(g, [[400, 660, 1.2], [420, 690, 0.7]]);
-  jBolt(g, 408, 724, 25);
   jBoot(g, [[296, 786], [298, 750], [352, 712, 302, 716], [424, 716], [450, 750, 450, 722], [448, 788], [372, 794]], [[300, 764], [446, 756]], [[326, 746], [358, 732], [394, 728], [428, 740], [322, 776], [358, 780], [420, 776]]);
   jSeam(g, [[368, 764], [370, 790]]);
 }
@@ -2021,9 +2013,7 @@ function drawJugLegB(g) {
   jRod(g, 626, 556, 652, 628, 16);
   jArmor(g, jShade(g, 640, 590, 744, 712), [[650, 600], [696, 578, 668, 576], [732, 612, 728, 586], [740, 706], [668, 718], [644, 652, 646, 700]]);
   jSeam(g, [[668, 612], [714, 604], [722, 696]]);
-  jRivets(g, [[666, 624], [716, 622], [724, 694], [674, 700]]);
   jWear(g, [[696, 662, 1.1], [680, 690, 0.7]]);
-  jBolt(g, 706, 718, 25);
   jBoot(g, [[648, 790], [650, 752], [706, 712, 656, 716], [778, 726, 756, 710], [804, 768, 806, 740], [796, 794], [722, 798]], [[652, 766], [800, 772]], [[676, 744], [706, 730], [744, 732], [778, 748], [678, 780], [718, 784], [776, 784]]);
   jSeam(g, [[730, 768], [730, 794]]);
 }
@@ -2060,29 +2050,24 @@ function drawJugBody(g) {
   jRod(g, 636, 462, 680, 552, 28);
   jRod(g, 490, 546, 624, 568, 28);
   jRod(g, 506, 596, 606, 604, 20, true);
-  for (const [x, y, r] of [[576, 504, 25], [532, 582, 20], [496, 548, 16], [622, 566, 16]]) jBolt(g, x, y, r);
   jArmor(g, jShade(g, 508, 444, 616, 496, JUG.iron, JUG.black), [[506, 444], [618, 444], [604, 488], [522, 488]]);
   for (const x of [530, 548, 566, 584, 600]) jLine(g, JUG.black, 7, [[x, 456], [x - 2, 480]]);
   // ---- the great humped hull behind everything else
   jArmor(g, jShade(g, 420, 120, 760, 470), [[366, 300], [402, 206, 372, 236], [480, 142, 430, 160], [566, 116], [690, 124], [748, 186, 736, 150], [796, 254, 790, 206], [798, 336], [758, 436, 792, 404], [664, 472], [482, 470], [388, 418, 418, 462]], { cast: false, bevel: 15 });
   // the rounded cheeks of the shell either side of the hood
   jArmor(g, jShade(g, 390, 180, 500, 320, JUG.glint, JUG.dark, JUG.mid), [[390, 296], [398, 222, 380, 248], [474, 180, 424, 184], [486, 216], [458, 268, 476, 246], [412, 302]]);
-  jRivets(g, [[406, 262], [420, 226], [454, 202]]);
   jArmor(g, jShade(g, 660, 180, 800, 340, JUG.lite, JUG.deep, JUG.mid), [[660, 206], [746, 188, 716, 178], [800, 262, 794, 212], [790, 322], [716, 362, 760, 356], [652, 298], [668, 252]]);
   jSeam(g, [[676, 222], [740, 214], [776, 266], [772, 308]]);
-  jRivets(g, [[692, 226], [736, 204], [776, 244], [786, 296]]);
   jWear(g, [[742, 252, 1.3], [690, 300, 0.9]]);
   // ---- the hood: a front face with a slot, and the lid above it carrying a plain chevron
   jArmor(g, jShade(g, 480, 190, 650, 290, JUG.mid, JUG.deep), [[470, 190], [574, 214], [662, 226], [648, 292], [572, 270], [474, 222]]);
   jArmor(g, jShade(g, 500, 100, 690, 230, JUG.glint, JUG.mid, JUG.lite), [[470, 190], [514, 126], [548, 94, 520, 98], [692, 118, 660, 96], [718, 168, 724, 134], [662, 226], [574, 214]], { bevel: 13 });
   jArmor(g, jShade(g, 660, 140, 720, 270, JUG.dark, JUG.deep), [[662, 226], [718, 168], [716, 206], [648, 292]], { cast: false, bevel: 6 });
-  jRivets(g, [[690, 212], [704, 188], [672, 242], [660, 268]], 6);
   jArmor(g, jShade(g, 540, 112, 640, 190, '#e4f3f7', '#6f929d'), [[548, 124], [646, 137], [592, 188]], { bevel: 6, lw: 7 });
   jPoly(g, JUG.tealDark, [[569, 136], [622, 143], [595, 168]], 0);
   jPoly(g, '#9fb9c2', [[584, 142], [607, 145], [596, 156]], 0);
   jLine(g, JUG.line, 17, [[528, 196], [572, 210]]);
   jLine(g, '#6f7690', 5, [[530, 192], [570, 205]]);
-  jRivets(g, [[486, 184], [524, 130], [556, 108], [676, 124], [700, 150], [696, 176]]);
   jWear(g, [[520, 160, 1], [660, 190, 0.8], [622, 104, 0.8]]);
   // ---- the shoulder on the claw side: upper arm, banded pauldron, spikes and big bolts
   jSpike(g, 806, 348, 872, 318, 22);
@@ -2095,9 +2080,7 @@ function drawJugBody(g) {
     jLine(g, '#e8eef0', 8, [[x - 11, y + 9], [x + 7, y - 6]]);
     jLine(g, '#e8eef0', 4, [[x - 5, y - 4], [x + 3, y + 9]]);
   }
-  jRivets(g, [[728, 288], [776, 272], [836, 346], [840, 396], [716, 428], [772, 460], [808, 462]]);
   jWear(g, [[756, 436, 1.1]]);
-  jBolt(g, 703, 357, 35);
   // ---- the shoulder on the axe side, with a white burst painted on its band
   jSpike(g, 332, 262, 286, 228, 20);
   jSpike(g, 314, 300, 262, 292, 20);
@@ -2113,12 +2096,10 @@ function drawJugBody(g) {
   jBall(g, '#33463f', 368, 286, 11, 0);
   jBall(g, '#eef3f4', 368, 286, 5, 0);
   jLine(g, 'rgba(232, 240, 242, 0.9)', 7, [[392, 232], [418, 222]]);
-  jRivets(g, [[330, 306], [350, 342], [412, 316], [422, 246], [346, 248]]);
   // ---- the chest under the collar: a vented panel
   jArmor(g, jShade(g, 540, 380, 660, 490, JUG.mid, JUG.deep), [[534, 384], [664, 376], [652, 466], [574, 486], [538, 450]]);
   jPoly(g, JUG.black, [[568, 424], [642, 418], [638, 462], [576, 472]], 5);
   for (const x of [580, 598, 616, 632]) jLine(g, '#7c849b', 7, [[x, 428], [x - 3, 464]]);
-  jRivets(g, [[552, 402], [648, 396], [644, 456]]);
   // ---- the two collar flaps curling over his head, edged in teal
   jArmor(g, jShade(g, 480, 260, 650, 450, JUG.lite, JUG.deep, JUG.mid), [[466, 270], [566, 282, 516, 262], [650, 300], [666, 368, 668, 322], [642, 440], [578, 466], [546, 398, 556, 440], [514, 332]]);
   jArmor(g, jShade(g, 390, 255, 540, 420, JUG.glint, JUG.dark, JUG.lite), [[384, 300], [452, 256, 400, 262], [526, 278, 496, 258], [566, 340, 556, 296], [532, 424], [504, 388], [470, 366], [420, 394], [392, 352, 390, 390]], { bevel: 13 });
@@ -2128,13 +2109,9 @@ function drawJugBody(g) {
     jLine(g, 'rgba(206, 234, 224, 0.65)', 5, path.map(([x, y]) => [x - 2, y - 4]));
   }
   jSeam(g, [[400, 320], [454, 282], [516, 296], [546, 342], [530, 392]]);
-  jRivets(g, [[408, 306], [454, 278], [506, 290], [538, 330], [540, 380], [590, 298], [638, 314], [652, 366], [634, 420]]);
   jWear(g, [[440, 330, 1.4], [602, 340, 1], [480, 300, 0.8], [628, 396, 0.7]]);
-  jBolt(g, 604, 394, 26);
   // ---- the small low head: a pointed perforated mask under a round sensor, with a glowing slit
   jBall(g, JUG.black, 490, 398, 42);
-  jBolt(g, 536, 402, 15);
-  jBolt(g, 442, 396, 13);
   jArmor(g, jMetal(g, 442, 372, 530, 482), [[436, 388], [484, 366, 450, 366], [530, 390, 520, 368], [538, 436], [502, 480], [479, 492], [450, 446, 458, 478]], { bevel: 8 });
   for (let j = 0; j < 5; j++) for (let i = 0; i < 6 - j; i++) {
     const x = 458 + i * 13 + j * 6.5;
@@ -2161,7 +2138,6 @@ function drawJugAxeArm(g) {
   jRod(g, 372, 378, 290, 452, 30, true);
   jRod(g, 340, 396, 264, 478, 46);
   jRod(g, 314, 386, 246, 440, 18);
-  jBolt(g, 342, 394, 23);
   // the gun along the forearm: a riveted housing and two heavy dark barrels pointing back
   jRod(g, 318, 540, 430, 462, 58, true);
   jBall(g, jMetal(g, 406, 436, 456, 490), 434, 459, 30);
@@ -2170,12 +2146,10 @@ function drawJugAxeArm(g) {
   jBall(g, JUG.black, 420, 527, 15, 5);
   jArmor(g, jShade(g, 236, 420, 400, 600, JUG.lite, JUG.deep, JUG.mid), [[234, 438], [330, 414, 270, 408], [398, 448, 386, 418], [380, 508], [324, 598, 372, 574], [238, 590], [224, 500]], { bevel: 13 });
   jSeam(g, [[260, 452], [352, 444], [372, 470], [318, 566], [252, 566]]);
-  jRivets(g, [[258, 438], [300, 428], [346, 430], [380, 456], [368, 500], [340, 552], [306, 580], [262, 576], [244, 532], [240, 476]]);
   jWear(g, [[330, 486, 1.5], [286, 540, 1], [360, 470, 0.7]]);
   jRod(g, 318, 598, 254, 640, 40, true);
   jBall(g, jMetal(g, 232, 622, 274, 664), 252, 643, 21);
   jBall(g, JUG.black, 250, 644, 11, 0);
-  jBolt(g, 268, 474, 32);
   // the haft: a steel shaft with a criss-cross grip and a heavy pommel
   jRod(g, 214, 290, 227, 694, 34, true);
   jLine(g, '#6d7389', 38, [[218, 424], [219, 450]]);
@@ -2188,7 +2162,6 @@ function drawJugAxeArm(g) {
   // the hammer spike on top
   jArmor(g, jMetal(g, 232, 258, 252, 306), [[218, 268], [272, 265], [272, 302], [218, 304]], { bevel: 7 });
   jArmor(g, jMetal(g, 270, 250, 306, 318), [[268, 262], [296, 248], [312, 284], [298, 316], [268, 300]], { bevel: 6 });
-  jRivets(g, [[236, 284], [256, 284]], 6);
   // the huge blade: a bevelled slab of steel, its honed edge bright, notched from use
   jArmor(g, jShade(g, 70, 310, 220, 560, '#dce0ea', '#5f667e', '#a3abbf'), [[50, 430], [80, 386], [152, 296], [208, 286], [224, 338], [208, 520], [192, 582], [62, 556], [46, 512, 44, 540]], { bevel: 12, lw: 9 });
   jPoly(g, '#f7f9fc', [[53, 430], [81, 392], [151, 305], [158, 322], [96, 406], [76, 448], [80, 540], [63, 548], [50, 512]], 0);
@@ -2200,22 +2173,13 @@ function drawJugAxeArm(g) {
   jLine(g, 'rgba(60, 66, 86, 0.6)', 2.4, [[86, 504], [112, 536]]);
   // the bracket bolting it to the haft
   jArmor(g, jShade(g, 118, 320, 216, 512, JUG.lite, JUG.deep, JUG.mid), [[124, 326], [206, 316], [218, 498], [182, 520], [122, 506], [140, 452], [116, 356]], { bevel: 10 });
-  for (let y = 342; y < 492; y += 21) {
-    jBall(g, JUG.black, 195, y, 9, 0);
-    jBall(g, JUG.pale, 193, y - 2, 6, 2.4);
-  }
-  jRivets(g, [[138, 340], [142, 490]], 9);
-  jBolt(g, 152, 412, 17);
+  jSeam(g, [[196, 338], [204, 492]], 6);
   jWear(g, [[160, 460, 1.2], [150, 372, 0.8]]);
   // the gauntlet, and jointed steel fingers wrapped round the haft
   jArmor(g, jShade(g, 170, 505, 312, 610, JUG.lite, JUG.deep), [[174, 516], [262, 510], [312, 554, 306, 514], [302, 608], [232, 600], [196, 566]]);
-  jRivets(g, [[210, 528], [250, 526], [290, 548], [290, 590]]);
   for (const [x0, y0, x1, y1] of [[178, 546, 236, 556], [170, 582, 240, 594], [180, 620, 236, 626]]) {
     jRod(g, x0, y0, x1, y1, 26);
-    jBolt(g, x0, y0, 13);
-    jBall(g, jMetal(g, x1 - 12, y1 - 12, x1 + 12, y1 + 12), x1, y1, 12, 4);
   }
-  jBolt(g, 286, 598, 21);
   jRod(g, 168, 600, 148, 648, 22);
 }
 
@@ -2224,20 +2188,16 @@ function drawJugClawArm(g) {
   jRod(g, 746, 410, 776, 508, 28, true);
   jRod(g, 776, 400, 806, 506, 52);
   jRod(g, 812, 420, 846, 494, 20);
-  jBolt(g, 776, 472, 35);
   // the steel hand: a knuckle block and three jointed talons, tucked under the gauntlet
   jArmor(g, jMetal(g, 730, 624, 880, 700), [[734, 626], [872, 636], [868, 690], [742, 682]], { bevel: 7 });
   for (const [x, y, mx, my, tx, ty, w] of [[750, 668, 742, 718, 762, 764, 40], [802, 676, 806, 730, 784, 786, 38], [852, 668, 868, 712, 846, 756, 32]]) {
     jRod(g, x, y, mx, my, w * 0.8);
     jArmor(g, jMetal(g, mx - w / 2, my, mx + w / 2, ty), [[mx - w / 2, my - 4], [mx + w / 2, my], [tx, ty], [mx - w * 0.3, my + 26]], { bevel: 5, lw: 6 });
-    jBolt(g, mx, my, w * 0.34);
   }
-  jRivets(g, [[754, 646], [808, 652], [854, 656]], 9);
   // the huge gauntlet
   jArmor(g, jShade(g, 736, 480, 926, 706, JUG.glint, JUG.deep, JUG.mid), [[722, 586], [736, 522], [796, 466, 748, 468], [864, 470, 834, 454], [918, 542, 912, 492], [924, 636, 934, 590], [884, 704, 920, 690], [838, 700], [806, 652], [736, 616]], { bevel: 17 });
   jArmor(g, jShade(g, 780, 480, 900, 650, JUG.lite, JUG.dark), [[756, 546], [800, 494, 766, 502], [858, 494, 832, 484], [900, 548, 894, 508], [904, 630], [874, 672, 900, 666], [848, 640], [818, 606], [760, 586]], { cast: false, lw: 5, bevel: 9 });
   jSeam(g, [[800, 500], [838, 546], [900, 566]]);
-  jRivets(g, [[742, 556], [758, 516], [796, 480], [850, 478], [896, 514], [912, 562], [912, 622], [890, 676], [850, 690], [746, 604]]);
   jWear(g, [[820, 524, 1.7], [870, 570, 1.1], [784, 560, 0.8], [862, 652, 1.2]]);
   jStud(g, 764, 592, 27);
   jStud(g, 822, 616, 29);

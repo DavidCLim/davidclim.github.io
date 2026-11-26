@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=201';
-import { drawLayer, OUT } from './sprites.js?v=201';
-import { drawDrop, trooperEyes, BOT_JETS, JUG_AXE_PIVOT, JUG_CLAW_PIVOT, JUG_EYE } from './art_units.js?v=201';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=201';
-import { EGG_DROPS } from './art_eggs.js?v=201';
+import { TAU, K, UNIT, FEET } from './config.js?v=204';
+import { drawLayer, OUT } from './sprites.js?v=204';
+import { drawDrop, trooperEyes, BOT_JETS, JUG_AXE_PIVOT, JUG_CLAW_PIVOT, JUG_EYE } from './art_units.js?v=204';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=204';
+import { EGG_DROPS } from './art_eggs.js?v=204';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -520,8 +520,33 @@ function drawJuggernaut(ctx, dpr, sprites, u) {
   const ph = u.anim * 0.52;
   const s = dead ? 0 : u.swing || 0;
   const claw = u.atkKind === 'claw';
-  const atk = claw ? d.claw : d;
-  const swing = !dead && !claw ? jugSwingAngle(u, s) : null;
+  const cannon = u.atkKind === 'cannon';
+  const spinning = u.atkKind === 'spin';
+  const atk = claw ? d.claw : cannon ? d.cannon : spinning ? d.spin : d;
+  const swing = !dead && !claw && !cannon && !spinning ? jugSwingAngle(u, s) : null;
+  // the cannon: arm levelled while it charges, then kicked hard back
+  let gun = null;
+  if (!dead && cannon && s > 0) {
+    const w = d.cannon.windup;
+    if (s < w) {
+      const q = Math.min(1, s / (w * 0.35));
+      gun = { turn: -0.42 * q, fwd: 4 * q, up: -4 * q, charge: s / w, kick: 0 };
+    } else {
+      const a = (s - w) / d.cannon.recover;
+      const kick = Math.max(0, 1 - a * 2.2);
+      const back = 1 - Math.max(0, (a - 0.5) / 0.5);
+      gun = { turn: -0.42 * back - 0.5 * kick, fwd: 4 * back - 22 * kick, up: -4 * back - 6 * kick, charge: 0, kick };
+    }
+  }
+  // the whirlwind: wind-up, then round and round
+  let spin = null;
+  if (!dead && spinning && s > 0) {
+    const sp = d.spin;
+    const on = s >= sp.windup && s <= sp.windup + sp.time;
+    const reach = s < sp.windup ? s / sp.windup : on ? 1 : Math.max(0, 1 - (s - sp.windup - sp.time) / sp.recover);
+    spin = { on, reach, turn: on ? (s - sp.windup) * TAU * 3.1 : 0 };
+  }
+  const big = d.scale / 1.25;
   const swipe = !dead && claw && s > 0 ? jugClawPose(u, s) : null;
   const winding = s > 0 && s < atk.windup;
   const charge = winding ? s / atk.windup : 0;
@@ -538,14 +563,51 @@ function drawJuggernaut(ctx, dpr, sprites, u) {
       ctx.strokeStyle = `rgba(${rgb}, ${0.75 * (1 - q)})`;
       ctx.lineWidth = w * (1 - q) + 0.4;
       ctx.beginPath();
-      ctx.ellipse(0, FEET + 2, rx * (0.2 + q), rx * 0.34 * (0.2 + q), 0, 0, TAU);
+      ctx.ellipse(0, FEET + 2, rx * big * (0.2 + q), rx * big * 0.34 * (0.2 + q), 0, 0, TAU);
       ctx.stroke();
     }
     for (let i = 0; i < 16; i++) {
       const a = (i / 16) * TAU + (u.id || 0);
-      botGlow(ctx, Math.cos(a) * (14 + 34 * q), FEET + Math.sin(a) * (5 + 11 * q) - 8 * q, 7 + 5 * q, '180, 172, 180', 0.8 * (1 - q));
+      botGlow(ctx, Math.cos(a) * (14 + 34 * q) * big, FEET + Math.sin(a) * (5 + 11 * q) * big - 8 * q, (7 + 5 * q) * big, '180, 172, 180', 0.8 * (1 - q));
     }
   }
+
+  const raging = !dead && u.rage;
+  if (raging) {
+    botGlow(ctx, 0, -20 * big, (46 + 5 * Math.sin(t * 9)) * big, '255, 60, 100', 0.34);
+    for (let i = 0; i < 10; i++) {
+      const q = (t * 0.9 + i * 0.317) % 1;
+      ctx.fillStyle = `rgba(255, ${i % 3 === 0 ? 200 : 88}, ${i % 3 === 0 ? 180 : 120}, ${0.9 * (1 - q)})`;
+      ctx.beginPath();
+      ctx.arc((Math.sin(i * 7.3) * 30 + Math.sin(q * 8 + i) * 3) * big, FEET - q * 58 * big, 1.5 * (1 - q) + 0.4, 0, TAU);
+      ctx.fill();
+    }
+  }
+  // rings of cut air, drawn half behind him and half in front
+  const vortex = (front) => {
+    if (!spin || spin.reach < 0.05) return;
+    const R = d.spin.radius * 0.92 * spin.reach;
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 5; i++) {
+      const y = FEET - 4 - i * 10.5 * big;
+      const rad = R * (1 - Math.abs(i - 1.6) * 0.13);
+      const lead = (spin.on ? spin.turn * (1.15 - i * 0.05) : t * 5) + i * 1.9;
+      for (let k = 0; k < 2; k++) {
+        const a1 = lead + k * Math.PI;
+        for (let seg = 0; seg < 9; seg++) {
+          const a = a1 - seg * 0.24;
+          if (Math.sin(a) > 0 !== front) continue;
+          const al = (1 - seg / 9) * (spin.on ? 1 : 0.4) * spin.reach;
+          ctx.strokeStyle = i % 2 ? `rgba(255, 255, 255, ${0.9 * al})` : `rgba(80, 245, 212, ${0.85 * al})`;
+          ctx.lineWidth = (4.6 - seg * 0.42) * (i === 2 ? 1.5 : 1);
+          ctx.beginPath();
+          ctx.ellipse(0, y, rad, rad * 0.3, 0, a - 0.25, a);
+          ctx.stroke();
+        }
+      }
+    }
+  };
+  vortex(false);
 
   // ---- he drops in heavily, with a streak above him, and squashes as he lands
   if (age < 0.36) {
@@ -568,6 +630,15 @@ function drawJuggernaut(ctx, dpr, sprites, u) {
   ctx.scale(d.scale, d.scale);
   ctx.translate(0, -FEET);
 
+  if (spin) {
+    // crouching into it, then flashing round: each half turn shows him facing the other way
+    ctx.translate(0, FEET);
+    const turnX = spin.on ? Math.cos(spin.turn) : 1;
+    const crouch = spin.on ? 0.04 : 0.1 * spin.reach;
+    ctx.scale((turnX < 0 ? -1 : 1) * Math.max(0.42, Math.abs(turnX)) * (1 + crouch), 1 - crouch);
+    ctx.translate(0, -FEET);
+  }
+
   // ---- legs lift and plant one at a time
   const stepA = moving ? Math.sin(ph) : 0;
   const leg = (layer, v) => {
@@ -589,7 +660,9 @@ function drawJuggernaut(ctx, dpr, sprites, u) {
     lean = swipe[0] > 0 ? -0.11 * (swipe[0] / 0.62) : -swipe[0] * 0.15;
     lunge = swipe[1] * 0.16;
   }
-  const tremble = winding ? (Math.random() - 0.5) * charge * 1.4 : 0;
+  if (gun) lean = gun.charge > 0 ? -0.06 * gun.charge : -0.2 * gun.kick;
+  if (spin) lean = 0;
+  const tremble = winding ? (Math.random() - 0.5) * charge * (cannon ? 2.4 : 1.4) : 0;
   ctx.translate(lunge * K * 3 + tremble * K, FEET);
   ctx.rotate(lean);
   ctx.translate(0, -FEET + bob * K);
@@ -615,7 +688,7 @@ function drawJuggernaut(ctx, dpr, sprites, u) {
 
   // ---- the arms
   const idleArm = dead ? 0.25 : Math.sin(t * 1.7 + 1) * 0.035;
-  const clawTurn = swing !== null ? -swing * 0.32 : moving ? Math.sin(ph) * 0.19 : -idleArm + Math.sin(t * 27) * 0.13 * show;
+  const clawTurn = spin ? 0.85 * spin.reach : gun ? 0.28 * (gun.charge + gun.kick) : swing !== null ? -swing * 0.32 : moving ? Math.sin(ph) * 0.19 : -idleArm + Math.sin(t * 27) * 0.13 * show;
   if (!swipe) jugAt(ctx, JUG_CLAW_PIVOT, clawTurn, A.clawArm);
   drawLayer(ctx, A.body);
 
@@ -638,7 +711,8 @@ function drawJuggernaut(ctx, dpr, sprites, u) {
     const flick = age < 0.8 ? 0 : age < 1.3 ? (Math.sin(age * 60) > 0 ? 1 : 0.1) : 1;
     const hot = winding || charging ? 1 : 0.66 + 0.18 * Math.sin(t * 3) + show * 0.3;
     ctx.lineCap = 'round';
-    for (const [col, w] of [[`rgba(60, 235, 195, ${flick * hot})`, 2.2], [`rgba(225, 255, 246, ${flick * hot})`, 0.85]]) {
+    const eyeRGB = raging ? '255, 66, 96' : '60, 235, 195';
+    for (const [col, w] of [[`rgba(${eyeRGB}, ${flick * hot})`, raging ? 2.8 : 2.2], [`rgba(${raging ? '255, 226, 230' : '225, 255, 246'}, ${flick * hot})`, 0.85]]) {
       ctx.strokeStyle = col;
       ctx.lineWidth = w * K;
       ctx.beginPath();
@@ -649,9 +723,9 @@ function drawJuggernaut(ctx, dpr, sprites, u) {
       ctx.lineTo((ex - 0.4) * K, (ey + 6) * K);
       ctx.stroke();
     }
-    const big = winding || charging || show > 0.4;
-    botGlow(ctx, ex * K, ey * K, (big ? 21 : 11) * K, '70, 255, 210', flick * (big ? 0.68 : 0.3));
-    if (big) {
+    const flare = winding || charging || show > 0.4 || raging;
+    botGlow(ctx, ex * K, ey * K, (flare ? 21 : 11) * K, raging ? '255, 70, 100' : '70, 255, 210', flick * (flare ? 0.68 : 0.3));
+    if (flare) {
       // a lens flare streaking out of his eye
       const fl = (26 + 22 * Math.max(charge, show)) * K;
       const fg = ctx.createLinearGradient(ex * K - fl, 0, ex * K + fl, 0);
@@ -668,7 +742,7 @@ function drawJuggernaut(ctx, dpr, sprites, u) {
     const blast = s >= atk.windup && s < atk.windup + atk.recover * 0.6;
     const heavy = blast || moving;
     jugPuffs(ctx, -23, -99, t, heavy ? 6 : 4, blast ? 10 : heavy ? 7 : 5, blast ? 46 : heavy ? 34 : 24, blast ? '226, 232, 240' : '128, 126, 144', blast ? 0.85 : 0.6, heavy ? 1.35 : 0.55);
-    const fire = blast ? 1 - (s - atk.windup) / (atk.recover * 0.6) : Math.max(show, charge * 0.6);
+    const fire = Math.max(blast && !spinning ? 1 - (s - atk.windup) / (atk.recover * 0.6) : Math.max(show, charge * 0.6), raging ? 0.5 + 0.18 * Math.sin(t * 17) : 0);
     if (fire > 0.05) {
       for (const [sx, sy, turn] of [[-17.5, -95, 1.72], [-25, -96, 1.57], [-33, -91, 1.4]]) jugJet(ctx, sx, sy, turn, 30 * fire * (blast ? 1.4 : 1), 4.6, t + sx);
       botGlow(ctx, -25 * K, -104 * K, 30 * K * fire, '90, 235, 220', 0.5 * fire);
@@ -680,6 +754,8 @@ function drawJuggernaut(ctx, dpr, sprites, u) {
   if (winding) {
     let tip;
     if (claw) tip = [-60 + swipe[1], -12 + swipe[2]];
+    else if (gun) tip = [61, -46];
+    else if (spinning) tip = [62, -22];
     else {
       const p = jugTurned(JUG_AXE_PIVOT, 62, -14, swing);
       tip = [p[0] + heave[0], p[1] + heave[1]];
@@ -706,9 +782,10 @@ function drawJuggernaut(ctx, dpr, sprites, u) {
   }
 
   // ---- the axe arm: ghost images and a broad crescent of light follow the blade down
-  const axeTurn = swing !== null ? swing : swipe ? -0.4 * Math.min(1, s / atk.windup) : moving ? -Math.sin(ph) * 0.14 : idleArm - 0.05 * show;
+  const axeTurn = spin ? -0.62 * spin.reach : gun ? gun.turn : swing !== null ? swing : swipe ? -0.4 * Math.min(1, s / atk.windup) : moving ? -Math.sin(ph) * 0.14 : idleArm - 0.05 * show;
   ctx.save();
   ctx.translate(heave[0] * K, heave[1] * K);
+  if (gun) ctx.translate(gun.fwd * K, gun.up * K);
   if (swing !== null && s > d.windup - 0.09 && s < d.windup + 0.2) {
     const fade = s < d.windup ? 1 : 1 - (s - d.windup) / 0.2;
     ctx.save();
@@ -737,6 +814,50 @@ function drawJuggernaut(ctx, dpr, sprites, u) {
   jugAt(ctx, JUG_AXE_PIVOT, axeTurn, A.axeArm);
   ctx.restore();
 
+  // ---- the plasma swelling at the end of the arm, and the blast as it leaves
+  if (gun && gun.charge > 0.04) {
+    const c = gun.charge;
+    const pulse = 1 + 0.14 * Math.sin(t * 46);
+    botGlow(ctx, 61 * K, -46 * K, 30 * c * pulse * K, '70, 240, 215', 0.95);
+    botGlow(ctx, 61 * K, -46 * K, 15 * c * pulse * K, '255, 255, 255', 1);
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(61 * K, -46 * K, 6.5 * c * K, 0, TAU);
+    ctx.fill();
+    for (const [col, w] of [['rgba(80, 240, 220, 0.85)', 2.4], ['#ffffff', 0.9]]) {
+      ctx.strokeStyle = col;
+      ctx.lineWidth = w * K;
+      for (let i = 0; i < 4; i++) {
+        let x = 61;
+        let y = -46;
+        ctx.beginPath();
+        ctx.moveTo(x * K, y * K);
+        const a = t * 9 + (i / 4) * TAU;
+        for (let k = 1; k <= 3; k++) {
+          x = 61 + Math.cos(a + (Math.random() - 0.5)) * k * 8 * c;
+          y = -46 + Math.sin(a + (Math.random() - 0.5)) * k * 8 * c;
+          ctx.lineTo(x * K, y * K);
+        }
+        ctx.stroke();
+      }
+    }
+  }
+  if (gun && gun.kick > 0) {
+    botGlow(ctx, 66 * K, -46 * K, 54 * gun.kick * K, '150, 255, 234', 0.95);
+    ctx.fillStyle = `rgba(255, 255, 255, ${gun.kick})`;
+    ctx.beginPath();
+    for (let i = 0; i < 14; i++) {
+      const a = (i / 14) * TAU;
+      const r = (i % 2 === 0 ? (i === 0 ? 62 : 28) : 9) * gun.kick;
+      const px = (66 + Math.cos(a) * r) * K;
+      const py = (-46 + Math.sin(a) * r * 0.7) * K;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+
   // ---- the claw swipe comes right across the front of him
   if (swipe) {
     if (s > atk.windup - 0.09 && s < atk.windup + 0.07) {
@@ -752,6 +873,13 @@ function drawJuggernaut(ctx, dpr, sprites, u) {
     ctx.save();
     ctx.translate(swipe[1] * K, swipe[2] * K);
     jugAt(ctx, JUG_CLAW_PIVOT, swipe[0], A.clawArm);
+    ctx.restore();
+  }
+
+  if (spin) {
+    ctx.save();
+    placeUnit(ctx, dpr, u);
+    vortex(true);
     ctx.restore();
   }
 

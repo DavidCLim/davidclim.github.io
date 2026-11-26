@@ -1,8 +1,10 @@
 // The Robot Juggernaut's effects: the crater, shockwaves, lightning and rubble of his axe, the claw slashes, the dust
 // under his feet, the ghostly trail of his charge, and the meltdown and explosion when he finally goes down.
 // World code only adds events to world.jfx; everything is drawn from each event's age and seed.
-import { TAU, K, FEET } from './config.js?v=201';
-import { drawLayer } from './sprites.js?v=201';
+import { TAU, K, FEET, JUGGERNAUT } from './config.js?v=204';
+import { drawLayer } from './sprites.js?v=204';
+
+const BIG = JUGGERNAUT.scale;
 
 // a steady pseudo-random number for particle i of an event
 const rnd = (seed, i) => {
@@ -27,8 +29,13 @@ export function stepJugFx(world, dt) {
   if (world.shake) world.shake = world.shake < 0.12 ? 0 : world.shake * Math.exp(-dt * 7.5);
   if (!world.jfx.length) return;
   const blow = [];
+  const landed = [];
   for (const e of world.jfx) {
     e.age += dt;
+    if (e.type === 'shell' && !e.done && e.age >= e.dur) {
+      e.done = true;
+      landed.push(e);
+    }
     if (e.type !== 'meltdown') continue;
     // little blasts pop all over him, then he goes up
     const pop = Math.floor(e.age / 0.17);
@@ -42,11 +49,12 @@ export function stepJugFx(world, dt) {
       blow.push(e);
     }
   }
+  for (const e of landed) world.jugPlasmaHit(e);
   for (const e of blow) {
     world.blowApart(e.unit);
-    addJugFx(world, { type: 'crater', x: e.x, y: e.y + FEET, life: 9, r: 34, dark: true });
-    addJugFx(world, { type: 'nova', x: e.x, y: e.y - 8, life: 1.9 });
-    jugShake(world, 12);
+    addJugFx(world, { type: 'crater', x: e.x, y: e.y + FEET, life: 10, r: 52, dark: true });
+    addJugFx(world, { type: 'nova', x: e.x, y: e.y - 14, life: 2, r: 44 });
+    jugShake(world, 13);
   }
   if (world.jfx.some((e) => e.age > e.life)) world.jfx = world.jfx.filter((e) => e.age <= e.life);
 }
@@ -158,6 +166,28 @@ export function drawJugGround(ctx, dpr, world, sprites) {
         const q = (e.age - delay) / dur;
         if (q > 0 && q < 1) groundRing(ctx, e.x, y, r * (0.2 + grow * easeOut(q)), `rgba(${rgb}, ${0.9 * (1 - q)})`, w * (1 - q) * Math.sqrt(big));
       }
+    } else if (e.type === 'whirl') {
+      const q = e.age / e.life;
+      groundRing(ctx, e.x, e.y, e.r * (0.55 + 0.6 * easeOut(q)), `rgba(90, 245, 212, ${0.75 * (1 - q)})`, 5 * (1 - q));
+      for (let i = 0; i < 14; i++) {
+        const a = (i / 14) * TAU + e.seed + q * 2.6;
+        const d = e.r * (0.6 + 0.45 * easeOut(q));
+        dot(ctx, e.x + Math.cos(a) * d, e.y + Math.sin(a) * d * 0.38 - 6 * q, 2.2 + 3 * q, `rgba(176, 168, 180, ${0.55 * (1 - q)})`);
+      }
+    } else if (e.type === 'roar') {
+      for (let i = 0; i < 4; i++) {
+        const q = (e.age - i * 0.11) / 0.6;
+        if (q > 0 && q < 1) groundRing(ctx, e.x, e.y, e.r * (0.2 + 1.15 * easeOut(q)), i % 2 ? `rgba(255, 255, 255, ${0.85 * (1 - q)})` : `rgba(255, 84, 110, ${0.9 * (1 - q)})`, 7 * (1 - q));
+      }
+      const hot = clamp01(1 - e.age / e.life);
+      for (let i = 0; i < 12; i++) {
+        const pts = jagged(e.x, e.y, (i / 12) * TAU, e.r * (0.7 + rnd(e.seed, i) * 0.5) * Math.min(1, e.age * 6), e.seed, i, 0.6);
+        strokePath(ctx, pts, `rgba(255, 70, 100, ${0.6 * hot})`, 2.8);
+        strokePath(ctx, pts, `rgba(255, 225, 230, ${0.9 * hot})`, 0.8);
+      }
+    } else if (e.type === 'plasma') {
+      const q = e.age / 0.5;
+      if (q < 1) groundRing(ctx, e.x, e.y + FEET + 3, e.r * (0.2 + 1.5 * easeOut(q)), `rgba(80, 245, 215, ${0.9 * (1 - q)})`, 7 * (1 - q));
     } else if (e.type === 'step') {
       const q = e.age / e.life;
       for (let i = 0; i < (e.big ? 11 : 7); i++) {
@@ -172,7 +202,7 @@ export function drawJugGround(ctx, dpr, world, sprites) {
       ctx.setTransform(e.facing * dpr, 0, 0, dpr, e.x * dpr, e.y * dpr);
       ctx.translate(0, FEET);
       ctx.rotate(0.15);
-      ctx.scale(1.25, 1.25);
+      ctx.scale(BIG, BIG);
       ctx.translate(0, -FEET);
       ctx.globalAlpha = 0.26 * (1 - q);
       drawJugParts(ctx, sprites.juggernaut, 0, 0);
@@ -184,6 +214,35 @@ export function drawJugGround(ctx, dpr, world, sprites) {
 
 function drawSlam(ctx, e) {
   const { x, y, r, seed, age: t } = e;
+  // a ring of stone shards punches up out of the ground, one after another, then sinks away
+  for (let i = 0; i < 14; i++) {
+    const a = (i / 14) * TAU + rnd(seed, i + 500) * 0.35;
+    const q = t - 0.04 - (i % 7) * 0.017;
+    if (q <= 0) continue;
+    const up = q < 0.09 ? q / 0.09 : q < 0.72 ? 1 : clamp01(1 - (q - 0.72) / 0.38);
+    if (up <= 0) continue;
+    const far = r * (0.78 + rnd(seed, i + 520) * 0.42);
+    // none come up on his side of the blow, where they would cover him
+    if (Math.cos(a) * (e.facing || 1) < -0.35) continue;
+    const bx = x + Math.cos(a) * far;
+    const by = y + Math.sin(a) * far * 0.4;
+    const h = (9 + rnd(seed, i + 540) * 17) * up;
+    const hw = 3 + rnd(seed, i + 560) * 3;
+    const tx = bx + Math.cos(a) * h * 0.45;
+    const ty = by - h;
+    glow(ctx, bx, by - h * 0.4, hw * 3.2, '80, 245, 210', 0.4 * up * clamp01(1 - q / 0.5));
+    for (const [side, col] of [[-1, '#8e869c'], [1, '#554e66']]) {
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.moveTo(bx + side * hw, by);
+      ctx.lineTo(tx, ty);
+      ctx.lineTo(bx, by + 1.2);
+      ctx.closePath();
+      ctx.fill();
+    }
+    strokePath(ctx, [[bx - hw, by], [tx, ty], [bx + hw, by]], '#241e30', 0.8);
+    strokePath(ctx, [[bx, by + 1], [tx, ty]], `rgba(170, 255, 232, ${0.9 * clamp01(1 - q / 0.6)})`, 0.8);
+  }
   if (t < 0.34) {
     // a pillar of light punching up out of the blow
     const q = t / 0.34;
@@ -289,7 +348,7 @@ function drawSlash(ctx, e) {
   const fade = e.age < 0.15 ? 1 : clamp01(1 - (e.age - 0.15) / (e.life - 0.15));
   ctx.save();
   ctx.translate(e.x, e.y);
-  ctx.scale(e.facing, 1);
+  ctx.scale(e.facing * 1.5, 1.5);
   for (let i = 0; i < 3; i++) {
     const rad = 17 + i * 6.5;
     const a0 = -1.35;
@@ -313,6 +372,110 @@ function drawSlash(ctx, e) {
     }
   }
   ctx.restore();
+}
+
+// the plasma in flight: a white-hot ball with a teal tail and motes spiralling round it
+function drawShell(ctx, e) {
+  if (e.done) return;
+  const q = clamp01(e.age / e.dur);
+  const at = (p) => [e.x + (e.tx - e.x) * p, e.y + (e.ty - e.y) * p - Math.sin(p * Math.PI) * 20];
+  const [x, y] = at(q);
+  for (let i = 12; i >= 1; i--) {
+    const p = q - i * 0.032;
+    if (p < 0) continue;
+    const [px, py] = at(p);
+    glow(ctx, px, py, 12 * (1 - i / 15), '70, 235, 215', 0.75 * (1 - i / 13));
+  }
+  glow(ctx, x, y, 23, '90, 245, 220', 0.95);
+  glow(ctx, x, y, 11, '255, 255, 255', 1);
+  dot(ctx, x, y, 4.6, '#ffffff');
+  for (let i = 0; i < 6; i++) {
+    const a = e.age * 26 + (i / 6) * TAU;
+    dot(ctx, x + Math.cos(a) * 11, y + Math.sin(a) * 6.5, 1.5, i % 2 ? '#d6fff6' : '#5cf0d0');
+  }
+}
+
+function drawPlasma(ctx, e) {
+  const { x, y, r, seed, age: t } = e;
+  if (t < 0.2) {
+    const q = t / 0.2;
+    glow(ctx, x, y - 4, r * (1.3 + q), '150, 255, 232', 0.95 * (1 - q));
+    glow(ctx, x, y - 4, r * (0.7 + q * 0.5), '255, 255, 255', 1 - q);
+  }
+  // a swelling, crackling sphere
+  if (t < 0.5) {
+    const q = t / 0.5;
+    const rad = r * (0.3 + 0.95 * easeOut(q));
+    glow(ctx, x, y - 6, rad * 1.25, '60, 225, 212', 0.5 * (1 - q));
+    ctx.strokeStyle = `rgba(190, 255, 240, ${1 - q})`;
+    ctx.lineWidth = 3.4 * (1 - q) + 0.4;
+    ctx.beginPath();
+    ctx.arc(x, y - 6, rad, 0, TAU);
+    ctx.stroke();
+    for (let i = 0; i < 9; i++) {
+      let a = (i / 9) * TAU + Math.random() * 0.5;
+      const pts = [[x, y - 6]];
+      for (let k = 1; k <= 4; k++) {
+        a += (Math.random() - 0.5) * 0.9;
+        pts.push([x + Math.cos(a) * rad * (k / 4), y - 6 + Math.sin(a) * rad * (k / 4)]);
+      }
+      strokePath(ctx, pts, `rgba(80, 240, 220, ${0.7 * (1 - q)})`, 2.6);
+      strokePath(ctx, pts, `rgba(255, 255, 255, ${1 - q})`, 0.8);
+    }
+  }
+  for (let i = 0; i < 30; i++) {
+    const life = 0.45 + rnd(seed, i) * 0.65;
+    const q = t / life;
+    if (q >= 1) continue;
+    const a = rnd(seed, i + 40) * TAU;
+    const d = r * (0.4 + rnd(seed, i + 80) * 1.2) * easeOut(q);
+    const px = x + Math.cos(a) * d;
+    const py = y - 6 + Math.sin(a) * d * 0.7 + 34 * q * q;
+    strokePath(ctx, [[px, py], [px - Math.cos(a) * 5 * (1 - q), py - Math.sin(a) * 3.5 * (1 - q)]], `rgba(${i % 3 ? '110, 250, 222' : '255, 255, 255'}, ${1 - q})`, 1.7 * (1 - q) + 0.4);
+  }
+  for (let i = 0; i < 8; i++) {
+    const q = (t - 0.12 - i * 0.04) / 0.85;
+    if (q > 0 && q < 1) glow(ctx, x + (rnd(seed, i + 120) - 0.5) * r, y - 4 - q * 42, 8 + q * 14, '88, 108, 120', 0.5 * (1 - q));
+  }
+}
+
+// a hit from his charge: a hard little starburst
+function drawImpact(ctx, e) {
+  const q = e.age / e.life;
+  glow(ctx, e.x, e.y, 15 * (0.5 + q), '255, 244, 200', 0.85 * (1 - q));
+  ctx.fillStyle = `rgba(255, 255, 255, ${1 - q})`;
+  ctx.beginPath();
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * TAU + e.seed;
+    const d = i % 2 === 0 ? 8 + 15 * easeOut(q) : 3;
+    if (i === 0) ctx.moveTo(e.x + Math.cos(a) * d, e.y + Math.sin(a) * d);
+    else ctx.lineTo(e.x + Math.cos(a) * d, e.y + Math.sin(a) * d);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+// the roar when rage takes him: a column of red light and embers
+function drawRoar(ctx, e) {
+  const t = e.age;
+  if (t < 0.7) {
+    const q = t / 0.7;
+    const w = 34 * (1 - q * 0.6);
+    const h = 90 + 90 * easeOut(q);
+    const pg = ctx.createLinearGradient(0, e.y, 0, e.y - h);
+    pg.addColorStop(0, `rgba(255, 190, 200, ${0.6 * (1 - q)})`);
+    pg.addColorStop(0.45, `rgba(255, 64, 100, ${0.45 * (1 - q)})`);
+    pg.addColorStop(1, 'rgba(255, 64, 100, 0)');
+    ctx.fillStyle = pg;
+    ctx.fillRect(e.x - w, e.y - h, w * 2, h);
+  }
+  for (let i = 0; i < 26; i++) {
+    const q = (t - rnd(e.seed, i) * 0.4) / 0.9;
+    if (q <= 0 || q >= 1) continue;
+    const px = e.x + (rnd(e.seed, i + 30) - 0.5) * 90 + Math.sin(q * 7 + i) * 6;
+    const py = e.y - q * (50 + rnd(e.seed, i + 60) * 90);
+    dot(ctx, px, py, 1.9 * (1 - q) + 0.4, `rgba(255, ${i % 3 === 0 ? 220 : 90}, ${i % 3 === 0 ? 200 : 110}, ${1 - q})`);
+  }
 }
 
 // the big one
@@ -380,7 +543,7 @@ function drawMeltdown(ctx, dpr, e, sprites) {
   ctx.setTransform(e.facing * dpr, 0, 0, dpr, (e.x + (Math.random() - 0.5) * 3.4 * q) * dpr, (e.y + (Math.random() - 0.5) * 1.6 * q) * dpr);
   ctx.translate(0, FEET + q * 2.4);
   ctx.rotate(-0.1 * q);
-  ctx.scale(1.25, 1.25);
+  ctx.scale(BIG, BIG);
   ctx.translate(0, -FEET);
   drawJugParts(ctx, sprites.juggernaut, -0.4 * easeOut(q), 0.55 * easeOut(q));
   // seams splitting with light
@@ -431,6 +594,10 @@ export function drawJugTop(ctx, dpr, world, sprites) {
     if (e.type === 'slam') drawSlam(ctx, e);
     else if (e.type === 'slash') drawSlash(ctx, e);
     else if (e.type === 'nova') drawNova(ctx, e);
+    else if (e.type === 'shell') drawShell(ctx, e);
+    else if (e.type === 'plasma') drawPlasma(ctx, e);
+    else if (e.type === 'impact') drawImpact(ctx, e);
+    else if (e.type === 'roar') drawRoar(ctx, e);
   }
   ctx.restore();
 }

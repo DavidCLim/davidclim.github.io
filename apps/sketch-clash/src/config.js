@@ -107,31 +107,37 @@ export const TROOPER = {
 // where it lands. Bullets and arrows only do part of their damage, and nothing knocks him back.
 export const JUGGERNAUT = {
   kind: 'jugger',
-  hp: 2400,
-  radius: 20,
-  scale: 1.25, // drawn this much bigger than its parts, about the feet
-  sep: 42,
-  speed: 36,
-  // riflemen back away from him, so every few seconds he fires his boilers and charges
-  charge: { time: 1.1, boost: 3.3, rest: 2.6, from: 50 },
-  sight: 460,
-  reach: 43, // from his middle to the edge of whoever he's swinging at
+  hp: 4600,
+  radius: 28,
+  scale: 1.8, // drawn this much bigger than its parts, about the feet
+  sep: 58,
+  speed: 42,
+  // riflemen back away from him, so every couple of seconds he fires his boilers and charges, flattening whoever is in the way
+  charge: { time: 1.1, boost: 3.4, rest: 1.8, from: 66, damage: 90, knock: 520 },
+  sight: 640,
+  reach: 62, // from his middle to the edge of whoever he's swinging at
   windup: 0.66, // heaving the axe up and bringing it down
   recover: 0.62,
-  rest: 0.45,
-  damage: 130,
+  rest: 0.25,
+  damage: 300,
   // every other swing is a quicker swipe across the front with the claw
-  claw: { windup: 0.4, recover: 0.46, damage: 75, at: 31, radius: 28 },
-  slamAt: 34, // how far in front of him the blade lands
-  slamRadius: 31,
-  knock: 430,
-  armor: 0.6,
+  claw: { windup: 0.4, recover: 0.46, damage: 190, at: 46, radius: 42 },
+  // out of reach? he levels his arm and lobs a burst of plasma
+  cannon: { windup: 0.85, recover: 0.55, damage: 240, radius: 48, speed: 330, rest: 3.6, min: 95, max: 400 },
+  // mobbed? he whirls round with the axe out
+  spin: { windup: 0.5, time: 1.05, recover: 0.35, tick: 0.17, damage: 80, radius: 78, need: 4, rest: 6.5 },
+  // badly hurt, he roars and turns faster and meaner for the rest of the fight
+  rage: { at: 0.4, haste: 1.35, damage: 90, radius: 100 },
+  slamAt: 50, // how far in front of him the blade lands
+  slamRadius: 48,
+  knock: 580,
+  armor: 0.45,
   noKnock: true,
   noDrop: true,
   explodes: true,
   meltdown: true, // he splits and pops for a second before he blows
-  parts: ['jugshell', 'jugshell', 'jugpipe', 'jugpipe', 'jugspike', 'jugspike', 'botplate', 'botlens', 'juggernaut'],
-  ring: 3.8,
+  parts: ['jugshell', 'jugshell', 'jugshell', 'jugpipe', 'jugpipe', 'jugpipe', 'jugspike', 'jugspike', 'jugspike', 'juggernaut'],
+  ring: 5.2,
   pivot: { x: 0, y: 0 },
   muzzleLen: 0,
 };
