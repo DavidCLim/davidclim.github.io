@@ -1,5 +1,5 @@
-import { TAU, FEET, GAIT } from './config.js?v=216';
-import { WATER, ICE, WALL } from './terrain.js?v=216';
+import { TAU, FEET, GAIT } from './config.js?v=217';
+import { WATER, ICE, WALL } from './terrain.js?v=217';
 
 // Everything the Animals and Mythical tabs add to the world, plus the terrain physics:
 // the beast brain, the mage's bolts, the necromancer's skeletons, zombie infection,
@@ -132,6 +132,11 @@ export function installBeasts(World) {
     }
     u.x = nx;
     u.y = ny;
+    // a robot with his feet in the water (walked, knocked or landed there) short-circuits and drops dead
+    if (d.robot && this.live && !(u.alt > 0.15) && (T.at(u.x, u.y + FEET) & WATER)) {
+      this.shortCircuit(u);
+      return;
+    }
     if (d.waterOnly && !(T.at(u.x, u.y + FEET) & WATER) && (T.at(ox, oy + FEET) & WATER)) {
       // never leaves the water under its own power
       u.x = ox;
@@ -169,6 +174,14 @@ export function installBeasts(World) {
         }
       }
     }
+  };
+
+  P.shortCircuit = function (u) {
+    u.alt = 0;
+    u.kx = u.ky = 0;
+    u.burn = 0;
+    this.hurt(u, u.hp + 1e6, u.x, u.y, 'zap', null);
+    if (this.sfx) this.sfx('zap', u.x);
   };
 
   // The closest foot position that is not inside a wall.

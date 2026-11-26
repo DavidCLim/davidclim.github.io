@@ -13,6 +13,7 @@ const SOUNDS = {
   smash: { gap: 0.08, vol: 0.28, noise: { dur: 0.14, f0: 900, f1: 200, type: 'lowpass' }, tone: { f0: 110, f1: 50, dur: 0.14, type: 'sine', vol: 1 } },
   slip: { gap: 0.1, vol: 0.18, tone: { f0: 900, f1: 220, dur: 0.35, type: 'sine', vol: 1 } },
   magic: { gap: 0.1, vol: 0.14, tone: { f0: 520, f1: 1300, dur: 0.22, type: 'sine', vol: 1 } },
+  zap: { gap: 0.12, vol: 0.22, noise: { dur: 0.45, f0: 5200, f1: 1500, type: 'bandpass' }, tone: { f0: 210, f1: 55, dur: 0.5, type: 'sawtooth', vol: 0.7 } },
   summon: { gap: 0.2, vol: 0.2, tone: { f0: 160, f1: 55, dur: 0.5, type: 'sawtooth', vol: 1 } },
 };
 

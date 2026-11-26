@@ -9,6 +9,7 @@ export const UNIT = K / 0.62;
 const R = K / 0.56;
 export const PIVOT = { x: 7 * K, y: 12 * K }; // where the soldier's rifle swings from, facing right
 export const MUZZLE_LEN = 38 * K; // pivot to the end of the barrel
+export const ZAP_TIME = 0.85; // how long a robot in water stands crackling before he drops
 export const FEET = 25 * K; // ground contact, below the body centre
 
 // Standing around, a soldier faces the viewer with the rifle held upright
@@ -82,6 +83,7 @@ export const SNIPER = {
 // Robo Trooper: a stocky walking armour with a big rifle. Slower and far tougher than a soldier, firing in threes.
 export const TROOPER = {
   ...SOLDIER,
+  robot: true, // water short-circuits him
   hp: 170, // a soldier has 100
   radius: 13 * UNIT,
   sep: 21 * UNIT,
@@ -109,21 +111,23 @@ export const TROOPER = {
 // near where they land. Bullets and arrows only do part of their damage, and nothing knocks him back.
 export const JUGGERNAUT = {
   kind: 'jugger',
+  robot: true,
   hp: 480,
-  radius: 15.5 * UNIT,
-  scale: 1.2, // a bit bigger than Robo Trooper, and built much broader
+  radius: 17 * UNIT,
+  scale: 1.34, // well bigger than Robo Trooper, and built much broader
+  jets: [[-36, -20], [-38, -4]], // his thrusters, on the back of the hump
   bulk: 1,
-  sep: 27 * UNIT,
+  sep: 30 * UNIT,
   speed: 48,
   // riflemen back away from him, so now and then he fires his thrusters to catch up
   charge: { time: 0.85, boost: 2.7, rest: 1.2, from: 30 },
   sight: 560,
-  reach: 23, // from his middle to the edge of whoever he's punching
+  reach: 24, // from his middle to the edge of whoever he's punching
   windup: 0.5,
   recover: 0.45,
   rest: 0.45,
   damage: 60, // two punches fell a soldier
-  slamAt: 17, // how far in front of him the punch lands
+  slamAt: 19, // how far in front of him the punch lands
   slamRadius: 14,
   slam: { every: 3, radius: 19 }, // every third blow is both fists at once, and lands wider
   lunge: 95, // how fast he throws himself into a punch
@@ -134,7 +138,7 @@ export const JUGGERNAUT = {
   boom: 15,
   thrusters: 'boost',
   parts: ['botplate', 'botplate', 'botpod', 'jugfist', 'juggernaut'],
-  ring: 1.6,
+  ring: 1.8,
   pivot: { x: 0, y: 0 },
   muzzleLen: 0,
 };
@@ -143,6 +147,7 @@ export const JUGGERNAUT = {
 // jetpack and fights from the air for a few seconds.
 export const JETTROOPER = {
   ...SOLDIER,
+  robot: true,
   kind: 'jet',
   hp: 260,
   radius: 13 * UNIT,
@@ -406,6 +411,7 @@ export const GAIT = { boar: 8, rat: 15, ant: 15, ape: 7, alligator: 7, piranha: 
 // MechaZord: this game's dragon in robot form, a flying silver dino-dragon that breathes a cone of fire.
 export const MECHAZORD = {
   ...DRAGON,
+  robot: true,
   flying: false,
   airborne: true, // like the dragon, he sometimes takes off and breathes fire from the air, sometimes he stays on the ground
   hoverH: 30,

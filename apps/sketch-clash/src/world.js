@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=216';
-import { TerrainMap, WALL } from './terrain.js?v=216';
-import { installBeasts } from './beasts.js?v=216';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=217';
+import { TerrainMap, WALL } from './terrain.js?v=217';
+import { installBeasts } from './beasts.js?v=217';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -611,7 +611,7 @@ export class World {
     u.jetT = 0.07;
     const k = d.thrusters === 'walk' ? 1.15 : d.scale;
     const wide = d.bulk || 1;
-    for (const [jx, jy] of [[-33, -15], [-32, 11]]) {
+    for (const [jx, jy] of d.jets || [[-33, -15], [-32, 11]]) {
       this.jetFlame(u.x + u.facing * jx * 0.31 * k * wide, u.y + FEET + (jy * 0.31 - FEET) * k, -u.facing * 48, 6, d.thrusters === 'walk' ? 0.62 : 0.95);
     }
   }
@@ -797,8 +797,10 @@ export class World {
           killerTeam: src ? src.team : null,
         });
       }
-      this.ghosts.push({ x: u.x, y: u.y, age: 0, seed: Math.random(), species: u.species, facing: u.facing || 1 });
-      this.corpses.push({ u: { ...u, dead: false, moving: false, hit: 0, flash: 0, burn: 0, charred: kind === 'burn' }, age: 0 });
+      // (a short-circuit holds him upright a moment first, so his ghost waits for him to drop)
+      const zapped = kind === 'zap';
+      this.ghosts.push({ x: u.x, y: u.y, age: zapped ? -ZAP_TIME : 0, seed: Math.random(), species: u.species, facing: u.facing || 1 });
+      this.corpses.push({ u: { ...u, dead: false, moving: false, hit: 0, flash: 0, burn: 0, charred: kind === 'burn' }, age: 0, zap: zapped });
       if (u.def.smoke) {
         for (let i = 0; i < 2; i++) {
           this.puffs.push({
@@ -821,7 +823,7 @@ export class World {
         k.cdT = 0.5;
       } else if ((kind === 'blast' || kind === 'snipe') && !u.def.noDrop && !u.def.creature) this.launchDrop(u);
       else if (this.onDeath) this.onDeath(u);
-      if (u.def.explodes) this.blowApart(u);
+      if (u.def.explodes && !zapped) this.blowApart(u); // water doesn't blow him apart: he just drops
       this.afterDeath(u, kind, src);
     }
   }
@@ -2079,7 +2081,8 @@ export class World {
     if (this.flames.some((f) => f.age > f.life)) this.flames = this.flames.filter((f) => f.age <= f.life);
 
     for (const c of this.corpses) c.age += dt;
-    if (this.corpses.some((c) => c.age > 1.5)) this.corpses = this.corpses.filter((c) => c.age <= 1.5);
+    const gone = (c) => c.age > (c.zap ? 1.5 + ZAP_TIME : 1.5);
+    if (this.corpses.some(gone)) this.corpses = this.corpses.filter((c) => !gone(c));
 
     for (const b of this.blasts) b.age += dt;
     if (this.blasts.some((b) => b.age > b.life)) this.blasts = this.blasts.filter((b) => b.age <= b.life);

@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=216';
-import { buildCreatureArt } from './creatures.js?v=216';
-import { buildEggArt } from './art_eggs.js?v=216';
-import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=216';
-import { Sfx } from './sfx.js?v=216';
-import { World } from './world.js?v=216';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=216';
-import { buildUnitArt, drawDrop } from './art_units.js?v=216';
-import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=216';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=217';
+import { buildCreatureArt } from './creatures.js?v=217';
+import { buildEggArt } from './art_eggs.js?v=217';
+import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=217';
+import { Sfx } from './sfx.js?v=217';
+import { World } from './world.js?v=217';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=217';
+import { buildUnitArt, drawDrop } from './art_units.js?v=217';
+import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=217';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -181,7 +181,7 @@ const LATTICE = {
   default: [15.5, 12.5, true],
   trooper: [28, 22, true],
   jettrooper: [28, 22, true],
-  juggernaut: [38, 28, true],
+  juggernaut: [43, 31, true],
   roman: [17.4, 17.6, false],
   cavalry: [34, 22, true],
   boar: [22, 15, true],
@@ -1209,10 +1209,12 @@ function render() {
 
   for (const c of world.corpses) {
     // knocked over backwards, dizzy stars circling, then fading as the ghost rises
-    const k = c.age;
+    const k = c.zap ? Math.max(0, c.age - ZAP_TIME) : c.age;
     const fall = 1 - (1 - Math.min(1, k / 0.2)) ** 2;
     const a = k < 0.75 ? 1 : Math.max(0, 1 - (k - 0.75) / 0.38);
-    c.u.tilt = -1.45 * fall;
+    // shorting out, he stands there juddering (any tilt at all shows him with his lights out) before he goes over
+    const judder = c.zap && c.age < ZAP_TIME;
+    c.u.tilt = judder ? Math.sin(c.age * 83) * 0.065 || 0.001 : -1.45 * fall;
     c.u.breath = 0;
     ctx.globalAlpha = a;
     drawBody(c.u);
@@ -1234,7 +1236,7 @@ function render() {
     ctx.fillStyle = '#f7cd3a';
     ctx.strokeStyle = '#e0902a';
     ctx.lineWidth = 0.6;
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < (judder ? 0 : 3); i++) {
       const ang = k * 9 + (i / 3) * TAU;
       const sx = c.u.x - c.u.facing * 9 * UNIT + Math.cos(ang) * 9 * UNIT;
       const sy = c.u.y + FEET * 0.45 + Math.sin(ang) * 3.5 * UNIT;
@@ -1250,6 +1252,7 @@ function render() {
       ctx.stroke();
     }
     ctx.globalAlpha = 1;
+    if (c.zap) drawShortCircuit(ctx, dpr, c);
   }
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
