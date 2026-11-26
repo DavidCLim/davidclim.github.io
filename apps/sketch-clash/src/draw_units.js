@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=232';
-import { drawLayer, OUT } from './sprites.js?v=232';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_TAIL, ZORD_JAW, ZORD_EYE, ZORD_CORE, zordEye, drawZordTail, drawZordSpine } from './art_units.js?v=232';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=232';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=232';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=233';
+import { drawLayer, OUT } from './sprites.js?v=233';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_TAIL, ZORD_JAW, ZORD_EYE, ZORD_CORE, zordEye, drawZordTail, drawZordSpine } from './art_units.js?v=233';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=233';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=233';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -1218,8 +1218,8 @@ function drawWizard(ctx, dpr, sprites, u) {
   const p = casting ? 1 - u.castT / u.def.castTime : 0;
   const flash = (u.castFlash || 0) / 0.24;
   const clock = performance.now() / 1000 + (u.id || 0);
-  const tilt = 0.07 + (casting ? 0.4 * (1 - (1 - p) ** 2) : flash > 0.6 ? 0.2 * ((flash - 0.6) / 0.4) : 0);
-  ctx.translate(lerp(21 * K, 20 * K, u.pose), 21 * K);
+  const tilt = 0.12 + (casting ? 0.31 * (1 - (1 - p) ** 2) : flash > 0.6 ? 0.16 * ((flash - 0.6) / 0.4) : 0);
+  ctx.translate(14 * K, 29 * K);
   ctx.rotate(tilt);
   const pink = casting && u.spell === 'burst';
   const rgb = pink ? '255, 100, 232' : '140, 235, 255';
@@ -1918,8 +1918,8 @@ const ICONS = {
     drawLayer(g, S.sword);
   }],
   mage: [104, 48, 48, (g, S) => {
-    g.translate(21 * K, 21 * K);
-    g.rotate(0.07);
+    g.translate(14 * K, 29 * K);
+    g.rotate(0.12);
     drawLayer(g, S.staff);
   }],
   necromancer: [128, 54, 68, (g, S) => {

@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=232';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=232';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=232';
+import { TAU, K } from './config.js?v=233';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=233';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=233';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask
@@ -686,21 +686,18 @@ function drawTower(g) {
   slab(g, [[-28.5, -11], [-22, -6.5], [-7, -4], [8, -5.5], [20, -5], [28.5, -11], [28, -1], [20, 6], [9, 5.5], [5, 8.5], [-9, 7.5], [-22, 4.5], [-28, 0]], across(g, -29, 29, '#b2afa8', '#7d7a75'), 2.3);
   slab(g, [[-28.5, -11], [-19, -17], [-4, -18], [9, -19.5], [22, -16], [28.5, -11], [20, -5], [8, -5.5], [-7, -4], [-22, -6.5]], '#c2bfb8', 2.3);
   crease(g, [[-7, -4], [-8.5, 1], [-6.5, 3.5]], TW.ink, 1.5);
-  crease(g, [[20, -5], [18.5, -0.5], [20, 6]], TW.ink, 1.5);
 
   // ---- the stone shaft: crooked, with stones jutting out of its sides
-  slab(g, [[-18, -14], [-17, -29], [-19.5, -31.5], [-18.5, -40], [-16, -41], [-14.5, -62], [-17.5, -64], [-17, -73], [-14.5, -74.5], [-15.5, -93], [15, -93], [14.5, -81], [17, -79], [16, -71], [14, -69.5], [15.5, -46], [18.5, -44], [18.5, -35], [16.5, -33], [18, -14]],
+  slab(g, [[-18, -14], [-15.8, -52], [-14.8, -62], [-17.6, -64], [-17.1, -73], [-14.6, -74.5], [-15.5, -93], [15, -93], [15.6, -46], [18.5, -44], [18.5, -35], [16.6, -33], [18, -14]],
     across(g, -19, 19, TW.stoneLite, TW.stoneShade), 2.4);
-  // a few loose stones in the wall, and a crack running down from the top
-  for (const [x, y, w] of [[5, -85, 8], [-13, -55, 8.5], [7.5, -50, 7]]) {
+  // a loose stone or two in the wall
+  for (const [x, y, w] of [[5, -85, 8], [-13, -50, 8.5]]) {
     slab(g, [[x, y], [x + w, y - 0.8], [x + w - 0.7, y + 4.2], [x + 0.5, y + 4.8]], 'rgba(255, 250, 235, 0.25)', 0);
     crease(g, [[x, y], [x + w, y - 0.8], [x + w - 0.7, y + 4.2], [x + 0.5, y + 4.8], [x, y]], 'rgba(55, 44, 30, 0.6)', 1.2);
   }
-  crease(g, [[-8, -90], [-5.5, -85.5], [-9, -82], [-7, -77.5]], 'rgba(60, 50, 36, 0.55)', 1.4);
 
-  // ---- the window, with a bar across it and a stone sill
+  // ---- the window and its stone sill
   pointed(g, 0, -68, 11, 16);
-  crease(g, [[-5.5, -66.5], [5.5, -66.5]], TW.ink, 1.5);
   slab(g, [[-8, -60.5], [7.5, -61], [6.8, -57], [-7.2, -56.6]], '#ded9cc', 1.8);
 
   // ---- the door in a plain stone arch
@@ -722,7 +719,6 @@ function drawTower(g) {
   g.fill();
   twInk(g, 2);
   g.stroke();
-  crease(g, [[0, -34.2], [0, -11.5]], 'rgba(50, 26, 8, 0.7)', 1.2);
   g.beginPath();
   g.arc(4.4, -21, 2.1, 0, TAU);
   g.fillStyle = '#d9b257';
@@ -731,26 +727,19 @@ function drawTower(g) {
   g.stroke();
 
   // ---- a small, battered roof: a bent, notched point over a knobbly ledge and a ragged edge of three tiles
-  slab(g, [[-33, -105], [-20, -116], [-21.5, -119], [-7, -131], [1, -139], [3, -112], [-11, -111]], TW.tile[0], 2.4);
+  slab(g, [[-33, -105], [-20, -116], [-21.5, -119], [1, -139], [3, -112], [-11, -111]], TW.tile[0], 2.4);
   slab(g, [[1, -139], [14, -152], [9.5, -139.5], [14, -129], [11, -127.5], [24, -117], [34, -103], [13, -112], [3, -112]], TW.tile[2], 2.4);
   drawTowerEave(g);
-  for (const pts of [
-    [[-12, -124], [-8.5, -121.5], [-9, -118]],
-    [[18, -121], [15.5, -118.5], [17, -115.5]],
-  ]) crease(g, pts, 'rgba(38, 30, 70, 0.6)', 1.5);
 }
 
 // The ledge and the ragged edge of the roof. Part of the tower, and drawn once more in front of whoever is up there.
 function drawTowerEave(g) {
-  slab(g, [[-20.5, -98], [-6, -99.5], [20, -99], [18.5, -92.5], [15, -91], [14, -88.5], [-14, -89], [-15.5, -92], [-19, -91.5]], TW.stone, 2.3);
-  slab(g, [[-33, -105], [-11, -111], [-9.5, -94], [-17, -96.5], [-20, -92], [-24, -94.5], [-30, -91.5]], TW.tile[1], 2.5);
-  slab(g, [[-11, -111], [13, -112], [14.5, -96.5], [6, -97.5], [3.5, -93.5], [-2, -96.5], [-9.5, -94]], TW.tile[0], 2.5);
-  slab(g, [[13, -112], [34, -103], [32, -90], [26, -95], [22, -93], [14.5, -96.5]], TW.tileDark, 2.5);
-  // splits in the tiles
-  for (const pts of [
-    [[-23, -108], [-21, -103.5], [-24, -100.5]],
-    [[5, -111], [7.5, -106], [5.5, -103]],
-  ]) crease(g, pts, 'rgba(38, 30, 70, 0.6)', 1.5);
+  slab(g, [[-20.5, -98], [20, -99], [18.5, -91], [14, -88.5], [-14, -89], [-19, -91.5]], TW.stone, 2.3);
+  slab(g, [[-33, -105], [-11, -111], [-9.5, -94], [-20, -92], [-24, -95.5], [-30, -91.5]], TW.tile[1], 2.5);
+  slab(g, [[-11, -111], [13, -112], [14.5, -96.5], [3.5, -93.5], [-9.5, -94]], TW.tile[0], 2.5);
+  slab(g, [[13, -112], [34, -103], [32, -90], [22, -94], [14.5, -96.5]], TW.tileDark, 2.5);
+  // one split in a tile
+  crease(g, [[5, -111], [7.5, -106], [5.5, -103]], 'rgba(38, 30, 70, 0.6)', 1.5);
 }
 
 // The opening broken into the roof, that a wizard looks out of: dark inside, its edge jagged.

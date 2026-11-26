@@ -1,5 +1,5 @@
-import { TAU, FEET, GAIT } from './config.js?v=232';
-import { WATER, ICE, WALL } from './terrain.js?v=232';
+import { TAU, FEET, GAIT } from './config.js?v=233';
+import { WATER, ICE, WALL } from './terrain.js?v=233';
 
 // Everything the Animals and Mythical tabs add to the world, plus the terrain physics:
 // the beast brain, the mage's bolts, the necromancer's skeletons, zombie infection,
@@ -573,7 +573,7 @@ export function installBeasts(World) {
   };
 
   // where the orb on his staff is as he lets a spell go
-  const staffTip = (u) => [u.x + u.facing * 38 * 0.31, (isUp(u) ? u.perch.p.y - u.def.perch.height : u.y) - 24 * 0.31];
+  const staffTip = (u) => [u.x + u.facing * 37 * 0.31, (isUp(u) ? u.perch.p.y - u.def.perch.height : u.y) - 22 * 0.31];
 
   P.castOrb = function (u, t) {
     const d = u.def;

@@ -1,6 +1,6 @@
-import { TAU } from './config.js?v=232';
-import { makeLayer, rr, OUT } from './sprites.js?v=232';
-import { eggBody, bigEyes, feetSet, eggSet, ghostBody, GAZE3 } from './art_units.js?v=232';
+import { TAU } from './config.js?v=233';
+import { makeLayer, rr, OUT } from './sprites.js?v=233';
+import { eggBody, bigEyes, feetSet, eggSet, ghostBody, GAZE3 } from './art_units.js?v=233';
 
 // The egg-shaped mythical units: zombie, mage, necromancer and the necromancer's skeletons.
 
@@ -74,143 +74,103 @@ function drawZombieBody(g, front, gz) {
 }
 
 // ------------------------------------------------------------ the wizard
-// The original's mage: a purple egg with a gold band, a wide-brimmed navy hat with a gold star, and a staff with a
-// glowing orb. Older and wiser here: heavy lids, bushy white brows, a drooping moustache and a beard down to his feet.
+// The original's mage, to its measure: a purple egg with a gold band, big eyes looking up from under a wide flat navy
+// brim, a straight pointed hat leaning back with a gold band and star, a white beard shaped like a drop, and a plain
+// staff with a glowing orb. His beard is longer than the original's, and two white tufts of brow show his age.
 function drawWizardBody(g, front, gz) {
-  const cx = front ? 0 : 5;
-  eggBody(g, '#a655c0', '#87359f');
+  const cx = front ? 0 : 5.4;
+  eggBody(g, '#a754bd', '#8c339f');
   g.save();
   g.beginPath();
   g.ellipse(0, 0, 20.2, 22.5, 0, 0, TAU);
   g.clip();
-  g.fillStyle = '#f0bd38';
-  g.beginPath();
-  g.moveTo(-24, 11);
-  g.quadraticCurveTo(0, 17, 24, 10);
-  g.lineTo(24, 15);
-  g.quadraticCurveTo(0, 22, -24, 16);
-  g.closePath();
-  g.fill();
+  g.fillStyle = '#f1bd36';
+  g.fillRect(-24, 14.6, 48, 4.4);
   g.restore();
 
-  // eyes half hidden under the brim, their lids heavy and unhurried
-  const xs = [cx - 6.4, cx + 7.6];
-  bigEyes(g, xs, gz, -3.8, 4.6, 4.8, 1.9, 2.6);
+  // big eyes, their tops under the brim, looking up out of its shade
+  const xs = [cx - 7.6, cx + 7.5];
   for (const x of xs) {
     g.beginPath();
-    g.ellipse(x, -3.8, 4.6, 4.8, 0, Math.PI * 1.08, Math.PI * 1.92);
-    g.quadraticCurveTo(x, -4.8, x - 4.4, -5.4);
-    g.closePath();
-    g.fillStyle = '#8b3fa6';
+    g.arc(x, -3.7, 4.9, 0, TAU);
+    g.fillStyle = '#ffffff';
     g.fill();
     g.strokeStyle = OUT;
-    g.lineWidth = 1.2;
+    g.lineWidth = 1.4;
     g.stroke();
+    g.beginPath();
+    g.arc(x + 0.6 + gz[0] * 0.5, -5.6 + gz[1] * 0.18, 2.3, 0, TAU);
+    g.fillStyle = OUT;
+    g.fill();
   }
 
-  // the beard: long, soft and tapering past his body to his toes, with a little curl at the end
-  g.fillStyle = vg(g, -2, 31, '#fdfcf7', '#e2e0d8');
+  // the beard: one smooth white drop, rounded under his eyes and drawn down to a point below his feet
+  g.beginPath();
+  g.moveTo(cx + 3, 32);
+  g.bezierCurveTo(cx - 0.4, 25, cx - 7.8, 16.6, cx - 7.8, 8.4);
+  g.bezierCurveTo(cx - 7.8, 3.4, cx - 4, -0.2, cx + 0.6, -0.2);
+  g.bezierCurveTo(cx + 5.4, -0.2, cx + 9.2, 3.4, cx + 9.2, 8.4);
+  g.bezierCurveTo(cx + 9.2, 16.4, cx + 5.2, 24.6, cx + 3, 32);
+  g.closePath();
+  g.fillStyle = '#fbfaf5';
+  g.fill();
   g.strokeStyle = OUT;
   g.lineWidth = 1.5;
   g.lineJoin = 'round';
-  g.beginPath();
-  g.moveTo(cx - 9.5, 0);
-  g.quadraticCurveTo(cx + 1, -3.4, cx + 11.5, 0);
-  g.bezierCurveTo(cx + 15, 7, cx + 10, 13, cx + 8.6, 17);
-  g.quadraticCurveTo(cx + 12, 19, cx + 6.6, 21.4);
-  g.bezierCurveTo(cx + 6, 26, cx + 3, 29, cx + 6.5, 32.5);
-  g.bezierCurveTo(cx - 1, 33, cx - 3.4, 28, cx - 4.4, 22.6);
-  g.quadraticCurveTo(cx - 10, 22, cx - 7.4, 17.4);
-  g.bezierCurveTo(cx - 11.5, 12, cx - 13, 6, cx - 9.5, 0);
-  g.closePath();
-  g.fill();
-  g.stroke();
-  g.strokeStyle = 'rgba(130, 128, 140, 0.55)';
-  g.lineWidth = 0.9;
-  g.lineCap = 'round';
-  g.beginPath();
-  g.moveTo(cx - 4, 6);
-  g.quadraticCurveTo(cx - 6, 14, cx - 1.6, 22);
-  g.moveTo(cx + 2.4, 8);
-  g.quadraticCurveTo(cx + 3.6, 17, cx + 0.4, 27);
-  g.moveTo(cx + 7, 5);
-  g.quadraticCurveTo(cx + 8.4, 11, cx + 4.6, 17);
-  g.stroke();
-  // moustache, drooping out to both sides
-  g.fillStyle = '#ffffff';
-  g.strokeStyle = OUT;
-  g.lineWidth = 1.2;
-  for (const side of [-1, 1]) {
-    g.beginPath();
-    g.moveTo(cx + 1, 0);
-    g.quadraticCurveTo(cx + 1 + side * 7, -2.6, cx + 1 + side * 14, 5.4);
-    g.quadraticCurveTo(cx + 1 + side * 8, 3.6, cx + 1 + side * 5.4, 4.6);
-    g.quadraticCurveTo(cx + 1 + side * 2, 4, cx + 1, 2.4);
-    g.closePath();
-    g.fill();
-    g.stroke();
-  }
-  // a round nose over it
-  g.beginPath();
-  g.ellipse(cx + 1, 0.4, 3, 2.6, 0, 0, TAU);
-  g.fillStyle = '#b86cc9';
-  g.fill();
   g.stroke();
 
-  drawWizardHat(g, cx);
+  drawWizardHat(g, 0);
 
-  // bushy white brows, poking out from under the brim and trailing at the ends
-  g.fillStyle = '#ffffff';
+  // two little white tufts of brow, just under the brim
+  g.fillStyle = '#fbfaf5';
   g.strokeStyle = OUT;
-  g.lineWidth = 1.1;
+  g.lineWidth = 1;
   for (const [x, side] of [[xs[0], -1], [xs[1], 1]]) {
     g.beginPath();
-    g.moveTo(x - side * 4, -9.8);
-    g.quadraticCurveTo(x + side * 1.5, -12.4, x + side * 6.4, -9);
-    g.quadraticCurveTo(x + side * 9.4, -6.6, x + side * 9.8, -2.6);
-    g.quadraticCurveTo(x + side * 6.6, -7.4, x + side * 3, -7.8);
-    g.quadraticCurveTo(x - side * 1, -8.8, x - side * 4, -8);
+    g.moveTo(x - side * 3.4, -7.4);
+    g.quadraticCurveTo(x + side * 2, -9, x + side * 6.6, -4.6);
+    g.quadraticCurveTo(x + side * 2.4, -6.2, x - side * 3.4, -5.9);
     g.closePath();
     g.fill();
     g.stroke();
   }
 }
 
-// the wide flat brim and a straight cone leaning back, with a gold band and star
+// the wide flat brim and a straight pointed cone leaning back, with a gold band and star
 function drawWizardHat(g, cx) {
   g.strokeStyle = OUT;
-  g.lineWidth = 1.7;
+  g.lineWidth = 1.5;
   g.lineJoin = 'round';
   g.beginPath();
-  g.moveTo(cx - 14.5, -13);
-  g.lineTo(cx - 12, -42);
-  g.quadraticCurveTo(cx + 3, -31, cx + 14.5, -13);
+  g.moveTo(cx + 15.6, -13);
+  g.lineTo(cx - 10.4, -37.6);
+  g.lineTo(cx - 14, -13);
   g.closePath();
-  g.fillStyle = '#2b3474';
+  g.fillStyle = '#2c3573';
   g.fill();
   g.stroke();
-  g.fillStyle = '#f0bd38';
+  g.fillStyle = '#f1bd36';
   g.beginPath();
-  g.moveTo(cx - 14.2, -18.2);
-  g.lineTo(cx + 11.6, -17.6);
-  g.lineTo(cx + 14, -13.6);
-  g.lineTo(cx - 14.5, -14);
+  g.moveTo(cx - 13.9, -18.8);
+  g.lineTo(cx + 11, -18.8);
+  g.lineTo(cx + 14.8, -15.2);
+  g.lineTo(cx - 14, -15.2);
   g.closePath();
   g.fill();
   g.beginPath();
-  g.ellipse(cx, -13.4, 28, 5.4, 0, 0, TAU);
-  g.fillStyle = '#2b3474';
+  g.ellipse(cx, -11.6, 29.4, 4.6, 0, 0, TAU);
+  g.fillStyle = '#2c3573';
   g.fill();
   g.stroke();
-  g.fillStyle = '#f5c63e';
-  star5(g, cx - 3.6, -26, 4.6, 2);
+  g.fillStyle = '#f4c23c';
+  star5(g, cx - 4, -25.4, 4.8, 2.1);
   g.fill();
 }
 
 // A plain wooden staff topped by an orb in the colour of the spell. Origin: its foot.
 function drawWizardStaff(g, orb) {
   g.lineCap = 'round';
-  for (const [col, wide] of [[OUT, 4.8], ['#c8964e', 2.8]]) {
+  for (const [col, wide] of [[OUT, 5.4], ['#c8964e', 3.4]]) {
     g.strokeStyle = col;
     g.lineWidth = wide;
     g.beginPath();
@@ -219,11 +179,11 @@ function drawWizardStaff(g, orb) {
     g.stroke();
   }
   g.beginPath();
-  g.arc(0, -WIZ_STAFF, 6.4, 0, TAU);
+  g.arc(0, -WIZ_STAFF, 6.2, 0, TAU);
   g.fillStyle = orb;
   g.fill();
   g.strokeStyle = OUT;
-  g.lineWidth = 1.7;
+  g.lineWidth = 1.6;
   g.stroke();
   g.beginPath();
   g.arc(2, -WIZ_STAFF + 1.8, 1.8, 0, TAU);
@@ -231,7 +191,7 @@ function drawWizardStaff(g, orb) {
   g.fill();
 }
 
-export const WIZ_STAFF = 52;
+export const WIZ_STAFF = 56;
 
 // ------------------------------------------------------------ necromancer
 function drawNecroBody(g, front, gz) {
@@ -484,8 +444,8 @@ export function buildEggArt() {
       torso: makeLayer(-40, -48, 40, 36, (g) => drawWizardBody(g, false, GAZE3[0])),
       torsoAngry: makeLayer(-40, -48, 40, 36, (g) => drawWizardBody(g, false, GAZE3[0])),
       torsoSide: GAZE3.map((gz) => makeLayer(-40, -48, 40, 36, (g) => drawWizardBody(g, false, gz))),
-      staff: makeLayer(-10, -62, 10, 6, (g) => drawWizardStaff(g, '#8ff0fb')),
-      staffPink: makeLayer(-10, -62, 10, 6, (g) => drawWizardStaff(g, '#ff62ea')),
+      staff: makeLayer(-10, -66, 10, 6, (g) => drawWizardStaff(g, '#8ff0fb')),
+      staffPink: makeLayer(-10, -66, 10, 6, (g) => drawWizardStaff(g, '#ff62ea')),
     },
     necromancer: {
       feet: feetSet('#1c1430'),
