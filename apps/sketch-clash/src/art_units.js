@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=236';
-import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=236';
+import { TAU, K } from './config.js?v=237';
+import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=237';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -2260,16 +2260,31 @@ function drawJetLauncher(g, loaded) {
 // on his back, a belt of rounds feeding a three-barrelled rotary cannon and a steel ridge bolted over his helmet.
 export const GATLING_WIDE = 1.08;
 
-function drawGatlingPack(g) {
-  drawTrooperPack(g);
-  // the ammo drum, riding on top of the thrusters
+// the ammo drum, riding on top of the thrusters; `turn` is how far round it has gone
+export function drawGatlingDrum(g, turn) {
   botBall(g, BOT.gun, -22, -20, 12, 2);
   botBall(g, BOT.gunDark, -22, -20, 8.2, 1.4);
   for (let i = 0; i < 6; i++) {
-    const a = (i / 6) * TAU + 0.4;
+    const a = turn + (i / 6) * TAU + 0.4;
     botBall(g, '#e8b54a', -22 + Math.cos(a) * 4.9, -20 + Math.sin(a) * 4.9, 2, 0.8);
   }
   botBall(g, '#1fbc9c', -22, -20, 2.2, 1);
+}
+
+// the belt of rounds, slung from the drum round to the gun; `feed` (0..1) moves them one place along
+export function drawGatlingBelt(g, feed) {
+  for (let i = 0; i < 8; i++) {
+    const k = (i + feed) / 8;
+    const x = -20 * (1 - k) * (1 - k) - 16 * k * (1 - k) + 6 * k * k;
+    const y = -3 * (1 - k) * (1 - k) + 44 * k * (1 - k) + 17 * k * k;
+    g.save();
+    g.translate(x, y);
+    g.rotate(1.25 - k * 1.15);
+    botPart(g, '#e8b54a', 1, () => g.roundRect(-4.4, -1.7, 8.8, 3.4, 1.4));
+    g.fillStyle = '#9c6f24';
+    g.fillRect(1.4, -1.4, 1.3, 2.8);
+    g.restore();
+  }
 }
 
 function drawGatlingBody(g) {
@@ -2285,19 +2300,6 @@ function drawGatlingBody(g) {
     g.lineTo(-1, -15.6);
   });
   for (const [x, y] of [[2.2, -24.4], [5.8, -20]]) botBall(g, '#6d7389', x, y, 1.5, 0.8);
-  // the belt of rounds, slung from the drum round to the gun
-  for (let i = 0; i < 8; i++) {
-    const k = i / 7;
-    const x = -20 * (1 - k) * (1 - k) + 2 * 2 * k * (1 - k) * -4 + 6 * k * k;
-    const y = -3 * (1 - k) * (1 - k) + 2 * k * (1 - k) * 22 + 17 * k * k;
-    g.save();
-    g.translate(x, y);
-    g.rotate(1.25 - k * 1.15);
-    botPart(g, '#e8b54a', 1, () => g.roundRect(-4.4, -1.7, 8.8, 3.4, 1.4));
-    g.fillStyle = '#9c6f24';
-    g.fillRect(1.4, -1.4, 1.3, 2.8);
-    g.restore();
-  }
 }
 
 // Origin: the grip. The body of the cannon; its barrels are drawn live, so they can spin.
@@ -2390,7 +2392,7 @@ export function buildUnitArt() {
 
   art.gatlingtrooper = {
     feet: art.trooper.feet,
-    pack: makeLayer(-42, -36, -6, 22, drawGatlingPack),
+    pack: art.trooper.pack,
     torso: makeLayer(-40, -40, 36, 28, drawGatlingBody),
     gun: makeLayer(-20, -18, 22, 12, drawGatlingGun),
     hand: makeLayer(-8, -2, 8, 14, drawGatlingHand),

@@ -1,9 +1,10 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=236';
-import { drawLayer, OUT } from './sprites.js?v=236';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels } from './art_units.js?v=236';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=236';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=236';
-import { drawZordGround, drawZordAir } from './zordfx.js?v=236';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=237';
+import { drawLayer, OUT } from './sprites.js?v=237';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt } from './art_units.js?v=237';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=237';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=237';
+import { drawZordGround, drawZordAir } from './zordfx.js?v=237';
+import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=237';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -190,60 +191,279 @@ function botGlow(ctx, x, y, r, rgb, a) {
   ctx.fill();
 }
 
-// The Gatling Trooper's cannon. Its barrels wind up before a volley, scream round while he fires and coast down after.
-function drawCannon(ctx, A, u, s) {
-  const { dead, moving, aiming, ph, pose, kick, t, clock } = s;
+// ---------------------------------------------------------------- the Gatling Trooper
+// How he stands is worked out once a frame and eased, so nothing about him snaps:
+//   brace  0..1  feet planted wide, crouched and leaning back, while the cannon winds up and runs
+//   lift   0..1  the cannon tipped up to cool after a volley (or to try its spin while he waits)
+//   spinA, spinRate  the barrels, with the ammo drum and the belt geared to them
+function gatlingMood(u, dead, aiming, t, clock) {
   const firing = !dead && u.burstLeft > 0;
-  const winding = !dead && aiming && !firing && (u.cdT || 0) < 0.6;
-  const want = firing ? 34 : winding ? 6 + 28 * (1 - Math.max(0, u.cdT || 0) / 0.6) : 0;
-  const dt = Math.min(0.05, Math.max(0, clock - (u.spinAt === undefined ? clock : u.spinAt)));
-  u.spinAt = clock;
-  u.spinRate = (u.spinRate || 0) + (want - (u.spinRate || 0)) * Math.min(1, dt * (want > (u.spinRate || 0) ? 9 : 2.2));
+  const winding = !dead && aiming && !firing && u.target && (u.cdT || 0) < 0.65;
+  const wind = winding ? 1 - Math.max(0, u.cdT || 0) / 0.65 : 0;
+  const dt = Math.min(0.05, Math.max(0, clock - (u.moodAt === undefined ? clock : u.moodAt)));
+  u.moodAt = clock;
+  // a volley ending starts him venting
+  if (u.wasFiring && !firing && !dead) {
+    u.ventAt = clock;
+  }
+  u.wasFiring = firing;
+  const vent = !dead && !firing && u.ventAt !== undefined && clock - u.ventAt < 0.85 ? (clock - u.ventAt) / 0.85 : 1;
+  // waiting with nobody to shoot, now and then he lifts the cannon and gives the barrels a whirl
+  const idle = !dead && !u.target && !u.moving;
+  const q = (t % 4.6) / 1.1;
+  const test = idle && q < 1 ? Math.sin(q * Math.PI) : 0;
+  const ease = (from, to, rate) => from + (to - from) * Math.min(1, dt * rate);
+  const want = firing ? 36 : winding ? 6 + 30 * wind : test * 17;
+  u.spinRate = ease(u.spinRate || 0, want, want > (u.spinRate || 0) ? 9 : 2.2);
   u.spinA = ((u.spinA || 0) + u.spinRate * dt) % TAU;
-  const heat = dead ? 0 : u.heat || 0;
-  ctx.save();
-  ctx.translate(6 * K, lerp(14, 13, pose) * K);
-  ctx.rotate(dead ? 0.8 : lerp(0.24 + (moving ? Math.sin(ph) * 0.08 : 0), u.aim, pose));
-  // it shudders in his grip while it runs
-  if (firing) ctx.translate((Math.random() - 0.7) * 1.6 * K * 2, (Math.random() - 0.5) * 1.4 * K * 2);
+  u.drumA = ((u.drumA || 0) + u.spinRate * dt * 0.22) % TAU;
+  u.feed = ((u.feed || 0) + u.spinRate * dt * 0.045) % 1;
+  u.brace = ease(u.brace || 0, firing ? 1 : wind * 0.8, 11);
+  u.lift = ease(u.lift || 0, vent < 1 ? Math.sin(Math.min(1, vent * 1.15) * Math.PI) : test * 0.55, 13);
+  return { firing, winding, wind, vent, test, brace: u.brace, lift: u.lift };
+}
+
+// his drum, and the belt of rounds running from it into the cannon
+function drawGatlingFeed(ctx, u) {
   ctx.save();
   ctx.scale(K, K);
-  drawGatlingBarrels(ctx, u.spinA, heat);
+  drawGatlingBelt(ctx, u.feed || 0);
   ctx.restore();
-  drawLayer(ctx, A.gun);
-  drawLayer(ctx, A.hand);
-  if (heat > 0.4) botGlow(ctx, 41 * K, 0, 10 * K, '255, 120, 40', (heat - 0.4) * 0.9);
-  // a ragged star of flame jumps at the muzzle with every round
-  if (u.flash > 0.02) {
-    const turn = Math.random() * TAU;
-    botGlow(ctx, 49 * K, 0, 13 * K, '255, 190, 60', 0.75);
-    for (const [col, k] of [['#ffb02e', 1], ['#fff3b0', 0.55]]) {
+}
+
+// teal power crackling round the barrels as they wind up
+function gatlingCharge(ctx, wind, t) {
+  botGlow(ctx, 34 * K, 0, (9 + 15 * wind) * K, '70, 255, 205', 0.65 * wind);
+  ctx.save();
+  ctx.scale(K, K);
+  ctx.lineCap = 'round';
+  // rings of it run down the barrels toward the muzzle
+  for (let i = 0; i < 3; i++) {
+    const q = (t * (1.8 + wind * 2) + i / 3) % 1;
+    const x = 18 + 30 * q;
+    for (const [col, wide] of [[`rgba(31, 214, 172, ${wind * (1 - q * 0.4)})`, 2.8], [`rgba(225, 255, 247, ${wind})`, 1]]) {
+      ctx.strokeStyle = col;
+      ctx.lineWidth = wide;
+      ctx.beginPath();
+      ctx.ellipse(x, 0, 3.2, 11 - 2.4 * q, 0, -1.9, 1.9);
+      ctx.stroke();
+    }
+  }
+  ctx.strokeStyle = `rgba(190, 255, 236, ${wind})`;
+  ctx.lineWidth = 1.2;
+  for (let b = 0; b < 3; b++) {
+    if (Math.random() > wind) continue;
+    let x = 20 + Math.random() * 22;
+    let y = (Math.random() < 0.5 ? -1 : 1) * (6 + Math.random() * 3);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    for (let i = 0; i < 3; i++) {
+      x += 3 + Math.random() * 6;
+      y += (Math.random() - 0.5) * 11;
+      ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// the blur of barrels going round too fast to see
+function gatlingBlur(ctx, amount, spin) {
+  ctx.save();
+  ctx.scale(K, K);
+  ctx.fillStyle = `rgba(200, 208, 226, ${0.34 * amount})`;
+  ctx.beginPath();
+  ctx.roundRect(18, -8, 27, 16, 5);
+  ctx.fill();
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = `rgba(245, 248, 255, ${0.8 * amount})`;
+  ctx.lineWidth = 1.1;
+  for (let i = 0; i < 3; i++) {
+    const a = spin * 1.7 + (i / 3) * TAU;
+    ctx.beginPath();
+    ctx.ellipse(40 - i * 8, 0, 3.4, 10.5, 0, a, a + 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// the roar at the muzzle, new in shape every frame: a tongue of flame ahead, two more out of the sides of the clamp,
+// and a hard white glint
+function gatlingMuzzle(ctx, hot, t) {
+  const x = 47;
+  botGlow(ctx, (x + 7) * K, 0, (24 + Math.random() * 5) * K, '255, 175, 45', 0.8 * hot);
+  const flame = (len, wide, turn, ox, oy) => {
+    ctx.save();
+    ctx.translate(ox * K, oy * K);
+    ctx.rotate(turn);
+    for (const [col, k] of [['#ff8a1e', 1], ['#ffc933', 0.72], ['#fff8d0', 0.42]]) {
       ctx.fillStyle = col;
       ctx.beginPath();
-      for (let i = 0; i < 12; i++) {
-        const an = turn + (i / 12) * TAU;
-        const r = (i % 2 ? 3 : 8 + Math.random() * 3) * k;
-        const stretch = Math.cos(an) > 0 ? 1.7 : 0.8;
-        const x = (49 + Math.cos(an) * r * stretch) * K;
-        const y = Math.sin(an) * r * 0.8 * K;
-        if (i) ctx.lineTo(x, y);
-        else ctx.moveTo(x, y);
-      }
+      ctx.moveTo(0, -wide * 0.45 * k * K);
+      const pts = [[0.34, -1], [0.44, -0.4], [0.74, -0.62], [0.7, -0.16], [1, 0], [0.68, 0.18], [0.78, 0.66], [0.42, 0.42], [0.32, 1]];
+      for (const [px, py] of pts) ctx.lineTo(px * len * k * (0.85 + Math.random() * 0.3) * K, py * wide * k * K);
+      ctx.lineTo(0, wide * 0.45 * k * K);
       ctx.closePath();
       ctx.fill();
     }
+    ctx.restore();
+  };
+  flame((30 + Math.random() * 13) * hot, 11, (Math.random() - 0.5) * 0.16, x, 0);
+  flame((11 + Math.random() * 7) * hot, 4.6, -1.35 + Math.random() * 0.2, 36, -9);
+  flame((11 + Math.random() * 7) * hot, 4.6, 1.35 - Math.random() * 0.2, 36, 9);
+  ctx.save();
+  ctx.translate((x + 4) * K, 0);
+  ctx.rotate(t * 11);
+  ctx.fillStyle = `rgba(255, 255, 255, ${0.95 * hot})`;
+  ctx.beginPath();
+  for (let i = 0; i < 8; i++) {
+    const an = (i / 8) * TAU;
+    const r = (i % 2 ? 2.2 : 12 + Math.random() * 5) * K;
+    if (i) ctx.lineTo(Math.cos(an) * r, Math.sin(an) * r);
+    else ctx.moveTo(Math.cos(an) * r, Math.sin(an) * r);
   }
-  // and the barrels smoke once he lets up
-  if (heat > 0.3 && !firing && kick < 0.1) {
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+// steam jetting out of the cannon's vents while it cools; `vent` runs 0..1
+function gatlingSteam(ctx, vent) {
+  const fade = Math.min(1, (1 - vent) * 1.8);
+  for (const [ox, oy, dx, dy] of [[24, -9, -0.15, -1], [38, -9, 0.45, -1], [-4, -10, -0.7, -0.75], [46, 0, 1, -0.2]]) {
     for (let i = 0; i < 5; i++) {
-      const q = (t * 1.5 + i / 5) % 1;
-      ctx.fillStyle = `rgba(170, 172, 184, ${0.6 * heat * (1 - q)})`;
+      const q = (vent * 3.4 + i / 5 + ox * 0.013) % 1;
+      const far = 4 + 24 * q;
+      ctx.fillStyle = `rgba(138, 156, 186, ${0.92 * fade * (1 - q * q)})`;
+      ctx.beginPath();
+      ctx.arc((ox + dx * far + Math.sin(q * 9 + i) * 2) * K, (oy + dy * far - 7 * q * q) * K, (2 + 5.2 * q) * K, 0, TAU);
+      ctx.fill();
+    }
+  }
+}
+
+// The cannon in his hands.
+function drawCannon(ctx, A, u, s, mood) {
+  const { dead, moving, ph, pose, t, age } = s;
+  const { firing, wind, vent } = mood;
+  const heat = dead ? 0 : u.heat || 0;
+  ctx.save();
+  ctx.translate(6 * K, lerp(14, 13, pose) * K);
+  // it lands with a clunk when he does
+  const clunk = age > 0.3 && age < 0.75 ? Math.sin((age - 0.3) * 21) * (0.75 - age) * 0.8 : 0;
+  const held = lerp(0.24 + (moving ? Math.sin(ph) * 0.15 : Math.sin(t * 2.4) * 0.03), u.aim, pose);
+  ctx.rotate(dead ? 0.8 : held - mood.lift * 0.72 + clunk);
+  // it hammers in his grip while it runs, and trembles as it winds up
+  if (firing) ctx.translate((Math.random() - 0.75) * 3.4 * K, (Math.random() - 0.5) * 2.4 * K);
+  else if (wind > 0) ctx.translate(0, Math.sin(t * 70) * wind * 0.7 * K);
+  ctx.save();
+  ctx.scale(K, K);
+  drawGatlingBarrels(ctx, u.spinA || 0, heat);
+  ctx.restore();
+  const blur = dead ? 0 : Math.max(0, Math.min(1, ((u.spinRate || 0) - 12) / 20));
+  if (blur > 0) gatlingBlur(ctx, blur, u.spinA);
+  drawLayer(ctx, A.gun);
+  drawLayer(ctx, A.hand);
+  if (heat > 0.35) botGlow(ctx, 42 * K, 0, (11 + 3 * heat) * K, '255, 112, 35', (heat - 0.35) * 0.95);
+  if (wind > 0.04) gatlingCharge(ctx, wind, t);
+  if (firing) gatlingMuzzle(ctx, u.flash > 0.02 ? 1 : 0.66, t);
+  if (vent < 1) gatlingSteam(ctx, vent);
+  else if (heat > 0.3 && !firing && !dead) {
+    for (let i = 0; i < 4; i++) {
+      const q = (t * 1.5 + i / 4) % 1;
+      ctx.fillStyle = `rgba(170, 176, 190, ${0.55 * heat * (1 - q)})`;
       ctx.beginPath();
       ctx.arc((45 + Math.sin(q * 7 + i) * 3) * K, (-4 - 22 * q) * K, (1.8 + 3.4 * q) * K, 0, TAU);
       ctx.fill();
     }
   }
   ctx.restore();
+}
+
+// the gunsight that swings out in front of his eye, and the brackets that close on his target as the cannon winds up
+function gatlingSight(ctx, mood, t) {
+  const on = Math.max(mood.brace, mood.wind);
+  if (on < 0.05) return;
+  const x = 29 * K;
+  const y = -8 * K;
+  const r = (6.4 + (1 - on) * 5) * K;
+  ctx.lineCap = 'round';
+  botGlow(ctx, x, y, r * 2, '70, 255, 205', 0.35 * on);
+  ctx.strokeStyle = `rgba(24, 196, 156, ${on})`;
+  ctx.lineWidth = 1.5 * K;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, TAU);
+  ctx.stroke();
+  ctx.beginPath();
+  for (let i = 0; i < 4; i++) {
+    const a = t * 3 + (i / 4) * TAU;
+    ctx.moveTo(x + Math.cos(a) * r * 0.55, y + Math.sin(a) * r * 0.55);
+    ctx.lineTo(x + Math.cos(a) * r * 1.5, y + Math.sin(a) * r * 1.5);
+  }
+  ctx.stroke();
+  ctx.fillStyle = mood.firing ? '#ff6a52' : '#19c49c';
+  ctx.beginPath();
+  ctx.arc(x, y, 1.3 * K, 0, TAU);
+  ctx.fill();
+}
+
+function gatlingLock(ctx, dpr, u, mood) {
+  const o = u.target;
+  if (!mood.winding || !o || o.dead) return;
+  const k = mood.wind;
+  const r = 20 - 10 * Math.min(1, k * 1.25);
+  ctx.save();
+  ctx.setTransform(dpr, 0, 0, dpr, o.x * dpr, o.y * dpr);
+  ctx.rotate((1 - k) * 2.4);
+  ctx.lineCap = 'round';
+  for (const [col, wide] of [[`rgba(10, 70, 58, ${0.75 * k})`, 2.6], [`rgba(70, 240, 195, ${k})`, 1.3]]) {
+    ctx.strokeStyle = col;
+    ctx.lineWidth = wide;
+    ctx.beginPath();
+    for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+      ctx.moveTo(sx * r, sy * r * 0.5);
+      ctx.lineTo(sx * r, sy * r);
+      ctx.lineTo(sx * r * 0.5, sy * r);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// on the ground under him: rings drawing in as he winds up, the glare of the muzzle while he fires, and a heavy puff
+// under each step
+function gatlingFooting(ctx, u, mood, s) {
+  const { moving, ph, t, age } = s;
+  const ring = (x, rx, col, wide) => {
+    ctx.strokeStyle = col;
+    ctx.lineWidth = wide;
+    ctx.beginPath();
+    ctx.ellipse(x, FEET + 1, rx, rx * 0.34, 0, 0, TAU);
+    ctx.stroke();
+  };
+  if (mood.wind > 0) {
+    for (let i = 0; i < 2; i++) {
+      const q = (t * 2.2 + i / 2) % 1;
+      ring(0, 32 - 20 * q, `rgba(40, 225, 180, ${0.75 * q * mood.wind})`, 1.2);
+    }
+  }
+  if (mood.firing) {
+    botGlow(ctx, 22, FEET, 28 + Math.random() * 6, '255, 168, 45', 0.3);
+    for (let i = 0; i < 2; i++) {
+      const q = (t * 3.4 + i / 2) % 1;
+      ring(-2, 13 + 20 * q, `rgba(150, 148, 160, ${0.55 * (1 - q)})`, 1.8 * (1 - q) + 0.4);
+    }
+  }
+  if (moving) {
+    const q = ((ph / Math.PI) % 1 + 1) % 1;
+    if (q < 0.5) ring(0, 8 + 22 * q, `rgba(150, 148, 160, ${0.6 * (1 - q / 0.5)})`, 1.1);
+  }
+  // a harder landing than the others'
+  if (age > 0.28 && age < 0.85) {
+    const q = (age - 0.28) / 0.57;
+    ring(0, 16 + 38 * q, `rgba(150, 148, 160, ${0.75 * (1 - q)})`, 3 * (1 - q) + 0.5);
+    ring(0, 10 + 30 * q, `rgba(40, 225, 180, ${0.75 * (1 - q)})`, 1.4 * (1 - q) + 0.3);
+  }
 }
 
 // a springy antenna whose tip lags behind whatever the body is doing
@@ -286,8 +506,11 @@ function drawTrooper(ctx, dpr, sprites, u) {
   const moving = u.moving && !dead;
   const aiming = pose > 0.6 && !dead;
   const ph = (u.anim * Math.PI) / 2;
+  const mood = heavy ? gatlingMood(u, dead, aiming, t, clock) : null;
 
+  if (heavy && !dead) gatlingLock(ctx, dpr, u, mood);
   placeUnit(ctx, dpr, u, u.hit > 0 ? (Math.random() - 0.5) * 2 : 0);
+  if (heavy && !dead) gatlingFooting(ctx, u, mood, { moving, ph, t, age });
 
   // ---- on the ground: the landing dust ring and the shockwave of each shot
   if (age > 0.26 && age < 0.8) {
@@ -320,7 +543,12 @@ function drawTrooper(ctx, dpr, sprites, u) {
   ctx.scale(size * (1 + 0.2 * squash), size * (1 - 0.22 * squash));
   ctx.translate(0, -FEET);
 
-  drawLayer(ctx, A.feet[moving ? (u.anim | 0) & 3 : 0]);
+  if (heavy && mood.brace > 0.01) {
+    ctx.save();
+    ctx.scale(1 + 0.3 * mood.brace, 1);
+    drawLayer(ctx, A.feet[0]);
+    ctx.restore();
+  } else drawLayer(ctx, A.feet[moving ? (u.anim | 0) & 3 : 0]);
 
   // ---- the body: a heavy waddle leaning into the walk, breathing at rest, rocked back by each shot
   if (moving) {
@@ -330,6 +558,13 @@ function drawTrooper(ctx, dpr, sprites, u) {
     ctx.scale(1 + 0.06 * (1 - wk), 1 - 0.08 * (1 - wk));
     ctx.translate(0, -FEET - wk * 2.4);
   } else if (!dead) ctx.translate(0, Math.sin(t * 2.4) * 0.6);
+  // he crouches over the cannon and leans back against it, shuddering while it runs
+  if (heavy && !dead && mood.brace > 0.01) {
+    ctx.translate((mood.firing ? Math.sin(t * 91) * 0.5 : 0) - 2.2 * mood.brace, FEET);
+    ctx.rotate(-0.1 * mood.brace);
+    ctx.scale(1 + 0.06 * mood.brace, 1 - 0.08 * mood.brace);
+    ctx.translate(0, -FEET);
+  }
   if (kick > 0 && !dead) {
     ctx.translate(-4.2 * kick * K * 3, FEET);
     ctx.rotate(-0.2 * kick);
@@ -349,10 +584,17 @@ function drawTrooper(ctx, dpr, sprites, u) {
     }
   }
   drawLayer(ctx, A.pack);
+  if (heavy) {
+    ctx.save();
+    ctx.scale(K, K);
+    drawGatlingDrum(ctx, -(u.drumA || 0));
+    ctx.restore();
+  }
 
   const sway = dead ? 7 : (moving ? -3.4 + Math.sin(ph * 2) * 3.4 : Math.sin(t * 2.1) * 1.6) - 12 * kick * Math.cos((1 - kick) * 9);
-  botAntennae(ctx, sway, !dead && t % 1.1 < 0.22);
+  botAntennae(ctx, heavy && mood.firing ? sway - 7 + Math.sin(t * 60) * 3 : sway, !dead && t % 1.1 < 0.22);
   drawLayer(ctx, A.torso);
+  if (heavy) drawGatlingFeed(ctx, u);
 
   // ---- eyes: boot up with a flicker, then look about, blink, narrow and spin up to aim
   let power = 1;
@@ -360,12 +602,13 @@ function drawTrooper(ctx, dpr, sprites, u) {
   else if (age < 0.85) power = Math.sin(age * 70) > 0 ? 1 : 0.15;
   if (!dead && u.hp < d.hp * 0.25 && Math.sin(t * 23) > 0.72) power = 0.2;
   const blinkT = t % 3.3;
-  const lid = !aiming && blinkT < 0.16 ? Math.sin((blinkT / 0.16) * Math.PI) : 0;
+  let lid = !aiming && blinkT < 0.16 ? Math.sin((blinkT / 0.16) * Math.PI) : 0;
+  if (heavy && mood.vent < 1) lid = Math.max(lid, Math.sin(mood.vent * Math.PI) * 0.62);
   const look = aiming ? [1, Math.sin(u.aim) * 1.2] : [Math.sin(t * 0.9) * 0.9 + 0.2, Math.sin(t * 1.7) * 0.5];
   ctx.save();
   ctx.scale(K, K);
   if (heavy) ctx.translate(10.6 * (GATLING_WIDE - 1), 0);
-  trooperEyes(ctx, { lx: look[0], ly: look[1], lid, angry: aiming, spin: aiming ? t * 5 : Math.sin(t * 0.6) * 0.4, power, dead });
+  trooperEyes(ctx, { lx: look[0], ly: look[1], lid, angry: aiming && !(heavy && mood.vent < 1), spin: aiming ? t * 5 : Math.sin(t * 0.6) * 0.4, power, dead });
   ctx.restore();
   if (!dead && power > 0.5) botGlow(ctx, (heavy ? 11.4 : 10.6) * K, -4.6 * K, (11 + (aiming ? 3 * Math.sin(t * 14) : Math.sin(t * 3))) * K, '70, 255, 205', aiming ? 0.34 : 0.18);
   // a green scanning beam sweeps about while there's nobody to shoot
@@ -391,7 +634,10 @@ function drawTrooper(ctx, dpr, sprites, u) {
   if (!dead) drawHitFlash(ctx, u, 20.9 * K, 23.2 * K);
 
   // ---- the blaster, or the cannon
-  if (heavy) drawCannon(ctx, A, u, { dead, moving, aiming, ph, pose, kick, t, clock });
+  if (heavy) {
+    drawCannon(ctx, A, u, { dead, moving, ph, pose, t, age }, mood);
+    if (!dead) gatlingSight(ctx, mood, t);
+  }
   else {
   ctx.save();
   ctx.translate(lerp(8 * K, 8 * K, pose), lerp(12 * K, 11 * K, pose));
@@ -1842,7 +2088,10 @@ function lumpsOf(e) {
 
 export function drawFlames(ctx, world, under) {
   if (!blob) blob = makeBlob();
-  if (under) drawZordGround(ctx, world);
+  if (under) {
+    drawZordGround(ctx, world);
+    drawGatlingGround(ctx, world);
+  }
   for (const f of world.flames) {
     if (!!f.under !== under) continue;
     const t = f.age / f.life;
@@ -1865,6 +2114,7 @@ export function drawFlames(ctx, world, under) {
   if (!under) {
     drawSpells(ctx, world);
     drawZordAir(ctx, world);
+    drawGatlingAir(ctx, world);
   }
 }
 
@@ -2177,6 +2427,7 @@ const ICONS = {
   gatlingtrooper: [108, 47, 48, (g, S) => {
     g.save();
     g.scale(K, K);
+    drawGatlingBelt(g, 0);
     g.translate(10.6 * (GATLING_WIDE - 1), 0);
     trooperEyes(g, { lx: 0.7, ly: 0.2 });
     g.restore();
@@ -2272,6 +2523,12 @@ export function paintUnitIcon(canvas, sprites, species) {
   g.translate((ox * canvas.width) / w, (oy * canvas.width) / w);
   g.scale(m, m);
   if (species === 'trooper' || species === 'jettrooper' || species === 'gatlingtrooper') drawLayer(g, S.pack);
+  if (species === 'gatlingtrooper') {
+    g.save();
+    g.scale(K, K);
+    drawGatlingDrum(g, 0);
+    g.restore();
+  }
   if (species === 'mechazord') {
     g.save();
     g.translate(0, FEET);

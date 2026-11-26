@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=236';
-import { buildCreatureArt } from './creatures.js?v=236';
-import { buildEggArt } from './art_eggs.js?v=236';
-import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=236';
-import { Sfx } from './sfx.js?v=236';
-import { World } from './world.js?v=236';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=236';
-import { buildUnitArt, drawDrop } from './art_units.js?v=236';
-import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=236';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=237';
+import { buildCreatureArt } from './creatures.js?v=237';
+import { buildEggArt } from './art_eggs.js?v=237';
+import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=237';
+import { Sfx } from './sfx.js?v=237';
+import { World } from './world.js?v=237';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=237';
+import { buildUnitArt, drawDrop } from './art_units.js?v=237';
+import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=237';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -1345,6 +1345,7 @@ function render() {
   // a thin grey streak, clear at the tail and dark at the head, that grows out of the muzzle
   ctx.lineWidth = 0.85;
   for (const b of world.bullets) {
+    if (b.tracer) continue;
     const sp = Math.hypot(b.vx, b.vy) || 1;
     const len = Math.min(9, 2 + (b.dist || 0));
     const tx = b.x - (b.vx / sp) * len;

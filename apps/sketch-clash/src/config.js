@@ -127,7 +127,8 @@ export const GATLING = {
   spread: 0.1,
   armor: 0.85,
   scale: 1.42, // of Robo Trooper's drawing; the trooper himself is 1.15
-  rapid: true,
+  rapid: true, // a rotary cannon: tracers, and his own muzzle and shell effects (gatlingfx.js)
+  casing: false,
   noDrop: true,
   ring: 1.55,
   pivot: { x: 8.5 * K, y: 8 * K }, // the drawing is scaled up 1.42 about the feet

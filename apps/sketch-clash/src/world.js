@@ -1,7 +1,8 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=236';
-import { TerrainMap, WALL } from './terrain.js?v=236';
-import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordFx } from './zordfx.js?v=236';
-import { installBeasts } from './beasts.js?v=236';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=237';
+import { TerrainMap, WALL } from './terrain.js?v=237';
+import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordFx } from './zordfx.js?v=237';
+import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=237';
+import { installBeasts } from './beasts.js?v=237';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -77,6 +78,7 @@ export class World {
     this.rockets = []; // the Jet Trooper's
     this.flames = []; // flamethrower stream
     resetZordFx(this);
+    resetGatlingFx(this);
     this.bombs = []; // grenades in the air
     this.arrows = []; // arrows in the air
     this.blasts = []; // explosions
@@ -468,6 +470,7 @@ export class World {
     this.arcs = [];
     this.rises = [];
     resetZordFx(this);
+    resetGatlingFx(this);
     this.terrain.clear();
     this.groups = [];
     this.started = false;
@@ -858,11 +861,15 @@ export class World {
       damage: d.damage,
       dist: 0,
       dead: false,
+      tracer: !!d.rapid,
     });
     u.flash = 0.07;
     if (this.sfx) this.sfx('shot', m.x);
     if (!d.rapid) this.muzzleFx(m, a);
-    else if ((u.shots = (u.shots || 0) + 1) % 4 === 0) this.muzzleFx(m, a);
+    else {
+      if (u.burstLeft === d.burst) gatlingVolley(this, u, m, a);
+      gatlingShot(this, u, m, a);
+    }
     if (d.smoke || (d.kick && !d.rapid)) u.recoil = 1;
     if (d.kick) u.heat = Math.min(1, (u.heat || 0) + 0.36);
     if (d.casing) {
@@ -1828,6 +1835,7 @@ export class World {
   blowApart(u) {
     this.blasts.push({ x: u.x, y: u.y - 2, age: 0, life: 4.4, r: u.def.boom || 15, seed: Math.random() });
     if (u.def.mega) zordDeath(this, u);
+    if (u.def.rapid) gatlingCookOff(this, u);
     for (let i = 0; i < 26; i++) {
       const a = Math.random() * TAU;
       const sp = 50 + Math.random() * 130;
@@ -1984,6 +1992,7 @@ export class World {
         continue;
       }
       if (this.shotBlocked(b.x, b.y, b.damage)) {
+        if (b.tracer) gatlingImpact(this, b.x, b.y, Math.atan2(b.vy, b.vx));
         b.dead = true;
         anyGone = true;
         continue;
@@ -2014,6 +2023,7 @@ export class World {
       if (hit) {
         b.dead = true;
         anyGone = true;
+        if (b.tracer) gatlingImpact(this, b.x, b.y, Math.atan2(b.vy, b.vx));
         this.hurt(hit, b.damage, b.x, b.y, 'bullet', b.owner);
       }
     }
@@ -2072,6 +2082,7 @@ export class World {
     if (this.casings.some((c) => c.age > c.life)) this.casings = this.casings.filter((c) => c.age <= c.life);
 
     stepZordFx(this, dt);
+    stepGatlingFx(this, dt);
 
     for (const f of this.flames) {
       f.age += dt;
