@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=217';
-import { buildCreatureArt } from './creatures.js?v=217';
-import { buildEggArt } from './art_eggs.js?v=217';
-import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=217';
-import { Sfx } from './sfx.js?v=217';
-import { World } from './world.js?v=217';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=217';
-import { buildUnitArt, drawDrop } from './art_units.js?v=217';
-import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=217';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=218';
+import { buildCreatureArt } from './creatures.js?v=218';
+import { buildEggArt } from './art_eggs.js?v=218';
+import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=218';
+import { Sfx } from './sfx.js?v=218';
+import { World } from './world.js?v=218';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=218';
+import { buildUnitArt, drawDrop } from './art_units.js?v=218';
+import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=218';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -181,7 +181,7 @@ const LATTICE = {
   default: [15.5, 12.5, true],
   trooper: [28, 22, true],
   jettrooper: [28, 22, true],
-  juggernaut: [43, 31, true],
+  juggernaut: [40, 29, true],
   roman: [17.4, 17.6, false],
   cavalry: [34, 22, true],
   boar: [22, 15, true],
