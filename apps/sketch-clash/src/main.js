@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=233';
-import { buildCreatureArt } from './creatures.js?v=233';
-import { buildEggArt } from './art_eggs.js?v=233';
-import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=233';
-import { Sfx } from './sfx.js?v=233';
-import { World } from './world.js?v=233';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=233';
-import { buildUnitArt, drawDrop } from './art_units.js?v=233';
-import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=233';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=234';
+import { buildCreatureArt } from './creatures.js?v=234';
+import { buildEggArt } from './art_eggs.js?v=234';
+import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=234';
+import { Sfx } from './sfx.js?v=234';
+import { World } from './world.js?v=234';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=234';
+import { buildUnitArt, drawDrop } from './art_units.js?v=234';
+import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=234';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -201,7 +201,7 @@ const LATTICE = {
   slime: [20, 15, true],
   giant: [42, 36, true],
   dragon: [48, 30, true],
-  mechazord: [86, 54, true],
+  mechazord: [48, 36, true],
   mage: [16, 13, true],
 };
 

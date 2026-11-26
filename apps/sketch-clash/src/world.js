@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=233';
-import { TerrainMap, WALL } from './terrain.js?v=233';
-import { installBeasts } from './beasts.js?v=233';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=234';
+import { TerrainMap, WALL } from './terrain.js?v=234';
+import { installBeasts } from './beasts.js?v=234';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -1238,8 +1238,8 @@ export class World {
       u.jetT = (u.jetT || 0) - dt;
       if (u.jetT <= 0) {
         u.jetT = 0.05;
-        for (const [jx, jy] of [[2, 22], [32, 16], [-58, 8]]) {
-          this.jetFlame(u.x + u.facing * jx * 0.31 * d.scale, u.y + FEET + (jy * 0.31 - FEET) * d.scale - u.alt * d.hoverH, -u.facing * 8, 85, 1.25 * d.scale);
+        for (const [jx, jy] of [[-37, -6], [-36, 18], [-9, 27], [11, 27]]) {
+          this.jetFlame(u.x + u.facing * jx * 0.31 * d.scale, u.y + FEET + (jy * 0.31 - FEET) * d.scale - u.alt * d.hoverH, -u.facing * 8, 70, 0.8 * d.scale);
         }
         if (this.sfx && Math.random() < 0.2) this.sfx('flame', u.x);
       }

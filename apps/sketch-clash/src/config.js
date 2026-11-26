@@ -418,7 +418,7 @@ export const SKELETON = {
 export const GAIT = { boar: 8, rat: 15, ant: 15, ape: 7, alligator: 7, piranha: 11, snake: 7, cheetah: 13, slime: 6, giant: 5, dragon: 7, mechazord: 7, zombie: 4.5, skeleton: 8 };
 
 // ------------------------------------------------------------------ terrain items
-// MechaZord: a mechanical dinosaur, this game's dragon in robot form and the biggest of the robots. His one attack is
+// MechaZord: Robo Trooper built bulkier, with a dragon's head, and the biggest of the robots. His one attack is
 // his fire breath; he walks, and now and then lifts off on jets and breathes from the air.
 export const MECHAZORD = {
   ...DRAGON,
@@ -426,27 +426,27 @@ export const MECHAZORD = {
   unique: true, // only one on the whole map at a time, whichever team he is on
   flying: false,
   airborne: true, // like the dragon, he sometimes takes off and breathes fire from the air, sometimes he stays on the ground
-  hoverH: 28,
-  scale: 1.34,
-  hp: 800,
-  radius: 24,
-  sep: 44,
+  hoverH: 24,
+  scale: 1.75, // of Robo Trooper's drawing; the trooper himself is 1.15, and not as broad
+  hp: 880,
+  radius: 13,
+  sep: 21,
   speed: 38,
   sight: 560,
   dps: 50, // the dragon's is 38; half as much again from the air
   burnDps: 12,
   cone: 0.34,
-  range: 200,
+  range: 210,
   holdDist: 135,
   onTime: 2.2,
   offTime: 1,
   explodes: true, // and goes to pieces when he dies, like the other robots
   boom: 22,
-  parts: ['botplate', 'botplate', 'botpod', 'zordspine', 'zordspine', 'zordspine', 'zordhead'],
-  ring: 3.8,
-  body: [62, 54, -48],
-  pivot: { x: 75 * K, y: -138 * K }, // his mouth
-  muzzleLen: 19 * K,
+  parts: ['botplate', 'botplate', 'botpod', 'botpod', 'zordhorn', 'zordhorn', 'zordhead'],
+  ring: 2,
+  body: [42, 40, -19],
+  pivot: { x: 54 * K, y: 4 * K }, // his mouth
+  muzzleLen: 10 * K,
   footFire: 18, // whoever is pressed this close against him, under his jaws, is caught by the fire too
   plume: { every: 0.028, speed: 1.75, life: 1.55, size: 1.9 },
 };

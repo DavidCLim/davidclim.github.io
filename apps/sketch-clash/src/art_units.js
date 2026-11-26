@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=233';
-import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=233';
+import { TAU, K } from './config.js?v=234';
+import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=234';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -1487,14 +1487,14 @@ export const DROPS = {
     drawTrooperCap(g);
     g.restore();
   },
-  zordspine(g) {
-    drawZordSpine(g, -8, 0, 0, 20, 0, false);
+  zordhorn(g) {
+    drawZordHornPiece(g);
   },
   zordhead(g) {
     g.save();
-    g.scale(0.62, 0.62);
-    g.translate(-46, 108);
-    drawZordHead(g);
+    g.scale(0.5, 0.5);
+    g.translate(-6, 3);
+    drawZordBody(g);
     drawZordJaw(g);
     g.restore();
   },
@@ -2073,316 +2073,118 @@ function drawJugFist(g) {
 }
 
 // ---------------------------------------------------------------- MechaZord
-// A mechanical dinosaur in Robo Trooper's colours, drawn the way the other robots are: bold outlines, a few chunky shapes and
-// one big lens eye. He stands upright on two armoured legs with clawed feet, a long segmented tail trailing behind and
-// two rows of blades down his back. Drawn in art units, facing +x, with the ground about 27 below the origin.
-// lilac armour, deep teal-grey panels, bright teal trim (his eye and lights), pale blue steel and navy feet
-const ZC = { lite: '#cfc4e6', light: '#b9add2', mid: '#9b8db6', dim: '#746796', dark: BOT.teal, deep: BOT.tealDark, trim: '#1fbc9c', trimDark: '#0d6f60', trimLite: '#9ffbe4', steel: '#d3d8e3', pod: BOT.pod, claw: BOT.pod, clawDark: BOT.podDark, foot: '#4a5478', footDark: '#353e60' };
+// Robo Trooper himself, built bulkier, with a dragon's head: the same egg, helmet, visor band, lens eye, antenna,
+// thruster pack and little navy feet, with a snout and hinged jaw, swept-back horns and two little clawed hands.
+// Drawn in Robo Trooper's own coordinates; the whole of him is scaled up as one.
 
-const zordSteel = (g, y0, y1, a = ZC.lite, b = ZC.mid) => {
-  const gr = g.createLinearGradient(0, y0, 0, y1);
-  gr.addColorStop(0, a);
-  gr.addColorStop(1, b);
-  return gr;
-};
+export const ZORD_WIDE = 1.16; // how much broader than a trooper his egg is
+export const ZORD_JAW = [10, 13.5]; // the hinge of his lower jaw
 
-function zordLine(g, pts, col, w) {
-  g.strokeStyle = col;
-  g.lineWidth = w;
-  g.lineCap = 'round';
-  g.lineJoin = 'round';
-  g.beginPath();
-  pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
-  g.stroke();
-}
-
-// a round red light in a steel ring
-function zordLamp(g, x, y, r) {
-  botBall(g, ZC.lite, x, y, r, 1.6);
-  botBall(g, ZC.trim, x, y, r * 0.56, 1);
-}
-
-// one armoured block with softened corners
-function zordBlock(g, fill, pts, r = 4, lw = 2.2) {
-  botPart(g, fill, lw, () => {
-    const n = pts.length;
-    for (let i = 0; i < n; i++) {
-      const [x, y] = pts[i];
-      const [px, py] = pts[(i + n - 1) % n];
-      const [nx, ny] = pts[(i + 1) % n];
-      const a = Math.min(r, Math.hypot(px - x, py - y) / 2);
-      const b = Math.min(r, Math.hypot(nx - x, ny - y) / 2);
-      const da = Math.hypot(px - x, py - y) || 1;
-      const db = Math.hypot(nx - x, ny - y) || 1;
-      const sx = x + ((px - x) / da) * a;
-      const sy = y + ((py - y) / da) * a;
-      if (i) g.lineTo(sx, sy);
-      else g.moveTo(sx, sy);
-      g.quadraticCurveTo(x, y, x + ((nx - x) / db) * b, y + ((ny - y) / db) * b);
-    }
+// a curved horn sweeping back from its root; its teal groove lights up before he breathes
+function zordHornShape(g, x, y, len, rise, w, fill) {
+  botPart(g, fill, 1.7, () => {
+    g.moveTo(x + w * 0.7, y - w * 0.5);
+    g.bezierCurveTo(x - len * 0.2, y - w * 1.3, x - len * 0.7, y - rise * 0.55 - w * 0.5, x - len, y - rise);
+    g.bezierCurveTo(x - len * 0.68, y - rise * 0.2, x - len * 0.3, y + w * 0.35, x - w * 0.2, y + w * 0.8);
   });
 }
-
-function zordClaw(g, x, y, far) {
-  botPart(g, far ? ZC.clawDark : ZC.claw, 1.8, () => {
-    g.moveTo(x - 6, y - 5);
-    g.quadraticCurveTo(x + 7, y - 5, x + 9, y + 3);
-    g.lineTo(x - 5, y + 3.4);
-  });
+export const ZORD_HORNS = [
+  // [root x, root y, length, rise, half width]; the first is on the far side of his helmet
+  [-2, -25, 22, 15, 4.4],
+  [-15, -17, 25, 14, 5.2],
+];
+function drawZordFarHorn(g) {
+  zordHornShape(g, ...ZORD_HORNS[0], '#aab1c2');
+}
+function drawZordNearHorn(g) {
+  zordHornShape(g, ...ZORD_HORNS[1], '#d3d8e3');
 }
 
-// A leg below the hip; origin at the hip joint.
-function drawZordLeg(g, far) {
-  const dx = far ? -2 : 0;
-  const drop = far ? -8 : 0;
-  const steel = far ? zordSteel(g, 6, 40, ZC.dim, ZC.dark) : zordSteel(g, 6, 40);
-  // thigh strut up into the haunch
-  zordBlock(g, far ? ZC.deep : ZC.dark, [[dx - 8, -4], [dx + 14, -2], [dx + 20, 18 + drop], [dx - 2, 20 + drop]], 6);
-  // a blade off the knee, then the great knee and shin armour
-  botPoly(g, far ? BOT.podDark : ZC.steel, [[dx + 19, 10 + drop], [dx + 39, 1 + drop], [dx + 27, 20 + drop]], 1.9);
-  zordBlock(g, steel, [[dx - 8, 12 + drop], [dx + 17, 6 + drop], [dx + 28, 16 + drop], [dx + 24, 36 + drop], [dx - 6, 37 + drop], [dx - 11, 24 + drop]], 8);
-  zordLine(g, [[dx - 8, 25 + drop], [dx + 6, 22 + drop], [dx + 25, 25 + drop]], far ? ZC.deep : ZC.dark, 1.8);
-  zordBlock(g, far ? ZC.dark : ZC.mid, [[dx - 2, 9 + drop], [dx + 15, 6 + drop], [dx + 16, 14 + drop], [dx, 16 + drop]], 3, 1.6);
-  // the foot
-  zordBlock(g, far ? ZC.footDark : ZC.foot, [[dx - 10, 38 + drop], [dx + 24, 36 + drop], [dx + 34, 45 + drop], [dx + 31, 51 + drop], [dx - 11, 52 + drop]], 6);
-  zordLine(g, [[dx - 8, 42 + drop], [dx + 24, 41 + drop]], ZC.trim, far ? 2 : 2.6);
-  for (const x of [dx + 8, dx + 20, dx + 31]) zordClaw(g, x, 49 + drop, far);
-}
-
-// the big round hip armour on the near side, with its red ring
-function drawZordHaunch(g) {
-  botBall(g, zordSteel(g, -50, -2), -12, -26, 23.5, 2.4);
-  g.strokeStyle = 'rgba(40, 34, 58, 0.6)';
-  g.lineWidth = 1.6;
-  g.beginPath();
-  g.arc(-12, -26, 17.5, -2.5, 0.6);
-  g.stroke();
-  botBall(g, ZC.trim, -12, -26, 11, 2);
-  botBall(g, ZC.deep, -12, -26, 7, 1.3);
-  botBall(g, ZC.trim, -12, -26, 3.4, 1);
-  g.fillStyle = 'rgba(255, 255, 255, 0.55)';
-  g.beginPath();
-  g.ellipse(-23, -41, 7, 3, -0.65, 0, TAU);
-  g.fill();
-}
-
-export const ZORD_CORE = { x: 37, y: -61 };
-
-// trunk and neck
-function drawZordBody(g) {
-  g.lineJoin = 'round';
-  const trunk = () => {
-    g.moveTo(10, -106);
-    g.bezierCurveTo(18, -108, 28, -105, 34, -100);
-    g.lineTo(37, -86);
-    g.bezierCurveTo(55, -78, 57, -52, 44, -36);
-    g.bezierCurveTo(40, -16, 22, -3, 2, -5);
-    g.lineTo(-22, -6);
-    g.bezierCurveTo(-45, -13, -46, -40, -31, -55);
-    g.bezierCurveTo(-18, -73, -10, -98, 10, -106);
-  };
-  botPart(g, zordSteel(g, -106, -4), 0, trunk);
+// the snout and jaw are drawn a size up, from just ahead of the jaw's hinge
+function zordMuzzle(g, draw) {
   g.save();
-  g.beginPath();
-  trunk();
-  g.closePath();
-  g.clip();
-  // the darker segmented belly
-  botPart(g, ZC.dark, 1.8, () => {
-    g.moveTo(36, -52);
-    g.bezierCurveTo(24, -40, 16, -20, 16, 4);
-    g.lineTo(62, 4);
-    g.lineTo(62, -52);
-  });
-  for (const y of [-40, -29, -18, -8]) zordLine(g, [[17, y + 4], [60, y - 3]], ZC.deep, 2);
-  for (const [x, y] of [[33, -36], [28, -24], [22, -13]]) zordLine(g, [[x - 9, y - 4], [x, y + 2], [x + 12, y - 7]], ZC.trim, 3.4);
-  // the chest plate
-  zordBlock(g, ZC.deep, [[20, -82], [45, -74], [52, -56], [36, -43], [18, -58]], 5, 2);
-  zordLine(g, [[22, -62], [28, -50], [38, -45]], ZC.trim, 3);
-  zordBlock(g, ZC.mid, [[27, -80], [43, -76], [37, -71]], 2, 1.4);
-  // the socket of the core in his chest (its light is painted live)
-  botBall(g, ZC.steel, ZORD_CORE.x, ZORD_CORE.y, 8.4, 2);
-  botBall(g, ZC.trimDark, ZORD_CORE.x, ZORD_CORE.y, 5.6, 1.3);
-  botBall(g, ZC.trim, ZORD_CORE.x, ZORD_CORE.y, 3, 0);
-  // rings of the neck, with a red stripe and its lights along them
-  for (const [ax, ay, bx, by] of [[3, -95, 24, -82], [11, -103, 34, -90]]) zordLine(g, [[ax, ay], [bx, by]], ZC.dark, 2.2);
-  zordLine(g, [[-6, -84], [8, -93], [21, -97], [36, -93]], ZC.trim, 3);
-  // seams down his back
-  zordLine(g, [[-8, -80], [2, -62], [-4, -48]], 'rgba(40, 34, 58, 0.65)', 1.8);
-  zordLine(g, [[-26, -56], [-8, -48], [8, -50]], 'rgba(40, 34, 58, 0.65)', 1.8);
-  g.fillStyle = 'rgba(255, 255, 255, 0.4)';
-  g.beginPath();
-  g.ellipse(-16, -66, 5, 11, 0.6, 0, TAU);
-  g.fill();
+  g.translate(9, 10);
+  g.scale(1.1, 1.13);
+  g.translate(-9, -10);
+  draw();
   g.restore();
-  g.strokeStyle = OUT;
-  g.lineWidth = 2.4;
-  g.beginPath();
-  trunk();
-  g.closePath();
-  g.stroke();
-  zordLamp(g, 6, -94, 3.6);
-  zordLamp(g, 22, -99, 3.2);
 }
 
-// the shoulder armour, drawn over the top of the near arm
-function drawZordPauldron(g) {
-  zordBlock(g, zordSteel(g, -92, -62), [[-6, -80], [4, -90], [22, -88], [29, -76], [24, -63], [0, -61], [-7, -69]], 8, 2.4);
-  zordBlock(g, ZC.mid, [[-2, -92], [14, -96], [22, -86], [4, -85]], 3, 2);
-  zordLine(g, [[2, -75], [18, -73]], ZC.trim, 4);
-  zordLine(g, [[-3, -67], [21, -67]], ZC.dark, 1.8);
-  g.fillStyle = 'rgba(255, 255, 255, 0.5)';
+// the egg, the helmet and the dragon's upper snout, all one head and body as a trooper's is
+function drawZordBody(g) {
+  // the inside of his mouth, seen when the jaw drops
+  botPoly(g, '#241c33', [[11, 9], [38, 9], [32, 18], [13, 20]], 1.4);
+  g.save();
+  g.scale(ZORD_WIDE, 1);
+  drawTrooperBody(g);
+  g.restore();
+  zordMuzzle(g, () => drawZordSnout(g));
+}
+
+function drawZordSnout(g) {
+  // a little horn on his nose
+  botPoly(g, '#d3d8e3', [[29.5, 1.6], [31.6, -7.4], [36, -0.4]], 1.4);
+  // the snout: out from under his visor, rising to a knob over the nostril
+  const gr = g.createLinearGradient(0, -2, 0, 14);
+  gr.addColorStop(0, BOT.lite);
+  gr.addColorStop(1, BOT.mid);
+  botPart(g, gr, 1.8, () => {
+    g.moveTo(9, 2.4);
+    g.bezierCurveTo(17, -2.4, 25, 2.6, 30, 0.4);
+    g.bezierCurveTo(35, -3.4, 42.5, -0.8, 42, 5.4);
+    g.quadraticCurveTo(41.8, 10.4, 37, 11.6);
+    g.quadraticCurveTo(24, 14.6, 10, 13);
+    g.quadraticCurveTo(5.4, 8, 9, 2.4);
+  });
+  // fangs along the upper lip, the front one the longest
+  for (const [x, y, d] of [[19, 13.2, 3.4], [26, 13.2, 3.2], [35.4, 11.6, 5.2]]) {
+    botPoly(g, '#f4f6fb', [[x - 2.2, y - 0.4], [x + 2.2, y - 0.7], [x + 0.4, y + d]], 1);
+  }
+  // the nostril, and light along the bridge
+  g.save();
+  g.translate(36.4, 3);
+  g.rotate(-0.35);
+  botPart(g, '#1f2730', 0, () => g.ellipse(0, 0, 2.4, 1.5, 0, 0, TAU));
+  g.restore();
+  g.fillStyle = 'rgba(232, 226, 255, 0.55)';
   g.beginPath();
-  g.ellipse(2, -82, 5, 2.4, -0.55, 0, TAU);
+  g.ellipse(19, 3.4, 6.4, 1.6, 0.06, 0, TAU);
   g.fill();
-}
-
-// An arm with a heavy clawed hand; origin at the shoulder.
-function drawZordArm(g, far) {
-  const steel = far ? zordSteel(g, -6, 24, ZC.dim, ZC.dark) : zordSteel(g, -6, 24);
-  botPoly(g, far ? BOT.podDark : ZC.steel, [[11, 17], [-8, 28], [4, 8]], 1.9);
-  zordBlock(g, far ? ZC.deep : ZC.dark, [[-7, -2], [7, -5], [19, 13], [8, 21]], 6);
-  zordBlock(g, steel, [[5, 9], [22, 0], [31, 14], [14, 24]], 6);
-  zordLine(g, [[12, 12], [24, 6]], ZC.trim, 2.8);
-  // the hand: a block with three thick talons
-  for (const [x, y] of [[40, 1], [42, 8], [39, 15]]) {
-    botPart(g, far ? ZC.dim : ZC.mid, 1.8, () => {
-      g.moveTo(x - 7, y - 3.4);
-      g.quadraticCurveTo(x + 6, y - 4, x + 9, y + 4);
-      g.quadraticCurveTo(x, y + 2, x - 7, y + 3.4);
-    });
-  }
-  zordBlock(g, steel, [[21, -2], [34, -4], [37, 16], [25, 20]], 5);
-}
-
-// the head: a flat armoured snout with two swept-back fins, drawn without its lower jaw
-function drawZordHead(g) {
-  g.lineJoin = 'round';
-  // fins and nose horn
-  for (const [a, b, c] of [[[27, -118], [8, -137], [36, -123]], [[41, -123], [30, -143], [50, -122]]]) {
-    botPoly(g, ZC.pod, [a, b, c], 2);
-    botPoly(g, ZC.trim, [[(a[0] + b[0]) / 2 + 1, (a[1] + b[1]) / 2 + 1], b, [(c[0] + b[0]) / 2 - 1, (c[1] + b[1]) / 2 + 1]], 1.3);
-  }
-  botPoly(g, ZC.pod, [[62, -116], [68, -127], [71, -112]], 1.8);
-  botPoly(g, ZC.steel, [[26, -108], [3, -112], [25, -100]], 1.8);
-  botPoly(g, ZC.steel, [[27, -100], [9, -95], [29, -95]], 1.6);
-  // the dark inside of the mouth, seen when the jaw drops
-  botPoly(g, '#241c33', [[36, -101], [70, -101], [61, -90], [40, -90]], 1.8);
-  zordBlock(g, zordSteel(g, -124, -98), [[19, -110], [26, -121], [43, -124], [58, -118], [77, -109], [76, -101], [44, -99], [30, -94], [20, -100]], 5, 2.4);
-  zordBlock(g, ZC.dark, [[22, -109], [38, -107], [37, -99], [28, -95], [22, -101]], 3, 1.6);
-  zordLine(g, [[33, -119], [46, -118], [62, -112]], ZC.trim, 3.2);
-  // upper teeth
-  for (const x of [50, 57, 64, 71]) botPoly(g, '#f4f6fb', [[x - 2.8, -100.6], [x + 2.8, -100.8], [x + 0.4, -95]], 1.2);
-  botBall(g, ZC.deep, 72, -106, 1.7, 0);
-  zordLamp(g, 29, -102, 3);
+  // two little spikes at the corner of his jaw, like a dragon's frill
+  botPoly(g, '#d3d8e3', [[8, 7.6], [-4, 6.4], [7, 12]], 1.4);
+  botPoly(g, '#d3d8e3', [[9, 12], [-1, 15.6], [10.6, 16]], 1.4);
 }
 
 // the lower jaw, hinged at ZORD_JAW
-export const ZORD_JAW = [38, -99];
 function drawZordJaw(g) {
-  for (const x of [53, 60, 66]) botPoly(g, '#f4f6fb', [[x - 2.6, -97.4], [x + 2.6, -97.6], [x + 0.6, -102.6]], 1.2);
-  zordBlock(g, zordSteel(g, -99, -88, ZC.light, ZC.dim), [[35, -99], [72, -99], [67, -92], [51, -88], [38, -91]], 4, 2.2);
-  zordLine(g, [[44, -93.5], [60, -94]], ZC.trim, 2.2);
+  zordMuzzle(g, () => drawZordChin(g));
 }
 
-export const ZORD_EYE = { x: 47, y: -110, r: 6.8 };
-// The eye, Robo Trooper's own teal lens. o: { lx, ly, lid, angry, power, dead }
-export function zordEye(g, o) {
-  const { x, y, r } = ZORD_EYE;
-  const power = o.power === undefined ? 1 : o.power;
-  botBall(g, '#7d749f', x, y, r, 1.8);
-  botBall(g, '#242838', x, y, r * 0.74, 0.8);
-  if (o.dead) {
-    zordLine(g, [[x - r * 0.38, y - r * 0.38], [x + r * 0.38, y + r * 0.38]], ZC.trimLite, 1.5);
-    zordLine(g, [[x + r * 0.38, y - r * 0.38], [x - r * 0.38, y + r * 0.38]], ZC.trimLite, 1.5);
-    return;
-  }
-  if (power > 0.02) {
-    g.globalAlpha = power;
-    const gr = g.createRadialGradient(x - r * 0.2, y - r * 0.2, 0.3, x, y, r * 0.7);
-    gr.addColorStop(0, '#9ffbe4');
-    gr.addColorStop(0.6, '#1fbc9c');
-    gr.addColorStop(1, '#0d6f60');
-    g.fillStyle = gr;
-    g.beginPath();
-    g.arc(x, y, r * 0.64, 0, TAU);
-    g.fill();
-    g.fillStyle = '#10141c';
-    g.beginPath();
-    g.arc(x + (o.lx || 0) * r * 0.22, y + (o.ly || 0) * r * 0.2, r * 0.25, 0, TAU);
-    g.fill();
-    g.fillStyle = '#ffffff';
-    g.beginPath();
-    g.arc(x - r * 0.18, y - r * 0.22, r * 0.14, 0, TAU);
-    g.fill();
-    g.globalAlpha = 1;
-  }
-  const lid = Math.max(o.lid || 0, o.angry ? 0.3 : 0);
-  if (lid > 0.02) {
-    g.save();
-    g.beginPath();
-    g.arc(x, y, r * 0.82, 0, TAU);
-    g.clip();
-    g.translate(x, y);
-    if (o.angry) g.rotate(0.3);
-    g.fillStyle = ZC.mid;
-    g.fillRect(-r, -r, r * 2, r * 2 * lid);
-    zordLine(g, [[-r, -r + r * 2 * lid], [r, -r + r * 2 * lid]], OUT, 1.6);
-    g.restore();
-  }
+function drawZordChin(g) {
+  for (const [x, d] of [[22.4, 3.6], [32.6, 4.2]]) botPoly(g, '#f4f6fb', [[x - 2.1, 15.2], [x + 2.1, 15], [x + 0.3, 15 - d]], 1);
+  botPart(g, BOT.dark, 1.8, () => {
+    g.moveTo(8.4, 13);
+    g.quadraticCurveTo(23, 16.2, 37.4, 13.8);
+    g.quadraticCurveTo(37, 19.8, 29, 20.8);
+    g.quadraticCurveTo(14, 22.6, 8.4, 13);
+  });
 }
 
-// ---- the parts that move on their own, painted live
-
-// The tail's joints, root first: [x, y, half thickness].
-export const ZORD_TAIL = [[-24, -26, 22], [-54, -6, 17.5], [-80, 8, 13.5], [-105, 14, 10], [-129, 12, 7], [-152, 1, 2.6]];
-
-// `pts` are ZORD_TAIL's joints, wherever they have swung to this frame
-export function drawZordTail(g, pts) {
-  const normal = (i) => {
-    const a = pts[Math.max(0, i - 1)];
-    const b = pts[Math.min(pts.length - 1, i + 1)];
-    const d = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
-    // across the tail, pointing down toward its underside
-    let nx = -(b[1] - a[1]) / d;
-    let ny = (b[0] - a[0]) / d;
-    if (ny < 0) {
-      nx = -nx;
-      ny = -ny;
-    }
-    return [nx, ny];
-  };
-  const at = (i, k) => {
-    const [nx, ny] = normal(i);
-    return [pts[i][0] + nx * pts[i][2] * k, pts[i][1] + ny * pts[i][2] * k];
-  };
-  // from the tip forward, so each segment overlaps the one behind it
-  for (let i = pts.length - 2; i >= 0; i--) {
-    botPoly(g, i % 2 ? ZC.mid : ZC.light, [at(i, -1), at(i + 1, -1), at(i + 1, 1), at(i, 1)], 2.4);
-    botPoly(g, ZC.dark, [at(i, 0.3), at(i + 1, 0.3), at(i + 1, 1), at(i, 1)], 1.8);
-    const m0 = at(i, 0.36);
-    const m1 = at(i + 1, 0.36);
-    const n0 = at(i, 0.8);
-    const n1 = at(i + 1, 0.8);
-    zordLine(g, [m0, [(n0[0] + n1[0]) / 2, (n0[1] + n1[1]) / 2], m1], ZC.trim, Math.max(1.6, pts[i][2] * 0.17));
+// a little round hand like the one a trooper holds his gun with, with three claws; origin in its middle
+function drawZordHand(g, far) {
+  for (const [x, y] of [[4.4, -3], [5.4, 0.8], [3.8, 4.4]]) {
+    botPart(g, '#d3d8e3', 1.1, () => {
+      g.moveTo(x - 2, y - 1.8);
+      g.quadraticCurveTo(x + 3.2, y - 1.4, x + 3, y + 1.8);
+      g.quadraticCurveTo(x + 0.6, y + 0.4, x - 2, y + 1.6);
+    });
   }
-  for (let i = 1; i < pts.length - 1; i++) {
-    const [x, y] = at(i, -0.22);
-    zordLamp(g, x, y, Math.max(2.2, pts[i][2] * 0.27));
-  }
+  botBall(g, far ? BOT.mid : BOT.lite, 0, 0, 5.4, 1.6);
 }
 
-// one blade of his back: from (x, y), pointing along `ang`; `glow` 0..1 lights its red core
-export function drawZordSpine(g, x, y, ang, len, glow, far) {
-  const w = Math.max(6, len * 0.46);
-  g.save();
-  g.translate(x, y);
-  g.rotate(ang);
-  botPoly(g, far ? BOT.podDark : ZC.steel, [[-5, -w * 0.55], [len * 0.92, -w * 0.3], [len, w * 0.06], [len * 0.7, w * 0.36], [-5, w * 0.55]], 2.1);
-  const core = glow > 0.5 ? '#7dffe0' : far ? ZC.trimDark : ZC.trim;
-  botPoly(g, core, [[-1, -w * 0.12], [len * 0.8, -w * 0.08], [len * 0.62, w * 0.2], [-1, w * 0.28]], 1.2);
-  if (glow > 0.5) botPoly(g, '#eafffa', [[2, 0], [len * 0.62, 0], [len * 0.5, w * 0.1], [2, w * 0.12]], 0);
-  g.restore();
+// the horn that breaks off him, for the pieces he leaves behind
+export function drawZordHornPiece(g) {
+  zordHornShape(g, 11, 5, ...ZORD_HORNS[1].slice(2), '#d3d8e3');
 }
 
 // ---------------------------------------------------------------- Jet Trooper
@@ -2500,15 +2302,14 @@ export function buildUnitArt() {
   };
 
   art.mechazord = {
-    farLeg: makeLayer(-18, -12, 44, 52, (g) => drawZordLeg(g, true)),
-    nearLeg: makeLayer(-18, -12, 48, 60, (g) => drawZordLeg(g, false)),
-    farArm: makeLayer(-12, -10, 56, 32, (g) => drawZordArm(g, true)),
-    nearArm: makeLayer(-12, -10, 56, 32, (g) => drawZordArm(g, false)),
-    body: makeLayer(-50, -114, 62, 2, drawZordBody),
-    haunch: makeLayer(-40, -54, 16, 2, drawZordHaunch),
-    pauldron: makeLayer(-12, -100, 34, -56, drawZordPauldron),
-    head: makeLayer(-2, -148, 82, -86, drawZordHead),
-    jaw: makeLayer(30, -108, 78, -82, drawZordJaw),
+    feet: art.trooper.feet,
+    pack: art.trooper.pack,
+    body: makeLayer(-30, -36, 48, 28, drawZordBody),
+    jaw: makeLayer(2, 4, 44, 28, drawZordJaw),
+    farHorn: makeLayer(-30, -46, 8, -16, drawZordFarHorn),
+    nearHorn: makeLayer(-46, -38, -6, -8, drawZordNearHorn),
+    farHand: makeLayer(-8, -8, 12, 10, (g) => drawZordHand(g, true)),
+    nearHand: makeLayer(-8, -8, 12, 10, (g) => drawZordHand(g, false)),
     ghost: makeLayer(-26, -30, 26, 26, (g) => ghostBody(g)),
   };
 
