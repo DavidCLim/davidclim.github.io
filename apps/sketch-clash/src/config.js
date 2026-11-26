@@ -82,7 +82,7 @@ export const SNIPER = {
 // Robo Trooper: a stocky walking armour with a big rifle. Slower and far tougher than a soldier, firing in threes.
 export const TROOPER = {
   ...SOLDIER,
-  hp: 360,
+  hp: 170, // a soldier has 100
   radius: 13 * UNIT,
   sep: 21 * UNIT,
   speed: 48,
@@ -93,7 +93,7 @@ export const TROOPER = {
   burstGap: 0.12,
   cooldownMin: 1.2,
   cooldownMax: 1.8,
-  damage: 24,
+  damage: 16, // three a volley: a bit more than a soldier does over the same time
   spread: 0.07,
   ring: 1.2,
   pivot: { x: 9.2 * K, y: 8.9 * K }, // the drawing is scaled up 1.15 about the feet
@@ -101,38 +101,73 @@ export const TROOPER = {
   kick: true, // he rocks back with every round
   casing: true, // and spits out shells
   explodes: true, // and goes to pieces when he dies
+  boom: 15,
+  thrusters: 'walk',
 };
 
 // Robot Juggernaut: a huge, slow, armoured brute. He wades in and brings a great axe down, flattening everyone near
 // where it lands. Bullets and arrows only do part of their damage, and nothing knocks him back.
 export const JUGGERNAUT = {
   kind: 'jugger',
-  hp: 4600,
-  radius: 13,
-  scale: 2, // still the big one: drawn this much bigger than a soldier-sized body, about the feet
-  sep: 23,
-  speed: 46,
-  // riflemen back away from him, so now and then he fires his jets to catch up
-  charge: { time: 0.9, boost: 2.7, rest: 1.6, from: 46 },
-  sight: 640,
-  reach: 36, // from his middle to the edge of whoever he's swinging at
+  hp: 480,
+  radius: 13 * UNIT,
+  scale: 1.15, // the same size as Robo Trooper; his bulk comes from the shoulders and fists
+  bulk: 1,
+  sep: 22 * UNIT,
+  speed: 48,
+  // riflemen back away from him, so now and then he fires his thrusters to catch up
+  charge: { time: 0.85, boost: 2.7, rest: 1.2, from: 30 },
+  sight: 560,
+  reach: 21, // from his middle to the edge of whoever he's punching
   windup: 0.5,
-  recover: 0.42,
-  rest: 0.3,
-  damage: 300,
-  slamAt: 29, // how far in front of him the blade lands
-  slamRadius: 29,
-  knock: 430,
-  // crowded? one quick spin of the axe
-  spin: { windup: 0.22, recover: 0.56, damage: 200, radius: 46, need: 3, rest: 3.5 },
-  armor: 0.45,
-  noKnock: true,
+  recover: 0.45,
+  rest: 0.45,
+  damage: 60, // two punches fell a soldier
+  slamAt: 17, // how far in front of him the punch lands
+  slamRadius: 14,
+  lunge: 95, // how fast he throws himself into a punch
+  knock: 70,
+  armor: 0.75,
   noDrop: true,
   explodes: true, // goes to pieces like Robo Trooper
-  parts: ['botplate', 'botplate', 'botpod', 'jugaxe', 'juggernaut'],
-  ring: 2.2,
+  boom: 15,
+  thrusters: 'boost',
+  parts: ['botplate', 'botplate', 'botpod', 'jugfist', 'juggernaut'],
+  ring: 1.25,
   pivot: { x: 0, y: 0 },
   muzzleLen: 0,
+};
+
+// Jet Trooper: between the two. One rocket at a time with a long reload, and every so often he takes off on his
+// jetpack and fights from the air for a few seconds.
+export const JETTROOPER = {
+  ...SOLDIER,
+  kind: 'jet',
+  hp: 260,
+  radius: 13 * UNIT,
+  sep: 22 * UNIT,
+  speed: 46,
+  sight: 460,
+  range: 300,
+  holdDist: 175,
+  cooldownMin: 3, // much slower to reload than Robo Trooper
+  cooldownMax: 3.8,
+  damage: 75,
+  blast: 22,
+  rocketSpeed: 250,
+  spread: 0.05,
+  armor: 0.9,
+  scale: 1.15, // the same size as Robo Trooper
+  fly: { time: 3.2, rest: 5, height: 28, boost: 1.8 },
+  ring: 1.2,
+  pivot: { x: 9.2 * K, y: 7.75 * K }, // the drawing is scaled up 1.15 about the feet
+  muzzleLen: 44 * K,
+  kick: true,
+  casing: false,
+  noDrop: true,
+  explodes: true,
+  boom: 15,
+  parts: ['botplate', 'botpod', 'botpod', 'jettrooper'],
 };
 
 const BODY = { radius: 11 * UNIT, sep: 17 * UNIT }; // crowds spread to about 14 screen px between bodies, as in the original
@@ -408,6 +443,7 @@ export const SPECIES = {
   ninja: { id: 'ninja', label: 'Samurai', def: NINJA },
   mechazord: { id: 'mechazord', label: 'MechaZord', def: MECHAZORD },
   trooper: { id: 'trooper', label: 'Robo Trooper', def: TROOPER },
+  jettrooper: { id: 'jettrooper', label: 'Jet Trooper', def: JETTROOPER },
   juggernaut: { id: 'juggernaut', label: 'Robot Juggernaut', def: JUGGERNAUT },
   boar: { id: 'boar', label: 'Boar', def: BOAR },
   rat: { id: 'rat', label: 'Rat', def: RAT },
@@ -432,7 +468,7 @@ export const SPECIES = {
 // The order of the palette (the knight only ever comes from a cavalry).
 export const TABS = [
   { id: 'army', label: 'Army', items: ['soldier', 'flamethrower', 'sniper', 'grenadier', 'archer', 'cowboy', 'ninja'] },
-  { id: 'robots', label: 'Robots', items: ['trooper', 'juggernaut'] }, // MechaZord's code is kept, but he isn't in the palette
+  { id: 'robots', label: 'Robots', items: ['trooper', 'jettrooper', 'juggernaut'] }, // MechaZord's code is kept, but he isn't in the palette
   { id: 'terrain', label: 'Terrain', items: ['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower'] },
 ];
 export const TERRAIN_LABELS = { wall: 'Wall', water: 'Water', ice: 'Ice', mine: 'Mines', barrel: 'Barrel', tree: 'Tree', tower: 'Wizard Tower' };

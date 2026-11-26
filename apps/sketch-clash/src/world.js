@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=211';
-import { TerrainMap, WALL } from './terrain.js?v=211';
-import { installBeasts } from './beasts.js?v=211';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=215';
+import { TerrainMap, WALL } from './terrain.js?v=215';
+import { installBeasts } from './beasts.js?v=215';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -73,6 +73,7 @@ export class World {
     this.streaks = []; // sniper shot trails
     this.puffs = []; // gun smoke
     this.casings = []; // ejected shells
+    this.rockets = []; // the Jet Trooper's
     this.flames = []; // flamethrower stream
     this.bombs = []; // grenades in the air
     this.arrows = []; // arrows in the air
@@ -446,6 +447,7 @@ export class World {
     this.puffs = [];
     this.casings = [];
     this.flames = [];
+    this.rockets = [];
     this.bombs = [];
     this.arrows = [];
     this.blasts = [];
@@ -594,6 +596,165 @@ export class World {
     return { x: u.x + u.facing * d.pivot.x, y: u.y + d.pivot.y };
   }
 
+  // one puff of the game's fire, drifting at (vx, vy)
+  jetFlame(x, y, vx, vy, k = 1, under = true) {
+    this.flames.push({ x: x + (Math.random() - 0.5) * 1.6, y: y + (Math.random() - 0.5) * 1.2, vx: vx + (Math.random() - 0.5) * 14, vy: vy + (Math.random() - 0.5) * 12, age: 0, life: 0.28 + Math.random() * 0.1, size: 2.1 * k, grow: 4.6 * k, dark: Math.random() < 0.65, under });
+  }
+
+  // flames out of the back pods while walking (Robo Trooper) or boosting (the Juggernaut)
+  thrust(u, dt) {
+    const d = u.def;
+    const on = d.thrusters === 'walk' ? u.moving : u.moving && u.chargeT > 0;
+    if (!on) return;
+    u.jetT = (u.jetT || 0) - dt;
+    if (u.jetT > 0) return;
+    u.jetT = 0.07;
+    const k = d.thrusters === 'walk' ? 1.15 : d.scale;
+    const wide = d.bulk || 1;
+    for (const [jx, jy] of [[-33, -15], [-32, 11]]) {
+      this.jetFlame(u.x + u.facing * jx * 0.31 * k * wide, u.y + FEET + (jy * 0.31 - FEET) * k, -u.facing * 48, 6, d.thrusters === 'walk' ? 0.62 : 0.95);
+    }
+  }
+
+  // The Jet Trooper: keeps his distance and fires one rocket at a time. Every few seconds he lifts off on his
+  // jetpack, flying faster and over any ground, still shooting, then drops back down.
+  stepJet(u, dt) {
+    const d = u.def;
+    const f = d.fly;
+    const t = this.acquire(u, dt);
+    u.reload = Math.max(0, (u.reload === undefined ? 0.6 : u.reload) - dt);
+    if (u.flyCd === undefined) u.flyCd = 2 + Math.random() * 2.5;
+    if (u.flyT > 0) {
+      u.flyT -= dt;
+      if (u.flyT <= 0) u.flyCd = f.rest + Math.random() * 2;
+    } else if (u.flyCd > 0) u.flyCd -= dt;
+    else if (t) {
+      u.flyT = f.time;
+      u.strafe = Math.random() < 0.5 ? -1 : 1;
+      this.jetDust(u);
+      for (let i = 0; i < 10; i++) this.jetFlame(u.x - u.facing * 8, u.y + 2, (Math.random() - 0.5) * 70, 18 + Math.random() * 30, 1.2);
+      if (this.sfx) this.sfx('flame', u.x);
+    }
+    const flying = u.flyT > 0;
+    const before = u.alt || 0;
+    u.alt = before + ((flying ? 1 : 0) - before) * Math.min(1, dt * 3.4);
+    if (!flying && before > 0.12 && u.alt <= 0.12) this.jetDust(u);
+    if (u.alt > 0.08) {
+      // fire pouring down out of both tanks
+      u.jetT = (u.jetT || 0) - dt;
+      if (u.jetT <= 0) {
+        u.jetT = 0.045;
+        const lift = u.alt * f.height;
+        for (const jx of [-24.5, -16.5]) {
+          this.jetFlame(u.x + u.facing * jx * 0.31 * d.scale, u.y + FEET + (20 * 0.31 - FEET) * d.scale - lift, -u.facing * 10, 80, 0.95);
+        }
+        if (this.sfx && Math.random() < 0.25) this.sfx('flame', u.x);
+      }
+    }
+    if (t) {
+      const dx = t.x - u.x;
+      const dy = t.y - u.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      if (Math.abs(dx) > 3) u.facing = dx > 0 ? 1 : -1;
+      this.aimAt(u, t, dt);
+      const speed = d.speed * u.speedMul * (flying ? f.boost : 1);
+      let mx = 0;
+      let my = 0;
+      if (dist > d.range * 0.85) {
+        mx = dx / dist;
+        my = dy / dist;
+      } else if (dist < d.holdDist * 0.55) {
+        mx = -dx / dist;
+        my = -dy / dist;
+      } else if (flying) {
+        // circles his target while he's up there
+        mx = (-dy / dist) * u.strafe * 0.75;
+        my = (dx / dist) * u.strafe * 0.75;
+      } else if (dist > d.holdDist) {
+        mx = (dx / dist) * 0.6;
+        my = (dy / dist) * 0.6;
+      }
+      if (mx || my) {
+        u.x += mx * speed * dt;
+        u.y += my * speed * dt;
+        u.moving = true;
+      }
+      if (u.reload <= 0 && dist <= d.range && (u.pose > 0.7 || u.alt > 0.5)) this.fireRocket(u, t);
+    } else this.marchStep(u, dt, d.speed * u.speedMul * 0.85);
+    this.readyUp(u, dt);
+  }
+
+  jetDust(u) {
+    for (let i = 0; i < 9; i++) {
+      const a = (i / 9) * TAU;
+      this.puffs.push({ x: u.x + Math.cos(a) * 6, y: u.y + FEET + Math.sin(a) * 2.5, vx: Math.cos(a) * 30, vy: Math.sin(a) * 9 - 2, age: 0, life: 0.55 + Math.random() * 0.25, size: 1.8 + Math.random(), dust: true });
+    }
+  }
+
+  fireRocket(u, t) {
+    const d = u.def;
+    const m = this.muzzleOf(u);
+    const miss = Math.hypot(t.x - m.x, t.y - m.y) * d.spread;
+    const tx = t.x + (Math.random() - 0.5) * miss * 2;
+    const ty = t.y - 2 + (Math.random() - 0.5) * miss * 2;
+    const dur = Math.max(0.12, Math.hypot(tx - m.x, ty - m.y) / d.rocketSpeed);
+    this.rockets.push({ x: m.x, y: m.y, sx: m.x, sy: m.y, tx, ty, age: 0, dur, trail: 0, side: u.side, owner: u });
+    u.reload = d.cooldownMin + Math.random() * (d.cooldownMax - d.cooldownMin);
+    u.recoil = 1;
+    u.flash = 0.07;
+    this.muzzleFx(m, Math.atan2(ty - m.y, tx - m.x));
+    if (this.sfx) this.sfx('snipe', m.x);
+  }
+
+  stepRockets(dt) {
+    if (!this.rockets.length) return;
+    for (const k of this.rockets) {
+      k.age += dt;
+      const p = Math.min(1, k.age / k.dur);
+      k.x = k.sx + (k.tx - k.sx) * p;
+      k.y = k.sy + (k.ty - k.sy) * p;
+      const a = Math.atan2(k.ty - k.sy, k.tx - k.sx);
+      k.trail -= dt;
+      if (k.trail <= 0) {
+        k.trail = 0.028;
+        this.jetFlame(k.x - Math.cos(a) * 7, k.y - Math.sin(a) * 7, -Math.cos(a) * 26, -Math.sin(a) * 26, 0.6);
+      }
+      let hit = p >= 1;
+      if (!hit && p > 0.35) {
+        this.eachEnemyNear(k.side, k.x, k.y, 14, (o) => {
+          if ((o.x - k.x) ** 2 + (o.y - 2 - k.y) ** 2 <= (o.def.radius + 3) ** 2) hit = true;
+        });
+        if (!hit && this.shotBlocked(k.x, k.y + 6, 12)) hit = true;
+      }
+      if (hit) {
+        k.dead = true;
+        this.rocketBurst(k);
+      }
+    }
+    if (this.rockets.some((k) => k.dead)) this.rockets = this.rockets.filter((k) => !k.dead);
+  }
+
+  // the original game's explosion, the same as a grenade's
+  rocketBurst(k) {
+    const d = k.owner.def;
+    this.blasts.push({ x: k.x, y: k.y, age: 0, life: 4.4, r: d.blast, seed: Math.random() });
+    this.eachEnemyNear(k.side, k.x, k.y, d.blast + 20, (o) => {
+      const dx = o.x - k.x;
+      const dy = o.y - k.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const reach = d.blast + o.def.radius;
+      if (dist > reach) return;
+      const share = 1 - 0.5 * (dist / reach);
+      if (!o.def.noKnock) {
+        o.kx += (dx / dist) * 260 * share;
+        o.ky += (dy / dist) * 260 * share;
+      }
+      this.hurt(o, d.damage * share, o.x, o.y, 'blast', k.owner);
+    });
+    this.hitProps(k.x, k.y, d.blast, d.damage);
+    if (this.sfx) this.sfx('boom', k.x);
+  }
+
   muzzleOf(u) {
     const d = u.def;
     const cos = Math.cos(u.aim);
@@ -604,7 +765,7 @@ export class World {
     }
     return {
       x: u.x + u.facing * (d.pivot.x + cos * d.muzzleLen),
-      y: u.y + d.pivot.y + sin * d.muzzleLen,
+      y: u.y + d.pivot.y + sin * d.muzzleLen - (d.fly ? (u.alt || 0) * d.fly.height : 0),
     };
   }
 
@@ -637,7 +798,7 @@ export class World {
         });
       }
       this.ghosts.push({ x: u.x, y: u.y, age: 0, seed: Math.random(), species: u.species, facing: u.facing || 1 });
-      this.corpses.push({ u: { ...u, dead: false, moving: false, hit: 0, flash: 0 }, age: 0 });
+      this.corpses.push({ u: { ...u, dead: false, moving: false, hit: 0, flash: 0, burn: 0, charred: kind === 'burn' }, age: 0 });
       if (u.def.smoke) {
         for (let i = 0; i < 2; i++) {
           this.puffs.push({
@@ -807,21 +968,6 @@ export class World {
         this.hurt(u, u.def.burnDps ? u.def.burnDps * 0.25 : 2.2, u.x, u.y, 'burn', u.burnSrc);
         if (u.dead) return;
       }
-      // little flames lick off him only once nobody is hosing him any more
-      if (u.burn < 2.5 && Math.random() < 0.14) {
-        this.flames.push({
-          x: u.x + (Math.random() - 0.5) * 12,
-          y: u.y - 4 - Math.random() * 12,
-          vx: (Math.random() - 0.5) * 14,
-          vy: -28 - Math.random() * 18,
-          age: 0,
-          life: 0.5 + Math.random() * 0.3,
-          size: 1.6 + Math.random() * 1,
-          grow: 1.2,
-          dark: Math.random() < 0.2,
-          small: true,
-        });
-      }
     }
     if (u.poison > 0) {
       u.poison -= dt;
@@ -864,6 +1010,7 @@ export class World {
       case 'flame': this.stepFlame(u, dt); break;
       case 'melee': this.stepMelee(u, dt); break;
       case 'jugger': this.stepJugger(u, dt); break;
+      case 'jet': this.stepJet(u, dt); break;
       case 'grenade': this.stepGrenade(u, dt); break;
       case 'archer': this.stepArcher(u, dt); break;
       case 'cavalry': this.stepCavalry(u, dt); break;
@@ -872,6 +1019,7 @@ export class World {
       case 'necro': this.stepNecro(u, dt); break;
       default: this.stepSoldier(u, dt);
     }
+    if (u.def.thrusters) this.thrust(u, dt);
   }
 
   stepSoldier(u, dt) {
@@ -1231,21 +1379,31 @@ export class World {
     }
   }
 
-  // The Robot Juggernaut: walk up (jets to catch runners), chop whoever is in reach, and spin the axe when crowded.
+  // The Robot Juggernaut: walk up (thrusters to catch runners) and punch whoever is in reach.
   stepJugger(u, dt) {
     const d = u.def;
     const t = this.acquire(u, dt);
     u.swingCd = Math.max(0, (u.swingCd || 0) - dt);
-    u.spinCd = Math.max(0, (u.spinCd || 0) - dt);
     u.chargeT = Math.max(0, (u.chargeT || 0) - dt);
     u.chargeCd = Math.max(0, (u.chargeCd || 0) - dt);
     if (u.swing > 0) {
       const before = u.swing;
-      const a = u.atkKind === 'spin' ? d.spin : d;
       u.swing += dt;
       u.pose = 1;
-      if (before < a.windup && u.swing >= a.windup) this.jugHit(u);
-      if (u.swing >= a.windup + a.recover) u.swing = 0;
+      // he lunges into the punch, so whoever is backing away can't just step out of it
+      const mark = u.target;
+      if (u.swing < d.windup && mark && !mark.dead) {
+        const dx = mark.x - u.x;
+        const dy = mark.y - u.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        if (dist > d.slamAt * 0.75) {
+          u.x += (dx / dist) * d.lunge * dt;
+          u.y += (dy / dist) * d.lunge * dt;
+          u.moving = true;
+        }
+      }
+      if (before < d.windup && u.swing >= d.windup) this.jugHit(u);
+      if (u.swing >= d.windup + d.recover) u.swing = 0;
       return;
     }
     if (t) {
@@ -1253,12 +1411,8 @@ export class World {
       const dy = t.y - u.y;
       const dist = Math.hypot(dx, dy) || 1;
       if (Math.abs(dx) > 3) u.facing = dx > 0 ? 1 : -1;
-      const crowded = u.swingCd <= 0 && u.spinCd <= 0 && this.jugBlow(u, u.x, u.y, d.spin.radius, 0, 0) >= d.spin.need;
-      if (crowded) {
-        this.jugStart(u, 'spin', d.spin);
-        u.spinCd = d.spin.rest;
-      } else if (dist - t.def.radius <= d.reach) {
-        if (u.swingCd <= 0) this.jugStart(u, 'chop', d);
+      if (dist - t.def.radius <= d.reach) {
+        if (u.swingCd <= 0) this.jugStart(u, 'punch', d);
       } else {
         const c = d.charge;
         if (dist - t.def.radius > c.from && u.chargeCd <= 0) {
@@ -1299,15 +1453,12 @@ export class World {
     return count;
   }
 
-  // the axe connects: all round him for a spin, otherwise where the blade comes down (toward whoever he's after)
+  // the punch lands, toward whoever he's after
   jugHit(u) {
     const d = u.def;
     let x = u.x;
     let y = u.y;
-    if (u.atkKind === 'spin') {
-      this.jugBlow(u, x, y, d.spin.radius, d.spin.damage, d.knock * 0.8);
-      this.hitProps(x, y, d.spin.radius, d.spin.damage);
-    } else {
+    {
       const t = u.target;
       let dx = u.facing;
       let dy = 0;
@@ -1329,7 +1480,7 @@ export class World {
         this.puffs.push({ x: x + Math.cos(a) * 6, y: y + FEET + Math.sin(a) * 2.5, vx: Math.cos(a) * 32, vy: Math.sin(a) * 10 - 3, age: 0, life: 0.5 + Math.random() * 0.25, size: 1.8 + Math.random(), dust: true });
       }
     }
-    if (this.sfx) this.sfx(u.atkKind === 'spin' ? 'shot' : 'boom', x);
+    if (this.sfx) this.sfx('shot', x);
   }
 
   stepMelee(u, dt) {
@@ -1667,11 +1818,11 @@ export class World {
   // A killed unit's headgear is thrown high into the air.
   // A robot goes to pieces: a flash, a shower of sparks and his pods, lens, plating and helmet flying off.
   blowApart(u) {
-    this.puffs.push({ boom: true, x: u.x, y: u.y - 2, vx: 0, vy: 0, age: 0, life: 0.45, size: 15 });
+    this.blasts.push({ x: u.x, y: u.y - 2, age: 0, life: 4.4, r: u.def.boom || 15, seed: Math.random() });
     for (let i = 0; i < 26; i++) {
       const a = Math.random() * TAU;
       const sp = 50 + Math.random() * 130;
-      this.sparks.push({ x: u.x, y: u.y - 3, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 30, life: 0.3 + Math.random() * 0.35, max: 0.65, cyan: i % 2 === 0 });
+      this.sparks.push({ x: u.x, y: u.y - 3, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 30, life: 0.3 + Math.random() * 0.35, max: 0.65 });
     }
     for (const part of u.def.parts || ['botpod', 'botpod', 'botlens', 'botplate', 'botplate', 'trooper']) {
       this.debris.push({ x: u.x, y: u.y, z: 12, vx: (Math.random() - 0.5) * 150, vy: (Math.random() - 0.5) * 80, vz: 170 + Math.random() * 180, rot: Math.random() * 6, spin: (Math.random() < 0.5 ? -1 : 1) * (7 + Math.random() * 10), age: 0, species: part });
@@ -1899,6 +2050,8 @@ export class World {
       p.vy *= 0.97;
     }
     if (this.puffs.some((p) => p.age > p.life)) this.puffs = this.puffs.filter((p) => p.age <= p.life);
+
+    this.stepRockets(dt);
 
     for (const c of this.casings) {
       c.age += dt;
