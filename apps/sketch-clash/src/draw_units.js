@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=182';
-import { drawLayer, OUT } from './sprites.js?v=182';
-import { drawDrop } from './art_units.js?v=182';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=182';
-import { EGG_DROPS } from './art_eggs.js?v=182';
+import { TAU, K, UNIT, FEET } from './config.js?v=184';
+import { drawLayer, OUT } from './sprites.js?v=184';
+import { drawDrop } from './art_units.js?v=184';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=184';
+import { EGG_DROPS } from './art_eggs.js?v=184';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -190,12 +190,13 @@ function drawTrooper(ctx, dpr, sprites, u) {
   if (u.hit > 0.13) {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
     ctx.beginPath();
-    ctx.ellipse(1 * K, -5 * K, 21 * K, 24 * K, 0, 0, TAU);
+    ctx.ellipse(1 * K, -12 * K, 20 * K, 24 * K, 0, 0, TAU);
     ctx.fill();
   }
+  // standing about, the rifle hangs muzzle down in front of him; to shoot it swings up onto the target
   const pose = u.pose;
-  ctx.translate(lerp(8 * K, 6 * K, pose), lerp(12 * K, 9 * K, pose));
-  ctx.rotate(lerp(0.5, u.aim, pose));
+  ctx.translate(lerp(-10.9 * K, 3 * K, pose), lerp(-2.3 * K, 4 * K, pose));
+  ctx.rotate(lerp(1.41, u.aim, pose));
   ctx.translate(-u.recoil * 2 * K, 0);
   drawLayer(ctx, u.flash > 0 ? A.gunFire : A.gun);
 }
@@ -712,9 +713,9 @@ export function drawMarks(ctx, dpr, marks) {
 // ------------------------------------------------------------- palette icons
 // [canvas width in art px, body x, body y, drawing]
 const ICONS = {
-  trooper: [100, 54, 62, (g, S) => {
-    g.translate(8 * K, 12 * K);
-    g.rotate(0.3);
+  trooper: [106, 58, 68, (g, S) => {
+    g.translate(-10.9 * K, -2.3 * K);
+    g.rotate(1.41);
     drawLayer(g, S.gun);
   }],
   flamethrower: [84, 34, 39, (g, S) => {

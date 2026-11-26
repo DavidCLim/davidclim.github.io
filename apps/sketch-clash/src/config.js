@@ -96,9 +96,9 @@ export const TROOPER = {
   damage: 24,
   spread: 0.07,
   ring: 1.4,
-  pivot: { x: 7.8 * K, y: 4.2 * K }, // the drawing is scaled up 1.3 about the feet
+  pivot: { x: 3.9 * K, y: -2.3 * K }, // the drawing is scaled up 1.3 about the feet
 
-  muzzleLen: 52 * K,
+  muzzleLen: 46 * K,
 };
 
 const BODY = { radius: 11 * UNIT, sep: 17 * UNIT }; // crowds spread to about 14 screen px between bodies, as in the original
