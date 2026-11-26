@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=225';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=225';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=225';
+import { TAU, K } from './config.js?v=226';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=226';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=226';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask
@@ -588,10 +588,9 @@ function drawTree(g) {
   g.stroke();
 }
 
-// A wizard tower, after the sketch it was asked to look like: a tall roof of stacked faceted tiles with a leaning point,
-// a wide upper floor with latticed windows held up on carved wooden blocks, three pointed windows stepping down the
-// stone shaft, a little turret on one side and a roofed bay on the other, a door in a chunky stone arch, and a round
-// stepped plinth with blocks jutting from it. Origin: the middle of the ground.
+// A wizard tower, after the sketch it was asked to look like, boiled down to its big rugged shapes: a crooked tiled roof
+// with a leaning point, a wide upper floor held up on two wooden blocks, a plain stone shaft with two pointed windows, a
+// door in an arch of three great stones, and a round step with a rough block. Origin: the middle of the ground.
 const TW = {
   tile: ['#8b7fc6', '#7a6eb8', '#695da6', '#9a8fd2'],
   tileDark: '#4a4189',
@@ -671,151 +670,63 @@ function pointed(g, x, y, w, h) {
 }
 
 function drawTower(g) {
-  const PI = Math.PI;
   shadowEll(g, 40, 8, 3);
 
-  // ---- the plinth: one round step, a rough block at each side
-  slab(g, [[28, -16], [37.5, -13], [35.5, -3], [27, -2]], TW.baseShade, 2);
-  drum(g, -0.5, -13, 29.5, 7, 11, across(g, -30, 29, '#aeaba5', '#7b7873'), TW.base);
-  slab(g, [[-37, -4], [-27.5, -1], [-29, 10.5], [-38.5, 5.5]], across(g, -38, -27, '#c0bdb6', '#96938d'), 2);
-  slab(g, [[-37, -4], [-30.5, -7], [-21, -3.5], [-27.5, -1]], '#cbc8c1', 2);
+  // ---- one round stone step, with a rough block against it
+  drum(g, 0, -13, 29, 7.4, 13, across(g, -29, 29, '#b2afa8', '#7d7a75'), '#bfbcb5');
+  slab(g, [[-33, -9], [-21.5, -5], [-22.5, 8], [-34, 2.5]], across(g, -34, -22, '#c0bdb6', '#96938d'), 2.2);
 
-  // ---- the stone shaft, a little crooked, with a few loose stones and a crack
-  slab(g, [[-19.5, -16], [-17, -50], [-15.5, -89], [15, -89], [16, -52], [18.5, -16]], across(g, -19, 18, TW.stoneLite, TW.stoneShade), 2.1);
-  for (const [x, y, w] of [[7, -70, 7.5], [-16, -34, 7.5], [9, -27, 7]]) {
-    slab(g, [[x, y], [x + w, y - 0.8], [x + w - 0.6, y + 4], [x + 0.4, y + 4.4]], 'rgba(255, 250, 235, 0.22)', 0);
-    crease(g, [[x, y], [x + w, y - 0.8], [x + w - 0.6, y + 4], [x + 0.4, y + 4.4], [x, y]], 'rgba(55, 44, 30, 0.55)', 1.1);
-  }
-  crease(g, [[-12, -80], [-9.5, -76], [-11.5, -72.5], [-9, -69]], 'rgba(55, 44, 30, 0.6)', 1.1);
-  // three pointed windows, stepping down from right to left
-  pointed(g, 3.5, -75.5, 7, 10.5);
-  pointed(g, -2.6, -63.5, 7, 10.5);
-  pointed(g, -8.6, -52, 7, 10.5);
+  // ---- the stone shaft, a little crooked
+  slab(g, [[-19.5, -15], [-16.5, -52], [-16, -89], [15.5, -89], [16.5, -50], [19.5, -15]], across(g, -19, 19, TW.stoneLite, TW.stoneShade), 2.3);
+  pointed(g, 4, -69, 9, 13.5);
+  pointed(g, -5.5, -52.5, 9, 13.5);
 
-  // ---- the door in its arch of big uneven stones
+  // ---- the door in an arch of three great stones
   g.beginPath();
-  g.moveTo(-8.5, -14);
-  g.lineTo(-8.5, -31);
-  g.bezierCurveTo(-8.5, -43, 12.5, -43, 12.5, -31);
-  g.lineTo(12.5, -14);
+  g.moveTo(-8.5, -12);
+  g.lineTo(-8.5, -25);
+  g.bezierCurveTo(-8.5, -37, 11.5, -37, 11.5, -25);
+  g.lineTo(11.5, -12);
   g.closePath();
-  g.fillStyle = across(g, -9, 13, '#b57c46', '#7a4b26');
+  g.fillStyle = across(g, -9, 12, '#b57c46', '#7a4b26');
   g.fill();
-  ink(g, 1.9);
+  ink(g, 2);
   g.stroke();
-  crease(g, [[2, -39.6], [2, -14.5]], 'rgba(50, 26, 8, 0.7)', 1.3);
   g.beginPath();
-  g.arc(8.4, -25.5, 1.9, 0, TAU);
+  g.arc(7, -21, 2.1, 0, TAU);
   g.fillStyle = '#f0c25a';
   g.fill();
-  ink(g, 1.2);
+  ink(g, 1.3);
   g.stroke();
-  for (const [pts, c] of [
-    [[[-15.5, -13], [-8.5, -14], [-8.5, -31.5], [-16.5, -32]], TW.stone],
-    [[[-16.5, -32], [-8.5, -31.5], [-4.6, -38.6], [-10.8, -45.4]], TW.stoneLite],
-    [[[-10.8, -45.4], [-4.6, -38.6], [8, -39.6], [12, -48]], '#efe8d4'],
-    [[[12, -48], [8, -39.6], [12.5, -30], [20, -33]], TW.stone],
-    [[[20, -33], [12.5, -30], [12.5, -14], [19.6, -13]], TW.stoneShade],
-  ]) slab(g, pts, c, 2);
+  slab(g, [[-16.5, -10], [-8.5, -11], [-8.5, -26], [-3.5, -33], [-11, -40.5], [-17.5, -28]], TW.stone, 2.2);
+  slab(g, [[-11, -40.5], [-3.5, -33], [8, -33.5], [13, -41]], '#efe8d4', 2.2);
+  slab(g, [[13, -41], [8, -33.5], [11.5, -26], [11.5, -11], [19.5, -10], [20, -30]], TW.stoneShade, 2.2);
 
-  // ---- one wide front step
-  slab(g, [[-14, -14], [18, -14], [22, -4], [-17, -4]], '#cfccc5', 2);
-  slab(g, [[-17, -4], [22, -4], [28, 2], [25, 11], [4, 13.5], [-18, 10.5], [-21, 2]], across(g, -21, 28, '#b9b6b0', '#8b8883'), 2);
-  crease(g, [[-21, 2], [-6, 4.6], [10, 4.4], [28, 2]], '#17141a', 1.5);
+  // ---- two wooden blocks holding up the top floor
+  slab(g, [[-25, -89], [-11, -88], [-13, -75], [-22, -77]], across(g, -25, -11, '#bd874f', TW.woodDark), 2.2);
+  slab(g, [[15, -88], [27, -90], [23.5, -76], [16, -74.5]], across(g, 15, 27, '#bd874f', TW.woodDark), 2.2);
 
-  // ---- the little turret on the left
-  g.beginPath();
-  g.moveTo(-31, -63);
-  g.lineTo(-30, -46);
-  g.quadraticCurveTo(-27, -36, -18, -34);
-  g.lineTo(-14, -46);
-  g.lineTo(-14, -63);
-  g.closePath();
-  g.fillStyle = across(g, -31, -14, TW.stoneLite, TW.stoneShade);
-  g.fill();
-  ink(g, 2);
-  g.stroke();
-  pointed(g, -23.5, -52, 5.4, 8.5);
-  slab(g, [[-39, -61.5], [-30, -72], [-23, -70], [-23, -59]], TW.tile[0], 2);
-  slab(g, [[-23, -70], [-15.5, -72.5], [-9.5, -62], [-23, -59]], TW.tile[2], 2);
-  slab(g, [[-31, -71.5], [-22.5, -85], [-15, -72], [-23, -69.5]], TW.tile[1], 2);
+  // ---- the wide upper floor: three rough faces with one big window
+  slab(g, [[-34, -108], [-15, -104], [-15, -84], [-32.5, -90]], across(g, -34, -15, '#e0d5bb', '#bcae90'), 2.3);
+  slab(g, [[-15, -104], [18, -104], [18, -84], [-15, -84]], TW.stone, 2.3);
+  slab(g, [[18, -104], [36, -109], [33.5, -91], [18, -84]], across(g, 18, 36, '#b3a68a', '#8d8169'), 2.3);
+  slab(g, [[-8, -101], [11, -101], [11, -88], [-8, -88]], '#f7bd4c', 2.2);
+  crease(g, [[1.5, -101], [1.5, -88]], '#17141a', 1.8);
+  crease(g, [[-8, -94.5], [11, -94.5]], '#17141a', 1.8);
 
-  // ---- the roofed bay on the right
-  g.beginPath();
-  g.moveTo(10, -54);
-  g.lineTo(26, -54);
-  g.quadraticCurveTo(26, -42, 15, -40);
-  g.quadraticCurveTo(10, -43, 10, -54);
-  g.closePath();
-  g.fillStyle = across(g, 10, 26, TW.stone, TW.stoneShade);
-  g.fill();
-  ink(g, 2);
-  g.stroke();
-  slab(g, [[6, -51.5], [11, -64], [18.5, -64.5], [18, -50]], TW.tile[0], 2);
-  slab(g, [[18.5, -64.5], [25, -63], [31.5, -52], [18, -50]], TW.tile[2], 2);
-  slab(g, [[11, -63.5], [17.5, -74], [25, -62.5], [18.5, -64.5]], TW.tile[1], 2);
-
-  // ---- the two carved wooden blocks holding up the top floor
-  const block = (pts, x, y, r) => {
-    slab(g, pts, across(g, pts[0][0], pts[1][0], '#bd874f', TW.woodDark), 2);
-    // one swirl of grain
-    g.strokeStyle = 'rgba(70, 38, 14, 0.8)';
-    g.lineWidth = 1.3;
-    g.beginPath();
-    for (let a = 0; a < PI * 2.8; a += 0.35) {
-      const rr = r * (a / (PI * 2.8));
-      if (a) g.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr);
-      else g.moveTo(x, y);
-    }
-    g.stroke();
-  };
-  block([[-25, -89], [-10, -88], [-11.5, -74], [-22, -76.5]], -17, -82, 4.6);
-  block([[16, -88], [27, -90], [24, -75.5], [17, -74]], 21.4, -82, 3.8);
-
-  // ---- the wide upper floor: three rough faces, each with a window of four panes
-  slab(g, [[-34, -108], [-15, -104], [-15, -84], [-32.5, -90]], across(g, -34, -15, '#e0d5bb', '#bcae90'), 2.1);
-  slab(g, [[-15, -104], [18, -104], [18, -84], [-15, -84]], TW.stone, 2.1);
-  slab(g, [[18, -104], [36, -109], [33.5, -91], [18, -84]], across(g, 18, 36, '#b3a68a', '#8d8169'), 2.1);
-  // (each window: top left, top right, bottom right, bottom left)
-  for (const [tl, tr, br, bl] of [
-    [[-30, -103], [-20, -100.8], [-20, -91.4], [-29.4, -94]],
-    [[-10, -100], [4.5, -100], [4.5, -89], [-10, -89]],
-    [[22, -100.4], [31.6, -103], [30.4, -94], [22, -90.6]],
-  ]) {
-    const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
-    slab(g, [tl, tr, br, bl], '#f7bd4c', 1.9);
-    crease(g, [mid(tl, tr), mid(bl, br)], '#17141a', 1.4);
-    crease(g, [mid(tl, bl), mid(tr, br)], '#17141a', 1.4);
-  }
-
-  // ---- the roof. Deep shadow tucked under it first
+  // ---- the roof: a deep shadow, a great crooked eave in big tiles, and the leaning point
   slab(g, [[-40, -110], [-15, -105.5], [18, -105.5], [41, -111], [20, -116], [-20, -116]], '#2e2856', 0);
-  // the slope of the great eave, in three broad facets
-  slab(g, [[-49, -112], [-30, -119], [-18, -138], [-37, -128]], TW.tile[0], 2.1);
-  slab(g, [[-30, -119], [14, -133], [12, -143], [-18, -138]], TW.tile[3], 2.1);
-  slab(g, [[14, -133], [51, -103], [35, -125], [12, -143]], TW.tile[2], 2.1);
-  // and its thick front edge: three big uneven tiles
-  slab(g, [[-49, -112], [-30, -119], [-28.5, -104], [-37, -105], [-46, -100.5]], TW.tile[1], 2.3);
-  slab(g, [[-30, -119], [14, -133], [15.5, -116], [3, -114.5], [-28.5, -104]], TW.tile[0], 2.3);
-  slab(g, [[14, -133], [51, -103], [47.5, -93], [37, -105], [15.5, -116]], TW.tileDark, 2.3);
-  // one more crooked tier, and the leaning point
-  slab(g, [[-25, -134], [-12.5, -150], [1, -148], [2, -137], [-10, -139]], TW.tile[1], 2.2);
-  slab(g, [[2, -137], [1, -148], [14, -151], [27, -134], [15, -138]], TW.tile[2], 2.2);
-  slab(g, [[-11, -149], [1, -157], [-1.5, -159], [11, -167], [12.5, -155], [16, -150], [2, -148]], TW.tile[0], 2.2);
+  slab(g, [[-49, -112], [-16, -120], [-12, -141], [-34, -130]], TW.tile[0], 2.4);
+  slab(g, [[-16, -120], [14, -132], [12, -144], [-12, -141]], TW.tile[3], 2.4);
+  slab(g, [[14, -132], [51, -103], [33, -130], [12, -144]], TW.tile[2], 2.4);
+  slab(g, [[-49, -112], [-16, -120], [-14.5, -105], [-35, -106], [-46, -100.5]], TW.tile[1], 2.5);
+  slab(g, [[-16, -120], [14, -132], [16, -116], [2, -113], [-14.5, -105]], TW.tile[0], 2.5);
+  slab(g, [[14, -132], [51, -103], [47.5, -93], [37, -105], [16, -116]], TW.tileDark, 2.5);
+  slab(g, [[-17, -138], [-1, -155], [-3.5, -157.5], [11, -167], [12.5, -153], [23, -136], [2, -141]], TW.tile[1], 2.4);
 
-  // knocks and cracks of age: chips out of the tiles' edges, splits in the stone
-  for (const pts of [
-    [[-39, -104.5], [-37.5, -109], [-34.5, -108], [-35.5, -112]],
-    [[-8, -108.4], [-6, -113], [-8.6, -116], [-6.6, -120]],
-    [[29, -108], [27.5, -113], [30.5, -115.5]],
-    [[-23, -129], [-19.5, -127], [-20, -123.5]],
-    [[19, -143.5], [16.5, -141], [18, -138.6]],
-  ]) crease(g, pts, 'rgba(20, 14, 52, 0.8)', 1.4);
-  for (const pts of [
-    [[12, -84.5], [13.5, -88], [11.4, -90]],
-    [[-23, -8.5], [-20, -6], [-21.5, -2.5]],
-    [[15, 11.6], [13.5, 8], [16.5, 6]],
-  ]) crease(g, pts, 'rgba(45, 36, 24, 0.75)', 1.3);
+  // a couple of cracks of age
+  crease(g, [[-30, -107.5], [-28, -112], [-31, -115], [-29.5, -119]], 'rgba(20, 14, 52, 0.8)', 1.6);
+  crease(g, [[11, -37.5], [14.5, -33], [12.5, -29.5]], 'rgba(45, 36, 24, 0.75)', 1.4);
 }
 
 // The living part of it, drawn over every frame: lamplight breathing in the windows. Same coordinates as drawTower.
@@ -831,13 +742,9 @@ export function drawTowerMagic(ctx, t) {
   };
   const breathe = 0.5 + 0.5 * Math.sin(t * 2.2);
   const other = 0.5 + 0.5 * Math.sin(t * 2.9 + 2);
-  glow(-2.8, -94.5, 13, 0.16 + 0.16 * breathe);
-  glow(26.5, -97.5, 10, 0.12 + 0.14 * other);
-  glow(-25, -98, 10, 0.1 + 0.12 * other);
-  glow(3.5, -75.5, 7, 0.14 + 0.18 * other);
-  glow(-2.6, -63.5, 7, 0.14 + 0.18 * breathe);
-  glow(-8.6, -52, 7, 0.14 + 0.18 * other);
-  glow(-24, -52.5, 6, 0.12 + 0.18 * breathe);
+  glow(1.5, -94.5, 15, 0.16 + 0.16 * breathe);
+  glow(4, -69, 8.5, 0.14 + 0.18 * other);
+  glow(-5.5, -52.5, 8.5, 0.14 + 0.18 * breathe);
 }
 
 export function buildTerrainArt() {
