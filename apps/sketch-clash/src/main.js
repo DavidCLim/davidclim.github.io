@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=228';
-import { buildCreatureArt } from './creatures.js?v=228';
-import { buildEggArt } from './art_eggs.js?v=228';
-import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=228';
-import { Sfx } from './sfx.js?v=228';
-import { World } from './world.js?v=228';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=228';
-import { buildUnitArt, drawDrop } from './art_units.js?v=228';
-import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=228';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=229';
+import { buildCreatureArt } from './creatures.js?v=229';
+import { buildEggArt } from './art_eggs.js?v=229';
+import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=229';
+import { Sfx } from './sfx.js?v=229';
+import { World } from './world.js?v=229';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=229';
+import { buildUnitArt, drawDrop } from './art_units.js?v=229';
+import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=229';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -69,7 +69,7 @@ function paintAny(canvas, id) {
   else paintIcon(canvas, sprites, id);
 }
 
-// The palette: four tabs (Army, Animals, Mythical, Terrain), each with its own units.
+// The palette: four tabs (Army, Robots, Magic, Terrain), each with its own units.
 // The icons are the same art as on the field.
 let species = 'soldier';
 let tabIndex = 0;
@@ -86,6 +86,12 @@ function buildUnits() {
   unitsEl.textContent = '';
   unitButtons = [];
   unitTip.hidden = true;
+  if (!TABS[tabIndex].items.length) {
+    const note = document.createElement('span');
+    note.className = 'units-empty';
+    note.textContent = 'Nothing here yet';
+    unitsEl.append(note);
+  }
   TABS[tabIndex].items.forEach((id, i) => {
     const b = document.createElement('button');
     b.type = 'button';
@@ -117,7 +123,7 @@ function buildUnits() {
 }
 function pickTab(i) {
   tabIndex = i;
-  species = TABS[i].items[0];
+  species = TABS[i].items[0] || null; // an empty tab leaves nothing in hand to place
   [...tabsEl.children].forEach((t, j) => t.setAttribute('aria-selected', String(j === i)));
   buildUnits();
 }
@@ -406,6 +412,8 @@ stageCanvas.addEventListener('pointerdown', (e) => {
   tstroke = null;
   if (erasing) {
     if (canPaint()) dab(ptr.x, ptr.y);
+  } else if (!species) {
+    return;
   } else if (TERRAIN_SET.has(species)) {
     if (canPaint()) terrainDown(ptr.x, ptr.y);
   } else if (canPaint()) {

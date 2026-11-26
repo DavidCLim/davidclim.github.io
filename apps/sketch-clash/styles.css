@@ -305,6 +305,15 @@ canvas {
   background: #ffffff;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
+.units-empty {
+  display: grid;
+  place-items: center;
+  height: 42px;
+  min-width: 236px;
+  padding: 0 14px;
+  color: #a3a3a3;
+  font-size: 13.333px;
+}
 .tabs button {
   height: 24px;
   padding: 3px 10px;

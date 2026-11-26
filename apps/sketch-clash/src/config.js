@@ -482,6 +482,7 @@ export const SPECIES = {
 export const TABS = [
   { id: 'army', label: 'Army', items: ['soldier', 'flamethrower', 'sniper', 'grenadier', 'archer', 'cowboy', 'ninja'] },
   { id: 'robots', label: 'Robots', items: ['trooper', 'jettrooper', 'mechazord'] }, // the Juggernaut's code is kept, but he isn't in the palette
+  { id: 'magic', label: 'Magic', items: [] }, // nothing in it yet
   { id: 'terrain', label: 'Terrain', items: ['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower'] },
 ];
 export const TERRAIN_LABELS = { wall: 'Wall', water: 'Water', ice: 'Ice', mine: 'Mines', barrel: 'Barrel', tree: 'Tree', tower: 'Wizard Tower' };
