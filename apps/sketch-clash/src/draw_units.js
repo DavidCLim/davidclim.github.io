@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=219';
-import { drawLayer, OUT } from './sprites.js?v=219';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD } from './art_units.js?v=219';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=219';
-import { EGG_DROPS } from './art_eggs.js?v=219';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=220';
+import { drawLayer, OUT } from './sprites.js?v=220';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_TAIL, ZORD_JAW, ZORD_EYE, zordEye, drawZordTail, drawZordSpine } from './art_units.js?v=220';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=220';
+import { EGG_DROPS } from './art_eggs.js?v=220';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -698,6 +698,216 @@ function drawJuggernaut(ctx, dpr, sprites, u) {
   if (!dead && (u.hit > 0.14 || (u.hp < d.hp * 0.4 && Math.sin(t * 7.3) > 0.9))) drawZaps(ctx, 2);
 }
 
+// MechaZord: stomps forward with his tail swinging; the blades down his back light up from the tail to his head, then
+// his jaw drops and he pours out fire. Now and then he lifts off on jets under his feet, and landing he shakes the
+// ground.
+// the blades along his back: [x, y, which way they point, length]; the rest ride on the tail
+const ZORD_BACK = [[22, -118, -2.2, 14], [9, -103, -2.34, 20], [-5, -88, -2.46, 26], [-17, -73, -2.52, 31], [-27, -58, -2.52, 34]];
+const ZORD_ON_TAIL = [[0, 0.2, -2.4, 33], [0, 0.75, -2.25, 29], [1, 0.3, -2.14, 24], [1, 0.85, -2.06, 20], [2, 0.45, -2.0, 17], [3, 0.1, -1.96, 13], [3, 0.75, -1.9, 10], [4, 0.4, -1.84, 8]];
+
+// everything of him above the shadow. m: { tail (joints), legs [near, far] as {a, lift}, arms [near, far] angles, bob,
+// jaw (radians open), headTilt, glow(i, n) }; `eyes` paints his eye
+function drawZordRig(ctx, A, m, eyes) {
+  const art = (fn) => {
+    ctx.save();
+    ctx.scale(K, K);
+    fn();
+    ctx.restore();
+  };
+  const joint = (layer, x, y, a, lift = 0) => {
+    ctx.save();
+    ctx.translate(x * K, (y - lift) * K);
+    ctx.rotate(a);
+    drawLayer(ctx, layer);
+    ctx.restore();
+  };
+  const fixed = (layer, dy) => {
+    ctx.save();
+    ctx.translate(0, dy * K);
+    drawLayer(ctx, layer);
+    ctx.restore();
+  };
+  const pts = m.tail;
+  // where each blade stands this frame
+  const blades = ZORD_BACK.map(([x, y, a, len]) => [x, y - m.bob, a, len]);
+  for (const [i, k, a, len] of ZORD_ON_TAIL) {
+    const p = pts[i];
+    const q = pts[i + 1];
+    const r = p[2] + (q[2] - p[2]) * k;
+    blades.push([p[0] + (q[0] - p[0]) * k, p[1] + (q[1] - p[1]) * k - r * 0.8, a, len]);
+  }
+  const n = blades.length;
+
+  joint(A.farLeg, 22, -22, m.legs[1].a, m.legs[1].lift);
+  joint(A.farArm, 31, -69 - m.bob, m.arms[1]);
+  // two rows of blades, the far one a little behind
+  art(() => {
+    for (let i = n - 1; i >= 0; i--) {
+      const [x, y, a, len] = blades[i];
+      drawZordSpine(ctx, x + 7, y - 1, a + 0.2, len * 0.8, m.glow(i, n), true);
+    }
+    for (let i = n - 1; i >= 0; i--) {
+      const [x, y, a, len] = blades[i];
+      drawZordSpine(ctx, x, y, a, len, m.glow(i, n), false);
+    }
+    drawZordTail(ctx, pts);
+  });
+  // the glow of the lit blades
+  for (let i = 0; i < n; i++) {
+    const g = m.glow(i, n);
+    if (g <= 0.5) continue;
+    const [x, y, a, len] = blades[i];
+    botGlow(ctx, (x + Math.cos(a) * len * 0.6) * K, (y + Math.sin(a) * len * 0.6) * K, len * 0.62 * K, '255, 90, 50', 0.55 * g);
+  }
+  fixed(A.body, -m.bob);
+  ctx.save();
+  ctx.translate(26 * K, (-100 - m.bob) * K);
+  ctx.rotate(m.headTilt);
+  ctx.translate(-26 * K, 100 * K);
+  drawLayer(ctx, A.head);
+  ctx.save();
+  ctx.translate(ZORD_JAW[0] * K, ZORD_JAW[1] * K);
+  ctx.rotate(m.jaw);
+  ctx.translate(-ZORD_JAW[0] * K, -ZORD_JAW[1] * K);
+  drawLayer(ctx, A.jaw);
+  ctx.restore();
+  eyes(ctx);
+  ctx.restore();
+  joint(A.nearLeg, -10, -25, m.legs[0].a, m.legs[0].lift);
+  fixed(A.haunch, -m.bob * 0.6);
+  joint(A.nearArm, 13, -69 - m.bob, m.arms[0]);
+  fixed(A.pauldron, -m.bob);
+}
+
+const ZORD_STILL = {
+  tail: ZORD_TAIL,
+  legs: [{ a: 0, lift: 0 }, { a: 0, lift: 0 }],
+  arms: [0, 0],
+  bob: 0,
+  jaw: 0,
+  headTilt: 0,
+  glow: () => 0,
+};
+
+function drawMechaZord(ctx, dpr, sprites, u) {
+  const A = sprites.mechazord;
+  const d = u.def;
+  const dead = !!u.tilt;
+  const clock = performance.now() / 1000;
+  const t = clock + (u.id || 0) * 0.737;
+  if (u.born === undefined) u.born = clock;
+  const age = dead ? 9 : clock - u.born;
+  const alt = dead ? 0 : u.alt || 0;
+  const moving = u.moving && !dead;
+  const firing = !!u.firing && !dead;
+  // the moment before he breathes, the light runs up his back
+  const inRange = u.target && Math.hypot(u.target.x - u.x, u.target.y - u.y) <= d.range;
+  const charge = !dead && !firing && inRange && !(u.burstLeft > 0) && u.burstT !== undefined && u.burstT < 0.8 ? Math.max(0, Math.min(1, 1 - u.burstT / 0.8)) : 0;
+  const ph = u.anim * 0.9;
+  const sn = Math.sin(ph);
+  const cs = Math.cos(ph);
+
+  // a stomp has just gone off when its cooldown jumps back up
+  if (u.stompCd !== undefined) {
+    if (u.stompSeen !== undefined && u.stompCd > u.stompSeen + 0.5) u.stompAt = clock;
+    u.stompSeen = u.stompCd;
+  }
+  const stomp = u.stompAt !== undefined && !dead ? clock - u.stompAt : 9;
+
+  placeUnit(ctx, dpr, u, u.hit > 0.16 ? (Math.random() - 0.5) * 1.4 : 0);
+  const ring = (x, y, rx, col, width) => {
+    ctx.strokeStyle = col;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    ctx.ellipse(x, y, rx, rx * 0.34, 0, 0, TAU);
+    ctx.stroke();
+  };
+  if (age > 0.28 && age < 0.9) {
+    const q = (age - 0.28) / 0.62;
+    ring(0, FEET + 1, 22 + 46 * q, `rgba(150, 148, 160, ${0.65 * (1 - q)})`, 3.6 * (1 - q) + 0.5);
+  }
+  if (stomp < 0.4) {
+    const q = stomp / 0.4;
+    ring(0, FEET + 1, d.stomp.radius * (0.35 + 0.75 * q), `rgba(150, 148, 160, ${0.8 * (1 - q)})`, 4 * (1 - q) + 0.4);
+    ring(0, FEET + 1, d.stomp.radius * (0.2 + 0.55 * q), `rgba(255, 100, 80, ${0.7 * (1 - q)})`, 2 * (1 - q) + 0.3);
+  }
+  // each heavy footfall puffs out under the foot that lands
+  if (moving && alt < 0.1) {
+    const q = ((ph / Math.PI + 0.5) % 1 + 1) % 1;
+    if (q < 0.45) ring((Math.floor(ph / Math.PI + 0.5) % 2 ? 8 : 26) * K, FEET, (9 + 26 * q) * K, `rgba(150, 148, 160, ${0.65 * (1 - q / 0.45)})`, 1.2);
+  }
+
+  // his shadow stays on the ground, shrinking as he climbs
+  ctx.save();
+  if (dead) ctx.globalAlpha = 0;
+  ctx.scale(K, K);
+  ctx.translate(-30, 28);
+  ctx.scale(1, 0.15);
+  const sh = ctx.createRadialGradient(0, 0, 20, 0, 0, 110 * (1 - alt * 0.25));
+  sh.addColorStop(0, `rgba(0, 0, 0, ${0.42 - alt * 0.2})`);
+  sh.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = sh;
+  ctx.beginPath();
+  ctx.arc(0, 0, 110, 0, TAU);
+  ctx.fill();
+  ctx.restore();
+
+  if (age < 0.3) ctx.translate(0, -90 * (1 - (age / 0.3) ** 2));
+  if (alt > 0.01) ctx.translate(0, -alt * (d.hoverH + Math.sin(t * 3.2) * 1.4));
+  const squash = age >= 0.3 && age < 0.6 ? Math.sin(((age - 0.3) / 0.3) * Math.PI) : stomp < 0.25 ? Math.sin((stomp / 0.25) * Math.PI) * 0.6 : 0;
+  ctx.translate(0, FEET);
+  ctx.scale(d.scale * (1 + 0.1 * squash), d.scale * (1 - 0.12 * squash));
+  ctx.translate(0, -FEET);
+  if (moving && alt < 0.1) {
+    ctx.translate(0, FEET);
+    ctx.rotate(0.025 + sn * 0.025);
+    ctx.translate(0, -FEET);
+  }
+
+  const swing = moving && alt < 0.1 ? 1 : 0;
+  const breathe = dead ? 0 : Math.sin(t * 1.7);
+  const tail = ZORD_TAIL.map(([x, y, r], i) => {
+    const wave = dead ? 0 : Math.sin(t * (moving ? 5.2 : 1.8) - i * 0.8) * i * (moving ? 1.3 : 0.9);
+    return [x, y + wave + alt * i * 1.6, r];
+  });
+  const m = {
+    tail,
+    legs: [
+      { a: swing * sn * 0.16 + alt * 0.22, lift: swing * Math.max(0, cs) * 8 },
+      { a: -swing * sn * 0.16 + alt * 0.14, lift: swing * Math.max(0, -cs) * 8 },
+    ],
+    arms: [
+      firing ? -0.22 + Math.sin(t * 30) * 0.03 : swing * -sn * 0.14 + breathe * 0.04 - charge * 0.2,
+      firing ? -0.16 : swing * sn * 0.14 - breathe * 0.03 - charge * 0.14,
+    ],
+    bob: swing * Math.abs(cs) * 3.4 + breathe * 1.1,
+    jaw: firing ? 0.55 + Math.sin(t * 38) * 0.04 : charge * 0.3,
+    // he braces: head drawn back while charging, dipped toward whoever he is burning
+    headTilt: firing ? Math.max(-0.2, Math.min(0.34, u.aim * 0.6)) + Math.sin(t * 34) * 0.012 : -0.14 * charge,
+    glow: dead ? () => 0 : firing ? (i) => 0.75 + 0.25 * Math.sin(t * 16 - i * 0.9) : charge > 0 ? (i, n) => (charge * 1.15 > (n - 1 - i) / n ? 1 : 0) : age > 0.5 && age < 1.5 ? (i, n) => (Math.abs((age - 0.5) * 1.5 - (n - 1 - i) / n) < 0.22 ? 1 : 0) : () => 0,
+  };
+
+  const power = age < 0.55 ? 0 : age < 0.9 ? (Math.sin(age * 70) > 0 ? 1 : 0.15) : 1;
+  const angry = firing || charge > 0;
+  const blink = !angry && t % 3.7 < 0.16 ? Math.sin(((t % 3.7) / 0.16) * Math.PI) : 0;
+  drawZordRig(ctx, A, m, (g) => {
+    g.save();
+    g.scale(K, K);
+    zordEye(g, { lx: angry ? 1 : Math.sin(t * 0.8) * 0.8, ly: angry ? 0.2 : Math.sin(t * 1.5) * 0.5, lid: blink, angry, power, dead });
+    g.restore();
+    if (!dead && power > 0.5) botGlow(g, ZORD_EYE.x * K, ZORD_EYE.y * K, (angry ? 16 : 12) * K, '255, 70, 55', angry ? 0.5 : 0.24);
+    if (firing || charge > 0.4) botGlow(g, 66 * K, -97 * K, (firing ? 20 + 3 * Math.sin(t * 40) : 14 * charge) * K, '255, 170, 60', firing ? 0.75 : 0.6 * charge);
+  });
+
+  burnGlow(ctx, u, 62 * K, 54 * K);
+  // a hit flashes white over his chest, and sparks crawl over him when he is badly hurt
+  if (!dead && u.hit > 0) botGlow(ctx, 2 * K, -48 * K, 62 * K, '235, 244, 255', Math.min(0.6, u.hit * 3));
+  if (!dead && u.hp < d.hp * 0.4 && Math.sin(t * 7.3) > 0.9) {
+    ctx.translate(0, -44 * K);
+    drawZaps(ctx, 3);
+  }
+}
+
 // Jet Trooper: walks and lobs rockets, and every so often lifts off on his jetpack and fights from the air. The fire
 // under him is made by the world, from the same flames as the flamethrower's.
 function drawJetTrooper(ctx, dpr, sprites, u) {
@@ -959,6 +1169,7 @@ const DRAWERS = {
   trooper: drawTrooper,
   jettrooper: drawJetTrooper,
   juggernaut: drawJuggernaut,
+  mechazord: drawMechaZord,
   roman: drawRoman,
   grenadier: drawGrenadier,
   archer: drawArcher,
@@ -981,10 +1192,11 @@ export function drawShortCircuit(ctx, dpr, c) {
   const s = u.def.scale || 1;
   const wide = u.species === 'juggernaut';
   const big = u.def.creature ? u.def.radius * 1.6 : 0;
-  const rx = big || (wide ? 36 : 23) * K * s;
-  const ry = big ? big * 0.8 : (wide ? 29 : 25) * K * s;
+  const zord = u.species === 'mechazord';
+  const rx = zord ? 62 * K * s : big || (wide ? 36 : 23) * K * s;
+  const ry = zord ? 54 * K * s : big ? big * 0.8 : (wide ? 29 : 25) * K * s;
   const cx = u.x - (wide ? u.facing * 2 * K * s : 0);
-  const cy = u.y + FEET + ((wide ? -8 : 0) * K - FEET) * s;
+  const cy = u.y + FEET + ((zord ? -48 : wide ? -8 : 0) * K - FEET) * s;
   const feet = u.y + FEET;
   // the shapes hold for a twentieth of a second, then jump
   let seed = (Math.floor(age * 22) + 1) * 97 + (u.id || 0) * 31;
@@ -1492,6 +1704,7 @@ const ICONS = {
     drawLayer(g, S.gunLoaded);
   }],
   juggernaut: [104, 52, 68, null],
+  mechazord: [240, 162, 176, null],
   trooper: [92, 44, 50, (g, S) => {
     g.save();
     g.scale(K, K);
@@ -1573,7 +1786,14 @@ export function paintUnitIcon(canvas, sprites, species) {
   g.translate((ox * canvas.width) / w, (oy * canvas.width) / w);
   g.scale(m, m);
   if (species === 'trooper' || species === 'jettrooper') drawLayer(g, S.pack);
-  if (species === 'juggernaut') {
+  if (species === 'mechazord') {
+    drawZordRig(g, S, ZORD_STILL, () => {
+      g.save();
+      g.scale(K, K);
+      zordEye(g, { lx: 0.6, ly: 0.1 });
+      g.restore();
+    });
+  } else if (species === 'juggernaut') {
     drawJugRig(g, S, JUG_REST, () => jugEye(g, { lx: 0.7, ly: 0.2 }));
   } else if (species === 'cavalry') {
     drawLayer(g, S.shadow);

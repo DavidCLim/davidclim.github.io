@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=219';
-import { buildCreatureArt } from './creatures.js?v=219';
-import { buildEggArt } from './art_eggs.js?v=219';
-import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=219';
-import { Sfx } from './sfx.js?v=219';
-import { World } from './world.js?v=219';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=219';
-import { buildUnitArt, drawDrop } from './art_units.js?v=219';
-import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=219';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=220';
+import { buildCreatureArt } from './creatures.js?v=220';
+import { buildEggArt } from './art_eggs.js?v=220';
+import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=220';
+import { Sfx } from './sfx.js?v=220';
+import { World } from './world.js?v=220';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=220';
+import { buildUnitArt, drawDrop } from './art_units.js?v=220';
+import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=220';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -195,7 +195,7 @@ const LATTICE = {
   slime: [20, 15, true],
   giant: [42, 36, true],
   dragon: [48, 30, true],
-  mechazord: [52, 32, true],
+  mechazord: [64, 40, true],
   mage: [16, 13, true],
 };
 
@@ -1226,7 +1226,7 @@ function render() {
       ctx.ellipse(0, 0, 20.5 * 0.31, 22.8 * 0.31, 0, 0, TAU);
       ctx.fill();
     }
-    if (c.u.species !== 'sniper' && c.u.species !== 'trooper' && c.u.species !== 'jettrooper' && c.u.species !== 'juggernaut') {
+    if (c.u.species !== 'sniper' && c.u.species !== 'trooper' && c.u.species !== 'jettrooper' && c.u.species !== 'juggernaut' && c.u.species !== 'mechazord') {
       placeUnit(ctx, dpr, c.u);
       ctx.globalAlpha = a;
       drawDizzyEyes(ctx, c.u);

@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=219';
-import { TerrainMap, WALL } from './terrain.js?v=219';
-import { installBeasts } from './beasts.js?v=219';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=220';
+import { TerrainMap, WALL } from './terrain.js?v=220';
+import { installBeasts } from './beasts.js?v=220';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -765,7 +765,7 @@ export class World {
     }
     return {
       x: u.x + u.facing * (d.pivot.x + cos * d.muzzleLen),
-      y: u.y + d.pivot.y + sin * d.muzzleLen - (d.fly ? (u.alt || 0) * d.fly.height : 0),
+      y: u.y + d.pivot.y + sin * d.muzzleLen - (d.fly ? (u.alt || 0) * d.fly.height : d.airborne ? (u.alt || 0) * d.hoverH : 0),
     };
   }
 
@@ -1222,6 +1222,16 @@ export class World {
       u.airT = u.air ? 3.5 + Math.random() * 2.5 : 4 + Math.random() * 3.5;
     }
     u.alt += ((u.air ? 1 : 0) - u.alt) * Math.min(1, dt * 2.2);
+    if (d.robot && u.alt > 0.1) {
+      u.jetT = (u.jetT || 0) - dt;
+      if (u.jetT <= 0) {
+        u.jetT = 0.05;
+        for (const [jx, jy] of [[2, 22], [32, 16], [-58, 8]]) {
+          this.jetFlame(u.x + u.facing * jx * 0.31, u.y + jy * 0.31 - u.alt * d.hoverH, -u.facing * 8, 85, 1.25);
+        }
+        if (this.sfx && Math.random() < 0.2) this.sfx('flame', u.x);
+      }
+    }
     if (d.stomp && !u.air && u.alt < 0.12) {
       u.stompCd -= dt;
       if (u.stompCd <= 0) {
@@ -1308,19 +1318,21 @@ export class World {
     // as in the original: separate soft puffs, about seventeen a second, each swelling from a small pale-yellow dot
     // into a big orange smudge that ends up brown
     u.flameAcc = (u.flameAcc || 0) + dt;
-    while (u.flameAcc >= 0.058) {
-      u.flameAcc -= 0.058;
+    // a big breather throws bigger puffs, faster and further, so the fire visibly reaches as far as it burns
+    const p = d.plume || { every: 0.058, speed: 1, life: 1, size: 1 };
+    while (u.flameAcc >= p.every) {
+      u.flameAcc -= p.every;
       const a = ang + (Math.random() - 0.5) * 0.22;
-      const sp = 165 + Math.random() * 30;
+      const sp = (165 + Math.random() * 30) * p.speed;
       this.flames.push({
         x: m.x,
         y: m.y,
         vx: Math.cos(a) * sp,
         vy: Math.sin(a) * sp,
         age: 0,
-        life: 0.42 + Math.random() * 0.08,
-        size: 2.4,
-        grow: 5.4 + Math.random() * 2,
+        life: (0.42 + Math.random() * 0.08) * p.life,
+        size: 2.4 * p.size,
+        grow: (5.4 + Math.random() * 2) * p.size,
         dark: Math.random() < 0.65,
       });
     }

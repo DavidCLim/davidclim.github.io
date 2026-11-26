@@ -408,31 +408,36 @@ export const SKELETON = {
 export const GAIT = { boar: 8, rat: 15, ant: 15, ape: 7, alligator: 7, piranha: 11, snake: 7, cheetah: 13, slime: 6, giant: 5, dragon: 7, mechazord: 7, zombie: 4.5, skeleton: 8 };
 
 // ------------------------------------------------------------------ terrain items
-// MechaZord: this game's dragon in robot form, a flying silver dino-dragon that breathes a cone of fire.
+// MechaZord: a mechanical dinosaur, this game's dragon in robot form and the biggest of the robots. He walks, breathes a
+// cone of fire, shakes the ground around his feet, and now and then lifts off on jets and breathes from the air.
 export const MECHAZORD = {
   ...DRAGON,
   robot: true,
   flying: false,
   airborne: true, // like the dragon, he sometimes takes off and breathes fire from the air, sometimes he stays on the ground
-  hoverH: 30,
-  shadowR: 52,
-  hp: 1100,
-  radius: 54,
-  sep: 58,
+  hoverH: 24,
+  scale: 1,
+  hp: 800,
+  radius: 19,
+  sep: 34,
   speed: 38,
-  sight: 420,
-  dps: 80, // way stronger than the dragon's 38, and half as much again from the air
-  burnDps: 16,
-  cone: 0.36,
-  range: 260,
-  holdDist: 170,
-  onTime: 2.4,
-  offTime: 0.8,
-  stomp: { radius: 60, dmg: 70, cd: 2.6, knock: 460 }, // on the ground, a shockwave under his feet
-  ring: 5,
-  body: [108, 62, 22],
-  pivot: { x: 228 * K, y: -214 * K },
-  muzzleLen: 8 * K,
+  sight: 560,
+  dps: 50, // the dragon's is 38; half as much again from the air
+  burnDps: 12,
+  cone: 0.34,
+  range: 200,
+  holdDist: 135,
+  onTime: 2.2,
+  offTime: 1,
+  stomp: { radius: 46, dmg: 45, cd: 2.8, knock: 380 }, // on the ground, a shockwave under his feet
+  explodes: true, // and goes to pieces when he dies, like the other robots
+  boom: 22,
+  parts: ['botplate', 'botplate', 'botpod', 'zordspine', 'zordspine', 'zordspine', 'zordhead'],
+  ring: 2.9,
+  body: [62, 54, -48],
+  pivot: { x: 56 * K, y: -97 * K }, // his mouth
+  muzzleLen: 14 * K,
+  plume: { every: 0.028, speed: 1.75, life: 1.55, size: 1.6 },
 };
 
 export const TERRAIN_IDS = ['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower'];
@@ -475,7 +480,7 @@ export const SPECIES = {
 // The order of the palette (the knight only ever comes from a cavalry).
 export const TABS = [
   { id: 'army', label: 'Army', items: ['soldier', 'flamethrower', 'sniper', 'grenadier', 'archer', 'cowboy', 'ninja'] },
-  { id: 'robots', label: 'Robots', items: ['trooper', 'jettrooper', 'juggernaut'] }, // MechaZord's code is kept, but he isn't in the palette
+  { id: 'robots', label: 'Robots', items: ['trooper', 'jettrooper', 'mechazord'] }, // the Juggernaut's code is kept, but he isn't in the palette
   { id: 'terrain', label: 'Terrain', items: ['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower'] },
 ];
 export const TERRAIN_LABELS = { wall: 'Wall', water: 'Water', ice: 'Ice', mine: 'Mines', barrel: 'Barrel', tree: 'Tree', tower: 'Wizard Tower' };
