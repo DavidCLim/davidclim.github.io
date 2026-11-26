@@ -428,27 +428,28 @@ export const MECHAZORD = {
   airborne: true, // like the dragon, he sometimes takes off and breathes fire from the air, sometimes he stays on the ground
   hoverH: 24,
   scale: 1.75, // of Robo Trooper's drawing; the trooper himself is 1.15, and not as broad
-  hp: 880,
+  hp: 1400,
+  mega: true, // his breath and his end come with their own effects (zordfx.js)
   radius: 13,
   sep: 21,
   speed: 38,
   sight: 560,
-  dps: 50, // the dragon's is 38; half as much again from the air
-  burnDps: 12,
-  cone: 0.34,
-  range: 210,
+  dps: 82, // the dragon's is 38; half as much again from the air
+  burnDps: 18,
+  cone: 0.38,
+  range: 240,
   holdDist: 135,
-  onTime: 2.2,
-  offTime: 1,
+  onTime: 2.5,
+  offTime: 0.85,
   explodes: true, // and goes to pieces when he dies, like the other robots
-  boom: 22,
+  boom: 30,
   parts: ['botplate', 'botplate', 'botpod', 'botpod', 'zordhorn', 'zordhorn', 'zordhead'],
   ring: 2,
   body: [42, 40, -19],
   pivot: { x: 54 * K, y: 4 * K }, // his mouth
   muzzleLen: 10 * K,
   footFire: 18, // whoever is pressed this close against him, under his jaws, is caught by the fire too
-  plume: { every: 0.028, speed: 1.75, life: 1.55, size: 1.9 },
+  plume: { every: 0.021, speed: 2.35, life: 1.7, size: 2.15 },
 };
 
 export const TERRAIN_IDS = ['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower'];

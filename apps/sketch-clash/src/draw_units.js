@@ -1,8 +1,9 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=234';
-import { drawLayer, OUT } from './sprites.js?v=234';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS } from './art_units.js?v=234';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=234';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=234';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=235';
+import { drawLayer, OUT } from './sprites.js?v=235';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS } from './art_units.js?v=235';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=235';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=235';
+import { drawZordGround, drawZordAir } from './zordfx.js?v=235';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -758,6 +759,86 @@ function drawZordRig(ctx, A, m, eyes) {
 }
 
 const ZORD_STILL = { jaw: 0.16, headTilt: 0, sway: 0, beacon: false, hand: 0, lit: 0 };
+const ZORD_MOUTH = { x: 39, y: 14 };
+
+// a thin four-pointed glint
+function zordGlint(g, x, y, long, short, turn, fill) {
+  g.fillStyle = fill;
+  g.beginPath();
+  for (let i = 0; i < 8; i++) {
+    const an = turn + (i / 8) * TAU;
+    const r = (i % 2 ? short : i % 4 ? long * 0.62 : long) * K;
+    if (i) g.lineTo(x * K + Math.cos(an) * r, y * K + Math.sin(an) * r);
+    else g.moveTo(x * K + Math.cos(an) * r, y * K + Math.sin(an) * r);
+  }
+  g.closePath();
+  g.fill();
+}
+
+// energy spirals into his open mouth and swells into a crackling ball of it
+function zordGather(g, charge, t) {
+  const { x, y } = ZORD_MOUTH;
+  g.lineCap = 'round';
+  for (let i = 0; i < 16; i++) {
+    const q = (t * 2.3 + i / 16) % 1;
+    const a = i * 2.4 + q * 2.6;
+    const far = (1 - q) * 34 + 3;
+    const tail = far + 3 + 5 * (1 - q);
+    g.strokeStyle = `rgba(${i % 4 ? '30, 220, 175' : '150, 255, 230'}, ${Math.min(1, q * 3) * Math.min(1, charge * 2)})`;
+    g.lineWidth = (0.9 + 1.5 * q) * K;
+    g.beginPath();
+    g.moveTo((x + Math.cos(a - 0.14) * tail) * K, (y + Math.sin(a - 0.14) * tail * 0.85) * K);
+    g.lineTo((x + Math.cos(a) * far) * K, (y + Math.sin(a) * far * 0.85) * K);
+    g.stroke();
+  }
+  const r = 2 + 6.4 * charge + Math.sin(t * 44) * 0.6;
+  botGlow(g, x * K, y * K, r * 3.2 * K, '70, 255, 205', 0.75 * Math.min(1, charge * 1.6));
+  g.strokeStyle = `rgba(215, 255, 245, ${Math.min(1, charge * 1.5)})`;
+  g.lineWidth = 0.9 * K;
+  for (let i = 0; i < 4; i++) {
+    const a = Math.random() * TAU;
+    g.beginPath();
+    g.moveTo(x * K, y * K);
+    g.lineTo((x + Math.cos(a + 0.4) * r * 1.4) * K, (y + Math.sin(a + 0.4) * r * 1.4) * K);
+    g.lineTo((x + Math.cos(a) * r * 2.3) * K, (y + Math.sin(a) * r * 2.3) * K);
+    g.stroke();
+  }
+  for (const [col, k] of [['#35e8bd', 1], ['#d9fff4', 0.68], ['#ffffff', 0.38]]) {
+    g.fillStyle = col;
+    g.beginPath();
+    g.arc(x * K, y * K, r * k * K, 0, TAU);
+    g.fill();
+  }
+  zordGlint(g, x, y, r * 2.6 * charge, r * 0.24, t * 3, `rgba(255, 255, 255, ${0.85 * charge})`);
+}
+
+// the glare at his mouth while the fire pours out
+function zordFlare(g, t) {
+  const { x, y } = ZORD_MOUTH;
+  const beat = Math.sin(t * 38);
+  botGlow(g, x * K, y * K, (23 + 3 * beat) * K, '255, 168, 55', 0.8);
+  botGlow(g, x * K, y * K, (13 + 2 * beat) * K, '90, 255, 215', 0.85);
+  zordGlint(g, x, y, 17 + 4 * beat, 2.4, t * 5, 'rgba(120, 255, 220, 0.8)');
+  zordGlint(g, x, y, 11 - 2 * beat, 2, -t * 7, '#ffffff');
+}
+
+// as he powers up, teal fire vents out of the back of his pack
+function zordVents(ctx, power, t) {
+  BOT_JETS.forEach(([jx, jy], i) => {
+    const x = jx * 1.1 - 4;
+    const y = jy * 1.1;
+    const len = (13 + 5 * Math.sin(t * 47 + i * 2)) * power;
+    botGlow(ctx, (x - len * 0.4) * K, y * K, (6 + len * 0.55) * K, '70, 255, 205', 0.6 * power);
+    for (const [col, wide, reach] of [['rgba(30, 215, 170, 0.9)', 3.8, 1], ['#e6fff8', 1.9, 0.62]]) {
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.moveTo(x * K, (y - wide) * K);
+      ctx.quadraticCurveTo((x - len * reach * 0.6) * K, (y - wide * 0.8) * K, (x - len * reach) * K, (y + (i ? 3 : -3) * reach) * K);
+      ctx.quadraticCurveTo((x - len * reach * 0.6) * K, (y + wide * 0.8) * K, x * K, (y + wide) * K);
+      ctx.fill();
+    }
+  });
+}
 
 // his eye, the very one Robo Trooper has, set over on his broader egg
 const ZORD_EYE = { x: 12.4, y: -4.6 };
@@ -822,6 +903,31 @@ function drawMechaZord(ctx, dpr, sprites, u) {
   ctx.fill();
   ctx.restore();
 
+  if (!dead && (charge > 0 || firing)) {
+    const base = d.scale * K * 30;
+    botGlow(ctx, firing ? 14 : 0, FEET, base * (firing ? 1.9 : 1.5), firing ? '255, 160, 50' : '70, 255, 205', firing ? 0.3 : 0.28 * charge);
+    for (let i = 0; i < 3; i++) {
+      const q = (t * (firing ? 1.7 : 2.1) + i / 3) % 1;
+      // drawing in toward him while he charges, thrown outward once he lets fly
+      ring(0, FEET + 1, base * (firing ? 0.7 + 1.2 * q : 1.9 - 1.2 * q), `rgba(40, 225, 180, ${0.7 * (firing ? 1 - q : q * charge)})`, 1.3);
+    }
+  }
+  if (age > 0.3 && age < 0.85) {
+    const q = (age - 0.3) / 0.55;
+    ring(0, FEET + 1, 18 + 56 * q, `rgba(40, 225, 180, ${0.8 * (1 - q)})`, 2.6 * (1 - q) + 0.4);
+    ctx.strokeStyle = `rgba(90, 245, 205, ${1 - q})`;
+    ctx.lineWidth = 0.9;
+    for (let i = 0; i < 7; i++) {
+      const a = (i / 7) * TAU + Math.random() * 0.5;
+      const r0 = 14 + 30 * q;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * r0, FEET + Math.sin(a) * r0 * 0.34);
+      ctx.lineTo(Math.cos(a + 0.18) * (r0 + 7), FEET + Math.sin(a + 0.18) * (r0 + 7) * 0.34 - 3);
+      ctx.lineTo(Math.cos(a) * (r0 + 14), FEET + Math.sin(a) * (r0 + 14) * 0.34);
+      ctx.stroke();
+    }
+  }
+
   if (age < 0.3) ctx.translate(0, -70 * (1 - (age / 0.3) ** 2));
   if (alt > 0.01) ctx.translate(0, -alt * (d.hoverH + Math.sin(t * 3.2) * 1.4));
   const squash = age >= 0.3 && age < 0.6 ? Math.sin(((age - 0.3) / 0.3) * Math.PI) : 0;
@@ -851,7 +957,7 @@ function drawMechaZord(ctx, dpr, sprites, u) {
   const angry = firing || charge > 0 || roar > 0.3;
   const blink = !angry && t % 3.7 < 0.16 ? Math.sin(((t % 3.7) / 0.16) * Math.PI) : 0;
   const m = {
-    jaw: roar > 0 ? 0.62 * roar + Math.sin(t * 40) * 0.04 * roar : firing ? 0.5 + Math.sin(t * 38) * 0.04 : dead ? 0.3 : 0.06 + charge * 0.22,
+    jaw: roar > 0 ? 0.62 * roar + Math.sin(t * 40) * 0.04 * roar : firing ? 0.54 + Math.sin(t * 38) * 0.05 : dead ? 0.3 : 0.06 + charge * 0.34,
     // he braces: head thrown back to roar or drawn back to charge, then dipped toward whoever he is burning
     headTilt: firing ? Math.max(-0.2, Math.min(0.3, u.aim * 0.55)) + Math.sin(t * 34) * 0.012 : roar > 0 ? -0.3 * roar : -0.16 * charge,
     sway: dead ? 7 : (moving ? -3.4 + Math.sin(ph * 2) * 3.4 : Math.sin(t * 2.1) * 1.6) - charge * 3,
@@ -859,10 +965,17 @@ function drawMechaZord(ctx, dpr, sprites, u) {
     hand: dead ? 0 : roar > 0 ? 7 * roar : charge * 3 + (moving ? Math.sin(ph) * 1.4 : Math.sin(t * 2.1) * 0.5),
     lit: dead ? 0 : firing ? 0.8 + 0.2 * Math.sin(t * 16) : Math.max(charge, roar),
   };
+  if (!dead && (firing || charge > 0.15)) zordVents(ctx, firing ? 1 : charge, t);
   drawZordRig(ctx, A, m, (g) => {
     zordLook(g, { lx: angry ? 1 : Math.sin(t * 0.8) * 0.8 + 0.2, ly: angry ? 0.2 : Math.sin(t * 1.5) * 0.5, lid: blink, angry, power, dead });
     if (!dead && power > 0.5) botGlow(g, ZORD_EYE.x * K, ZORD_EYE.y * K, (angry ? 15 : 11) * K, '70, 255, 205', angry ? 0.42 : 0.2);
-    if (firing || charge > 0.4) botGlow(g, 36 * K, 14 * K, (firing ? 15 + 2.4 * Math.sin(t * 40) : 11 * charge) * K, '255, 170, 60', firing ? 0.75 : 0.6 * charge);
+    // his eye blazes, with a glare right across it
+    if (!dead && (firing || charge > 0.3)) {
+      const k = firing ? 1 : charge;
+      zordGlint(g, ZORD_EYE.x, ZORD_EYE.y, (19 + 2 * Math.sin(t * 29)) * k, 0.9, 0, `rgba(185, 255, 235, ${0.9 * k})`);
+    }
+    if (firing) zordFlare(g, t);
+    else if (charge > 0.04) zordGather(g, charge, t);
     // lightning jumps between the tips of his horns and his antenna as the fire builds
     if (charge > 0.2 && Math.random() < 0.7) {
       const tips = ZORD_HORNS.map(([x, y, len, rise]) => [x - len, y - rise]).reverse();
@@ -1574,6 +1687,8 @@ const blobs = (() => {
     yellow: mk('255, 226, 110'),
     orange: mk('247, 150, 62'),
     brown: mk('176, 104, 46'),
+    plasma: mk('36, 224, 206'),
+    core: mk('246, 255, 244'),
   };
 })();
 
@@ -1634,16 +1749,30 @@ function lumpsOf(e) {
 
 export function drawFlames(ctx, world, under) {
   if (!blob) blob = makeBlob();
+  if (under) drawZordGround(ctx, world);
   for (const f of world.flames) {
     if (!!f.under !== under) continue;
     const t = f.age / f.life;
     const r = (f.size + f.grow * t) * (f.small ? 1 : 1.12);
     const spr = t < 0.3 ? blobs.yellow : f.dark && t > 0.62 ? blobs.brown : blobs.orange;
     ctx.globalAlpha = Math.max(0, (t < 0.1 ? 0.75 + t * 2 : 0.92) * (1 - t * t * t));
-    ctx.drawImage(spr, f.x - r, f.y - r, r * 2, r * 2);
+    // teal laid over yellow turns green, so his goes by way of white heat: teal, then white, and only then fire
+    if (f.hot && t < 0.17) {
+      ctx.drawImage(blobs.plasma, f.x - r * 1.12, f.y - r * 1.12, r * 2.24, r * 2.24);
+      ctx.drawImage(blobs.core, f.x - r * 0.72, f.y - r * 0.72, r * 1.44, r * 1.44);
+    } else {
+      ctx.drawImage(spr, f.x - r, f.y - r, r * 2, r * 2);
+      if (f.hot && t < 0.34) {
+        ctx.globalAlpha *= 1 - (t - 0.17) / 0.17;
+        ctx.drawImage(blobs.core, f.x - r * 0.8, f.y - r * 0.8, r * 1.6, r * 1.6);
+      }
+    }
   }
   ctx.globalAlpha = 1;
-  if (!under) drawSpells(ctx, world);
+  if (!under) {
+    drawSpells(ctx, world);
+    drawZordAir(ctx, world);
+  }
 }
 
 // the Jet Trooper's rockets: a stubby grey rocket with a red nose (its fire trail is ordinary flame)

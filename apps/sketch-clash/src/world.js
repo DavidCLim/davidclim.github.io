@@ -1,6 +1,7 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=234';
-import { TerrainMap, WALL } from './terrain.js?v=234';
-import { installBeasts } from './beasts.js?v=234';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=235';
+import { TerrainMap, WALL } from './terrain.js?v=235';
+import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordFx } from './zordfx.js?v=235';
+import { installBeasts } from './beasts.js?v=235';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -75,6 +76,7 @@ export class World {
     this.casings = []; // ejected shells
     this.rockets = []; // the Jet Trooper's
     this.flames = []; // flamethrower stream
+    resetZordFx(this);
     this.bombs = []; // grenades in the air
     this.arrows = []; // arrows in the air
     this.blasts = []; // explosions
@@ -465,6 +467,7 @@ export class World {
     this.bursts = [];
     this.arcs = [];
     this.rises = [];
+    resetZordFx(this);
     this.terrain.clear();
     this.groups = [];
     this.started = false;
@@ -1277,6 +1280,7 @@ export class World {
       } else if (u.burstT <= 0 && dist <= d.range) {
         u.burstLeft = 1;
         u.burstT = d.onTime * (0.8 + Math.random() * 0.4);
+        if (d.mega) zordIgnite(this, u, this.muzzleOf(u), u.facing > 0 ? u.aim : Math.PI - u.aim);
       }
     } else {
       u.burstLeft = 0;
@@ -1310,8 +1314,10 @@ export class World {
         size: 2.4 * p.size,
         grow: (5.4 + Math.random() * 2) * p.size,
         dark: Math.random() < 0.65,
+        hot: !!d.mega,
       });
     }
+    if (d.mega) zordBreath(this, u, m, ang, dt, u.target);
     if (this.sfx) this.sfx('flame', m.x);
     const cone = d.cone;
     this.eachEnemyNear(u.side, m.x, m.y, d.range, (o) => {
@@ -1819,6 +1825,7 @@ export class World {
   // A robot goes to pieces: a flash, a shower of sparks and his pods, lens, plating and helmet flying off.
   blowApart(u) {
     this.blasts.push({ x: u.x, y: u.y - 2, age: 0, life: 4.4, r: u.def.boom || 15, seed: Math.random() });
+    if (u.def.mega) zordDeath(this, u);
     for (let i = 0; i < 26; i++) {
       const a = Math.random() * TAU;
       const sp = 50 + Math.random() * 130;
@@ -2061,6 +2068,8 @@ export class World {
       c.rot += c.spin * dt;
     }
     if (this.casings.some((c) => c.age > c.life)) this.casings = this.casings.filter((c) => c.age <= c.life);
+
+    stepZordFx(this, dt);
 
     for (const f of this.flames) {
       f.age += dt;
