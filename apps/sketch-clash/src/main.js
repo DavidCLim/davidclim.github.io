@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=192';
-import { buildCreatureArt } from './creatures.js?v=192';
-import { buildEggArt } from './art_eggs.js?v=192';
-import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=192';
-import { Sfx } from './sfx.js?v=192';
-import { World } from './world.js?v=192';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=192';
-import { buildUnitArt, drawDrop } from './art_units.js?v=192';
-import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=192';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=193';
+import { buildCreatureArt } from './creatures.js?v=193';
+import { buildEggArt } from './art_eggs.js?v=193';
+import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=193';
+import { Sfx } from './sfx.js?v=193';
+import { World } from './world.js?v=193';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=193';
+import { buildUnitArt, drawDrop } from './art_units.js?v=193';
+import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=193';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -1213,7 +1213,7 @@ function render() {
     c.u.breath = 0;
     ctx.globalAlpha = a;
     drawBody(c.u);
-    if (c.u.species !== 'sniper') {
+    if (c.u.species !== 'sniper' && c.u.species !== 'trooper') {
       placeUnit(ctx, dpr, c.u);
       ctx.globalAlpha = a;
       drawDizzyEyes(ctx, c.u);
@@ -1338,6 +1338,24 @@ function render() {
       ctx.globalAlpha = 0.62 * (t < 0.5 ? 1 : 1 - (t - 0.5) / 0.5);
       ctx.drawImage(smokeSprite, p.x - r, p.y - r, r * 2, r * 2);
       ctx.globalAlpha = 1;
+      continue;
+    }
+    if (p.boom) {
+      // a white-hot core inside a spreading orange ring
+      const r = p.size * (0.35 + 0.9 * Math.sqrt(t));
+      const gr = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+      gr.addColorStop(0, `rgba(255, 255, 240, ${1 - t})`);
+      gr.addColorStop(0.45, `rgba(255, 196, 70, ${0.9 * (1 - t)})`);
+      gr.addColorStop(1, 'rgba(255, 120, 40, 0)');
+      ctx.fillStyle = gr;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r, 0, TAU);
+      ctx.fill();
+      ctx.strokeStyle = `rgba(110, 200, 255, ${0.8 * (1 - t)})`;
+      ctx.lineWidth = 1.8 * (1 - t) + 0.3;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r * 1.35, 0, TAU);
+      ctx.stroke();
       continue;
     }
     if (p.ring) {

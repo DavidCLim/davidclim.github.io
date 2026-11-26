@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=192';
-import { TerrainMap, WALL } from './terrain.js?v=192';
-import { installBeasts } from './beasts.js?v=192';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=193';
+import { TerrainMap, WALL } from './terrain.js?v=193';
+import { installBeasts } from './beasts.js?v=193';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -660,6 +660,7 @@ export class World {
         k.cdT = 0.5;
       } else if ((kind === 'blast' || kind === 'snipe') && !u.def.noDrop && !u.def.creature) this.launchDrop(u);
       else if (this.onDeath) this.onDeath(u);
+      if (u.def.explodes) this.blowApart(u);
       this.afterDeath(u, kind, src);
     }
   }
@@ -682,7 +683,11 @@ export class World {
     u.flash = 0.07;
     if (this.sfx) this.sfx('shot', m.x);
     this.muzzleFx(m, a);
-    if (d.smoke) u.recoil = 1;
+    if (d.smoke || d.kick) u.recoil = 1;
+    if (d.kick) u.heat = Math.min(1, (u.heat || 0) + 0.36);
+    if (d.casing) {
+      this.casings.push({ x: u.x + u.facing * 5, y: u.y - 1, vx: -u.facing * (22 + Math.random() * 30), vy: -62 - Math.random() * 30, rot: Math.random() * 3, spin: (Math.random() - 0.5) * 26, age: 0, life: 0.75 });
+    }
   }
 
   // As measured in the original: a hollow yellow ring on the muzzle that shrinks away in five frames, and a small
@@ -783,6 +788,7 @@ export class World {
     u.flash = Math.max(0, u.flash - dt);
     u.hit = Math.max(0, u.hit - dt);
     u.recoil = Math.max(0, u.recoil - dt * 5);
+    if (u.heat > 0) u.heat = Math.max(0, u.heat - dt * 0.45);
     u.moving = false;
     u.breath += dt;
     if (u.kx || u.ky) {
@@ -1557,6 +1563,23 @@ export class World {
   }
 
   // A killed unit's headgear is thrown high into the air.
+  // A robot goes to pieces: a flash, a shower of sparks and his pods, lens, plating and helmet flying off.
+  blowApart(u) {
+    this.puffs.push({ boom: true, x: u.x, y: u.y - 2, vx: 0, vy: 0, age: 0, life: 0.45, size: 15 });
+    for (let i = 0; i < 26; i++) {
+      const a = Math.random() * TAU;
+      const sp = 50 + Math.random() * 130;
+      this.sparks.push({ x: u.x, y: u.y - 3, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 30, life: 0.3 + Math.random() * 0.35, max: 0.65, cyan: i % 2 === 0 });
+    }
+    for (const part of ['botpod', 'botpod', 'botlens', 'botplate', 'botplate', 'trooper']) {
+      this.debris.push({ x: u.x, y: u.y, z: 12, vx: (Math.random() - 0.5) * 150, vy: (Math.random() - 0.5) * 80, vz: 170 + Math.random() * 180, rot: Math.random() * 6, spin: (Math.random() < 0.5 ? -1 : 1) * (7 + Math.random() * 10), age: 0, species: part });
+    }
+    for (let i = 0; i < 4; i++) {
+      this.puffs.push({ x: u.x + (Math.random() - 0.5) * 14, y: u.y - 2 + (Math.random() - 0.5) * 10, vx: (Math.random() - 0.5) * 20, vy: -14 - Math.random() * 14, age: 0, life: 1 + Math.random() * 0.6, size: 4 + Math.random() * 4 });
+    }
+    if (this.sfx) this.sfx('boom', u.x);
+  }
+
   launchDrop(u) {
     this.debris.push({
       x: u.x,

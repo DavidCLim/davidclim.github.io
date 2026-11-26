@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=192';
-import { drawLayer, OUT } from './sprites.js?v=192';
-import { drawDrop } from './art_units.js?v=192';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=192';
-import { EGG_DROPS } from './art_eggs.js?v=192';
+import { TAU, K, UNIT, FEET } from './config.js?v=193';
+import { drawLayer, OUT } from './sprites.js?v=193';
+import { drawDrop, trooperEyes, BOT_JETS } from './art_units.js?v=193';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=193';
+import { EGG_DROPS } from './art_eggs.js?v=193';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -174,31 +174,274 @@ export function drawHitFlash(ctx, u, rx, ry) {
   }
 }
 
-// Robo Trooper: legs, a hull that bobs a little, and the rifle swinging from his hand toward the target.
+// Robo Trooper. Everything lively about him is drawn here, frame by frame: dropping in and booting up, thruster jets
+// as he walks, a scanning beam while idle, a laser sight and a charging cell as he aims, a heavy kick with a ground
+// shockwave when he fires, a smoking barrel, electric crackle when hit and dead lenses once he falls.
+const BOT_SCALE = 1.15;
+
+function botJet(ctx, x, y, len, wide, t) {
+  const flick = 0.82 + 0.18 * Math.sin(t * 61 + y) + 0.1 * Math.sin(t * 97);
+  const L = len * flick * K;
+  const W = wide * K;
+  const tongue = (l, w, col) => {
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.moveTo(x * K, y * K - w);
+    ctx.quadraticCurveTo(x * K - l * 0.55, y * K - w * 0.7, x * K - l, y * K + l * 0.08);
+    ctx.quadraticCurveTo(x * K - l * 0.55, y * K + w * 0.9, x * K, y * K + w);
+    ctx.closePath();
+    ctx.fill();
+  };
+  tongue(L * 1.2, W * 1.35, 'rgba(70, 150, 255, 0.35)');
+  tongue(L, W, 'rgba(88, 196, 255, 0.92)');
+  tongue(L * 0.55, W * 0.55, '#eefcff');
+}
+
+function botGlow(ctx, x, y, r, rgb, a) {
+  const gr = ctx.createRadialGradient(x, y, 0, x, y, r);
+  gr.addColorStop(0, `rgba(${rgb}, ${a})`);
+  gr.addColorStop(1, `rgba(${rgb}, 0)`);
+  ctx.fillStyle = gr;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, TAU);
+  ctx.fill();
+}
+
+// two springy antennae whose tips lag behind whatever the body is doing
+function botAntennae(ctx, sway, blinkOn) {
+  ctx.lineCap = 'round';
+  for (const [x0, y0, x1, y1, k, beacon] of [[-2, -26, -12, -43, 1, true], [5, -26.6, -2, -47, 0.8, false]]) {
+    const tx = x1 + sway * k;
+    const ty = y1 + Math.abs(sway) * 0.35;
+    for (const [col, w] of [[OUT, 2.7], ['#7a8494', 1.2]]) {
+      ctx.strokeStyle = col;
+      ctx.lineWidth = w * K;
+      ctx.beginPath();
+      ctx.moveTo(x0 * K, y0 * K);
+      ctx.quadraticCurveTo(((x0 + x1) / 2) * K, ((y0 + y1) / 2) * K, tx * K, ty * K);
+      ctx.stroke();
+    }
+    if (beacon && blinkOn) botGlow(ctx, tx * K, ty * K, 7 * K, '255, 90, 70', 0.7);
+    ctx.fillStyle = beacon ? (blinkOn ? '#ff6a52' : '#8d3b34') : '#9fb0c2';
+    ctx.strokeStyle = OUT;
+    ctx.lineWidth = 0.8 * K;
+    ctx.beginPath();
+    ctx.arc(tx * K, ty * K, 1.9 * K, 0, TAU);
+    ctx.fill();
+    ctx.stroke();
+  }
+}
+
 function drawTrooper(ctx, dpr, sprites, u) {
   const A = sprites.trooper;
+  const d = u.def;
+  const dead = !!u.tilt;
+  const clock = performance.now() / 1000;
+  const t = clock + (u.id || 0) * 0.737;
+  if (u.born === undefined) u.born = clock;
+  const age = dead ? 9 : clock - u.born;
+  const pose = u.pose;
+  const kick = u.recoil || 0;
+  const moving = u.moving && !dead;
+  const aiming = pose > 0.6 && !dead;
+  const ph = (u.anim * Math.PI) / 2;
+
   placeUnit(ctx, dpr, u, u.hit > 0 ? (Math.random() - 0.5) * 2 : 0);
-  // a big fella: scaled up about his feet
-  ctx.translate(0, FEET);
-  ctx.scale(1.3, 1.3);
-  ctx.translate(0, -FEET);
-  drawLayer(ctx, A.feet[u.moving ? (u.anim | 0) & 3 : 0]);
-  if (u.moving) ctx.translate(0, -Math.abs(Math.sin((u.anim * Math.PI) / 2)) * 1.2);
-  else ctx.translate(0, Math.sin(u.breath * 2.2) * 0.4);
-  drawLayer(ctx, A.torso);
-  burnGlow(ctx, u, 22 * K, 26 * K);
-  if (u.hit > 0.13) {
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+
+  // ---- on the ground: the landing dust ring and the shockwave of each shot
+  if (age > 0.26 && age < 0.8) {
+    const q = (age - 0.26) / 0.54;
+    ctx.strokeStyle = `rgba(150, 148, 160, ${0.55 * (1 - q)})`;
+    ctx.lineWidth = 2.4 * (1 - q) + 0.5;
     ctx.beginPath();
-    ctx.ellipse(1 * K, -12 * K, 20 * K, 24 * K, 0, 0, TAU);
+    ctx.ellipse(0, FEET + 1, 9 + 22 * q, 3 + 7.5 * q, 0, 0, TAU);
+    ctx.stroke();
+    ctx.fillStyle = `rgba(190, 186, 190, ${0.7 * (1 - q)})`;
+    for (let i = 0; i < 7; i++) {
+      const a = (i / 7) * TAU + (u.id || 0);
+      ctx.beginPath();
+      ctx.arc(Math.cos(a) * (10 + 20 * q), FEET + Math.sin(a) * (3 + 6 * q) - 3 * q, 2.6 * (1 - q) + 0.6, 0, TAU);
+      ctx.fill();
+    }
+  }
+  if (kick > 0.05 && !dead) {
+    ctx.strokeStyle = `rgba(120, 190, 235, ${0.5 * kick})`;
+    ctx.lineWidth = 0.6 + 1.6 * kick;
+    ctx.beginPath();
+    ctx.ellipse(-2, FEET + 1, 10 + 17 * (1 - kick), 3.4 + 5.4 * (1 - kick), 0, 0, TAU);
+    ctx.stroke();
+  }
+
+  // ---- he drops in from above and squashes as he lands
+  if (age < 0.28) ctx.translate(0, -46 * (1 - (age / 0.28) ** 2));
+  ctx.translate(0, FEET);
+  const squash = age >= 0.28 && age < 0.55 ? Math.sin(((age - 0.28) / 0.27) * Math.PI) : 0;
+  ctx.scale(BOT_SCALE * (1 + 0.2 * squash), BOT_SCALE * (1 - 0.22 * squash));
+  ctx.translate(0, -FEET);
+
+  drawLayer(ctx, A.feet[moving ? (u.anim | 0) & 3 : 0]);
+
+  // ---- the body: a heavy waddle leaning into the walk, breathing at rest, rocked back by each shot
+  if (moving) {
+    const wk = Math.abs(Math.sin(ph));
+    ctx.translate(0, FEET);
+    ctx.rotate(0.09 + Math.sin(ph) * 0.035);
+    ctx.scale(1 + 0.06 * (1 - wk), 1 - 0.08 * (1 - wk));
+    ctx.translate(0, -FEET - wk * 2.4);
+  } else if (!dead) ctx.translate(0, Math.sin(t * 2.4) * 0.6);
+  if (kick > 0 && !dead) {
+    ctx.translate(-4.2 * kick * K * 3, FEET);
+    ctx.rotate(-0.2 * kick);
+    ctx.translate(0, -FEET);
+  }
+
+  // ---- thrusters: jets behind him while he walks, a hard flare against the recoil, idle puffs of steam
+  const burst = Math.max(moving ? 1 : 0, kick > 0.2 ? kick * 1.5 : 0, age < 0.34 ? 1.2 : 0);
+  if (burst > 0 && !dead) {
+    for (const [jx, jy] of BOT_JETS) {
+      botGlow(ctx, (jx - 5) * K, jy * K, 13 * K * burst, '90, 180, 255', 0.5);
+      botJet(ctx, jx, jy, 20 * burst, 4.2, t);
+      for (let i = 0; i < 3; i++) {
+        const q = (t * 2.6 + i / 3 + jy * 0.1) % 1;
+        ctx.fillStyle = `rgba(184, 190, 204, ${0.45 * (1 - q)})`;
+        ctx.beginPath();
+        ctx.arc((jx - 14 - 22 * q) * K, (jy + 2 - 7 * q) * K, (2 + 3.4 * q) * K, 0, TAU);
+        ctx.fill();
+      }
+    }
+  } else if (!dead && !aiming) {
+    const q = (t % 2.8) / 0.7;
+    if (q < 1) {
+      ctx.fillStyle = `rgba(205, 210, 222, ${0.6 * (1 - q)})`;
+      for (const [jx, jy] of BOT_JETS) {
+        ctx.beginPath();
+        ctx.arc((jx - 3 - 9 * q) * K, (jy - 3 - 10 * q) * K, (1.8 + 3.6 * q) * K, 0, TAU);
+        ctx.fill();
+      }
+    }
+  }
+  drawLayer(ctx, A.pack);
+
+  const sway = dead ? 7 : (moving ? -3.4 + Math.sin(ph * 2) * 3.4 : Math.sin(t * 2.1) * 1.6) - 12 * kick * Math.cos((1 - kick) * 9);
+  botAntennae(ctx, sway, !dead && t % 1.1 < 0.22);
+  drawLayer(ctx, A.torso);
+
+  // ---- eyes: boot up with a flicker, then look about, blink, narrow and spin up to aim
+  let power = 1;
+  if (age < 0.5) power = 0;
+  else if (age < 0.85) power = Math.sin(age * 70) > 0 ? 1 : 0.15;
+  if (!dead && u.hp < d.hp * 0.25 && Math.sin(t * 23) > 0.72) power = 0.2;
+  const blinkT = t % 3.3;
+  const lid = !aiming && blinkT < 0.16 ? Math.sin((blinkT / 0.16) * Math.PI) : 0;
+  const look = aiming ? [1, Math.sin(u.aim) * 1.2] : [Math.sin(t * 0.9) * 0.9 + 0.2, Math.sin(t * 1.7) * 0.5];
+  ctx.save();
+  ctx.scale(K, K);
+  trooperEyes(ctx, { lx: look[0], ly: look[1], lid, angry: aiming, spin: aiming ? t * 5 : Math.sin(t * 0.6) * 0.4, power, dead });
+  ctx.restore();
+  if (!dead && power > 0.5) botGlow(ctx, 10.6 * K, -4.6 * K, (11 + (aiming ? 3 * Math.sin(t * 14) : Math.sin(t * 3))) * K, '70, 255, 205', aiming ? 0.34 : 0.18);
+  // a green scanning beam sweeps about while there's nobody to shoot
+  if (!dead && !moving && pose < 0.35 && age > 0.9) {
+    const sa = Math.sin(t * 1.25) * 0.5 + 0.05;
+    ctx.save();
+    ctx.translate(15 * K, -4.6 * K);
+    ctx.rotate(sa);
+    const sg = ctx.createLinearGradient(0, 0, 58 * K, 0);
+    sg.addColorStop(0, 'rgba(70, 245, 200, 0.42)');
+    sg.addColorStop(1, 'rgba(70, 245, 200, 0)');
+    ctx.fillStyle = sg;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(58 * K, -12 * K);
+    ctx.lineTo(58 * K, 12 * K);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  burnGlow(ctx, u, 20.7 * K, 23 * K);
+  if (!dead) drawHitFlash(ctx, u, 20.9 * K, 23.2 * K);
+
+  // ---- the blaster
+  ctx.save();
+  ctx.translate(lerp(8 * K, 8 * K, pose), lerp(12 * K, 11 * K, pose));
+  ctx.rotate(dead ? 0.9 : lerp(0.3 + (moving ? Math.sin(ph) * 0.12 : 0), u.aim - kick * 0.34, pose));
+  ctx.translate(-kick * 5.5 * K, 0);
+  const heat = u.heat || 0;
+  // laser sight while lining up the shot
+  if (aiming && kick < 0.1) {
+    const reach = 92 * K;
+    const lg = ctx.createLinearGradient(39 * K, 0, 39 * K + reach, 0);
+    lg.addColorStop(0, 'rgba(255, 60, 50, 0.7)');
+    lg.addColorStop(1, 'rgba(255, 60, 50, 0)');
+    ctx.strokeStyle = lg;
+    ctx.lineWidth = 0.9 * K * 1.4;
+    ctx.beginPath();
+    ctx.moveTo(39 * K, -1 * K);
+    ctx.lineTo(39 * K + reach, -1 * K);
+    ctx.stroke();
+    botGlow(ctx, 40 * K, -1 * K, (4 + Math.sin(t * 18)) * K, '255, 70, 60', 0.85);
+  }
+  drawLayer(ctx, A.gun);
+  // the power cell fills as the next volley charges
+  const charge = aiming ? 1 - Math.max(0, Math.min(1, (u.cdT || 0) / 1.5)) : 0.35 + 0.15 * Math.sin(t * 2.6);
+  ctx.fillStyle = charge > 0.92 ? '#e9ffff' : '#4fe4f5';
+  ctx.fillRect(2.4 * K, -1.7 * K, 8.8 * K * Math.max(0.08, charge), 2.2 * K);
+  if (aiming && charge > 0.6) botGlow(ctx, 7 * K, -0.6 * K, 12 * K, '80, 225, 255', (charge - 0.6) * 1.2);
+  // a glowing, smoking barrel after he has been firing
+  if (heat > 0.05) {
+    ctx.fillStyle = `rgba(255, 120, 40, ${0.62 * heat})`;
+    ctx.fillRect(17 * K, -3.4 * K, 20 * K, 4.8 * K);
+    botGlow(ctx, 37 * K, -1 * K, 11 * K, '255, 140, 50', 0.5 * heat);
+  }
+  if (u.flash > 0) {
+    // a blue-white starburst on top of the ordinary muzzle ring
+    botGlow(ctx, 41 * K, -1 * K, 22 * K, '120, 220, 255', 0.85);
+    ctx.fillStyle = '#f2fdff';
+    ctx.beginPath();
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * TAU;
+      const r = (i % 2 === 0 ? (i === 0 ? 19 : 11) : 3.4) * K;
+      const px = 41 * K + Math.cos(a) * r;
+      const py = -1 * K + Math.sin(a) * r * 0.75;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
     ctx.fill();
   }
-  // standing about, the rifle hangs muzzle down in front of him; to shoot it swings up onto the target
-  const pose = u.pose;
-  ctx.translate(lerp(-10.9 * K, 3 * K, pose), lerp(-2.3 * K, 4 * K, pose));
-  ctx.rotate(lerp(1.41, u.aim, pose));
-  ctx.translate(-u.recoil * 2 * K, 0);
-  drawLayer(ctx, A.gun);
+  if (heat > 0.3 && kick < 0.1) {
+    for (let i = 0; i < 4; i++) {
+      const q = (t * 1.5 + i / 4) % 1;
+      ctx.fillStyle = `rgba(170, 172, 184, ${0.55 * heat * (1 - q)})`;
+      ctx.beginPath();
+      ctx.arc((38 + Math.sin(q * 7 + i) * 3) * K, (-3 - 20 * q) * K, (1.6 + 3 * q) * K, 0, TAU);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+
+  // ---- electricity crawls over him when he's hit, and a badly damaged one keeps sparking
+  const zap = !dead && (u.hit > 0.02 || (u.hp < d.hp * 0.45 && Math.sin(t * 7.3) > 0.9));
+  if (zap) {
+    ctx.lineJoin = 'miter';
+    for (let b = 0; b < 3; b++) {
+      let x = (Math.random() - 0.5) * 34;
+      let y = (Math.random() - 0.6) * 36;
+      const path = [[x, y]];
+      for (let i = 0; i < 4; i++) {
+        x += (Math.random() - 0.5) * 16;
+        y += (Math.random() - 0.5) * 16;
+        path.push([x, y]);
+      }
+      for (const [col, w] of [['rgba(80, 200, 255, 0.75)', 2.8], ['#ffffff', 1]]) {
+        ctx.strokeStyle = col;
+        ctx.lineWidth = w * K;
+        ctx.beginPath();
+        path.forEach(([px, py], i) => (i ? ctx.lineTo(px * K, py * K) : ctx.moveTo(px * K, py * K)));
+        ctx.stroke();
+      }
+    }
+  }
 }
 
 function drawFlamethrower(ctx, dpr, sprites, u) {
@@ -743,9 +986,13 @@ export function drawMarks(ctx, dpr, marks) {
 // ------------------------------------------------------------- palette icons
 // [canvas width in art px, body x, body y, drawing]
 const ICONS = {
-  trooper: [106, 58, 68, (g, S) => {
-    g.translate(-10.9 * K, -2.3 * K);
-    g.rotate(1.41);
+  trooper: [92, 44, 50, (g, S) => {
+    g.save();
+    g.scale(K, K);
+    trooperEyes(g, { lx: 0.7, ly: 0.2 });
+    g.restore();
+    g.translate(8 * K, 12 * K);
+    g.rotate(0.2);
     drawLayer(g, S.gun);
   }],
   flamethrower: [84, 34, 39, (g, S) => {
@@ -819,6 +1066,7 @@ export function paintUnitIcon(canvas, sprites, species) {
   g.save();
   g.translate((ox * canvas.width) / w, (oy * canvas.width) / w);
   g.scale(m, m);
+  if (species === 'trooper') drawLayer(g, S.pack);
   if (species === 'cavalry') {
     drawLayer(g, S.shadow);
     drawLayer(g, S.horse[4]);

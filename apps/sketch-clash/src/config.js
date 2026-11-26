@@ -83,8 +83,8 @@ export const SNIPER = {
 export const TROOPER = {
   ...SOLDIER,
   hp: 360,
-  radius: 14 * UNIT,
-  sep: 24 * UNIT,
+  radius: 13 * UNIT,
+  sep: 21 * UNIT,
   speed: 48,
   sight: 400,
   range: 300,
@@ -95,10 +95,12 @@ export const TROOPER = {
   cooldownMax: 1.8,
   damage: 24,
   spread: 0.07,
-  ring: 1.4,
-  pivot: { x: 3.9 * K, y: -2.3 * K }, // the drawing is scaled up 1.3 about the feet
-
-  muzzleLen: 46 * K,
+  ring: 1.2,
+  pivot: { x: 9.2 * K, y: 8.9 * K }, // the drawing is scaled up 1.15 about the feet
+  muzzleLen: 45 * K,
+  kick: true, // he rocks back with every round
+  casing: true, // and spits out shells
+  explodes: true, // and goes to pieces when he dies
 };
 
 const BODY = { radius: 11 * UNIT, sep: 17 * UNIT }; // crowds spread to about 14 screen px between bodies, as in the original

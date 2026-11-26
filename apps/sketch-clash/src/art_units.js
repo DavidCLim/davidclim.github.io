@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=192';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=192';
+import { TAU, K } from './config.js?v=193';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=193';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -1458,9 +1458,23 @@ export const DROPS = {
     }
   },
   trooper(g) {
-    // a knocked-off lens turret
-    botBall(g, '#7d77a2', 0, 0, 5.4, 1.2);
-    botBall(g, '#20b097', 0, 0, 3.2, 0.8);
+    g.save();
+    g.scale(0.66, 0.66);
+    g.translate(0, 18);
+    drawTrooperCap(g);
+    g.restore();
+  },
+  botpod(g) {
+    botPoly(g, BOT.noz, [[-4, -4], [-13, -8], [-12, 3], [-4, 4]]);
+    botBall(g, BOT.pod, 0, 0, 8, 1.6);
+  },
+  botlens(g) {
+    botBall(g, '#7d749f', 0, 0, 8, 1.6);
+    botBall(g, '#1fbc9c', 0, 0, 4.8, 1.2);
+  },
+  botplate(g) {
+    botPoly(g, BOT.mid, [[-10, -4], [8, -7], [12, 3], [-3, 8]], 1.6);
+    botBall(g, BOT.lite, -1, 0, 2.4, 1);
   },
   roman(g) {
     g.fillStyle = '#ffffff';
@@ -1609,25 +1623,9 @@ const GHOSTS = {
 };
 
 // ---------------------------------------------------------------- Robo Trooper
-// Drawn part by part in the coordinates of a 1500px reference view (three-quarter, facing right), then mapped
-// into art units: the antenna tips sit at the top and the soles at y = 28.
-const BS = 80 / 700;
-const BOT = { lite: '#b4a9ca', mid: '#9588ae', dark: '#6f638c', teal: '#637872', tealDark: '#4c5f5a', pod: '#abc6d0', podDark: '#7d98a6', noz: '#4d606e', hole: '#222b34', slate: '#8392b2', gun: '#4d577b', gunDark: '#374061', gunLite: '#6a759b', line: '#25212f' };
-
-function botSpace(g) {
-  g.scale(BS, BS);
-  g.translate(-760, -1115 + 28 / BS);
-}
-
-// a layer drawn at three times the usual resolution, so all the small parts stay crisp
-function botLayer(minX, minY, maxX, maxY, draw) {
-  const res = 3;
-  const l = makeLayer(minX * res, minY * res, maxX * res, maxY * res, (g) => {
-    g.scale(res, res);
-    draw(g);
-  });
-  return { canvas: l.canvas, x: l.x / res, y: l.y / res, w: l.w / res, h: l.h / res };
-}
+// Built like the rest of the army (an egg on two little feet under a helmet), but armoured: a visor band with a big
+// green lens and a small red one for eyes, two antennae and a pair of thruster pods on his back.
+const BOT = { lite: '#b9add2', mid: '#9b8db6', dark: '#746796', teal: '#5f7a74', tealDark: '#465e59', pod: '#b4ced8', podDark: '#7d98a6', noz: '#4a5a6b', hole: '#1f2730', slate: '#8c9bbd', gun: '#4f5a80', gunDark: '#353e60', gunLite: '#737fa6' };
 
 function botPart(g, fill, lw, path) {
   g.beginPath();
@@ -1636,235 +1634,221 @@ function botPart(g, fill, lw, path) {
   g.fillStyle = fill;
   g.fill();
   if (!lw) return;
-  g.strokeStyle = BOT.line;
+  g.strokeStyle = OUT;
   g.lineWidth = lw;
   g.lineJoin = 'round';
   g.stroke();
 }
 
-function botPoly(g, fill, pts, lw = 7) {
+function botPoly(g, fill, pts, lw = 1.4) {
   botPart(g, fill, lw, () => pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))));
 }
 
-function botBall(g, fill, x, y, r, lw = 7) {
+function botBall(g, fill, x, y, r, lw = 1.4) {
   botPart(g, fill, lw, () => g.arc(x, y, r, 0, TAU));
 }
 
-function botOval(g, fill, x, y, rx, ry, rot = 0, lw = 6) {
-  botPart(g, fill, lw, () => g.ellipse(x, y, rx, ry, rot, 0, TAU));
-}
-
-function botShade(g, x0, y0, x1, y1, a, b) {
-  const gr = g.createLinearGradient(x0, y0, x1, y1);
-  gr.addColorStop(0, a);
-  gr.addColorStop(1, b);
-  return gr;
-}
-
-function botLine(g, col, lw, pts) {
-  g.strokeStyle = col;
-  g.lineWidth = lw;
-  g.lineCap = 'round';
-  g.beginPath();
-  pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
-  g.stroke();
-}
-
-// a thruster nozzle seen end on: a slate rim round a dark mouth
-function botNozzle(g, x, y, rx, ry, rot) {
-  botOval(g, BOT.noz, x, y, rx, ry, rot);
-  botOval(g, BOT.hole, x, y, rx * 0.62, ry * 0.64, rot, 0);
-}
-
-function botPod(g, x, y, r) {
-  botBall(g, botShade(g, x - r, y - r, x + r, y + r, '#c3dae2', BOT.podDark), x, y, r);
-}
-
-// the legs: hip joint, rounded knee armour, shin and a flat clawed foot; frames 1 and 3 are the steps
-function drawTrooperLegs(g, frame) {
-  botSpace(g);
-  const step = [0, 1, 0, -1][frame];
-  // the black tube slung behind, between the legs
-  botPoly(g, '#262832', [[690, 1040], [750, 1046], [748, 1090], [690, 1082]]);
-  botOval(g, '#14151c', 692, 1061, 11, 21, 0, 5);
-  const leg = (dir, parts) => {
-    g.save();
-    g.translate(step * dir * 22, step * dir > 0 ? -14 : 0);
-    parts();
-    g.restore();
-  };
-  leg(-1, () => {
-    botPoly(g, BOT.slate, [[652, 905], [716, 912], [702, 990], [642, 978]]);
-    botPoly(g, botShade(g, 625, 970, 710, 1045, BOT.mid, BOT.dark), [[628, 978], [660, 962], [695, 968], [713, 1006], [694, 1046], [638, 1038], [618, 1006]]);
-    botBall(g, BOT.lite, 668, 996, 17, 5);
-    botPoly(g, BOT.dark, [[634, 1036], [690, 1042], [680, 1086], [626, 1080]]);
-    botPoly(g, '#666a94', [[600, 1080], [692, 1076], [700, 1106], [668, 1108], [660, 1096], [652, 1115], [628, 1114], [630, 1100], [616, 1114], [598, 1108]]);
-  });
-  leg(1, () => {
-    botPoly(g, BOT.slate, [[842, 912], [905, 902], [928, 966], [866, 986]]);
-    botPoly(g, botShade(g, 840, 950, 935, 1030, BOT.lite, BOT.mid), [[846, 966], [878, 948], [912, 952], [938, 992], [916, 1030], [860, 1024], [838, 992]]);
-    botBall(g, BOT.lite, 888, 986, 19, 5);
-    botLine(g, BOT.dark, 6, [[872, 1028], [918, 1000]]);
-    botPoly(g, BOT.mid, [[864, 1022], [918, 1018], [932, 1064], [880, 1072]]);
-    botPoly(g, '#8279a4', [[850, 1062], [934, 1056], [954, 1084], [920, 1086], [908, 1074], [898, 1092], [872, 1090], [874, 1080], [858, 1090], [842, 1084]]);
-  });
+// the thruster pack, drawn behind the body; the nozzle mouths are at BOT_JETS
+export const BOT_JETS = [[-33, -15], [-32, 11]];
+function drawTrooperPack(g) {
+  botPoly(g, BOT.noz, [[-22, -12], [-14, -8], [-14, 8], [-22, 10]]);
+  for (const [y, tip] of [[-11, -4], [8, 3]]) {
+    botPoly(g, BOT.noz, [[-26, y - 5], [-34, y + tip - 5], [-33, y + tip + 4], [-25, y + 5]]);
+    g.fillStyle = BOT.hole;
+    g.beginPath();
+    g.ellipse(-33.4, y + tip - 0.4, 1.9, 4.2, tip * 0.05, 0, TAU);
+    g.fill();
+    const gr = g.createRadialGradient(-23, y - 3, 1, -21, y, 10);
+    gr.addColorStop(0, '#dcedf3');
+    gr.addColorStop(1, BOT.podDark);
+    botBall(g, gr, -21, y, 8.2, 1.7);
+    g.strokeStyle = 'rgba(52, 82, 98, 0.7)';
+    g.lineWidth = 1;
+    g.beginPath();
+    g.moveTo(-23.5, y - 7.6);
+    g.quadraticCurveTo(-27, y, -23.5, y + 7.6);
+    g.stroke();
+  }
 }
 
 function drawTrooperBody(g) {
-  botSpace(g);
-  // ---- backpack: the pod peeking out behind the head on the right
-  botPoly(g, BOT.podDark, [[752, 498], [830, 488], [836, 548], [758, 546]]);
-  botPod(g, 846, 496, 46);
-  botPoly(g, BOT.noz, [[860, 478], [894, 504], [878, 552], [840, 530]]);
-  botNozzle(g, 882, 527, 19, 29, -0.55);
-  // ---- the equipment box on its back and the struts to the pods
-  botPoly(g, '#55666e', [[556, 566], [668, 548], [676, 625], [560, 640]]);
-  botPoly(g, '#6d8086', [[575, 556], [650, 545], [654, 570], [578, 580]], 6);
-  botPoly(g, BOT.noz, [[505, 548], [540, 528], [640, 604], [612, 640]]);
-  botPoly(g, BOT.noz, [[520, 878], [600, 800], [632, 832], [555, 912]]);
-  // ---- the upper pair of pods on the left
-  botPoly(g, BOT.pod, [[425, 545], [488, 532], [496, 612], [436, 608]]);
-  botNozzle(g, 428, 578, 19, 31, 0.15);
-  botPoly(g, BOT.noz, [[392, 486], [434, 468], [482, 522], [452, 556], [404, 526]]);
-  botNozzle(g, 412, 505, 22, 39, -0.62);
-  botPod(g, 492, 554, 62);
-  botLine(g, 'rgba(60, 90, 104, 0.7)', 6, [[452, 508], [468, 556], [456, 602]]);
-  botNozzle(g, 524, 546, 27, 34, -0.2);
-  // ---- the lower pair of pods
-  botPod(g, 540, 884, 36);
-  botPoly(g, BOT.noz, [[420, 872], [452, 862], [476, 912], [440, 922]]);
-  botNozzle(g, 432, 892, 21, 31, -0.3);
-  botPoly(g, BOT.noz, [[414, 978], [458, 944], [500, 976], [454, 1010]]);
-  botNozzle(g, 434, 994, 19, 29, 0.78);
-  botPod(g, 494, 928, 57);
-  botLine(g, 'rgba(60, 90, 104, 0.7)', 6, [[462, 884], [486, 930], [468, 978]]);
-  botNozzle(g, 548, 930, 23, 31, -0.15);
-  // ---- twin antennae
-  botLine(g, BOT.line, 15, [[808, 548], [729, 419]]);
-  botLine(g, BOT.line, 15, [[836, 548], [765, 417]]);
-  botLine(g, '#6b7681', 8, [[808, 548], [729, 419]]);
-  botLine(g, '#6b7681', 8, [[836, 548], [765, 417]]);
-  // ---- the far arm: small shoulder, strut, forearm and hand
-  botPoly(g, BOT.slate, [[925, 686], [962, 690], [968, 770], [932, 772]]);
-  botBall(g, botShade(g, 900, 610, 990, 700, BOT.lite, BOT.dark), 943, 652, 49);
-  botLine(g, BOT.dark, 6, [[950, 614], [972, 650], [958, 692]]);
-  botPoly(g, botShade(g, 915, 750, 1005, 910, BOT.lite, BOT.dark), [[918, 748], [972, 756], [1004, 826], [992, 898], [938, 914], [914, 852]]);
-  botPoly(g, BOT.mid, [[938, 778], [972, 786], [982, 844], [944, 852]], 5);
-  botBall(g, BOT.lite, 954, 872, 15, 5);
-  botPoly(g, BOT.dark, [[936, 902], [992, 890], [990, 952], [972, 962], [966, 928], [958, 958], [940, 956], [944, 928], [930, 940]]);
-  // ---- the domed hull
-  botPart(g, botShade(g, 680, 520, 920, 860, BOT.lite, BOT.dark), 9, () => {
-    g.moveTo(626, 668);
-    g.bezierCurveTo(624, 576, 692, 522, 784, 522);
-    g.bezierCurveTo(872, 522, 924, 584, 924, 662);
-    g.lineTo(916, 790);
-    g.lineTo(896, 848);
-    g.quadraticCurveTo(780, 866, 690, 840);
-    g.lineTo(634, 776);
+  g.lineJoin = 'round';
+  g.lineCap = 'round';
+  eggBody(g, BOT.lite, BOT.dark);
+  g.save();
+  g.beginPath();
+  g.ellipse(0, 0, 20.2, 22.5, 0, 0, TAU);
+  g.clip();
+  // the visor band the lenses sit in
+  botPart(g, BOT.teal, 1.3, () => {
+    g.moveTo(-24, -13);
+    g.quadraticCurveTo(2, -16, 24, -13);
+    g.lineTo(24, 3);
+    g.quadraticCurveTo(2, 8, -24, 2);
   });
-  // the raised plate on top of the dome and the seams
-  botPart(g, 'rgba(208, 200, 228, 0.5)', 0, () => {
-    g.moveTo(700, 562);
-    g.bezierCurveTo(740, 524, 828, 522, 868, 556);
-    g.lineTo(866, 580);
-    g.quadraticCurveTo(780, 556, 700, 590);
-  });
-  botLine(g, 'rgba(62, 52, 86, 0.75)', 6, [[790, 524], [842, 538], [876, 566]]);
-  botLine(g, 'rgba(62, 52, 86, 0.75)', 6, [[700, 566], [716, 548], [752, 530]]);
-  botLine(g, 'rgba(62, 52, 86, 0.75)', 6, [[636, 712], [700, 722], [772, 736], [868, 728], [918, 708]]);
-  botLine(g, 'rgba(62, 52, 86, 0.6)', 5, [[774, 736], [776, 764]]);
-  // ---- the visor band wrapped round the head, with its hinge and slit
-  botPart(g, botShade(g, 700, 580, 780, 712, '#6e857d', BOT.tealDark), 8, () => {
-    g.moveTo(622, 606);
-    g.quadraticCurveTo(760, 560, 922, 592);
-    g.lineTo(926, 684);
-    g.quadraticCurveTo(792, 724, 628, 688);
-  });
-  botLine(g, 'rgba(170, 200, 188, 0.6)', 6, [[636, 615], [712, 596], [790, 590]]);
-  botLine(g, 'rgba(30, 40, 38, 0.7)', 6, [[664, 603], [668, 694]]);
-  botBall(g, BOT.tealDark, 636, 648, 22);
-  botBall(g, BOT.teal, 636, 648, 9, 5);
-  botLine(g, '#161c1e', 16, [[768, 652], [816, 657]]);
-  // ---- the lens turret: toothed ring and green eye, red eye, and the little sight below
-  for (let i = 0; i < 14; i++) {
-    const a = (i / 14) * TAU;
-    botBall(g, '#76709a', 858 + Math.cos(a) * 42, 634 + Math.sin(a) * 42, 9, 4);
+  g.fillStyle = 'rgba(190, 220, 208, 0.35)';
+  g.fillRect(-22, -11.6, 26, 2);
+  g.strokeStyle = '#18211f';
+  g.lineWidth = 1.8;
+  g.beginPath();
+  g.moveTo(-16, -3);
+  g.lineTo(-10, -2.6);
+  g.stroke();
+  // armour below: a slate chest hatch with a handle, three vent slats and the belt
+  botPoly(g, BOT.slate, [[1, 9], [19, 8], [18, 16], [3, 17]], 1.1);
+  g.strokeStyle = '#dfe6f6';
+  g.lineWidth = 1.6;
+  g.beginPath();
+  g.moveTo(7, 12.4);
+  g.lineTo(13.5, 12);
+  g.stroke();
+  g.strokeStyle = '#4a4068';
+  g.lineWidth = 1.3;
+  g.beginPath();
+  for (const x of [-13, -9.4, -5.8]) {
+    g.moveTo(x, 8.6);
+    g.lineTo(x + 1.4, 14.4);
   }
-  botBall(g, '#7d77a2', 858, 634, 41, 6);
-  botBall(g, '#55597a', 861, 636, 31, 5);
-  const eye = g.createRadialGradient(854, 628, 3, 862, 637, 27);
-  eye.addColorStop(0, '#5fe6cc');
-  eye.addColorStop(0.55, '#20b097');
-  eye.addColorStop(1, '#13806f');
-  botBall(g, eye, 862, 637, 24, 4);
-  botBall(g, '#fff', 853, 627, 6, 0);
-  botBall(g, '#7d77a2', 901, 657, 24, 6);
-  botBall(g, '#dd3f37', 901, 657, 14, 4);
-  botBall(g, '#ff9a8c', 896, 652, 4, 0);
-  botPart(g, '#8079a6', 6, () => g.roundRect(822, 668, 62, 46, 18));
-  botBall(g, '#1f8f80', 851, 690, 10, 4);
-  botBall(g, '#6ff0d2', 851, 690, 4, 0);
-  for (const [x, y, dx, dy] of [[833, 690, 8, 0], [861, 690, 8, 0], [851, 672, 0, 8], [851, 700, 0, 8]]) botLine(g, '#26233c', 4, [[x, y], [x + dx, y + dy]]);
-  // ---- chest: the slate hatch with its handle, and the slatted vent
-  botPoly(g, botShade(g, 780, 760, 790, 846, '#93a1bf', '#6f7d9e'), [[774, 766], [916, 758], [912, 828], [868, 850], [782, 838]]);
-  botLine(g, 'rgba(40, 48, 76, 0.7)', 6, [[776, 782], [914, 773]]);
-  botPart(g, '#9aa8c6', 6, () => g.roundRect(826, 788, 72, 19, 9));
-  botPoly(g, BOT.lite, [[688, 722], [764, 736], [768, 794], [702, 791]]);
-  for (const x of [710, 727, 744]) botLine(g, '#4a4066', 9, [[x, 744], [x + 7, 776]]);
-  // ---- waist and skirt plates
-  botPoly(g, BOT.dark, [[636, 806], [702, 846], [704, 936], [644, 924]]);
-  botPoly(g, botShade(g, 706, 850, 850, 945, BOT.mid, BOT.dark), [[704, 842], [852, 856], [846, 946], [708, 934]]);
-  botLine(g, 'rgba(52, 42, 74, 0.75)', 6, [[766, 850], [764, 938]]);
-  botLine(g, 'rgba(52, 42, 74, 0.75)', 6, [[766, 880], [848, 884]]);
-  botPoly(g, '#5f6a8c', [[744, 934], [826, 940], [812, 962], [756, 958]], 6);
-  botPoly(g, BOT.lite, [[854, 848], [916, 844], [924, 934], [862, 946]]);
-  for (const y of [874, 887, 900, 913]) botLine(g, '#4a4066', 7, [[872, y], [901, y - 2]]);
-  botPoly(g, BOT.dark, [[920, 826], [956, 848], [950, 920], [924, 930]]);
-  // ---- the near arm: big domed shoulder with its round cap, strut, and the blocky forearm
-  botPoly(g, BOT.slate, [[556, 722], [604, 726], [614, 796], [570, 806]]);
-  botPart(g, botShade(g, 520, 600, 620, 740, '#bdb2d2', BOT.dark), 9, () => {
-    g.moveTo(496, 690);
-    g.bezierCurveTo(488, 622, 530, 590, 572, 592);
-    g.bezierCurveTo(622, 596, 646, 636, 640, 692);
-    g.lineTo(630, 728);
-    g.quadraticCurveTo(566, 750, 502, 726);
-  });
-  botLine(g, 'rgba(62, 52, 86, 0.7)', 6, [[500, 708], [566, 724], [636, 708]]);
-  botBall(g, BOT.lite, 517, 642, 28);
-  botBall(g, BOT.mid, 515, 640, 13, 5);
-  botPoly(g, botShade(g, 530, 775, 640, 910, BOT.lite, BOT.dark), [[534, 782], [602, 766], [646, 802], [642, 896], [588, 914], [546, 882], [524, 830]]);
-  botPoly(g, BOT.mid, [[546, 812], [588, 800], [606, 862], [564, 876]], 5);
-  botBall(g, BOT.lite, 574, 786, 20, 6);
-  botLine(g, BOT.dark, 7, [[588, 890], [634, 872]]);
+  g.stroke();
+  botPoly(g, BOT.dark, [[-23, 17], [23, 16], [20, 26], [-20, 26]], 1.2);
+  g.strokeStyle = 'rgba(40, 30, 64, 0.7)';
+  g.lineWidth = 1;
+  g.beginPath();
+  for (const x of [-9, 1, 11]) {
+    g.moveTo(x, 17);
+    g.lineTo(x, 24);
+  }
+  g.stroke();
+  g.restore();
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.8;
+  g.beginPath();
+  g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
+  g.stroke();
+  drawTrooperCap(g);
+  // a round shoulder bolt
+  botBall(g, BOT.lite, -15.5, 5.5, 5, 1.4);
+  botBall(g, BOT.mid, -15.5, 5.5, 2.1, 1);
 }
 
-// Origin: the grip. The long rifle, drawn as it hangs in the reference and then turned to lie along +x.
-function drawTrooperGun(g, firing) {
-  g.rotate(-1.41);
-  g.scale(BS, BS);
-  g.translate(-665, -850);
-  botPoly(g, BOT.gunDark, [[668, 728], [694, 736], [702, 800], [654, 796], [640, 758]]);
-  botBall(g, '#1d2233', 668, 755, 8, 4);
-  botBall(g, '#1d2233', 678, 780, 8, 4);
-  botPoly(g, botShade(g, 625, 800, 712, 930, BOT.gunLite, BOT.gunDark), [[630, 790], [692, 796], [714, 880], [700, 942], [654, 936], [624, 858]]);
-  botLine(g, '#252c45', 7, [[652, 806], [676, 926]]);
-  // the long thin parts under the receiver: rail, barrel and the tube beside it
-  botPoly(g, BOT.gun, [[628, 990], [650, 982], [670, 1078], [650, 1086]]);
-  for (const y of [1006, 1032, 1058]) botBall(g, '#1d2233', 644 + (y - 1006) * 0.2, y, 5, 0);
-  botPoly(g, BOT.gun, [[658, 934], [706, 936], [718, 1012], [672, 1016]]);
-  botPoly(g, BOT.gunLite, [[700, 946], [728, 950], [734, 1074], [708, 1076]]);
-  botPoly(g, BOT.gunDark, [[670, 1010], [696, 1006], [732, 1096], [708, 1106]]);
-  botPoly(g, BOT.gun, [[704, 1092], [742, 1082], [756, 1136], [718, 1148]]);
-  botOval(g, '#14161f', 737, 1142, 18, 9, -0.25, 4);
-  // the hexagonal block on its side, and the fingers round the grip
-  botPoly(g, BOT.gun, [[614, 872], [656, 866], [674, 905], [656, 946], [618, 944], [600, 906]]);
-  botPoly(g, BOT.gunLite, [[624, 896], [648, 894], [650, 920], [626, 922]], 5);
-  botPoly(g, BOT.mid, [[640, 832], [686, 826], [694, 858], [646, 866]], 6);
-  botLine(g, '#4a4066', 5, [[656, 832], [662, 862]]);
-  if (firing) {
-    botPoly(g, '#ffd65c', [[726, 1140], [704, 1190], [734, 1170], [746, 1220], [760, 1168], [792, 1182], [754, 1134]], 0);
-    botPoly(g, '#fff3c0', [[732, 1142], [728, 1172], [742, 1162], [748, 1190], [756, 1158], [750, 1138]], 0);
+// the armoured helmet, with a brim like the soldiers'
+function drawTrooperCap(g) {
+  const gr = g.createLinearGradient(0, -29, 0, -13);
+  gr.addColorStop(0, '#a99cc4');
+  gr.addColorStop(1, '#675a88');
+  botPart(g, gr, 1.8, () => {
+    g.moveTo(-19, -13.4);
+    g.bezierCurveTo(-18, -31, 19, -31, 20, -13.6);
+    g.quadraticCurveTo(1, -16.6, -19, -13.4);
+  });
+  botPart(g, '#58497a', 1.6, () => g.roundRect(-22, -15.2, 45, 3.8, 1.9));
+  g.strokeStyle = 'rgba(40, 30, 66, 0.65)';
+  g.lineWidth = 1;
+  g.beginPath();
+  g.moveTo(-4, -26.4);
+  g.quadraticCurveTo(-8, -20, -8, -15.6);
+  g.moveTo(8, -26.2);
+  g.quadraticCurveTo(13, -21, 13.6, -15.8);
+  g.stroke();
+  g.fillStyle = 'rgba(232, 226, 255, 0.55)';
+  g.beginPath();
+  g.ellipse(-9, -22.4, 4, 2, -0.5, 0, TAU);
+  g.fill();
+}
+
+// The eyes are drawn live so they can look about, blink, narrow, spin up and die.
+//   o: { lx, ly (where they look, -1..1), lid (0 open .. 1 shut), angry, spin, power (0..1), dead }
+export function trooperEyes(g, o) {
+  const lx = o.lx || 0;
+  const ly = o.ly || 0;
+  const power = o.power === undefined ? 1 : o.power;
+  const eye = (x, y, r, iris, deep, glow) => {
+    botBall(g, '#7d749f', x, y, r, 1.5);
+    botBall(g, '#242838', x, y, r * 0.76, 0.8);
+    if (o.dead) {
+      g.strokeStyle = glow;
+      g.globalAlpha = 0.8;
+      g.lineWidth = 1.4;
+      g.beginPath();
+      g.moveTo(x - r * 0.4, y - r * 0.4);
+      g.lineTo(x + r * 0.4, y + r * 0.4);
+      g.moveTo(x + r * 0.4, y - r * 0.4);
+      g.lineTo(x - r * 0.4, y + r * 0.4);
+      g.stroke();
+      g.globalAlpha = 1;
+      return;
+    }
+    if (power > 0.02) {
+      g.globalAlpha = power;
+      const gr = g.createRadialGradient(x - r * 0.2, y - r * 0.2, 0.3, x, y, r * 0.7);
+      gr.addColorStop(0, glow);
+      gr.addColorStop(0.6, iris);
+      gr.addColorStop(1, deep);
+      g.fillStyle = gr;
+      g.beginPath();
+      g.arc(x, y, r * 0.66, 0, TAU);
+      g.fill();
+      g.fillStyle = '#10141c';
+      g.beginPath();
+      g.arc(x + lx * r * 0.24, y + ly * r * 0.2, r * 0.27, 0, TAU);
+      g.fill();
+      g.fillStyle = '#ffffff';
+      g.beginPath();
+      g.arc(x + lx * r * 0.24 - r * 0.18, y + ly * r * 0.2 - r * 0.2, r * 0.14, 0, TAU);
+      g.fill();
+      g.globalAlpha = 1;
+    }
+    const lid = Math.max(o.lid || 0, o.angry ? 0.3 : 0);
+    if (lid > 0.02) {
+      g.save();
+      g.beginPath();
+      g.arc(x, y, r * 0.82, 0, TAU);
+      g.clip();
+      g.translate(x, y);
+      if (o.angry) g.rotate(x > 4 ? -0.28 : 0.28);
+      g.fillStyle = BOT.mid;
+      g.fillRect(-r, -r, r * 2, r * 2 * lid);
+      g.strokeStyle = OUT;
+      g.lineWidth = 1.3;
+      g.beginPath();
+      g.moveTo(-r, -r + r * 2 * lid);
+      g.lineTo(r, -r + r * 2 * lid);
+      g.stroke();
+      g.restore();
+    }
+  };
+  eye(-2.2, -4.6, 5, '#e2463c', '#8e1f1c', '#ffb3a4');
+  // the toothed focus ring round the big lens, which spins as he takes aim
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * TAU + (o.spin || 0);
+    botBall(g, '#8b83ae', 10.6 + Math.cos(a) * 7.3, -4.6 + Math.sin(a) * 7.3, 1.5, 0.8);
   }
+  eye(10.6, -4.6, 7.3, '#1fbc9c', '#0d6f60', '#9ffbe4');
+  botBall(g, '#7d749f', 10.6, 5.2, 2.6, 1.1);
+  g.fillStyle = o.dead ? '#2b4a46' : '#63f5d3';
+  g.beginPath();
+  g.arc(10.6, 5.2, 1.1, 0, TAU);
+  g.fill();
+}
+
+// Origin: the grip. A chunky blue blaster with a scope and a power cell.
+function drawTrooperGun(g) {
+  g.lineJoin = 'round';
+  botPoly(g, BOT.gunDark, [[-10, -3], [-3, -4.4], [-2, 4], [-11, 6]]);
+  botPoly(g, BOT.gun, [[-4, -5.6], [15, -5.6], [17, 3.6], [-3, 4.4]], 1.6);
+  botPoly(g, BOT.gunDark, [[1, -10], [11, -10], [11, -5.6], [1, -5.6]]);
+  botBall(g, '#59d8ee', 11.4, -7.8, 1.7, 0.9);
+  botPoly(g, BOT.gunDark, [[6, 4], [13, 3.8], [11, 11], [5.6, 10.4]]);
+  botPoly(g, BOT.gunLite, [[16, -4.2], [31, -3.6], [31, 1.6], [16, 2.4]]);
+  botPoly(g, BOT.gunDark, [[30, -5.8], [38.5, -5.8], [38.5, 3.6], [30, 3.6]], 1.6);
+  g.fillStyle = '#12151f';
+  g.fillRect(36.4, -3.4, 2, 4.6);
+  g.fillStyle = 'rgba(255, 255, 255, 0.4)';
+  g.fillRect(0, -4.6, 13, 1.2);
+  // the window of the power cell (lit live)
+  botPoly(g, '#1e2b42', [[1.5, -2.4], [12, -2.4], [12, 1.2], [1.5, 1.2]], 0.9);
+  // his hand round the grip
+  botBall(g, BOT.lite, 0.5, 3.6, 4.2, 1.5);
 }
 
 // ---------------------------------------------------------------- build
@@ -1894,10 +1878,10 @@ export function buildUnitArt() {
   };
 
   art.trooper = {
-    feet: [0, 1, 2, 3].map((i) => botLayer(-26, -4, 28, 32, (g) => drawTrooperLegs(g, i))),
-    torso: botLayer(-46, -56, 34, 20, drawTrooperBody),
-    gun: botLayer(-18, -14, 40, 14, (g) => drawTrooperGun(g, false)),
-    gunFire: botLayer(-18, -16, 56, 16, (g) => drawTrooperGun(g, true)),
+    feet: feetSet('#4a5478'),
+    pack: makeLayer(-40, -26, -8, 22, drawTrooperPack),
+    torso: makeLayer(-40, -38, 36, 26, drawTrooperBody),
+    gun: makeLayer(-18, -14, 44, 14, drawTrooperGun),
     ghost: makeLayer(-26, -30, 26, 26, (g) => ghostBody(g)),
   };
 
