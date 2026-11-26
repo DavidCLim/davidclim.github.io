@@ -1,10 +1,11 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=238';
-import { drawLayer, OUT } from './sprites.js?v=238';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt } from './art_units.js?v=238';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=238';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=238';
-import { drawZordGround, drawZordAir } from './zordfx.js?v=238';
-import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=238';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=239';
+import { drawLayer, OUT } from './sprites.js?v=239';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt } from './art_units.js?v=239';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=239';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=239';
+import { drawZordGround, drawZordAir } from './zordfx.js?v=239';
+import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=239';
+import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=239';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -196,7 +197,8 @@ function botGlow(ctx, x, y, r, rgb, a) {
 //   brace  0..1  feet planted wide, crouched and leaning back, while the cannon winds up and runs
 //   lift   0..1  the cannon tipped up to cool after a volley (or to try its spin while he waits)
 //   spinA, spinRate  the barrels, with the ammo drum and the belt geared to them
-function gatlingMood(u, dead, aiming, t, clock) {
+function gatlingMood(u, dead, aiming, R) {
+  const clock = u.breath;
   const firing = !dead && u.burstLeft > 0;
   const winding = !dead && aiming && !firing && u.target && (u.cdT || 0) < 0.65;
   const wind = winding ? 1 - Math.max(0, u.cdT || 0) / 0.65 : 0;
@@ -205,13 +207,15 @@ function gatlingMood(u, dead, aiming, t, clock) {
   // a volley ending starts him venting
   if (u.wasFiring && !firing && !dead) {
     u.ventAt = clock;
+    if (u.rig) {
+      // the recoil he was leaning into lets go all at once
+      u.rig.s.lean.v += 1.8;
+      u.rig.s.cap.v -= 55;
+    }
   }
   u.wasFiring = firing;
   const vent = !dead && !firing && u.ventAt !== undefined && clock - u.ventAt < 0.85 ? (clock - u.ventAt) / 0.85 : 1;
-  // waiting with nobody to shoot, now and then he lifts the cannon and gives the barrels a whirl
-  const idle = !dead && !u.target && !u.moving;
-  const q = (t % 4.6) / 1.1;
-  const test = idle && q < 1 ? Math.sin(q * Math.PI) : 0;
+  const test = R.fidget === 'tinker' ? Math.sin(R.q * Math.PI) : 0;
   const ease = (from, to, rate) => from + (to - from) * Math.min(1, dt * rate);
   const want = firing ? 36 : winding ? 6 + 30 * wind : test * 17;
   u.spinRate = ease(u.spinRate || 0, want, want > (u.spinRate || 0) ? 9 : 2.2);
@@ -231,239 +235,78 @@ function drawGatlingFeed(ctx, u) {
   ctx.restore();
 }
 
-// teal power crackling round the barrels as they wind up
-function gatlingCharge(ctx, wind, t) {
-  botGlow(ctx, 34 * K, 0, (9 + 15 * wind) * K, '70, 255, 205', 0.65 * wind);
-  ctx.save();
-  ctx.scale(K, K);
-  ctx.lineCap = 'round';
-  // rings of it run down the barrels toward the muzzle
-  for (let i = 0; i < 3; i++) {
-    const q = (t * (1.8 + wind * 2) + i / 3) % 1;
-    const x = 18 + 30 * q;
-    for (const [col, wide] of [[`rgba(31, 214, 172, ${wind * (1 - q * 0.4)})`, 2.8], [`rgba(225, 255, 247, ${wind})`, 1]]) {
-      ctx.strokeStyle = col;
-      ctx.lineWidth = wide;
-      ctx.beginPath();
-      ctx.ellipse(x, 0, 3.2, 11 - 2.4 * q, 0, -1.9, 1.9);
-      ctx.stroke();
-    }
-  }
-  ctx.strokeStyle = `rgba(190, 255, 236, ${wind})`;
-  ctx.lineWidth = 1.2;
-  for (let b = 0; b < 3; b++) {
-    if (Math.random() > wind) continue;
-    let x = 20 + Math.random() * 22;
-    let y = (Math.random() < 0.5 ? -1 : 1) * (6 + Math.random() * 3);
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    for (let i = 0; i < 3; i++) {
-      x += 3 + Math.random() * 6;
-      y += (Math.random() - 0.5) * 11;
-      ctx.lineTo(x, y);
-    }
-    ctx.stroke();
-  }
-  ctx.restore();
-}
-
 // the blur of barrels going round too fast to see
-function gatlingBlur(ctx, amount, spin) {
-  ctx.save();
-  ctx.scale(K, K);
-  ctx.fillStyle = `rgba(200, 208, 226, ${0.34 * amount})`;
+function gatlingBlur(ctx, amount) {
+  ctx.fillStyle = `rgba(205, 213, 230, ${0.36 * amount})`;
   ctx.beginPath();
-  ctx.roundRect(18, -8, 27, 16, 5);
+  ctx.roundRect(18 * K, -8 * K, 27 * K, 16 * K, 5 * K);
   ctx.fill();
-  ctx.lineCap = 'round';
-  ctx.strokeStyle = `rgba(245, 248, 255, ${0.8 * amount})`;
-  ctx.lineWidth = 1.1;
-  for (let i = 0; i < 3; i++) {
-    const a = spin * 1.7 + (i / 3) * TAU;
+}
+
+// one clean tongue of flame at the muzzle, a different length every frame, with a white heart
+function gatlingMuzzle(ctx, hot) {
+  const x = 46;
+  const len = (22 + Math.random() * 10) * hot;
+  botGlow(ctx, (x + 6) * K, 0, 19 * K, '255, 180, 50', 0.65 * hot);
+  for (const [col, k] of [['#ff9420', 1], ['#ffd23c', 0.7], ['#fffbe0', 0.4]]) {
+    ctx.fillStyle = col;
     ctx.beginPath();
-    ctx.ellipse(40 - i * 8, 0, 3.4, 10.5, 0, a, a + 2);
-    ctx.stroke();
+    ctx.moveTo(x * K, -4 * k * K);
+    ctx.lineTo((x + len * 0.34 * k) * K, -10 * k * K);
+    ctx.lineTo((x + len * 0.46 * k) * K, -3.4 * k * K);
+    ctx.lineTo((x + len * k) * K, 0);
+    ctx.lineTo((x + len * 0.46 * k) * K, 3.4 * k * K);
+    ctx.lineTo((x + len * 0.34 * k) * K, 10 * k * K);
+    ctx.lineTo(x * K, 4 * k * K);
+    ctx.closePath();
+    ctx.fill();
   }
-  ctx.restore();
 }
 
-// the roar at the muzzle, new in shape every frame: a tongue of flame ahead, two more out of the sides of the clamp,
-// and a hard white glint
-function gatlingMuzzle(ctx, hot, t) {
-  const x = 47;
-  botGlow(ctx, (x + 7) * K, 0, (24 + Math.random() * 5) * K, '255, 175, 45', 0.8 * hot);
-  const flame = (len, wide, turn, ox, oy) => {
-    ctx.save();
-    ctx.translate(ox * K, oy * K);
-    ctx.rotate(turn);
-    for (const [col, k] of [['#ff8a1e', 1], ['#ffc933', 0.72], ['#fff8d0', 0.42]]) {
-      ctx.fillStyle = col;
-      ctx.beginPath();
-      ctx.moveTo(0, -wide * 0.45 * k * K);
-      const pts = [[0.34, -1], [0.44, -0.4], [0.74, -0.62], [0.7, -0.16], [1, 0], [0.68, 0.18], [0.78, 0.66], [0.42, 0.42], [0.32, 1]];
-      for (const [px, py] of pts) ctx.lineTo(px * len * k * (0.85 + Math.random() * 0.3) * K, py * wide * k * K);
-      ctx.lineTo(0, wide * 0.45 * k * K);
-      ctx.closePath();
-      ctx.fill();
-    }
-    ctx.restore();
-  };
-  flame((30 + Math.random() * 13) * hot, 11, (Math.random() - 0.5) * 0.16, x, 0);
-  flame((11 + Math.random() * 7) * hot, 4.6, -1.35 + Math.random() * 0.2, 36, -9);
-  flame((11 + Math.random() * 7) * hot, 4.6, 1.35 - Math.random() * 0.2, 36, 9);
-  ctx.save();
-  ctx.translate((x + 4) * K, 0);
-  ctx.rotate(t * 11);
-  ctx.fillStyle = `rgba(255, 255, 255, ${0.95 * hot})`;
-  ctx.beginPath();
-  for (let i = 0; i < 8; i++) {
-    const an = (i / 8) * TAU;
-    const r = (i % 2 ? 2.2 : 12 + Math.random() * 5) * K;
-    if (i) ctx.lineTo(Math.cos(an) * r, Math.sin(an) * r);
-    else ctx.moveTo(Math.cos(an) * r, Math.sin(an) * r);
-  }
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
-}
-
-// steam jetting out of the cannon's vents while it cools; `vent` runs 0..1
+// a few puffs of steam off the barrels while they cool; `vent` runs 0..1
 function gatlingSteam(ctx, vent) {
-  const fade = Math.min(1, (1 - vent) * 1.8);
-  for (const [ox, oy, dx, dy] of [[24, -9, -0.15, -1], [38, -9, 0.45, -1], [-4, -10, -0.7, -0.75], [46, 0, 1, -0.2]]) {
-    for (let i = 0; i < 5; i++) {
-      const q = (vent * 3.4 + i / 5 + ox * 0.013) % 1;
-      const far = 4 + 24 * q;
-      ctx.fillStyle = `rgba(138, 156, 186, ${0.92 * fade * (1 - q * q)})`;
-      ctx.beginPath();
-      ctx.arc((ox + dx * far + Math.sin(q * 9 + i) * 2) * K, (oy + dy * far - 7 * q * q) * K, (2 + 5.2 * q) * K, 0, TAU);
-      ctx.fill();
-    }
+  const fade = Math.min(1, (1 - vent) * 2);
+  for (let i = 0; i < 4; i++) {
+    const q = (vent * 2.6 + i / 4) % 1;
+    ctx.fillStyle = `rgba(148, 164, 192, ${0.85 * fade * (1 - q * q)})`;
+    ctx.beginPath();
+    ctx.arc((43 + Math.sin(q * 7 + i * 2) * 3) * K, (-5 - 24 * q) * K, (2.4 + 4.4 * q) * K, 0, TAU);
+    ctx.fill();
   }
 }
 
 // The cannon in his hands.
-function drawCannon(ctx, A, u, s, mood) {
-  const { dead, moving, ph, pose, t, age } = s;
+function drawCannon(ctx, A, u, s, mood, R) {
+  const { dead, pose, t } = s;
   const { firing, wind, vent } = mood;
   const heat = dead ? 0 : u.heat || 0;
   ctx.save();
-  ctx.translate(6 * K, lerp(14, 13, pose) * K);
-  // it lands with a clunk when he does
-  const clunk = age > 0.3 && age < 0.75 ? Math.sin((age - 0.3) * 21) * (0.75 - age) * 0.8 : 0;
-  const held = lerp(0.24 + (moving ? Math.sin(ph) * 0.15 : Math.sin(t * 2.4) * 0.03), u.aim, pose);
-  ctx.rotate(dead ? 0.8 : held - mood.lift * 0.72 + clunk);
+  ctx.translate((6 + R.gunX) * K, lerp(14, 13, pose) * K);
+  const held = lerp(0.24 + Math.cos(R.phase) * 0.13 * R.move + Math.sin(t * 2.4) * 0.03, u.aim, pose);
+  ctx.rotate(dead ? 0.8 : held - mood.lift * 0.72 + R.gunA);
   // it hammers in his grip while it runs, and trembles as it winds up
-  if (firing) ctx.translate((Math.random() - 0.75) * 3.4 * K, (Math.random() - 0.5) * 2.4 * K);
-  else if (wind > 0) ctx.translate(0, Math.sin(t * 70) * wind * 0.7 * K);
+  if (firing) ctx.translate((Math.random() - 0.75) * 3 * K, (Math.random() - 0.5) * 2 * K);
+  else if (wind > 0) ctx.translate(0, Math.sin(t * 70) * wind * 0.6 * K);
   ctx.save();
   ctx.scale(K, K);
   drawGatlingBarrels(ctx, u.spinA || 0, heat);
   ctx.restore();
   const blur = dead ? 0 : Math.max(0, Math.min(1, ((u.spinRate || 0) - 12) / 20));
-  if (blur > 0) gatlingBlur(ctx, blur, u.spinA);
+  if (blur > 0) gatlingBlur(ctx, blur);
   drawLayer(ctx, A.gun);
   drawLayer(ctx, A.hand);
-  if (heat > 0.35) botGlow(ctx, 42 * K, 0, (11 + 3 * heat) * K, '255, 112, 35', (heat - 0.35) * 0.95);
-  if (wind > 0.04) gatlingCharge(ctx, wind, t);
-  if (firing) gatlingMuzzle(ctx, u.flash > 0.02 ? 1 : 0.66, t);
+  if (heat > 0.35) botGlow(ctx, 42 * K, 0, (10 + 3 * heat) * K, '255, 112, 35', (heat - 0.35) * 0.9);
+  // winding up, a teal charge gathers at the muzzle
+  if (wind > 0.04) {
+    botGlow(ctx, 47 * K, 0, (6 + 10 * wind) * K, '70, 255, 205', 0.85 * wind);
+    ctx.fillStyle = `rgba(235, 255, 250, ${wind})`;
+    ctx.beginPath();
+    ctx.arc(47 * K, 0, 2.6 * wind * K, 0, TAU);
+    ctx.fill();
+  }
+  if (firing) gatlingMuzzle(ctx, u.flash > 0.02 ? 1 : 0.62);
   if (vent < 1) gatlingSteam(ctx, vent);
-  else if (heat > 0.3 && !firing && !dead) {
-    for (let i = 0; i < 4; i++) {
-      const q = (t * 1.5 + i / 4) % 1;
-      ctx.fillStyle = `rgba(170, 176, 190, ${0.55 * heat * (1 - q)})`;
-      ctx.beginPath();
-      ctx.arc((45 + Math.sin(q * 7 + i) * 3) * K, (-4 - 22 * q) * K, (1.8 + 3.4 * q) * K, 0, TAU);
-      ctx.fill();
-    }
-  }
   ctx.restore();
-}
-
-// the gunsight that swings out in front of his eye, and the brackets that close on his target as the cannon winds up
-function gatlingSight(ctx, mood, t) {
-  const on = Math.max(mood.brace, mood.wind);
-  if (on < 0.05) return;
-  const x = 29 * K;
-  const y = -8 * K;
-  const r = (6.4 + (1 - on) * 5) * K;
-  ctx.lineCap = 'round';
-  botGlow(ctx, x, y, r * 2, '70, 255, 205', 0.35 * on);
-  ctx.strokeStyle = `rgba(24, 196, 156, ${on})`;
-  ctx.lineWidth = 1.5 * K;
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, TAU);
-  ctx.stroke();
-  ctx.beginPath();
-  for (let i = 0; i < 4; i++) {
-    const a = t * 3 + (i / 4) * TAU;
-    ctx.moveTo(x + Math.cos(a) * r * 0.55, y + Math.sin(a) * r * 0.55);
-    ctx.lineTo(x + Math.cos(a) * r * 1.5, y + Math.sin(a) * r * 1.5);
-  }
-  ctx.stroke();
-  ctx.fillStyle = mood.firing ? '#ff6a52' : '#19c49c';
-  ctx.beginPath();
-  ctx.arc(x, y, 1.3 * K, 0, TAU);
-  ctx.fill();
-}
-
-function gatlingLock(ctx, dpr, u, mood) {
-  const o = u.target;
-  if (!mood.winding || !o || o.dead) return;
-  const k = mood.wind;
-  const r = 20 - 10 * Math.min(1, k * 1.25);
-  ctx.save();
-  ctx.setTransform(dpr, 0, 0, dpr, o.x * dpr, o.y * dpr);
-  ctx.rotate((1 - k) * 2.4);
-  ctx.lineCap = 'round';
-  for (const [col, wide] of [[`rgba(10, 70, 58, ${0.75 * k})`, 2.6], [`rgba(70, 240, 195, ${k})`, 1.3]]) {
-    ctx.strokeStyle = col;
-    ctx.lineWidth = wide;
-    ctx.beginPath();
-    for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
-      ctx.moveTo(sx * r, sy * r * 0.5);
-      ctx.lineTo(sx * r, sy * r);
-      ctx.lineTo(sx * r * 0.5, sy * r);
-    }
-    ctx.stroke();
-  }
-  ctx.restore();
-}
-
-// on the ground under him: rings drawing in as he winds up, the glare of the muzzle while he fires, and a heavy puff
-// under each step
-function gatlingFooting(ctx, u, mood, s) {
-  const { moving, ph, t, age } = s;
-  const ring = (x, rx, col, wide) => {
-    ctx.strokeStyle = col;
-    ctx.lineWidth = wide;
-    ctx.beginPath();
-    ctx.ellipse(x, FEET + 1, rx, rx * 0.34, 0, 0, TAU);
-    ctx.stroke();
-  };
-  if (mood.wind > 0) {
-    for (let i = 0; i < 2; i++) {
-      const q = (t * 2.2 + i / 2) % 1;
-      ring(0, 32 - 20 * q, `rgba(40, 225, 180, ${0.75 * q * mood.wind})`, 1.2);
-    }
-  }
-  if (mood.firing) {
-    botGlow(ctx, 22, FEET, 28 + Math.random() * 6, '255, 168, 45', 0.3);
-    for (let i = 0; i < 2; i++) {
-      const q = (t * 3.4 + i / 2) % 1;
-      ring(-2, 13 + 20 * q, `rgba(150, 148, 160, ${0.55 * (1 - q)})`, 1.8 * (1 - q) + 0.4);
-    }
-  }
-  if (moving) {
-    const q = ((ph / Math.PI) % 1 + 1) % 1;
-    if (q < 0.5) ring(0, 8 + 22 * q, `rgba(150, 148, 160, ${0.6 * (1 - q / 0.5)})`, 1.1);
-  }
-  // a harder landing than the others'
-  if (age > 0.28 && age < 0.85) {
-    const q = (age - 0.28) / 0.57;
-    ring(0, 16 + 38 * q, `rgba(150, 148, 160, ${0.75 * (1 - q)})`, 3 * (1 - q) + 0.5);
-    ring(0, 10 + 30 * q, `rgba(40, 225, 180, ${0.75 * (1 - q)})`, 1.4 * (1 - q) + 0.3);
-  }
 }
 
 // a springy antenna whose tip lags behind whatever the body is doing
@@ -502,23 +345,32 @@ function drawTrooper(ctx, dpr, sprites, u) {
   if (u.born === undefined) u.born = clock;
   const age = dead ? 9 : clock - u.born;
   const pose = u.pose;
-  const kick = u.recoil || 0;
   const moving = u.moving && !dead;
   const aiming = pose > 0.6 && !dead;
-  const ph = (u.anim * Math.PI) / 2;
-  const mood = heavy ? gatlingMood(u, dead, aiming, t, clock) : null;
+  // just before he shoots he sinks into it
+  const ready = !heavy && aiming && u.target && !(u.burstLeft > 0) && u.cdT > 0 && u.cdT < 0.32 ? 1 - u.cdT / 0.32 : 0;
+  const braced = heavy ? u.brace || 0 : 0;
+  const R = rigStep(u, {
+    age, dead, moving,
+    bang: u.flash,
+    kick: heavy ? 0.14 : 1,
+    cadence: heavy ? 1.8 : 2.25,
+    calm: !u.target && !moving,
+    busy: u.burstLeft > 0,
+    fidgets: heavy ? ['look', 'tinker', 'tinker', 'stretch', 'shimmy'] : ['look', 'look', 'tinker', 'stretch', 'shimmy', 'hops'],
+    aim: { lean: -0.11 * braced - 0.07 * ready, squash: 0.08 * braced + 0.11 * ready },
+  });
+  const mood = heavy ? gatlingMood(u, dead, aiming, R) : null;
 
-  if (heavy && !dead) gatlingLock(ctx, dpr, u, mood);
-  placeUnit(ctx, dpr, u, u.hit > 0 ? (Math.random() - 0.5) * 2 : 0);
-  if (heavy && !dead) gatlingFooting(ctx, u, mood, { moving, ph, t, age });
+  placeUnit(ctx, dpr, u, u.hit > 0.14 ? (Math.random() - 0.5) * 1.6 : 0);
 
-  // ---- on the ground: the landing dust ring and the shockwave of each shot
+  // ---- on the ground: the dust ring where he lands, and the shockwave of each shot
   if (age > 0.26 && age < 0.8) {
     const q = (age - 0.26) / 0.54;
-    ctx.strokeStyle = `rgba(150, 148, 160, ${0.55 * (1 - q)})`;
-    ctx.lineWidth = 2.4 * (1 - q) + 0.5;
+    ctx.strokeStyle = `rgba(150, 148, 160, ${0.6 * (1 - q)})`;
+    ctx.lineWidth = (heavy ? 3 : 2.4) * (1 - q) + 0.5;
     ctx.beginPath();
-    ctx.ellipse(0, FEET + 1, 9 + 22 * q, 3 + 7.5 * q, 0, 0, TAU);
+    ctx.ellipse(0, FEET + 1, 9 + (heavy ? 32 : 22) * q, 3 + (heavy ? 11 : 7.5) * q, 0, 0, TAU);
     ctx.stroke();
     ctx.fillStyle = `rgba(190, 186, 190, ${0.7 * (1 - q)})`;
     for (let i = 0; i < 7; i++) {
@@ -528,48 +380,27 @@ function drawTrooper(ctx, dpr, sprites, u) {
       ctx.fill();
     }
   }
-  if (kick > 0.05 && !dead) {
+  const kick = u.recoil || 0;
+  if (!heavy && kick > 0.05 && !dead) {
     ctx.strokeStyle = `rgba(120, 190, 235, ${0.5 * kick})`;
     ctx.lineWidth = 0.6 + 1.6 * kick;
     ctx.beginPath();
     ctx.ellipse(-2, FEET + 1, 10 + 17 * (1 - kick), 3.4 + 5.4 * (1 - kick), 0, 0, TAU);
     ctx.stroke();
   }
+  if (heavy && mood.firing) botGlow(ctx, 20, FEET, 24, '255, 170, 50', 0.22);
 
-  // ---- he drops in from above and squashes as he lands
-  if (age < 0.28) ctx.translate(0, -46 * (1 - (age / 0.28) ** 2));
+  // ---- he drops in from above, stretched by the fall; the springs squash him as he lands
+  const fall = age < 0.28 ? age / 0.28 : 0;
+  if (age < 0.28) ctx.translate(0, -46 * (1 - fall ** 2));
   ctx.translate(0, FEET);
-  const squash = age >= 0.28 && age < 0.55 ? Math.sin(((age - 0.28) / 0.27) * Math.PI) : 0;
-  ctx.scale(size * (1 + 0.2 * squash), size * (1 - 0.22 * squash));
+  ctx.scale(size * (1 - 0.09 * fall), size * (1 + 0.16 * fall));
   ctx.translate(0, -FEET);
 
-  if (heavy && mood.brace > 0.01) {
-    ctx.save();
-    ctx.scale(1 + 0.3 * mood.brace, 1);
-    drawLayer(ctx, A.feet[0]);
-    ctx.restore();
-  } else drawLayer(ctx, A.feet[moving ? (u.anim | 0) & 3 : 0]);
+  drawBotFeet(ctx, A, R, { spread: 4.5 * braced, clock: t });
+  if (!dead) stepDust(ctx, R, heavy ? 1.15 : 1);
 
-  // ---- the body: a heavy waddle leaning into the walk, breathing at rest, rocked back by each shot
-  if (moving) {
-    const wk = Math.abs(Math.sin(ph));
-    ctx.translate(0, FEET);
-    ctx.rotate(0.09 + Math.sin(ph) * 0.035);
-    ctx.scale(1 + 0.06 * (1 - wk), 1 - 0.08 * (1 - wk));
-    ctx.translate(0, -FEET - wk * 2.4);
-  } else if (!dead) ctx.translate(0, Math.sin(t * 2.4) * 0.6);
-  // he crouches over the cannon and leans back against it, shuddering while it runs
-  if (heavy && !dead && mood.brace > 0.01) {
-    ctx.translate((mood.firing ? Math.sin(t * 91) * 0.5 : 0) - 2.2 * mood.brace, FEET);
-    ctx.rotate(-0.1 * mood.brace);
-    ctx.scale(1 + 0.06 * mood.brace, 1 - 0.08 * mood.brace);
-    ctx.translate(0, -FEET);
-  }
-  if (kick > 0 && !dead) {
-    ctx.translate(-4.2 * kick * K * 3, FEET);
-    ctx.rotate(-0.2 * kick);
-    ctx.translate(0, -FEET);
-  }
+  applyBotBody(ctx, R);
 
   // ---- idle puffs of steam from the pods (his thruster fire is the same fire as everything else's)
   if (!dead && !aiming && !moving) {
@@ -583,6 +414,8 @@ function drawTrooper(ctx, dpr, sprites, u) {
       }
     }
   }
+  ctx.save();
+  ctx.translate(0, R.pack * K);
   drawLayer(ctx, A.pack);
   if (heavy) {
     ctx.save();
@@ -590,10 +423,9 @@ function drawTrooper(ctx, dpr, sprites, u) {
     drawGatlingDrum(ctx, -(u.drumA || 0));
     ctx.restore();
   }
+  ctx.restore();
 
-  const sway = dead ? 7 : (moving ? -3.4 + Math.sin(ph * 2) * 3.4 : Math.sin(t * 2.1) * 1.6) - 12 * kick * Math.cos((1 - kick) * 9);
-  botAntennae(ctx, heavy && mood.firing ? sway - 7 + Math.sin(t * 60) * 3 : sway, !dead && t % 1.1 < 0.22);
-  drawLayer(ctx, A.torso);
+  drawLayer(ctx, A.torsoBare);
   if (heavy) drawGatlingFeed(ctx, u);
 
   // ---- eyes: boot up with a flicker, then look about, blink, narrow and spin up to aim
@@ -601,21 +433,39 @@ function drawTrooper(ctx, dpr, sprites, u) {
   if (age < 0.5) power = 0;
   else if (age < 0.85) power = Math.sin(age * 70) > 0 ? 1 : 0.15;
   if (!dead && u.hp < d.hp * 0.25 && Math.sin(t * 23) > 0.72) power = 0.2;
+  // now and then a double blink
   const blinkT = t % 3.3;
+  const again = (t % 9.9) - 0.26;
   let lid = !aiming && blinkT < 0.16 ? Math.sin((blinkT / 0.16) * Math.PI) : 0;
+  if (!aiming && again > 0 && again < 0.16) lid = Math.sin((again / 0.16) * Math.PI);
   if (heavy && mood.vent < 1) lid = Math.max(lid, Math.sin(mood.vent * Math.PI) * 0.62);
-  const look = aiming ? [1, Math.sin(u.aim) * 1.2] : [Math.sin(t * 0.9) * 0.9 + 0.2, Math.sin(t * 1.7) * 0.5];
+  if (R.fidget === 'stretch') lid = Math.max(lid, Math.sin(R.q * Math.PI));
+  let look = [Math.sin(t * 0.9) * 0.9 + 0.2, Math.sin(t * 1.7) * 0.5];
+  if (aiming) look = [1, Math.sin(u.aim) * 1.2];
+  else if (R.fidget === 'look') look = [Math.sin(R.q * TAU) * 1.5, -0.2];
+  else if (R.fidget === 'tinker') look = [0.9, 0.9];
+  else if (moving) look = [0.9, 0.25 + Math.sin(R.phase * 2) * 0.25];
+  const calmEye = (heavy && mood.vent < 1) || R.happy;
   ctx.save();
   ctx.scale(K, K);
   if (heavy) ctx.translate(10.6 * (GATLING_WIDE - 1), 0);
-  trooperEyes(ctx, { lx: look[0], ly: look[1], lid, angry: aiming && !(heavy && mood.vent < 1), spin: aiming ? t * 5 : Math.sin(t * 0.6) * 0.4, power, dead });
+  trooperEyes(ctx, { lx: look[0], ly: look[1], lid: R.happy ? 0 : lid, angry: aiming && !calmEye, happy: R.happy, spin: aiming ? t * 5 : Math.sin(t * 0.6) * 0.4, power, dead });
   ctx.restore();
-  if (!dead && power > 0.5) botGlow(ctx, (heavy ? 11.4 : 10.6) * K, -4.6 * K, (11 + (aiming ? 3 * Math.sin(t * 14) : Math.sin(t * 3))) * K, '70, 255, 205', aiming ? 0.34 : 0.18);
+  const eyeX = heavy ? 11.4 : 10.6;
+  if (!dead && power > 0.5) botGlow(ctx, eyeX * K, -4.6 * K, (11 + (aiming ? 3 * Math.sin(t * 14) : Math.sin(t * 3))) * K, '70, 255, 205', aiming ? 0.34 : 0.18);
+
+  // ---- helmet and antenna, bouncing on their own spring
+  ctx.save();
+  applyBotCap(ctx, R);
+  botAntennae(ctx, dead ? 7 : R.ant + (heavy && mood.firing ? Math.sin(t * 60) * 2.4 : 0), !dead && t % 1.1 < 0.22);
+  drawLayer(ctx, A.cap);
+  ctx.restore();
+
   // a green scanning beam sweeps about while there's nobody to shoot
-  if (!dead && !moving && pose < 0.35 && age > 0.9) {
-    const sa = Math.sin(t * 1.25) * 0.5 + 0.05;
+  if (!dead && !moving && pose < 0.35 && age > 0.9 && R.fidget !== 'tinker' && !R.happy) {
+    const sa = (R.fidget === 'look' ? Math.sin(R.q * TAU) * 0.5 : Math.sin(t * 1.25) * 0.5) + 0.05;
     ctx.save();
-    ctx.translate(15 * K, -4.6 * K);
+    ctx.translate((eyeX + 4.4) * K, -4.6 * K);
     ctx.rotate(sa);
     const sg = ctx.createLinearGradient(0, 0, 58 * K, 0);
     sg.addColorStop(0, 'rgba(70, 245, 200, 0.42)');
@@ -634,47 +484,46 @@ function drawTrooper(ctx, dpr, sprites, u) {
   if (!dead) drawHitFlash(ctx, u, 20.9 * K, 23.2 * K);
 
   // ---- the blaster, or the cannon
-  if (heavy) {
-    drawCannon(ctx, A, u, { dead, moving, ph, pose, t, age }, mood);
-    if (!dead) gatlingSight(ctx, mood, t);
-  }
+  if (heavy) drawCannon(ctx, A, u, { dead, pose, t }, mood, R);
   else {
-  ctx.save();
-  ctx.translate(lerp(8 * K, 8 * K, pose), lerp(12 * K, 11 * K, pose));
-  ctx.rotate(dead ? 0.9 : lerp(0.3 + (moving ? Math.sin(ph) * 0.12 : 0), u.aim - kick * 0.34, pose));
-  ctx.translate(-kick * 5.5 * K, 0);
-  const heat = u.heat || 0;
-  // laser sight while lining up the shot
-  if (aiming && kick < 0.1) {
-    const reach = 92 * K;
-    const lg = ctx.createLinearGradient(39 * K, 0, 39 * K + reach, 0);
-    lg.addColorStop(0, 'rgba(255, 60, 50, 0.7)');
-    lg.addColorStop(1, 'rgba(255, 60, 50, 0)');
-    ctx.strokeStyle = lg;
-    ctx.lineWidth = 0.9 * K * 1.4;
-    ctx.beginPath();
-    ctx.moveTo(39 * K, -1 * K);
-    ctx.lineTo(39 * K + reach, -1 * K);
-    ctx.stroke();
-    botGlow(ctx, 40 * K, -1 * K, (4 + Math.sin(t * 18)) * K, '255, 70, 60', 0.85);
-  }
-  drawLayer(ctx, A.gun);
-  // the power cell fills as the next volley charges
-  const charge = aiming ? 1 - Math.max(0, Math.min(1, (u.cdT || 0) / 1.5)) : 0.35 + 0.15 * Math.sin(t * 2.6);
-  ctx.fillStyle = charge > 0.92 ? '#e9ffff' : '#4fe4f5';
-  ctx.fillRect(2.4 * K, -1.7 * K, 8.8 * K * Math.max(0.08, charge), 2.2 * K);
-  if (aiming && charge > 0.6) botGlow(ctx, 7 * K, -0.6 * K, 12 * K, '80, 225, 255', (charge - 0.6) * 1.2);
-  // a smoking barrel after he has been firing (the muzzle ring is the same as any gun's)
-  if (heat > 0.3 && kick < 0.1) {
-    for (let i = 0; i < 4; i++) {
-      const q = (t * 1.5 + i / 4) % 1;
-      ctx.fillStyle = `rgba(170, 172, 184, ${0.55 * heat * (1 - q)})`;
+    // waiting about, he brings the blaster up to look it over, and gives it a pat of a shake
+    const check = R.fidget === 'tinker' ? Math.sin(Math.min(1, R.q * 1.15) * Math.PI) ** 0.6 : 0;
+    ctx.save();
+    ctx.translate((8 + R.gunX - 3 * check) * K, (lerp(12, 11, pose) - 5 * check + (R.happy ? R.hop * 0.35 : 0)) * K);
+    const held = lerp(0.3 + Math.cos(R.phase) * 0.17 * R.move + Math.sin(t * 2.5) * 0.035, u.aim, pose);
+    ctx.rotate(dead ? 0.9 : held + R.gunA - check * 0.95 + (check > 0.7 ? Math.sin(t * 34) * 0.07 : 0) - R.happy * 0.55);
+    const heat = u.heat || 0;
+    // laser sight while lining up the shot
+    if (aiming && kick < 0.1) {
+      const reach = 92 * K;
+      const lg = ctx.createLinearGradient(39 * K, 0, 39 * K + reach, 0);
+      lg.addColorStop(0, 'rgba(255, 60, 50, 0.7)');
+      lg.addColorStop(1, 'rgba(255, 60, 50, 0)');
+      ctx.strokeStyle = lg;
+      ctx.lineWidth = 0.9 * K * 1.4;
       ctx.beginPath();
-      ctx.arc((38 + Math.sin(q * 7 + i) * 3) * K, (-3 - 20 * q) * K, (1.6 + 3 * q) * K, 0, TAU);
-      ctx.fill();
+      ctx.moveTo(39 * K, -1 * K);
+      ctx.lineTo(39 * K + reach, -1 * K);
+      ctx.stroke();
+      botGlow(ctx, 40 * K, -1 * K, (4 + Math.sin(t * 18)) * K, '255, 70, 60', 0.85);
     }
-  }
-  ctx.restore();
+    drawLayer(ctx, A.gun);
+    // the power cell fills as the next volley charges
+    const charge = aiming ? 1 - Math.max(0, Math.min(1, (u.cdT || 0) / 1.5)) : 0.35 + 0.15 * Math.sin(t * 2.6);
+    ctx.fillStyle = charge > 0.92 ? '#e9ffff' : '#4fe4f5';
+    ctx.fillRect(2.4 * K, -1.7 * K, 8.8 * K * Math.max(0.08, charge), 2.2 * K);
+    if (aiming && charge > 0.6) botGlow(ctx, 7 * K, -0.6 * K, 12 * K, '80, 225, 255', (charge - 0.6) * 1.2);
+    // a smoking barrel after he has been firing (the muzzle ring is the same as any gun's)
+    if (heat > 0.3 && kick < 0.1) {
+      for (let i = 0; i < 4; i++) {
+        const q = (t * 1.5 + i / 4) % 1;
+        ctx.fillStyle = `rgba(170, 172, 184, ${0.55 * heat * (1 - q)})`;
+        ctx.beginPath();
+        ctx.arc((38 + Math.sin(q * 7 + i) * 3) * K, (-3 - 20 * q) * K, (1.6 + 3 * q) * K, 0, TAU);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
   }
 
   // ---- electricity crawls over him when he's hit, and a badly damaged one keeps sparking
@@ -1024,9 +873,16 @@ function drawZordRig(ctx, A, m, eyes) {
     drawLayer(ctx, layer);
     ctx.restore();
   };
+  // helmet, horns and antenna ride together
+  const capped = (fn) => {
+    ctx.save();
+    applyBotCap(ctx, { cap: m.cap || 0, capRot: m.capRot || 0 });
+    fn();
+    ctx.restore();
+  };
   // his pack, a size up like the rest of him
   ctx.save();
-  ctx.translate(-4 * K, 0);
+  ctx.translate(-4 * K, (m.pack || 0) * K);
   ctx.scale(1.1, 1.1);
   drawLayer(ctx, A.pack);
   ctx.restore();
@@ -1062,18 +918,21 @@ function drawZordRig(ctx, A, m, eyes) {
   ctx.translate(0, 18 * K);
   ctx.rotate(m.headTilt);
   ctx.translate(0, -18 * K);
-  at(A.farHand, 30, 19 - m.hand * 0.6);
-  drawLayer(ctx, A.farHorn);
-  botAntennae(ctx, m.sway, m.beacon);
-  drawLayer(ctx, A.body);
+  at(A.farHand, 30 + (m.reach || 0), 19 - (m.handFar === undefined ? m.hand * 0.6 : m.handFar));
+  capped(() => drawLayer(ctx, A.farHorn));
+  drawLayer(ctx, A.bodyBare);
   ctx.save();
   ctx.translate(ZORD_JAW[0] * K, ZORD_JAW[1] * K);
   ctx.rotate(m.jaw);
   ctx.translate(-ZORD_JAW[0] * K, -ZORD_JAW[1] * K);
   drawLayer(ctx, A.jaw);
   ctx.restore();
-  drawLayer(ctx, A.nearHorn);
-  if (m.lit > 0) {
+  eyes(ctx, 'eye');
+  capped(() => {
+    botAntennae(ctx, m.sway, m.beacon);
+    drawLayer(ctx, A.cap);
+    drawLayer(ctx, A.nearHorn);
+    if (!(m.lit > 0)) return;
     art(() => {
       ctx.lineCap = 'round';
       for (const [x, y, len, rise] of ZORD_HORNS) {
@@ -1087,13 +946,13 @@ function drawZordRig(ctx, A, m, eyes) {
         }
       }
     });
-  }
-  eyes(ctx);
-  at(A.nearHand, 1, 21 - m.hand);
+  });
+  eyes(ctx, 'fx');
+  at(A.nearHand, 1 + (m.reach || 0), 21 - m.hand);
   ctx.restore();
 }
 
-const ZORD_STILL = { jaw: 0.16, headTilt: 0, sway: 0, beacon: false, hand: 0, lit: 0, rack: 0 };
+const ZORD_STILL = { jaw: 0.16, headTilt: 0, sway: 0, beacon: false, hand: 0, lit: 0, rack: 0, cap: 0, capRot: 0 };
 const ZORD_MOUTH = { x: 39, y: 14 };
 
 // a thin four-pointed glint
@@ -1200,10 +1059,41 @@ function drawMechaZord(ctx, dpr, sprites, u) {
   const inRange = u.target && Math.hypot(u.target.x - u.x, u.target.y - u.y) <= d.range;
   const charge = !dead && !firing && inRange && !(u.burstLeft > 0) && u.burstT !== undefined && u.burstT < 0.8 ? Math.max(0, Math.min(1, 1 - u.burstT / 0.8)) : 0;
   // he roars once he has landed, and now and then while he waits for a fight
-  const idleFor = !dead && !moving && !u.target && age > 4 ? t % 8 : 9;
-  const roarAt = age > 0.75 && age < 2.1 ? (age - 0.75) / 1.35 : idleFor < 1.35 ? idleFor / 1.35 : 1;
-  const roar = roarAt < 1 ? Math.min(1, roarAt * 5, (1 - roarAt) * 4) : 0;
-  const ph = (u.anim * Math.PI) / 2;
+  const idleRoar = !dead && u.rig && u.rig.fidget === 'roar' ? (u.rig.t - u.rig.fidgetAt) / u.rig.fidgetFor : 1;
+  const roarAt = age > 0.75 && age < 2.1 ? (age - 0.75) / 1.35 : idleRoar < 1 ? idleRoar : 1;
+  const roar = roarAt < 1 ? Math.max(0, Math.min(1, roarAt * 5, (1 - roarAt) * 4)) : 0;
+  const R = rigStep(u, {
+    age, dead, moving, alt,
+    bang: u.launch || 0, // each missile leaving kicks him
+    kick: 0.6,
+    cadence: 1.55,
+    calm: !u.target && !moving && alt < 0.1 && age > 2.2,
+    busy: firing || u.salvo > 0,
+    fidgets: ['look', 'chomp', 'yawn', 'sniff', 'roar', 'stretch'],
+    // he gathers himself back to charge, then throws his weight into the breath
+    aim: {
+      lean: firing ? 0.11 : -0.19 * charge - 0.08 * roar + (alt > 0.12 ? 0.08 : 0),
+      squash: firing ? 0.02 : 0.1 * charge,
+      head: firing ? Math.max(-0.2, Math.min(0.3, u.aim * 0.55)) : roar > 0 ? -0.3 * roar : -0.18 * charge,
+      jaw: roar > 0 ? 0.64 * roar : firing ? 0.56 : dead ? 0.3 : 0.05 + charge * 0.36,
+    },
+  });
+  // letting fly rocks his whole body; shutting off, his jaws snap to
+  if (u.rig && firing !== !!u.wasBreathing) {
+    const s = u.rig.s;
+    if (firing) {
+      s.lean.v += 3.4;
+      s.squash.v += 2.8;
+      s.cap.v -= 110;
+      s.ant.v -= 150;
+      s.jaw.v += 8;
+    } else {
+      s.jaw.v -= 9;
+      s.squash.v += 1.4;
+      s.lean.v -= 1.2;
+    }
+  }
+  u.wasBreathing = firing;
 
   placeUnit(ctx, dpr, u, u.hit > 0.16 ? (Math.random() - 0.5) * 1.4 : 0);
   const ring = (x, y, rx, col, width) => {
@@ -1218,9 +1108,9 @@ function drawMechaZord(ctx, dpr, sprites, u) {
     ring(0, FEET + 1, 14 + 34 * q, `rgba(150, 148, 160, ${0.65 * (1 - q)})`, 3 * (1 - q) + 0.5);
   }
   // each heavy step puffs out a little ring of dust
-  if (moving && alt < 0.1) {
-    const q = ((ph / Math.PI) % 1 + 1) % 1;
-    if (q < 0.45) ring(0, FEET + 1, 10 + 30 * q, `rgba(150, 148, 160, ${0.55 * (1 - q / 0.45)})`, 1.1);
+  if (moving && alt < 0.1 && R.since.step < 0.26) {
+    const q = R.since.step / 0.26;
+    ring((R.foot ? 8 : -5) * K * d.scale, FEET + 1, 7 + 21 * q, `rgba(150, 148, 160, ${0.6 * (1 - q)})`, 1.2);
   }
 
   // his shadow stays on the ground, shrinking as he climbs
@@ -1265,12 +1155,10 @@ function drawMechaZord(ctx, dpr, sprites, u) {
 
   if (age < 0.3) ctx.translate(0, -70 * (1 - (age / 0.3) ** 2));
   if (alt > 0.01) ctx.translate(0, -alt * (d.hoverH + Math.sin(t * 3.2) * 1.4));
-  const squash = age >= 0.3 && age < 0.6 ? Math.sin(((age - 0.3) / 0.3) * Math.PI) : 0;
+  const fall = age < 0.3 ? age / 0.3 : 0;
   ctx.translate(0, FEET);
-  ctx.scale(d.scale * (1 + 0.16 * squash), d.scale * (1 - 0.18 * squash));
+  ctx.scale(d.scale * (1 - 0.09 * fall), d.scale * (1 + 0.16 * fall));
   ctx.translate(0, -FEET);
-  // each missile leaving shoves him forward
-  if (!dead && u.launch > 0) ctx.translate(2.2 * u.launch, 0);
   // roaring he shudders
   if (roar > 0) ctx.translate(Math.sin(t * 62) * 0.5 * roar, 0);
 
@@ -1278,34 +1166,43 @@ function drawMechaZord(ctx, dpr, sprites, u) {
   ctx.translate(0, FEET);
   ctx.scale(ZORD_WIDE, 1);
   ctx.translate(0, -FEET);
-  drawLayer(ctx, A.feet[moving && alt < 0.1 ? (u.anim | 0) & 3 : 0]);
+  drawBotFeet(ctx, A, R, { spread: firing ? 2.6 : 2 * charge, air: alt > 0.12 ? alt : 0, clock: t, shadow: false });
   ctx.restore();
 
-  // the trooper's heavy waddle, leaning into the walk, and his breathing at rest
-  if (moving && alt < 0.1) {
-    const wk = Math.abs(Math.sin(ph));
-    ctx.translate(0, FEET);
-    ctx.rotate(0.07 + Math.sin(ph) * 0.035);
-    ctx.scale(1 + 0.05 * (1 - wk), 1 - 0.07 * (1 - wk));
-    ctx.translate(0, -FEET - wk * 2.2);
-  } else if (!dead) ctx.translate(0, Math.sin(t * 2.1) * 0.6);
+  // drawing breath he swells up; firing, he trembles with it
+  applyBotBody(ctx, R, 0.065 * charge);
+  if (firing) ctx.translate(Math.sin(t * 83) * 0.35, 0);
 
   const power = age < 0.55 ? 0 : age < 0.9 ? (Math.sin(age * 70) > 0 ? 1 : 0.15) : 1;
   const angry = firing || charge > 0 || roar > 0.3;
   const blink = !angry && t % 3.7 < 0.16 ? Math.sin(((t % 3.7) / 0.16) * Math.PI) : 0;
+  // his little hands paddle as he walks, come up to roar, and clap along when he is pleased
+  const paddle = Math.sin(R.phase) * 4 * R.move;
+  const lifted = roar * 7.5 + charge * 3.5 + (R.happy ? -R.hop * 0.9 : 0) - R.gunA * 6 + Math.sin(t * 2.5) * 0.7;
   const m = {
-    jaw: roar > 0 ? 0.62 * roar + Math.sin(t * 40) * 0.04 * roar : firing ? 0.54 + Math.sin(t * 38) * 0.05 : dead ? 0.3 : 0.06 + charge * 0.34,
-    // he braces: head thrown back to roar or drawn back to charge, then dipped toward whoever he is burning
-    headTilt: firing ? Math.max(-0.2, Math.min(0.3, u.aim * 0.55)) + Math.sin(t * 34) * 0.012 : roar > 0 ? -0.3 * roar : -0.16 * charge,
-    sway: dead ? 7 : (moving ? -3.4 + Math.sin(ph * 2) * 3.4 : Math.sin(t * 2.1) * 1.6) - charge * 3,
+    jaw: R.jaw + (roar > 0 ? Math.sin(t * 40) * 0.04 * roar : firing ? Math.sin(t * 38) * 0.05 : 0),
+    // head thrown back to roar or drawn back to charge, then dipped toward whoever he is burning
+    headTilt: R.head + (firing ? Math.sin(t * 34) * 0.012 : 0),
+    sway: dead ? 7 : R.ant,
     beacon: !dead && t % 1.1 < 0.22,
-    hand: dead ? 0 : roar > 0 ? 7 * roar : charge * 3 + (moving ? Math.sin(ph) * 1.4 : Math.sin(t * 2.1) * 0.5),
+    cap: R.cap,
+    capRot: R.capRot,
+    pack: R.pack - (u.salvo > 0 ? 2 : 0),
+    reach: R.happy ? 2 : R.gunX * 0.3,
+    hand: dead ? 0 : lifted + paddle,
+    handFar: dead ? 0 : lifted * 0.7 - paddle,
     lit: dead ? 0 : firing ? 0.8 + 0.2 * Math.sin(t * 16) : Math.max(charge, roar),
     rack: dead ? 0 : u.salvo > 0 ? 1 : u.missileT !== undefined && u.missileT < 0.7 && u.target ? 1 - Math.max(0, u.missileT) / 0.7 : 0,
   };
   if (!dead && (firing || charge > 0.15)) zordVents(ctx, firing ? 1 : charge, t);
-  drawZordRig(ctx, A, m, (g) => {
-    zordLook(g, { lx: angry ? 1 : Math.sin(t * 0.8) * 0.8 + 0.2, ly: angry ? 0.2 : Math.sin(t * 1.5) * 0.5, lid: blink, angry, power, dead });
+  let lid = blink;
+  if (R.fidget === 'yawn') lid = Math.max(lid, Math.min(1, Math.sin(R.q * Math.PI) * 1.3));
+  const gaze = angry ? [1, 0.2] : R.fidget === 'look' ? [Math.sin(R.q * TAU) * 1.5, -0.2] : R.fidget === 'sniff' ? [0.9, 1] : [Math.sin(t * 0.8) * 0.8 + 0.2, Math.sin(t * 1.5) * 0.5];
+  drawZordRig(ctx, A, m, (g, layer) => {
+    if (layer === 'eye') {
+      zordLook(g, { lx: gaze[0], ly: gaze[1], lid: R.happy ? 0 : lid, angry: angry && !R.happy, happy: R.happy, power, dead });
+      return;
+    }
     if (!dead && power > 0.5) botGlow(g, ZORD_EYE.x * K, ZORD_EYE.y * K, (angry ? 15 : 11) * K, '70, 255, 205', angry ? 0.42 : 0.2);
     // his eye blazes, with a glare right across it
     if (!dead && (firing || charge > 0.3)) {
@@ -1356,6 +1253,38 @@ function drawMechaZord(ctx, dpr, sprites, u) {
   if (!dead && u.hp < d.hp * 0.4 && Math.sin(t * 7.3) > 0.9) drawZaps(ctx, 3);
 }
 
+// the next rocket flipping up out of his pack, over his helmet and into the launcher. q runs 0..1
+function jetReload(ctx, q, angle) {
+  const gx = 8;
+  const gy = 10;
+  const ex = gx + Math.cos(angle) * 36 - Math.sin(angle) * -1;
+  const ey = gy + Math.sin(angle) * 36 + Math.cos(angle) * -1;
+  const at = (k) => [lerp(lerp(-24, 4, k), lerp(4, ex, k), k), lerp(lerp(-12, -62, k), lerp(-62, ey, k), k)];
+  const e = q * q * (3 - 2 * q);
+  const [x, y] = at(e);
+  ctx.save();
+  ctx.scale(K, K);
+  // it turns end over end on the way and comes in nose first
+  ctx.translate(x, y);
+  ctx.rotate(-Math.PI / 2 + (Math.PI * 2.5 + angle) * e);
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = OUT;
+  for (const [col, pts] of [
+    ['#1fbc9c', [[-6, 0], [-11, -6.5], [-9, 0], [-11, 6.5]]],
+    ['#d3d8e3', [[-9, -3.4], [4, -3.4], [4, 3.4], [-9, 3.4]]],
+    ['#e0523c', [[4, -3.4], [12, 0], [4, 3.4]]],
+  ]) {
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    pts.forEach(([px, py], i) => (i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)));
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 // Jet Trooper: walks and lobs rockets, and every so often lifts off on his jetpack and fights from the air. The fire
 // under him is made by the world, from the same flames as the flamethrower's.
 function drawJetTrooper(ctx, dpr, sprites, u) {
@@ -1369,11 +1298,30 @@ function drawJetTrooper(ctx, dpr, sprites, u) {
   const alt = dead ? 0 : u.alt || 0;
   const air = alt > 0.12;
   const moving = u.moving && !dead && !air;
-  const ph = (u.anim * Math.PI) / 2;
   const pose = u.pose;
-  const kick = dead ? 0 : u.recoil || 0;
+  const aiming = pose > 0.6 && !!u.target && !dead;
+  const reload = u.reload || 0;
+  const ready = aiming && !air && reload > 0 && reload < 0.3 ? 1 - reload / 0.3 : 0;
+  const drift = u.rig ? u.rig.vx * u.facing : 0;
+  const R = rigStep(u, {
+    age, dead, moving, alt,
+    bang: u.flash,
+    kick: 2,
+    cadence: 2.25,
+    calm: !u.target && !moving && !air,
+    fidgets: ['look', 'hops', 'hops', 'tinker', 'stretch', 'shimmy'],
+    // in the air he banks the way he is flying
+    aim: { lean: air ? Math.max(-0.2, Math.min(0.3, drift * 0.004)) + 0.05 : -0.07 * ready, squash: 0.12 * ready },
+  });
+  // the rocket clacks home
+  if (u.rig && u.wasReload > 0.45 && reload <= 0.45) {
+    u.rig.s.gunX.v -= 75;
+    u.rig.s.gunA.v += 3.5;
+    u.rig.s.cap.v -= 25;
+  }
+  u.wasReload = reload;
 
-  placeUnit(ctx, dpr, u, u.hit > 0 ? (Math.random() - 0.5) * 2 : 0);
+  placeUnit(ctx, dpr, u, u.hit > 0.14 ? (Math.random() - 0.5) * 1.6 : 0);
   // his shadow stays on the ground, shrinking as he climbs
   if (air) {
     ctx.fillStyle = `rgba(40, 42, 54, ${0.28 - 0.12 * alt})`;
@@ -1383,62 +1331,76 @@ function drawJetTrooper(ctx, dpr, sprites, u) {
   }
   if (age > 0.26 && age < 0.8) {
     const q = (age - 0.26) / 0.54;
-    ctx.strokeStyle = `rgba(150, 148, 160, ${0.55 * (1 - q)})`;
+    ctx.strokeStyle = `rgba(150, 148, 160, ${0.6 * (1 - q)})`;
     ctx.lineWidth = 2.4 * (1 - q) + 0.5;
     ctx.beginPath();
     ctx.ellipse(0, FEET + 1, 10 + 24 * q, 3.4 + 8 * q, 0, 0, TAU);
     ctx.stroke();
   }
-  if (age < 0.28) ctx.translate(0, -50 * (1 - (age / 0.28) ** 2));
+  const fall = age < 0.28 ? age / 0.28 : 0;
+  if (age < 0.28) ctx.translate(0, -50 * (1 - fall ** 2));
   ctx.translate(0, -alt * (d.fly.height + Math.sin(t * 3.4) * 2));
-  const squash = age >= 0.28 && age < 0.55 ? Math.sin(((age - 0.28) / 0.27) * Math.PI) : 0;
   ctx.translate(0, FEET);
-  ctx.scale(d.scale * (1 + 0.2 * squash), d.scale * (1 - 0.22 * squash));
+  ctx.scale(d.scale * (1 - 0.09 * fall), d.scale * (1 + 0.16 * fall));
   ctx.translate(0, -FEET);
-  if (air) {
-    // leaning into the flight
-    ctx.rotate((u.moving ? 0.14 : 0.04) + Math.sin(t * 2.3) * 0.04);
-  }
 
-  if (air) {
-    // legs dangling
-    ctx.save();
-    ctx.translate(-1.5 * alt * K * 3, 1.5 * alt * K * 3);
-    ctx.rotate(0.12 * alt);
-    drawLayer(ctx, A.feet[1]);
-    ctx.restore();
-  } else drawLayer(ctx, A.feet[moving ? (u.anim | 0) & 3 : 0]);
-  if (moving) {
-    const wk = Math.abs(Math.sin(ph));
-    ctx.translate(0, FEET);
-    ctx.rotate(0.06 + Math.sin(ph) * 0.035);
-    ctx.scale(1 + 0.045 * (1 - wk), 1 - 0.06 * (1 - wk));
-    ctx.translate(0, -FEET - wk * 1.8);
-  } else if (!dead && !air) ctx.translate(0, Math.sin(t * 2.4) * 0.6);
-  if (kick > 0) {
-    ctx.translate(-9 * kick * K, 0);
-    ctx.rotate(-0.12 * kick);
-  }
+  drawBotFeet(ctx, A, R, { air: alt, clock: t, shadow: !air });
+  if (!dead && !air) stepDust(ctx, R, 1);
+  applyBotBody(ctx, R);
 
+  // little test burns from the pack as he hops about
+  if (!dead && !air && R.fidget === 'hops' && R.hop < -1) {
+    const len = Math.min(1, -R.hop / 5);
+    for (const jx of [-24.5, -16.5]) {
+      botGlow(ctx, jx * K, 26 * K, 9 * len * K, '255, 170, 60', 0.8);
+      ctx.fillStyle = '#ffd23c';
+      ctx.beginPath();
+      ctx.moveTo((jx - 3) * K, 20 * K);
+      ctx.lineTo(jx * K, (20 + (12 + Math.random() * 6) * len) * K);
+      ctx.lineTo((jx + 3) * K, 20 * K);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+  ctx.save();
+  ctx.translate(0, R.pack * K);
   drawLayer(ctx, A.pack);
-  drawLayer(ctx, A.torso);
+  ctx.restore();
+  drawLayer(ctx, A.torsoBare);
 
   const power = age < 0.5 ? 0 : age < 0.85 ? (Math.sin(age * 70) > 0 ? 1 : 0.15) : 1;
-  const aiming = pose > 0.6 && !!u.target && !dead;
-  const blink = !aiming && t % 3.3 < 0.16 ? Math.sin(((t % 3.3) / 0.16) * Math.PI) : 0;
+  let lid = !aiming && t % 3.3 < 0.16 ? Math.sin(((t % 3.3) / 0.16) * Math.PI) : 0;
+  if (R.fidget === 'stretch') lid = Math.max(lid, Math.sin(R.q * Math.PI));
+  let look = [Math.sin(t * 0.9) * 0.9, Math.sin(t * 1.7) * 0.5];
+  if (aiming) look = [1, Math.sin(u.aim)];
+  else if (R.fidget === 'look') look = [Math.sin(R.q * TAU) * 1.5, -0.3];
+  else if (R.fidget === 'tinker') look = [0.9, 0.9];
+  else if (moving || air) look = [0.9, air ? 0.8 : 0.25];
+  // he watches the new rocket go over
+  if (!dead && reload > 0.45 && reload < 1.05) look = [Math.sin(((1.05 - reload) / 0.6) * Math.PI - 1.4) * 1.4, -1.1];
   ctx.save();
   ctx.scale(K, K);
-  trooperEyes(ctx, { lx: aiming ? 1 : Math.sin(t * 0.9) * 0.9, ly: aiming ? Math.sin(u.aim) : Math.sin(t * 1.7) * 0.5, lid: blink, angry: aiming, power, dead });
+  trooperEyes(ctx, { lx: look[0], ly: look[1], lid: R.happy ? 0 : lid, angry: aiming && !R.happy && !(reload > 0.45 && reload < 1.05), happy: R.happy, power, dead });
   ctx.restore();
   if (!dead && power > 0.5) botGlow(ctx, 10.6 * K, -4.6 * K, 11 * K, '70, 255, 205', aiming ? 0.32 : 0.18);
+
+  ctx.save();
+  applyBotCap(ctx, R);
+  drawLayer(ctx, A.cap);
+  ctx.restore();
 
   burnGlow(ctx, u, 20.7 * K, 23 * K);
   if (!dead) drawHitFlash(ctx, u, 20.9 * K, 23.2 * K);
 
-  ctx.translate(lerp(8 * K, 8 * K, pose), lerp(12 * K, 10 * K, pose));
-  ctx.rotate(dead ? 0.9 : lerp(0.28 + (moving ? Math.sin(ph) * 0.1 : 0), u.aim - kick * 0.3, pose));
-  ctx.translate(-kick * 6 * K, 0);
-  drawLayer(ctx, (u.reload || 0) < 0.45 && !dead ? A.gunLoaded : A.gun);
+  const check = R.fidget === 'tinker' ? Math.sin(Math.min(1, R.q * 1.15) * Math.PI) ** 0.6 : 0;
+  const held = lerp(0.28 + Math.cos(R.phase) * 0.15 * R.move + Math.sin(t * 2.5) * 0.035, u.aim, pose);
+  const angle = dead ? 0.9 : held + R.gunA - check * 0.8 + (check > 0.7 ? Math.sin(t * 30) * 0.06 : 0) - R.happy * 0.55;
+  ctx.save();
+  ctx.translate((8 + R.gunX - 3 * check) * K, (lerp(12, 10, pose) - 4 * check + (R.happy ? R.hop * 0.35 : 0)) * K);
+  ctx.rotate(angle);
+  drawLayer(ctx, reload < 0.45 && !dead ? A.gunLoaded : A.gun);
+  ctx.restore();
+  if (!dead && reload > 0.45 && reload < 1.05) jetReload(ctx, (1.05 - reload) / 0.6, angle);
   if (!dead && u.hit > 0.14) {
     ctx.setTransform(u.facing * dpr, 0, 0, dpr, u.x * dpr, (u.y - alt * d.fly.height) * dpr);
     drawZaps(ctx, 2);
@@ -2536,7 +2498,9 @@ export function paintUnitIcon(canvas, sprites, species) {
     g.translate(0, -FEET);
     drawLayer(g, S.feet[0]);
     g.restore();
-    drawZordRig(g, S, ZORD_STILL, (c) => zordLook(c, { lx: 0.7, ly: 0.2 }));
+    drawZordRig(g, S, ZORD_STILL, (c, layer) => {
+      if (layer === 'eye') zordLook(c, { lx: 0.7, ly: 0.2 });
+    });
   } else if (species === 'juggernaut') {
     drawJugRig(g, S, JUG_REST, () => jugEye(g, { lx: 0.7, ly: 0.2 }));
   } else if (species === 'cavalry') {

@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=238';
-import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=238';
+import { TAU, K } from './config.js?v=239';
+import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=239';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -1710,7 +1710,7 @@ function drawTrooperPack(g) {
   }
 }
 
-function drawTrooperBody(g) {
+function drawTrooperBody(g, bare) {
   g.lineJoin = 'round';
   g.lineCap = 'round';
   eggBody(g, BOT.lite, BOT.dark);
@@ -1734,7 +1734,7 @@ function drawTrooperBody(g) {
   g.beginPath();
   g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
   g.stroke();
-  drawTrooperCap(g);
+  if (bare !== true) drawTrooperCap(g);
 }
 
 // the armoured helmet, with a brim like the soldiers'
@@ -1774,6 +1774,15 @@ export function trooperEyes(g, o) {
       g.lineTo(x - r * 0.4, y + r * 0.4);
       g.stroke();
       g.globalAlpha = 1;
+      return;
+    }
+    if (o.happy) {
+      g.strokeStyle = glow;
+      g.lineWidth = r * 0.27;
+      g.lineCap = 'round';
+      g.beginPath();
+      g.arc(x, y + r * 0.26, r * 0.4, Math.PI * 1.14, Math.PI * 1.86);
+      g.stroke();
       return;
     }
     if (power > 0.02) {
@@ -2118,14 +2127,21 @@ function zordMuzzle(g, draw) {
 }
 
 // the egg, the helmet and the dragon's upper snout, all one head and body as a trooper's is
-function drawZordBody(g) {
+function drawZordBody(g, bare) {
   // the inside of his mouth, seen when the jaw drops
   botPoly(g, '#241c33', [[11, 9], [38, 9], [32, 18], [13, 20]], 1.4);
   g.save();
   g.scale(ZORD_WIDE, 1);
-  drawTrooperBody(g);
+  drawTrooperBody(g, bare);
   g.restore();
   zordMuzzle(g, () => drawZordSnout(g));
+}
+
+function drawZordCap(g) {
+  g.save();
+  g.scale(ZORD_WIDE, 1);
+  drawTrooperCap(g);
+  g.restore();
 }
 
 function drawZordSnout(g) {
@@ -2223,9 +2239,9 @@ function drawJetCrest(g) {
   botPoly(g, BOT.teal, [[-4, -27], [-17, -37], [-3, -36], [10, -27.6]], 1.6);
 }
 
-function drawJetBody(g) {
-  drawJetCrest(g);
-  drawTrooperBody(g);
+function drawJetBody(g, bare) {
+  if (bare !== true) drawJetCrest(g);
+  drawTrooperBody(g, bare);
   // the harness strap that holds the pack on
   for (const [col, w] of [[OUT, 5], [BOT.teal, 3]]) {
     g.strokeStyle = col;
@@ -2287,12 +2303,24 @@ export function drawGatlingBelt(g, feed) {
   }
 }
 
-function drawGatlingBody(g) {
+function drawGatlingBody(g, bare) {
   g.save();
   g.scale(GATLING_WIDE, 1);
-  drawTrooperBody(g);
+  drawTrooperBody(g, bare);
   g.restore();
-  // the steel ridge over the top of his helmet, and its bolts
+  if (bare !== true) drawGatlingRidge(g);
+}
+
+function drawGatlingCap(g) {
+  g.save();
+  g.scale(GATLING_WIDE, 1);
+  drawTrooperCap(g);
+  g.restore();
+  drawGatlingRidge(g);
+}
+
+// the steel ridge over the top of his helmet, and its bolts
+function drawGatlingRidge(g) {
   botPart(g, '#d3d8e3', 1.5, () => {
     g.moveTo(-3, -28.4);
     g.quadraticCurveTo(4, -30.6, 10, -26.6);
@@ -2342,6 +2370,32 @@ export function feetSet(color) {
   return FEET_POSES.map((pose) => makeLayer(-30, 16, 32, 38, (g) => drawFeet(g, pose, true, color)));
 }
 
+// one robot foot, and the soft shadow they stand on, so each foot can step on its own
+function botFoot(g) {
+  g.fillStyle = '#4a5478';
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.3;
+  g.beginPath();
+  g.ellipse(0, 0, 6.8, 4, 0, 0, TAU);
+  g.fill();
+  g.stroke();
+  g.fillStyle = 'rgba(210, 220, 255, 0.38)';
+  g.beginPath();
+  g.ellipse(-1.6, -1.7, 2.8, 1.1, -0.15, 0, TAU);
+  g.fill();
+}
+
+function botShade(g) {
+  g.scale(1, 0.27);
+  const gr = g.createRadialGradient(0, 0, 2, 0, 0, 31);
+  gr.addColorStop(0, 'rgba(0, 0, 0, 0.5)');
+  gr.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  g.fillStyle = gr;
+  g.beginPath();
+  g.arc(0, 0, 31, 0, TAU);
+  g.fill();
+}
+
 export function eggSet(drawBody, gazes = GAZE3, extra = {}) {
   return {
     torso: makeLayer(-40, -38, 36, 26, (g) => drawBody(g, false, gazes[0], false)),
@@ -2367,6 +2421,10 @@ export function buildUnitArt() {
     feet: feetSet('#4a5478'),
     pack: makeLayer(-40, -26, -8, 22, drawTrooperPack),
     torso: makeLayer(-40, -38, 36, 26, drawTrooperBody),
+    torsoBare: makeLayer(-40, -38, 36, 28, (g) => drawTrooperBody(g, true)),
+    cap: makeLayer(-26, -34, 28, -8, drawTrooperCap),
+    foot: makeLayer(-9, -6, 9, 6, botFoot),
+    shade: makeLayer(-32, -10, 32, 10, botShade),
     gun: makeLayer(-18, -14, 44, 14, drawTrooperGun),
     ghost: makeLayer(-26, -30, 26, 26, (g) => ghostBody(g)),
   };
@@ -2375,6 +2433,13 @@ export function buildUnitArt() {
     feet: art.trooper.feet,
     pack: makeLayer(-42, -24, -8, 24, drawJetPack),
     torso: makeLayer(-40, -42, 36, 26, drawJetBody),
+    torsoBare: makeLayer(-40, -42, 36, 28, (g) => drawJetBody(g, true)),
+    cap: makeLayer(-26, -42, 28, -8, (g) => {
+      drawJetCrest(g);
+      drawTrooperCap(g);
+    }),
+    foot: art.trooper.foot,
+    shade: art.trooper.shade,
     gun: makeLayer(-18, -12, 46, 14, (g) => drawJetLauncher(g, false)),
     gunLoaded: makeLayer(-18, -12, 46, 14, (g) => drawJetLauncher(g, true)),
     ghost: makeLayer(-26, -30, 26, 26, (g) => ghostBody(g)),
@@ -2394,6 +2459,10 @@ export function buildUnitArt() {
     feet: art.trooper.feet,
     pack: art.trooper.pack,
     torso: makeLayer(-40, -40, 36, 28, drawGatlingBody),
+    torsoBare: makeLayer(-40, -40, 36, 28, (g) => drawGatlingBody(g, true)),
+    cap: makeLayer(-28, -36, 30, -8, drawGatlingCap),
+    foot: art.trooper.foot,
+    shade: art.trooper.shade,
     gun: makeLayer(-20, -18, 22, 12, drawGatlingGun),
     hand: makeLayer(-8, -2, 8, 14, drawGatlingHand),
     ghost: makeLayer(-26, -30, 26, 26, (g) => ghostBody(g)),
@@ -2403,6 +2472,10 @@ export function buildUnitArt() {
     feet: art.trooper.feet,
     pack: art.trooper.pack,
     body: makeLayer(-30, -36, 48, 28, drawZordBody),
+    bodyBare: makeLayer(-30, -36, 48, 28, (g) => drawZordBody(g, true)),
+    cap: makeLayer(-30, -34, 32, -8, drawZordCap),
+    foot: art.trooper.foot,
+    shade: art.trooper.shade,
     jaw: makeLayer(2, 4, 44, 28, drawZordJaw),
     farHorn: makeLayer(-30, -46, 8, -16, drawZordFarHorn),
     nearHorn: makeLayer(-46, -38, -6, -8, drawZordNearHorn),

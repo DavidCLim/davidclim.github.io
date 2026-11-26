@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=238';
-import { buildCreatureArt } from './creatures.js?v=238';
-import { buildEggArt } from './art_eggs.js?v=238';
-import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=238';
-import { Sfx } from './sfx.js?v=238';
-import { World } from './world.js?v=238';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=238';
-import { buildUnitArt, drawDrop } from './art_units.js?v=238';
-import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=238';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=239';
+import { buildCreatureArt } from './creatures.js?v=239';
+import { buildEggArt } from './art_eggs.js?v=239';
+import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=239';
+import { Sfx } from './sfx.js?v=239';
+import { World } from './world.js?v=239';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=239';
+import { buildUnitArt, drawDrop } from './art_units.js?v=239';
+import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=239';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -187,7 +187,7 @@ const LATTICE = {
   default: [15.5, 12.5, true],
   trooper: [28, 22, true],
   jettrooper: [28, 22, true],
-  gatlingtrooper: [33, 25, true],
+  gatlingtrooper: [31, 24, true],
   juggernaut: [43, 31, true],
   roman: [17.4, 17.6, false],
   cavalry: [34, 22, true],
@@ -202,7 +202,7 @@ const LATTICE = {
   slime: [20, 15, true],
   giant: [42, 36, true],
   dragon: [48, 30, true],
-  mechazord: [44, 32, true],
+  mechazord: [40, 29, true],
   mage: [16, 13, true],
 };
 

@@ -1,8 +1,8 @@
 // The Gatling Trooper's effects in the world: his glowing tracer rounds, the brass that pours out of the cannon, bounces
 // and piles up, the sparks where his rounds strike, and the blast of his ammo drum when he goes. All of it is for show.
-import { TAU, FEET } from './config.js?v=238';
+import { TAU, FEET } from './config.js?v=239';
 
-const BRASS_MAX = 90;
+const BRASS_MAX = 36;
 
 export function resetGatlingFx(world) {
   world.brass = [];
@@ -28,45 +28,38 @@ function pop(world, x, y, r, life, kind) {
   world.pops.push({ x, y, r, life, kind, age: 0, turn: Math.random() * TAU });
 }
 
-// the first round of a volley: a thump at the muzzle and dust kicked up round his feet
-export function gatlingVolley(world, u, m, a) {
-  pop(world, m.x, m.y, 15, 0.2, 'ring');
-  chips(world, m.x, m.y, 10, a, 1.1, 190);
-  for (let i = 0; i < 8; i++) {
-    const an = (i / 8) * TAU;
-    world.puffs.push({ x: u.x + Math.cos(an) * 8, y: u.y + FEET + Math.sin(an) * 3, vx: Math.cos(an) * 32, vy: Math.sin(an) * 10 - 3, age: 0, life: 0.45 + Math.random() * 0.2, size: 1.7 + Math.random(), dust: true });
-  }
+// the first round of a volley lands with a thump
+export function gatlingVolley(world, u) {
   if (world.sfx) world.sfx('slam', u.x);
 }
 
-// every round: sparks spat out of the muzzle, a brass shell flung back, and now and then a lick of smoke
+// every round: a brass shell flung back from every other one, and now and then a lick of smoke
 export function gatlingShot(world, u, m, a) {
-  chips(world, m.x, m.y, 2, a, 0.75, 150);
-  shell(world, u.x + u.facing * 2, u.y + FEET + (Math.random() - 0.5) * 5, 11 + Math.random() * 3, -u.facing * (18 + Math.random() * 42), (Math.random() - 0.4) * 16, 52 + Math.random() * 48, 1.7 + Math.random() * 1.1);
   u.shots = (u.shots || 0) + 1;
-  if (u.shots % 4 === 0) {
-    world.puffs.push({ x: m.x + Math.cos(a) * 7, y: m.y + Math.sin(a) * 7 - 1, vx: Math.cos(a) * 8, vy: -9 - Math.random() * 8, age: 0, life: 0.55 + Math.random() * 0.25, size: 1.8 + Math.random() * 1.1 });
+  if (u.shots % 2 === 0) {
+    shell(world, u.x + u.facing * 2, u.y + FEET + (Math.random() - 0.5) * 4, 10 + Math.random() * 2, -u.facing * (20 + Math.random() * 30), (Math.random() - 0.4) * 12, 52 + Math.random() * 36, 1.1 + Math.random() * 0.6);
+  }
+  if (u.shots % 6 === 0) {
+    world.puffs.push({ x: m.x + Math.cos(a) * 7, y: m.y + Math.sin(a) * 7 - 1, vx: Math.cos(a) * 8, vy: -9 - Math.random() * 8, age: 0, life: 0.5, size: 1.8 });
   }
 }
 
-// where a round strikes: a flash, and sparks thrown back the way it came
+// where a round strikes: one small flash and a couple of sparks
 export function gatlingImpact(world, x, y, ang) {
-  pop(world, x, y, 5 + Math.random() * 2, 0.09, 'star');
-  chips(world, x, y, 4, ang + Math.PI, 2.2, 135);
+  pop(world, x, y, 4.4, 0.08, 'star');
+  chips(world, x, y, 2, ang + Math.PI, 1.8, 120);
 }
 
 // the ammo drum goes off as he blows apart
 export function gatlingCookOff(world, u) {
   const gy = u.y + FEET;
-  for (let i = 0; i < 34; i++) {
+  for (let i = 0; i < 14; i++) {
     const a = Math.random() * TAU;
-    const sp = 20 + Math.random() * 80;
-    shell(world, u.x, gy + (Math.random() - 0.5) * 6, 12, Math.cos(a) * sp, Math.sin(a) * sp * 0.45, 90 + Math.random() * 140, 2.2 + Math.random() * 1.6);
+    const sp = 24 + Math.random() * 66;
+    shell(world, u.x, gy + (Math.random() - 0.5) * 6, 11, Math.cos(a) * sp, Math.sin(a) * sp * 0.45, 90 + Math.random() * 120, 1.7 + Math.random() * 0.9);
   }
-  chips(world, u.x, u.y - 3, 34, 0, TAU, 240);
-  chips(world, u.x, u.y - 3, 12, 0, TAU, 150, true);
-  pop(world, u.x, u.y - 3, 34, 0.34, 'ring');
-  for (let i = 0; i < 7; i++) pop(world, u.x + (Math.random() - 0.5) * 36, u.y + (Math.random() - 0.6) * 22, 5 + Math.random() * 4, 0.16 + i * 0.05, 'star');
+  chips(world, u.x, u.y - 3, 16, 0, TAU, 210);
+  pop(world, u.x, u.y - 3, 30, 0.3, 'ring');
 }
 
 export function stepGatlingFx(world, dt) {
@@ -147,14 +140,14 @@ function drawTracer(ctx, b) {
   const sp = Math.hypot(b.vx, b.vy) || 1;
   const ux = b.vx / sp;
   const uy = b.vy / sp;
-  const len = Math.min(21, 4 + (b.dist || 0));
-  for (const [rgb, wide, k] of [['255, 128, 24', 3.9, 1], ['255, 206, 60', 2.1, 0.8]]) {
+  const len = Math.min(15, 4 + (b.dist || 0));
+  for (const [rgb, wide, k] of [['255, 156, 28', 2.5, 1]]) {
     const gr = ctx.createLinearGradient(b.x - ux * len * k, b.y - uy * len * k, b.x, b.y);
     gr.addColorStop(0, `rgba(${rgb}, 0)`);
     gr.addColorStop(1, `rgba(${rgb}, 0.95)`);
     line(ctx, b.x - ux * len * k, b.y - uy * len * k, b.x, b.y, gr, wide);
   }
-  line(ctx, b.x - ux * 4, b.y - uy * 4, b.x, b.y, '#fffdf0', 1.2);
+  line(ctx, b.x - ux * 3.6, b.y - uy * 3.6, b.x, b.y, '#fff6c8', 1.1);
 }
 
 // over the units: tracers, shells in the air, sparks and flashes

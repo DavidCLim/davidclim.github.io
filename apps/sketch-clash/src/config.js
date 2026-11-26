@@ -112,8 +112,8 @@ export const TROOPER = {
 export const GATLING = {
   ...TROOPER,
   hp: 520,
-  radius: 15 * UNIT,
-  sep: 24 * UNIT,
+  radius: 14 * UNIT,
+  sep: 22 * UNIT,
   speed: 40,
   sight: 440,
   range: 300,
@@ -126,13 +126,13 @@ export const GATLING = {
   damage: 9,
   spread: 0.1,
   armor: 0.85,
-  scale: 1.28, // of Robo Trooper's drawing; the trooper himself is 1.15
+  scale: 1.18, // of Robo Trooper's drawing; the trooper himself is 1.15
   rapid: true, // a rotary cannon: tracers, and his own muzzle and shell effects (gatlingfx.js)
   casing: false,
   noDrop: true,
-  ring: 1.4,
-  pivot: { x: 7.7 * K, y: 9.6 * K }, // the drawing is scaled up 1.28 about the feet
-  muzzleLen: 58 * K,
+  ring: 1.3,
+  pivot: { x: 7.1 * K, y: 10.8 * K }, // the drawing is scaled up 1.18 about the feet
+  muzzleLen: 53 * K,
   boom: 19,
   parts: ['botplate', 'botplate', 'botpod', 'botpod', 'gatlingbarrel', 'trooper'],
 };
@@ -457,11 +457,11 @@ export const MECHAZORD = {
   flying: false,
   airborne: true, // like the dragon, he sometimes takes off and breathes fire from the air, sometimes he stays on the ground
   hoverH: 24,
-  scale: 1.55, // of Robo Trooper's drawing; the trooper himself is 1.15, and not as broad
+  scale: 1.4, // of Robo Trooper's drawing; the trooper himself is 1.15, and not as broad
   hp: 2200,
   mega: true, // his breath and his end come with their own effects (zordfx.js)
-  radius: 11.5,
-  sep: 19,
+  radius: 10.5,
+  sep: 17.5,
   speed: 38,
   sight: 560,
   dps: 82, // the dragon's is 38; half as much again from the air
@@ -477,10 +477,10 @@ export const MECHAZORD = {
   // range: further than his fire; flight: seconds each is in the air
   missiles: { first: 2.4, every: 5.5, count: 6, gap: 0.09, damage: 48, blast: 17, range: 390, flight: 0.9 },
   parts: ['botplate', 'botplate', 'botpod', 'botpod', 'zordhorn', 'zordhorn', 'zordhead'],
-  ring: 1.8,
-  body: [37, 36, -14],
-  pivot: { x: 48 * K, y: 6.4 * K }, // his mouth
-  muzzleLen: 9 * K,
+  ring: 1.65,
+  body: [33, 33, -10],
+  pivot: { x: 43 * K, y: 8.2 * K }, // his mouth
+  muzzleLen: 8 * K,
   footFire: 18, // whoever is pressed this close against him, under his jaws, is caught by the fire too
   plume: { every: 0.021, speed: 2.35, life: 1.7, size: 2.15 },
 };
