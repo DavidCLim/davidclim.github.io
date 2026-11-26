@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=226';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=226';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=226';
+import { TAU, K } from './config.js?v=227';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=227';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=227';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask
@@ -588,9 +588,8 @@ function drawTree(g) {
   g.stroke();
 }
 
-// A wizard tower, after the sketch it was asked to look like, boiled down to its big rugged shapes: a crooked tiled roof
-// with a leaning point, a wide upper floor held up on two wooden blocks, a plain stone shaft with two pointed windows, a
-// door in an arch of three great stones, and a round step with a rough block. Origin: the middle of the ground.
+// A wizard tower in a few big rugged shapes, after its sketch: a crooked pointed roof of big tiles, a plain stone shaft
+// with one pointed window, a door in a rough stone arch and a round step. Origin: the middle of the ground.
 const TW = {
   tile: ['#8b7fc6', '#7a6eb8', '#695da6', '#9a8fd2'],
   tileDark: '#4a4189',
@@ -670,66 +669,44 @@ function pointed(g, x, y, w, h) {
 }
 
 function drawTower(g) {
-  shadowEll(g, 40, 8, 3);
+  shadowEll(g, 36, 8, 3);
 
-  // ---- one round stone step, with a rough block against it
-  drum(g, 0, -13, 29, 7.4, 13, across(g, -29, 29, '#b2afa8', '#7d7a75'), '#bfbcb5');
-  slab(g, [[-33, -9], [-21.5, -5], [-22.5, 8], [-34, 2.5]], across(g, -34, -22, '#c0bdb6', '#96938d'), 2.2);
+  // ---- one round stone step
+  drum(g, 0, -12, 27, 7, 12, across(g, -27, 27, '#b2afa8', '#7d7a75'), '#bfbcb5');
 
   // ---- the stone shaft, a little crooked
-  slab(g, [[-19.5, -15], [-16.5, -52], [-16, -89], [15.5, -89], [16.5, -50], [19.5, -15]], across(g, -19, 19, TW.stoneLite, TW.stoneShade), 2.3);
-  pointed(g, 4, -69, 9, 13.5);
-  pointed(g, -5.5, -52.5, 9, 13.5);
+  slab(g, [[-18, -14], [-15, -52], [-15.5, -93], [15, -93], [15.5, -49], [18, -14]], across(g, -18, 18, TW.stoneLite, TW.stoneShade), 2.4);
+  pointed(g, 0, -67, 11, 17);
 
-  // ---- the door in an arch of three great stones
+  // ---- the door in one rough stone arch
+  slab(g, [[-14, -11], [-14.5, -31], [-7.5, -42], [7, -43], [14.5, -32], [14, -11]], '#efe8d4', 2.3);
   g.beginPath();
-  g.moveTo(-8.5, -12);
-  g.lineTo(-8.5, -25);
-  g.bezierCurveTo(-8.5, -37, 11.5, -37, 11.5, -25);
-  g.lineTo(11.5, -12);
+  g.moveTo(-8.5, -11);
+  g.lineTo(-8.5, -27);
+  g.bezierCurveTo(-8.5, -39, 8.5, -39, 8.5, -27);
+  g.lineTo(8.5, -11);
   g.closePath();
-  g.fillStyle = across(g, -9, 12, '#b57c46', '#7a4b26');
+  g.fillStyle = across(g, -9, 9, '#b57c46', '#7a4b26');
   g.fill();
   ink(g, 2);
   g.stroke();
   g.beginPath();
-  g.arc(7, -21, 2.1, 0, TAU);
+  g.arc(4.4, -21, 2.1, 0, TAU);
   g.fillStyle = '#f0c25a';
   g.fill();
   ink(g, 1.3);
   g.stroke();
-  slab(g, [[-16.5, -10], [-8.5, -11], [-8.5, -26], [-3.5, -33], [-11, -40.5], [-17.5, -28]], TW.stone, 2.2);
-  slab(g, [[-11, -40.5], [-3.5, -33], [8, -33.5], [13, -41]], '#efe8d4', 2.2);
-  slab(g, [[13, -41], [8, -33.5], [11.5, -26], [11.5, -11], [19.5, -10], [20, -30]], TW.stoneShade, 2.2);
 
-  // ---- two wooden blocks holding up the top floor
-  slab(g, [[-25, -89], [-11, -88], [-13, -75], [-22, -77]], across(g, -25, -11, '#bd874f', TW.woodDark), 2.2);
-  slab(g, [[15, -88], [27, -90], [23.5, -76], [16, -74.5]], across(g, 15, 27, '#bd874f', TW.woodDark), 2.2);
-
-  // ---- the wide upper floor: three rough faces with one big window
-  slab(g, [[-34, -108], [-15, -104], [-15, -84], [-32.5, -90]], across(g, -34, -15, '#e0d5bb', '#bcae90'), 2.3);
-  slab(g, [[-15, -104], [18, -104], [18, -84], [-15, -84]], TW.stone, 2.3);
-  slab(g, [[18, -104], [36, -109], [33.5, -91], [18, -84]], across(g, 18, 36, '#b3a68a', '#8d8169'), 2.3);
-  slab(g, [[-8, -101], [11, -101], [11, -88], [-8, -88]], '#f7bd4c', 2.2);
-  crease(g, [[1.5, -101], [1.5, -88]], '#17141a', 1.8);
-  crease(g, [[-8, -94.5], [11, -94.5]], '#17141a', 1.8);
-
-  // ---- the roof: a deep shadow, a great crooked eave in big tiles, and the leaning point
-  slab(g, [[-40, -110], [-15, -105.5], [18, -105.5], [41, -111], [20, -116], [-20, -116]], '#2e2856', 0);
-  slab(g, [[-49, -112], [-16, -120], [-12, -141], [-34, -130]], TW.tile[0], 2.4);
-  slab(g, [[-16, -120], [14, -132], [12, -144], [-12, -141]], TW.tile[3], 2.4);
-  slab(g, [[14, -132], [51, -103], [33, -130], [12, -144]], TW.tile[2], 2.4);
-  slab(g, [[-49, -112], [-16, -120], [-14.5, -105], [-35, -106], [-46, -100.5]], TW.tile[1], 2.5);
-  slab(g, [[-16, -120], [14, -132], [16, -116], [2, -113], [-14.5, -105]], TW.tile[0], 2.5);
-  slab(g, [[14, -132], [51, -103], [47.5, -93], [37, -105], [16, -116]], TW.tileDark, 2.5);
-  slab(g, [[-17, -138], [-1, -155], [-3.5, -157.5], [11, -167], [12.5, -153], [23, -136], [2, -141]], TW.tile[1], 2.4);
-
-  // a couple of cracks of age
-  crease(g, [[-30, -107.5], [-28, -112], [-31, -115], [-29.5, -119]], 'rgba(20, 14, 52, 0.8)', 1.6);
-  crease(g, [[11, -37.5], [14.5, -33], [12.5, -29.5]], 'rgba(45, 36, 24, 0.75)', 1.4);
+  // ---- the roof: a pointed hat with a crooked tip, over a thick edge of three big tiles
+  slab(g, [[-24, -99], [23, -100], [20, -89], [-20, -88]], TW.stone, 2.3);
+  slab(g, [[-43, -103], [-12, -135], [1, -150], [3, -114], [-14, -113]], TW.tile[0], 2.4);
+  slab(g, [[1, -150], [17, -165], [11, -150], [17, -134], [44, -102], [17, -114], [3, -114]], TW.tile[2], 2.4);
+  slab(g, [[-43, -103], [-14, -113], [-12, -96], [-39, -92]], TW.tile[1], 2.5);
+  slab(g, [[-14, -113], [17, -114], [19, -97], [-12, -96]], TW.tile[0], 2.5);
+  slab(g, [[17, -114], [44, -102], [40, -91], [19, -97]], TW.tileDark, 2.5);
 }
 
-// The living part of it, drawn over every frame: lamplight breathing in the windows. Same coordinates as drawTower.
+// The living part of it, drawn over every frame: lamplight breathing in its window. Same coordinates as drawTower.
 export function drawTowerMagic(ctx, t) {
   const glow = (x, y, r, al) => {
     const gr = ctx.createRadialGradient(x * K, y * K, 0, x * K, y * K, r * K);
@@ -741,10 +718,7 @@ export function drawTowerMagic(ctx, t) {
     ctx.fill();
   };
   const breathe = 0.5 + 0.5 * Math.sin(t * 2.2);
-  const other = 0.5 + 0.5 * Math.sin(t * 2.9 + 2);
-  glow(1.5, -94.5, 15, 0.16 + 0.16 * breathe);
-  glow(4, -69, 8.5, 0.14 + 0.18 * other);
-  glow(-5.5, -52.5, 8.5, 0.14 + 0.18 * breathe);
+  glow(0, -67, 13, 0.16 + 0.2 * breathe);
 }
 
 export function buildTerrainArt() {

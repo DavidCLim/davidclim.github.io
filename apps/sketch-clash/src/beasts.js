@@ -1,5 +1,5 @@
-import { TAU, FEET, GAIT } from './config.js?v=226';
-import { WATER, ICE, WALL } from './terrain.js?v=226';
+import { TAU, FEET, GAIT } from './config.js?v=227';
+import { WATER, ICE, WALL } from './terrain.js?v=227';
 
 // Everything the Animals and Mythical tabs add to the world, plus the terrain physics:
 // the beast brain, the mage's bolts, the necromancer's skeletons, zombie infection,
