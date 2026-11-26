@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=184';
-import { drawLayer, OUT } from './sprites.js?v=184';
-import { drawDrop } from './art_units.js?v=184';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=184';
-import { EGG_DROPS } from './art_eggs.js?v=184';
+import { TAU, K, UNIT, FEET } from './config.js?v=186';
+import { drawLayer, OUT } from './sprites.js?v=186';
+import { drawDrop } from './art_units.js?v=186';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=186';
+import { EGG_DROPS } from './art_eggs.js?v=186';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -198,7 +198,7 @@ function drawTrooper(ctx, dpr, sprites, u) {
   ctx.translate(lerp(-10.9 * K, 3 * K, pose), lerp(-2.3 * K, 4 * K, pose));
   ctx.rotate(lerp(1.41, u.aim, pose));
   ctx.translate(-u.recoil * 2 * K, 0);
-  drawLayer(ctx, u.flash > 0 ? A.gunFire : A.gun);
+  drawLayer(ctx, A.gun);
 }
 
 function drawFlamethrower(ctx, dpr, sprites, u) {
@@ -333,7 +333,7 @@ function drawCowboy(ctx, dpr, sprites, u) {
   ctx.translate(lerp(14 * K, d.pivot.x, pose) - u.recoil * 2.2 * K, lerp(17 * K, d.pivot.y, pose));
   ctx.rotate(lerp(0.9, u.aim - u.recoil * 0.18, pose));
   ctx.scale(0.78, 0.78);
-  drawLayer(ctx, u.flash > 0 ? A.pistolFire : A.pistol);
+  drawLayer(ctx, A.pistol);
 }
 
 function drawZombie(ctx, dpr, sprites, u) {
@@ -576,27 +576,42 @@ export function drawFx(ctx, dpr, sprites, world) {
       ctx.restore();
       continue;
     }
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
+    // as measured in the original: the shadow is a soft grey dash sliding along the ground under the arrow, and the
+    // arrow itself (red tail, brown shaft, grey point) tips over as it follows its high slow arc
+    const ground = Math.atan2(a.y1 - a.y0, a.x1 - a.x0);
+    ctx.strokeStyle = 'rgba(90, 92, 102, 0.34)';
+    ctx.lineCap = 'round';
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.ellipse(gx, gy + FEET * 0.5, 4, 1.5, 0, 0, TAU);
-    ctx.fill();
-    const slope = a.y1 - a.y0 + 4 * a.h * (2 * p - 1);
-    if (a.age < 0.28) {
-      // a fresh arrow trails a pale speed streak
-      const ang0 = Math.atan2(slope, a.x1 - a.x0);
-      ctx.strokeStyle = `rgba(150, 152, 162, ${0.6 * (1 - a.age / 0.28)})`;
-      ctx.lineWidth = 1.6;
-      ctx.beginPath();
-      ctx.moveTo(gx, gy - 4 * a.h * p * (1 - p));
-      ctx.lineTo(gx - Math.cos(ang0) * 24, gy - 4 * a.h * p * (1 - p) - Math.sin(ang0) * 24);
-      ctx.stroke();
-    }
+    ctx.moveTo(gx - Math.cos(ground) * 4.2, gy + FEET * 0.8 - Math.sin(ground) * 4.2);
+    ctx.lineTo(gx + Math.cos(ground) * 4.2, gy + FEET * 0.8 + Math.sin(ground) * 4.2);
+    ctx.stroke();
+    const slope = a.y1 - a.y0 - 4 * a.h * (1 - 2 * p);
     ctx.save();
     ctx.translate(gx, gy - 4 * a.h * p * (1 - p));
     ctx.rotate(Math.atan2(slope, a.x1 - a.x0));
-    ctx.scale(1.6, 1.6); // the original's flying arrow is about 17px long
-    ctx.translate(-16 * K, 0);
-    drawLayer(ctx, arrow);
+    ctx.strokeStyle = '#7b5a3c';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-4.8, 0);
+    ctx.lineTo(3.4, 0);
+    ctx.stroke();
+    ctx.fillStyle = '#e0403a';
+    ctx.beginPath();
+    ctx.moveTo(-6.8, 0);
+    ctx.lineTo(-5, -1.8);
+    ctx.lineTo(-3.2, 0);
+    ctx.lineTo(-5, 1.8);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#5a5d68';
+    ctx.beginPath();
+    ctx.moveTo(5.6, 0);
+    ctx.lineTo(2.4, -1.6);
+    ctx.lineTo(3.2, 0);
+    ctx.lineTo(2.4, 1.6);
+    ctx.closePath();
+    ctx.fill();
     ctx.restore();
   }
 

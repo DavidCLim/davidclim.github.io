@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=184';
-import { buildCreatureArt } from './creatures.js?v=184';
-import { buildEggArt } from './art_eggs.js?v=184';
-import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=184';
-import { Sfx } from './sfx.js?v=184';
-import { World } from './world.js?v=184';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=184';
-import { buildUnitArt } from './art_units.js?v=184';
-import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=184';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=186';
+import { buildCreatureArt } from './creatures.js?v=186';
+import { buildEggArt } from './art_eggs.js?v=186';
+import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=186';
+import { Sfx } from './sfx.js?v=186';
+import { World } from './world.js?v=186';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=186';
+import { buildUnitArt } from './art_units.js?v=186';
+import { drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=186';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -326,6 +326,15 @@ function dab(x, y) {
   const { sp } = stroke;
   const D = (LATTICE[sp] || LATTICE.default)[1] * 0.72;
   const pts = stroke.pts || (stroke.pts = []);
+  // a tap with the ring small (the default) drops exactly one unit where you tap, as in the original
+  if (!stroke.dragged && brush <= 12) {
+    const team = teamAt(x);
+    if (!pts.length && canPlace(x, y, team)) {
+      pts.push({ x, y });
+      stroke.made.push(world.addUnit(sp, team, x, y));
+    }
+    return;
+  }
   const area = (brush * brush) / (D * D);
   const tries = Math.ceil(area * (stroke.dragged ? 0.8 : 4)) + 1;
   for (let n = 0; n < tries; n++) {
@@ -964,7 +973,7 @@ function drawSoldier(u) {
     IDLE_PIVOT.y + (PIVOT.y - IDLE_PIVOT.y) * pose,
   );
   ctx.rotate(IDLE_AIM + (u.aim - IDLE_AIM) * pose + Math.sin(u.breath * 1.6) * 0.03 * (1 - pose));
-  drawLayer(ctx, u.flash > 0 ? S.rifleFire : S.rifle);
+  drawLayer(ctx, S.rifle);
 }
 
 // The sniper's own idle routine (see SNIPER_IDLES in world.js): rifle
@@ -1056,7 +1065,7 @@ function drawSniper(u) {
       ctx.scale(-1, 1);
       ctx.rotate(-0.05 + Math.sin(u.breath * 1.4) * 0.02);
     } else ctx.rotate(lerp(ia, u.aim, pose));
-    drawLayer(ctx, u.flash > 0 ? S.rifleFire : S.rifle);
+    drawLayer(ctx, S.rifle);
     if (idle && lift > 0.85 && pose < 0.3) {
       // sun glint off the scope
       ctx.globalAlpha = standA * ((lift - 0.85) / 0.15);
@@ -1209,14 +1218,22 @@ function render() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.lineCap = 'round';
 
-  ctx.lineWidth = 1.2;
-  ctx.strokeStyle = '#5e616b';
-  ctx.beginPath();
+  // a thin grey streak, clear at the tail and dark at the head, that grows out of the muzzle
+  ctx.lineWidth = 0.85;
   for (const b of world.bullets) {
-    ctx.moveTo(b.x - b.vx * 0.013, b.y - b.vy * 0.013);
+    const sp = Math.hypot(b.vx, b.vy) || 1;
+    const len = Math.min(9, 2 + (b.dist || 0));
+    const tx = b.x - (b.vx / sp) * len;
+    const ty = b.y - (b.vy / sp) * len;
+    const gr = ctx.createLinearGradient(tx, ty, b.x, b.y);
+    gr.addColorStop(0, 'rgba(94, 97, 107, 0)');
+    gr.addColorStop(1, 'rgba(82, 85, 96, 1)');
+    ctx.strokeStyle = gr;
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
     ctx.lineTo(b.x, b.y);
+    ctx.stroke();
   }
-  ctx.stroke();
 
   // the mage's frost bolts: a glowing cyan orb
   for (const o of world.orbs) {
@@ -1263,6 +1280,34 @@ function render() {
       ctx.globalAlpha = 0.62 * (t < 0.5 ? 1 : 1 - (t - 0.5) / 0.5);
       ctx.drawImage(smokeSprite, p.x - r, p.y - r, r * 2, r * 2);
       ctx.globalAlpha = 1;
+      continue;
+    }
+    if (p.ring) {
+      // muzzle flash: a hollow yellow ring with a pale middle, shrinking
+      const r = p.size * (1 - 0.72 * t * t);
+      ctx.fillStyle = 'rgba(255, 244, 196, 0.85)';
+      ctx.strokeStyle = '#fcbc3c';
+      ctx.lineWidth = Math.max(0.5, r * 0.55);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r, 0, TAU);
+      ctx.fill();
+      ctx.stroke();
+      continue;
+    }
+    if (p.star) {
+      // a little five-lobed puff
+      const r = p.size * (0.85 + 0.25 * Math.min(1, t * 3));
+      ctx.fillStyle = `rgba(196, 198, 206, ${0.7 * (1 - t * t)})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r * 0.62, 0, TAU);
+      for (let k = 0; k < 5; k++) {
+        const an = p.rot + (k / 5) * TAU;
+        const px = p.x + Math.cos(an) * r * 0.66;
+        const py = p.y + Math.sin(an) * r * 0.66;
+        ctx.moveTo(px + r * 0.4, py);
+        ctx.arc(px, py, r * 0.4, 0, TAU);
+      }
+      ctx.fill();
       continue;
     }
     if (p.dust) {

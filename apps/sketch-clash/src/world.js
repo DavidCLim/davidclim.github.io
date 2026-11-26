@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=184';
-import { TerrainMap, WALL } from './terrain.js?v=184';
-import { installBeasts } from './beasts.js?v=184';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=186';
+import { TerrainMap, WALL } from './terrain.js?v=186';
+import { installBeasts } from './beasts.js?v=186';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -680,22 +680,15 @@ export class World {
     });
     u.flash = 0.07;
     if (this.sfx) this.sfx('shot', m.x);
-    // a small pale puff drifts away from the muzzle along the shot
-    this.puffs.push({ x: m.x, y: m.y, vx: Math.cos(a) * 9, vy: -9, age: 0, life: 0.9, size: 1.0 });
-    if (d.smoke) {
-      u.recoil = 1;
-      for (let i = 0; i < 3; i++) {
-        this.puffs.push({
-          x: m.x,
-          y: m.y,
-          vx: Math.cos(a) * (14 + Math.random() * 22) + (Math.random() - 0.5) * 14,
-          vy: Math.sin(a) * (14 + Math.random() * 22) - 6 - Math.random() * 10,
-          age: 0,
-          life: 0.9 + Math.random() * 0.5,
-          size: 4 + Math.random() * 4,
-        });
-      }
-    }
+    this.muzzleFx(m, a);
+    if (d.smoke) u.recoil = 1;
+  }
+
+  // As measured in the original: a hollow yellow ring on the muzzle that shrinks away in five frames, and a small
+  // pale star of smoke that stays hanging just in front of it.
+  muzzleFx(m, a) {
+    this.puffs.push({ ring: true, x: m.x, y: m.y, vx: 0, vy: 0, age: 0, life: 0.095, size: 2.3 });
+    this.puffs.push({ star: true, x: m.x + Math.cos(a) * 9, y: m.y + Math.sin(a) * 9, vx: Math.cos(a) * 1.5, vy: -1.5, age: 0, life: 0.75, size: 2.1, rot: Math.random() * TAU });
   }
 
   // A sniper round is a ray: it hits everything along the line, up to
@@ -1470,8 +1463,8 @@ export class World {
       x1: t.x + (Math.random() - 0.5) * sp * 2,
       y1: t.y + (Math.random() - 0.5) * sp * 2,
       age: 0,
-      dur: 0.25 + dist / d.arrowSpeed,
-      h: 24 + dist * 0.3,
+      dur: 0.06 + dist / d.arrowSpeed,
+      h: dist * 0.32, // the arc peaks about a third as high as the shot is long
       side: u.side,
       owner: u,
       damage: d.damage,

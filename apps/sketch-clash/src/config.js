@@ -43,7 +43,7 @@ export const SOLDIER = {
   cooldownMin: 1.4,
   cooldownMax: 2,
   damage: 34,
-  bulletSpeed: 640,
+  bulletSpeed: 510, // 13.5 screen px a frame in the original
   bulletRange: 380,
   spread: 0.06,
   pivot: PIVOT,
@@ -176,7 +176,7 @@ export const ARCHER = {
   cooldownMin: 0.25,
   cooldownMax: 0.6,
   damage: 45, // eight arrows kill a Roman in the original
-  arrowSpeed: 380,
+  arrowSpeed: 162, // about 260 screen px a second in the original
   pivot: { x: 13 * K, y: 3 * K },
   muzzleLen: 14 * K,
 };
