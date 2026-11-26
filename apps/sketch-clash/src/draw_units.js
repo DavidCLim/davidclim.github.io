@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=194';
-import { drawLayer, OUT } from './sprites.js?v=194';
-import { drawDrop, trooperEyes, BOT_JETS } from './art_units.js?v=194';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=194';
-import { EGG_DROPS } from './art_eggs.js?v=194';
+import { TAU, K, UNIT, FEET } from './config.js?v=195';
+import { drawLayer, OUT } from './sprites.js?v=195';
+import { drawDrop, trooperEyes, BOT_JETS } from './art_units.js?v=195';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=195';
+import { EGG_DROPS } from './art_eggs.js?v=195';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -207,10 +207,10 @@ function botGlow(ctx, x, y, r, rgb, a) {
   ctx.fill();
 }
 
-// two springy antennae whose tips lag behind whatever the body is doing
+// a springy antenna whose tip lags behind whatever the body is doing
 function botAntennae(ctx, sway, blinkOn) {
   ctx.lineCap = 'round';
-  for (const [x0, y0, x1, y1, k, beacon] of [[-2, -26, -12, -43, 1, true], [5, -26.6, -2, -47, 0.8, false]]) {
+  for (const [x0, y0, x1, y1, k, beacon] of [[1, -26.4, -8, -45, 1, true]]) {
     const tx = x1 + sway * k;
     const ty = y1 + Math.abs(sway) * 0.35;
     for (const [col, w] of [[OUT, 2.7], ['#7a8494', 1.2]]) {

@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=194';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=194';
+import { TAU, K } from './config.js?v=195';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=195';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -1624,7 +1624,7 @@ const GHOSTS = {
 
 // ---------------------------------------------------------------- Robo Trooper
 // Built like the rest of the army (an egg on two little feet under a helmet), but armoured: a visor band with a big
-// green lens and a small red one for eyes, two antennae and a pair of thruster pods on his back.
+// green lens for an eye, one antenna and a pair of thruster pods on his back.
 const BOT = { lite: '#b9add2', mid: '#9b8db6', dark: '#746796', teal: '#5f7a74', tealDark: '#465e59', pod: '#b4ced8', podDark: '#7d98a6', noz: '#4a5a6b', hole: '#1f2730', slate: '#8c9bbd', gun: '#4f5a80', gunDark: '#353e60', gunLite: '#737fa6' };
 
 function botPart(g, fill, lw, path) {
@@ -1682,7 +1682,6 @@ function drawTrooperBody(g) {
   });
   g.fillStyle = 'rgba(190, 220, 208, 0.35)';
   g.fillRect(-22, -11.6, 26, 2);
-  botPoly(g, BOT.slate, [[1, 9], [19, 8], [18, 16], [3, 17]], 1.1);
   botPoly(g, BOT.dark, [[-23, 17], [23, 16], [20, 26], [-20, 26]], 1.2);
   g.restore();
   g.strokeStyle = OUT;
@@ -1771,7 +1770,6 @@ export function trooperEyes(g, o) {
       g.restore();
     }
   };
-  eye(-2.2, -4.6, 5, '#e2463c', '#8e1f1c', '#ffb3a4');
   eye(10.6, -4.6, 7.3, '#1fbc9c', '#0d6f60', '#9ffbe4');
 }
 
