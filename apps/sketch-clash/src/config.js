@@ -416,11 +416,11 @@ export const MECHAZORD = {
   unique: true, // only one on the whole map at a time, whichever team he is on
   flying: false,
   airborne: true, // like the dragon, he sometimes takes off and breathes fire from the air, sometimes he stays on the ground
-  hoverH: 24,
-  scale: 1,
+  hoverH: 28,
+  scale: 1.34,
   hp: 800,
-  radius: 19,
-  sep: 34,
+  radius: 24,
+  sep: 44,
   speed: 38,
   sight: 560,
   dps: 50, // the dragon's is 38; half as much again from the air
@@ -430,15 +430,17 @@ export const MECHAZORD = {
   holdDist: 135,
   onTime: 2.2,
   offTime: 1,
-  stomp: { radius: 46, dmg: 45, cd: 2.8, knock: 380 }, // on the ground, a shockwave under his feet
+  stomp: { radius: 58, dmg: 45, cd: 2.8, knock: 380 }, // on the ground, a shockwave under his feet
   explodes: true, // and goes to pieces when he dies, like the other robots
   boom: 22,
   parts: ['botplate', 'botplate', 'botpod', 'zordspine', 'zordspine', 'zordspine', 'zordhead'],
-  ring: 2.9,
+  ring: 3.8,
   body: [62, 54, -48],
-  pivot: { x: 56 * K, y: -97 * K }, // his mouth
-  muzzleLen: 14 * K,
-  plume: { every: 0.028, speed: 1.75, life: 1.55, size: 1.6 },
+  pivot: { x: 75 * K, y: -138 * K }, // his mouth
+  muzzleLen: 19 * K,
+  plume: { every: 0.028, speed: 1.75, life: 1.55, size: 1.9 },
+  // his second attack, and every third after it, is a plasma beam: he gathers it, then it cuts through everyone on its line
+  beam: { every: 3, charge: 1.1, fire: 0.75, rest: 0.45, range: 290, width: 8, dps: 170 },
 };
 
 export const TERRAIN_IDS = ['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower'];

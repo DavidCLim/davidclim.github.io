@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=221';
-import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=221';
+import { TAU, K } from './config.js?v=222';
+import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=222';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -2138,7 +2138,8 @@ function drawZordLeg(g, far) {
   const steel = far ? zordSteel(g, 6, 40, ZC.dim, ZC.dark) : zordSteel(g, 6, 40);
   // thigh strut up into the haunch
   zordBlock(g, far ? ZC.deep : ZC.dark, [[dx - 8, -4], [dx + 14, -2], [dx + 20, 18 + drop], [dx - 2, 20 + drop]], 6);
-  // the great knee and shin armour
+  // a blade off the knee, then the great knee and shin armour
+  botPoly(g, far ? BOT.podDark : ZC.steel, [[dx + 19, 10 + drop], [dx + 39, 1 + drop], [dx + 27, 20 + drop]], 1.9);
   zordBlock(g, steel, [[dx - 8, 12 + drop], [dx + 17, 6 + drop], [dx + 28, 16 + drop], [dx + 24, 36 + drop], [dx - 6, 37 + drop], [dx - 11, 24 + drop]], 8);
   zordLine(g, [[dx - 8, 25 + drop], [dx + 6, 22 + drop], [dx + 25, 25 + drop]], far ? ZC.deep : ZC.dark, 1.8);
   zordBlock(g, far ? ZC.dark : ZC.mid, [[dx - 2, 9 + drop], [dx + 15, 6 + drop], [dx + 16, 14 + drop], [dx, 16 + drop]], 3, 1.6);
@@ -2164,6 +2165,8 @@ function drawZordHaunch(g) {
   g.ellipse(-23, -41, 7, 3, -0.65, 0, TAU);
   g.fill();
 }
+
+export const ZORD_CORE = { x: 37, y: -61 };
 
 // trunk and neck
 function drawZordBody(g) {
@@ -2195,8 +2198,12 @@ function drawZordBody(g) {
   for (const [x, y] of [[33, -36], [28, -24], [22, -13]]) zordLine(g, [[x - 9, y - 4], [x, y + 2], [x + 12, y - 7]], ZC.trim, 3.4);
   // the chest plate
   zordBlock(g, ZC.deep, [[20, -82], [45, -74], [52, -56], [36, -43], [18, -58]], 5, 2);
-  zordLine(g, [[24, -70], [35, -58], [49, -66]], ZC.trim, 3.6);
-  zordBlock(g, ZC.mid, [[27, -80], [41, -76], [35, -69]], 2, 1.4);
+  zordLine(g, [[22, -62], [28, -50], [38, -45]], ZC.trim, 3);
+  zordBlock(g, ZC.mid, [[27, -80], [43, -76], [37, -71]], 2, 1.4);
+  // the socket of the core in his chest (its light is painted live)
+  botBall(g, ZC.steel, ZORD_CORE.x, ZORD_CORE.y, 8.4, 2);
+  botBall(g, ZC.trimDark, ZORD_CORE.x, ZORD_CORE.y, 5.6, 1.3);
+  botBall(g, ZC.trim, ZORD_CORE.x, ZORD_CORE.y, 3, 0);
   // rings of the neck, with a red stripe and its lights along them
   for (const [ax, ay, bx, by] of [[3, -95, 24, -82], [11, -103, 34, -90]]) zordLine(g, [[ax, ay], [bx, by]], ZC.dark, 2.2);
   zordLine(g, [[-6, -84], [8, -93], [21, -97], [36, -93]], ZC.trim, 3);
@@ -2233,6 +2240,7 @@ function drawZordPauldron(g) {
 // An arm with a heavy clawed hand; origin at the shoulder.
 function drawZordArm(g, far) {
   const steel = far ? zordSteel(g, -6, 24, ZC.dim, ZC.dark) : zordSteel(g, -6, 24);
+  botPoly(g, far ? BOT.podDark : ZC.steel, [[11, 17], [-8, 28], [4, 8]], 1.9);
   zordBlock(g, far ? ZC.deep : ZC.dark, [[-7, -2], [7, -5], [19, 13], [8, 21]], 6);
   zordBlock(g, steel, [[5, 9], [22, 0], [31, 14], [14, 24]], 6);
   zordLine(g, [[12, 12], [24, 6]], ZC.trim, 2.8);
@@ -2256,6 +2264,8 @@ function drawZordHead(g) {
     botPoly(g, ZC.trim, [[(a[0] + b[0]) / 2 + 1, (a[1] + b[1]) / 2 + 1], b, [(c[0] + b[0]) / 2 - 1, (c[1] + b[1]) / 2 + 1]], 1.3);
   }
   botPoly(g, ZC.pod, [[62, -116], [68, -127], [71, -112]], 1.8);
+  botPoly(g, ZC.steel, [[26, -108], [3, -112], [25, -100]], 1.8);
+  botPoly(g, ZC.steel, [[27, -100], [9, -95], [29, -95]], 1.6);
   // the dark inside of the mouth, seen when the jaw drops
   botPoly(g, '#241c33', [[36, -101], [70, -101], [61, -90], [40, -90]], 1.8);
   zordBlock(g, zordSteel(g, -124, -98), [[19, -110], [26, -121], [43, -124], [58, -118], [77, -109], [76, -101], [44, -99], [30, -94], [20, -100]], 5, 2.4);
@@ -2492,12 +2502,12 @@ export function buildUnitArt() {
   art.mechazord = {
     farLeg: makeLayer(-18, -12, 44, 52, (g) => drawZordLeg(g, true)),
     nearLeg: makeLayer(-18, -12, 48, 60, (g) => drawZordLeg(g, false)),
-    farArm: makeLayer(-12, -10, 56, 28, (g) => drawZordArm(g, true)),
-    nearArm: makeLayer(-12, -10, 56, 28, (g) => drawZordArm(g, false)),
+    farArm: makeLayer(-12, -10, 56, 32, (g) => drawZordArm(g, true)),
+    nearArm: makeLayer(-12, -10, 56, 32, (g) => drawZordArm(g, false)),
     body: makeLayer(-50, -114, 62, 2, drawZordBody),
     haunch: makeLayer(-40, -54, 16, 2, drawZordHaunch),
     pauldron: makeLayer(-12, -100, 34, -56, drawZordPauldron),
-    head: makeLayer(4, -148, 82, -86, drawZordHead),
+    head: makeLayer(-2, -148, 82, -86, drawZordHead),
     jaw: makeLayer(30, -108, 78, -82, drawZordJaw),
     ghost: makeLayer(-26, -30, 26, 26, (g) => ghostBody(g)),
   };
