@@ -1,10 +1,10 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=237';
-import { drawLayer, OUT } from './sprites.js?v=237';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt } from './art_units.js?v=237';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=237';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=237';
-import { drawZordGround, drawZordAir } from './zordfx.js?v=237';
-import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=237';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=238';
+import { drawLayer, OUT } from './sprites.js?v=238';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt } from './art_units.js?v=238';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=238';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=238';
+import { drawZordGround, drawZordAir } from './zordfx.js?v=238';
+import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=238';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
