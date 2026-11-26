@@ -1,5 +1,6 @@
-import { TAU, K } from './config.js?v=239';
-import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=239';
+import { TAU, K } from './config.js?v=240';
+import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=240';
+import { buildGibbonArt, drawGibbonHatDrop } from './gibbon.js?v=240';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -1494,6 +1495,9 @@ export const DROPS = {
     drawGatlingBarrels(g, 0.5, 0);
     g.restore();
   },
+  gibbondore(g) {
+    drawGibbonHatDrop(g);
+  },
   zordhorn(g) {
     drawZordHornPiece(g);
   },
@@ -2409,6 +2413,7 @@ export function eggSet(drawBody, gazes = GAZE3, extra = {}) {
 export function buildUnitArt() {
   const dark = feetSet('#25232e');
   const art = {};
+  art.gibbondore = buildGibbonArt();
 
   art.flamethrower = {
     feet: dark,

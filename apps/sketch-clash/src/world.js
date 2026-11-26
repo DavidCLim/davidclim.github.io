@@ -1,8 +1,9 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=239';
-import { TerrainMap, WALL } from './terrain.js?v=239';
-import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordFx } from './zordfx.js?v=239';
-import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=239';
-import { installBeasts } from './beasts.js?v=239';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=240';
+import { TerrainMap, WALL } from './terrain.js?v=240';
+import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordFx } from './zordfx.js?v=240';
+import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=240';
+import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=240';
+import { installBeasts } from './beasts.js?v=240';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -79,6 +80,7 @@ export class World {
     this.flames = []; // flamethrower stream
     resetZordFx(this);
     resetGatlingFx(this);
+    resetGibbonFx(this);
     this.bombs = []; // grenades in the air
     this.arrows = []; // arrows in the air
     this.blasts = []; // explosions
@@ -471,6 +473,7 @@ export class World {
     this.rises = [];
     resetZordFx(this);
     resetGatlingFx(this);
+    resetGibbonFx(this);
     this.terrain.clear();
     this.groups = [];
     this.started = false;
@@ -1042,6 +1045,7 @@ export class World {
       case 'cavalry': this.stepCavalry(u, dt); break;
       case 'beast': this.stepBeast(u, dt); break;
       case 'mage': this.stepMage(u, dt); break;
+      case 'gibbon': stepGibbon(this, u, dt); break;
       case 'necro': this.stepNecro(u, dt); break;
       default: this.stepSoldier(u, dt);
     }
@@ -2083,6 +2087,7 @@ export class World {
 
     stepZordFx(this, dt);
     stepGatlingFx(this, dt);
+    stepGibbonFx(this, dt);
 
     for (const f of this.flames) {
       f.age += dt;

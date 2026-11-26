@@ -5,8 +5,8 @@
 // a hit, a landing) just give the springs a shove, and they overshoot and settle on their own.
 // All of it is for show; none of it changes what a robot does. It runs on the unit's own time (u.breath, which only
 // moves while the world does), so a paused robot holds still.
-import { TAU, K, FEET } from './config.js?v=239';
-import { drawLayer } from './sprites.js?v=239';
+import { TAU, K, FEET } from './config.js?v=240';
+import { drawLayer } from './sprites.js?v=240';
 
 // [stiffness, damping]: low damping rings on longer
 const SPRINGS = {
@@ -129,7 +129,7 @@ export function rigStep(u, o) {
   if (o.calm && !walking && age > 1.4 && !r.fidget && clock > r.nextFidget && o.fidgets) {
     r.fidget = o.fidgets[Math.floor(Math.random() * o.fidgets.length)];
     r.fidgetAt = clock;
-    r.fidgetFor = { look: 1.6, stretch: 1.2, shimmy: 0.8, tinker: 1.5, hops: 0.9, chomp: 0.8, yawn: 1.7, sniff: 1.3, roar: 1.35 }[r.fidget] || 1.2;
+    r.fidgetFor = { look: 1.6, stretch: 1.2, shimmy: 0.8, tinker: 1.5, hops: 0.9, chomp: 0.8, yawn: 1.7, sniff: 1.3, roar: 1.35, scratch: 1.5, twirl: 1.1, hoot: 1.5 }[r.fidget] || 1.2;
     r.nextFidget = clock + r.fidgetFor + 1.4 + Math.random() * 2.6;
     r.beat = 0;
   }

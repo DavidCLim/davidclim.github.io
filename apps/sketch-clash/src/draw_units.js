@@ -1,11 +1,13 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=239';
-import { drawLayer, OUT } from './sprites.js?v=239';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt } from './art_units.js?v=239';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=239';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=239';
-import { drawZordGround, drawZordAir } from './zordfx.js?v=239';
-import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=239';
-import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=239';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=240';
+import { drawLayer, OUT } from './sprites.js?v=240';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt } from './art_units.js?v=240';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=240';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=240';
+import { drawZordGround, drawZordAir } from './zordfx.js?v=240';
+import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=240';
+import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=240';
+import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=240';
+import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=240';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -1828,6 +1830,7 @@ const DRAWERS = {
   flamethrower: drawFlamethrower,
   trooper: drawTrooper,
   gatlingtrooper: drawTrooper,
+  gibbondore: (ctx, dpr, sprites, u) => drawGibbondore(ctx, dpr, sprites, u, burnOverlay),
   jettrooper: drawJetTrooper,
   juggernaut: drawJuggernaut,
   mechazord: drawMechaZord,
@@ -2053,6 +2056,7 @@ export function drawFlames(ctx, world, under) {
   if (under) {
     drawZordGround(ctx, world);
     drawGatlingGround(ctx, world);
+    drawGibbonGround(ctx, world);
   }
   for (const f of world.flames) {
     if (!!f.under !== under) continue;
@@ -2077,6 +2081,7 @@ export function drawFlames(ctx, world, under) {
     drawSpells(ctx, world);
     drawZordAir(ctx, world);
     drawGatlingAir(ctx, world);
+    drawGibbonAir(ctx, world);
   }
 }
 
@@ -2402,6 +2407,7 @@ const ICONS = {
     drawLayer(g, S.gun);
     drawLayer(g, S.hand);
   }],
+  gibbondore: [126, 57, 69, null],
   mechazord: [108, 51, 50, null],
   trooper: [96, 45, 44, (g, S) => {
     g.save();
@@ -2501,6 +2507,8 @@ export function paintUnitIcon(canvas, sprites, species) {
     drawZordRig(g, S, ZORD_STILL, (c, layer) => {
       if (layer === 'eye') zordLook(c, { lx: 0.7, ly: 0.2 });
     });
+  } else if (species === 'gibbondore') {
+    drawGibbonStill(g, S);
   } else if (species === 'juggernaut') {
     drawJugRig(g, S, JUG_REST, () => jugEye(g, { lx: 0.7, ly: 0.2 }));
   } else if (species === 'cavalry') {

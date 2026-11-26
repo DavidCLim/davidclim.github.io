@@ -191,7 +191,7 @@ canvas {
 }
 
 /* ---------- Brush size meter ---------- */
-.brush-box[hidden], .setting-row[hidden] { display: none !important; }
+.brush-box[hidden] { display: none !important; }
 .brush-box {
   position: absolute;
   top: 52px;
@@ -436,6 +436,13 @@ canvas {
   .back { font-size: 18px; }
   .start-btn { bottom: 150px; font-size: 1.7rem; padding: 3px 32px 7px; }
   .team-label { top: 56px; font-size: 0.8rem; }
+}
+
+/* Too narrow for the title and five buttons side by side: the buttons drop to a row of their own. */
+@media (max-width: 600px) {
+  .tools { top: 44px; right: 10px; gap: 6px; }
+  .team-label { top: 90px; }
+  .stage-wrap .paused-pill { top: 124px; }
 }
 
 /* ---------- Paused pill, legend overflow ---------- */

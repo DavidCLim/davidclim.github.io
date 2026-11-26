@@ -1,5 +1,5 @@
-import { TAU, FEET, GAIT } from './config.js?v=239';
-import { WATER, ICE, WALL } from './terrain.js?v=239';
+import { TAU, FEET, GAIT } from './config.js?v=240';
+import { WATER, ICE, WALL } from './terrain.js?v=240';
 
 // Everything the Animals and Mythical tabs add to the world, plus the terrain physics:
 // the beast brain, the mage's bolts, the necromancer's skeletons, zombie infection,
@@ -60,6 +60,7 @@ export function installBeasts(World) {
   // Terrain acts on how far the unit moved this step.
   P.applyTerrain = function (u, ox, oy, dt) {
     if (u.perch && u.perch.state !== 'walk') return;
+    if (u.leap) return; // a leap carries him clean over walls and water
     const d = u.def;
     const T = this.terrain;
     let dx = u.x - ox;

@@ -426,6 +426,27 @@ export const MAGE = {
   // and lightning that leaps from enemy to enemy, leaving each one alight
   chain: { damage: 28, jumps: 5, hop: 62, burn: 2.2 },
 };
+// Gibbondore The Great: a gibbon wizard. He fights like the original's ape (straight in, and a ground slam that sends
+// everyone flying), crosses the gap in one great leap, and throws stars from his staff on the way.
+export const GIBBONDORE = {
+  kind: 'gibbon',
+  hp: 1050,
+  armor: 0.68, // a ward about him turns aside some of every bullet and arrow
+  radius: 9,
+  sep: 13.5,
+  speed: 61,
+  sight: 440,
+  reach: 20, // from his middle to the edge of whoever he slams
+  slam: { radius: 33, damage: 58, knock: 240, time: 0.62, cooldown: [0.55, 0.85] },
+  leap: { min: 42, max: 205, time: 0.56, height: 36, cooldown: 3.4 },
+  spell: { range: 260, cast: 0.42, cooldown: [1.6, 2.2], bolts: 3, damage: 31, blast: 11, speed: 235 },
+  scale: 1.2,
+  ring: 1.7,
+  body: [25, 24, -6],
+  pivot: { x: 0, y: 0 },
+  muzzleLen: 0,
+};
+
 export const GIANT = {
   ...BEAST, hp: 560, radius: 15, sep: 17, speed: 24, reach: 26, damage: 68, cooldownMin: 1.9, cooldownMax: 2.5, atkTime: 0.95,
   slam: { radius: 40, knock: 260 }, creature: true, body: [28, 34, -12], ring: 2.1,
@@ -514,6 +535,7 @@ export const SPECIES = {
   zombie: { id: 'zombie', label: 'Zombie', def: ZOMBIE },
   slime: { id: 'slime', label: 'Slime', def: SLIME },
   mage: { id: 'mage', label: 'Wizard', def: MAGE },
+  gibbondore: { id: 'gibbondore', label: 'Gibbondore The Great', def: GIBBONDORE },
   giant: { id: 'giant', label: 'Giant', def: GIANT },
   dragon: { id: 'dragon', label: 'Dragon', def: DRAGON },
   necromancer: { id: 'necromancer', label: 'Necromancer', def: NECROMANCER },
@@ -527,7 +549,7 @@ export const SPECIES = {
 export const TABS = [
   { id: 'army', label: 'Army', items: ['soldier', 'flamethrower', 'sniper', 'grenadier', 'archer', 'cowboy', 'ninja'] },
   { id: 'robots', label: 'Robots', items: ['trooper', 'jettrooper', 'gatlingtrooper', 'mechazord'] }, // the Juggernaut's code is kept, but he isn't in the palette
-  { id: 'magic', label: 'Magic', items: ['mage'] },
+  { id: 'magic', label: 'Magic', items: ['mage', 'gibbondore'] },
   { id: 'terrain', label: 'Terrain', items: ['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower'] },
 ];
 export const TERRAIN_LABELS = { wall: 'Wall', water: 'Water', ice: 'Ice', mine: 'Mines', barrel: 'Barrel', tree: 'Tree', tower: 'Wizard Tower' };

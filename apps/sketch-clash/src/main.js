@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=239';
-import { buildCreatureArt } from './creatures.js?v=239';
-import { buildEggArt } from './art_eggs.js?v=239';
-import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=239';
-import { Sfx } from './sfx.js?v=239';
-import { World } from './world.js?v=239';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=239';
-import { buildUnitArt, drawDrop } from './art_units.js?v=239';
-import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=239';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=240';
+import { buildCreatureArt } from './creatures.js?v=240';
+import { buildEggArt } from './art_eggs.js?v=240';
+import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=240';
+import { Sfx } from './sfx.js?v=240';
+import { World } from './world.js?v=240';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=240';
+import { buildUnitArt, drawDrop } from './art_units.js?v=240';
+import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=240';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -204,6 +204,7 @@ const LATTICE = {
   dragon: [48, 30, true],
   mechazord: [40, 29, true],
   mage: [16, 13, true],
+  gibbondore: [34, 28, true],
 };
 
 // Terrain: walls, water and ice are painted as strokes; the rest are dropped along the drag.
@@ -456,11 +457,6 @@ stageCanvas.addEventListener('pointermove', (e) => {
 function endPaint(e) {
   // a tap that never travelled still drops a patch
   if (ptr.down && stroke && !stroke.started && canPaint() && !erasing) dab(stroke.ox, stroke.oy);
-  // Romans snap into a rectangle, however they were painted
-  if (stroke && SPECIES[stroke.sp].def.formation && shieldWall) {
-    const [fx, fy] = LATTICE[stroke.sp] || LATTICE.default;
-    world.formRectangle(stroke.made, stroke.ang, fx, fy);
-  }
   ptr.down = false;
   stroke = null;
   tstroke = null;
@@ -596,24 +592,11 @@ try {
   setLammy(false);
 }
 lammyToggle.addEventListener('change', () => setLammy(lammyToggle.checked));
-// Shield Wall: off (the default) knights stay as painted, on they snap into a square block
-const wallToggle = $('wall-toggle');
-let shieldWall = false;
-try {
-  shieldWall = localStorage.getItem('sketch-clash-wall') === '1';
-} catch {
-  shieldWall = false;
-}
-wallToggle.checked = shieldWall;
-wallToggle.addEventListener('change', () => {
-  shieldWall = wallToggle.checked;
-  try {
-    localStorage.setItem('sketch-clash-wall', shieldWall ? '1' : '0');
-  } catch {
-    // storage may be blocked; the switch still works for this visit
-  }
+// the gear opens and shuts Settings (so does the comma key)
+$('settings').addEventListener('click', () => {
+  settingsPanel.hidden = !settingsPanel.hidden;
 });
-// the speaker button mutes and unmutes, as in the original; Settings opens with the comma key
+// the speaker button mutes and unmutes, as in the original
 const SOUND_ON = '<path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>';
 const SOUND_OFF = '<path d="M11 5 6 9H2v6h4l5 4z"/><path d="m22 9-6 6M16 9l6 6"/>';
 $('sound').addEventListener('click', () => {
@@ -1273,7 +1256,7 @@ function render() {
       ctx.ellipse(0, 0, 20.5 * 0.31, 22.8 * 0.31, 0, 0, TAU);
       ctx.fill();
     }
-    if (c.u.species !== 'sniper' && c.u.species !== 'trooper' && c.u.species !== 'jettrooper' && c.u.species !== 'gatlingtrooper' && c.u.species !== 'juggernaut' && c.u.species !== 'mechazord') {
+    if (c.u.species !== 'sniper' && c.u.species !== 'trooper' && c.u.species !== 'jettrooper' && c.u.species !== 'gatlingtrooper' && c.u.species !== 'juggernaut' && c.u.species !== 'mechazord' && c.u.species !== 'gibbondore') {
       placeUnit(ctx, dpr, c.u);
       ctx.globalAlpha = a;
       drawDizzyEyes(ctx, c.u);
