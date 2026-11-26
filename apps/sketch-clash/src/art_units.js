@@ -1,5 +1,5 @@
-import { TAU, K } from './config.js?v=193';
-import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=193';
+import { TAU, K } from './config.js?v=194';
+import { makeLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=194';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -1662,12 +1662,6 @@ function drawTrooperPack(g) {
     gr.addColorStop(0, '#dcedf3');
     gr.addColorStop(1, BOT.podDark);
     botBall(g, gr, -21, y, 8.2, 1.7);
-    g.strokeStyle = 'rgba(52, 82, 98, 0.7)';
-    g.lineWidth = 1;
-    g.beginPath();
-    g.moveTo(-23.5, y - 7.6);
-    g.quadraticCurveTo(-27, y, -23.5, y + 7.6);
-    g.stroke();
   }
 }
 
@@ -1688,37 +1682,8 @@ function drawTrooperBody(g) {
   });
   g.fillStyle = 'rgba(190, 220, 208, 0.35)';
   g.fillRect(-22, -11.6, 26, 2);
-  g.strokeStyle = '#18211f';
-  g.lineWidth = 1.8;
-  g.beginPath();
-  g.moveTo(-16, -3);
-  g.lineTo(-10, -2.6);
-  g.stroke();
-  // armour below: a slate chest hatch with a handle, three vent slats and the belt
   botPoly(g, BOT.slate, [[1, 9], [19, 8], [18, 16], [3, 17]], 1.1);
-  g.strokeStyle = '#dfe6f6';
-  g.lineWidth = 1.6;
-  g.beginPath();
-  g.moveTo(7, 12.4);
-  g.lineTo(13.5, 12);
-  g.stroke();
-  g.strokeStyle = '#4a4068';
-  g.lineWidth = 1.3;
-  g.beginPath();
-  for (const x of [-13, -9.4, -5.8]) {
-    g.moveTo(x, 8.6);
-    g.lineTo(x + 1.4, 14.4);
-  }
-  g.stroke();
   botPoly(g, BOT.dark, [[-23, 17], [23, 16], [20, 26], [-20, 26]], 1.2);
-  g.strokeStyle = 'rgba(40, 30, 64, 0.7)';
-  g.lineWidth = 1;
-  g.beginPath();
-  for (const x of [-9, 1, 11]) {
-    g.moveTo(x, 17);
-    g.lineTo(x, 24);
-  }
-  g.stroke();
   g.restore();
   g.strokeStyle = OUT;
   g.lineWidth = 1.8;
@@ -1726,9 +1691,6 @@ function drawTrooperBody(g) {
   g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
   g.stroke();
   drawTrooperCap(g);
-  // a round shoulder bolt
-  botBall(g, BOT.lite, -15.5, 5.5, 5, 1.4);
-  botBall(g, BOT.mid, -15.5, 5.5, 2.1, 1);
 }
 
 // the armoured helmet, with a brim like the soldiers'
@@ -1742,14 +1704,6 @@ function drawTrooperCap(g) {
     g.quadraticCurveTo(1, -16.6, -19, -13.4);
   });
   botPart(g, '#58497a', 1.6, () => g.roundRect(-22, -15.2, 45, 3.8, 1.9));
-  g.strokeStyle = 'rgba(40, 30, 66, 0.65)';
-  g.lineWidth = 1;
-  g.beginPath();
-  g.moveTo(-4, -26.4);
-  g.quadraticCurveTo(-8, -20, -8, -15.6);
-  g.moveTo(8, -26.2);
-  g.quadraticCurveTo(13, -21, 13.6, -15.8);
-  g.stroke();
   g.fillStyle = 'rgba(232, 226, 255, 0.55)';
   g.beginPath();
   g.ellipse(-9, -22.4, 4, 2, -0.5, 0, TAU);
@@ -1818,17 +1772,7 @@ export function trooperEyes(g, o) {
     }
   };
   eye(-2.2, -4.6, 5, '#e2463c', '#8e1f1c', '#ffb3a4');
-  // the toothed focus ring round the big lens, which spins as he takes aim
-  for (let i = 0; i < 10; i++) {
-    const a = (i / 10) * TAU + (o.spin || 0);
-    botBall(g, '#8b83ae', 10.6 + Math.cos(a) * 7.3, -4.6 + Math.sin(a) * 7.3, 1.5, 0.8);
-  }
   eye(10.6, -4.6, 7.3, '#1fbc9c', '#0d6f60', '#9ffbe4');
-  botBall(g, '#7d749f', 10.6, 5.2, 2.6, 1.1);
-  g.fillStyle = o.dead ? '#2b4a46' : '#63f5d3';
-  g.beginPath();
-  g.arc(10.6, 5.2, 1.1, 0, TAU);
-  g.fill();
 }
 
 // Origin: the grip. A chunky blue blaster with a scope and a power cell.
@@ -1836,9 +1780,6 @@ function drawTrooperGun(g) {
   g.lineJoin = 'round';
   botPoly(g, BOT.gunDark, [[-10, -3], [-3, -4.4], [-2, 4], [-11, 6]]);
   botPoly(g, BOT.gun, [[-4, -5.6], [15, -5.6], [17, 3.6], [-3, 4.4]], 1.6);
-  botPoly(g, BOT.gunDark, [[1, -10], [11, -10], [11, -5.6], [1, -5.6]]);
-  botBall(g, '#59d8ee', 11.4, -7.8, 1.7, 0.9);
-  botPoly(g, BOT.gunDark, [[6, 4], [13, 3.8], [11, 11], [5.6, 10.4]]);
   botPoly(g, BOT.gunLite, [[16, -4.2], [31, -3.6], [31, 1.6], [16, 2.4]]);
   botPoly(g, BOT.gunDark, [[30, -5.8], [38.5, -5.8], [38.5, 3.6], [30, 3.6]], 1.6);
   g.fillStyle = '#12151f';
