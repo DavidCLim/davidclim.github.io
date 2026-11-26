@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=215';
-import { buildCreatureArt } from './creatures.js?v=215';
-import { buildEggArt } from './art_eggs.js?v=215';
-import { buildTerrainArt, renderGround, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=215';
-import { Sfx } from './sfx.js?v=215';
-import { World } from './world.js?v=215';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=215';
-import { buildUnitArt, drawDrop } from './art_units.js?v=215';
-import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=215';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS } from './config.js?v=216';
+import { buildCreatureArt } from './creatures.js?v=216';
+import { buildEggArt } from './art_eggs.js?v=216';
+import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=216';
+import { Sfx } from './sfx.js?v=216';
+import { World } from './world.js?v=216';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=216';
+import { buildUnitArt, drawDrop } from './art_units.js?v=216';
+import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon } from './draw_units.js?v=216';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -181,7 +181,7 @@ const LATTICE = {
   default: [15.5, 12.5, true],
   trooper: [28, 22, true],
   jettrooper: [28, 22, true],
-  juggernaut: [30, 23, true],
+  juggernaut: [38, 28, true],
   roman: [17.4, 17.6, false],
   cavalry: [34, 22, true],
   boar: [22, 15, true],
@@ -201,9 +201,9 @@ const LATTICE = {
 
 // Terrain: walls, water and ice are painted as strokes; the rest are dropped along the drag.
 const TERRAIN_SET = new Set(['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower']);
-const DISCRETE = { mine: { gap: 84, off: 2 }, barrel: { gap: 20, off: 7 }, tree: { gap: 42, off: 15 }, tower: { gap: 56, off: 12 } };
+const DISCRETE = { mine: { gap: 84, off: 2 }, barrel: { gap: 20, off: 7 }, tree: { gap: 42, off: 15 }, tower: { gap: 68, off: 15 } };
 let tstroke = null;
-const STROKE_BASE = { wall: 11.5, water: 22, ice: 22 };
+const STROKE_BASE = { wall: 13.5, water: 24.5, ice: 24.5 };
 
 function brushWidth() {
   return Math.max(1, brush / 9); // the default ring gives the normal width; a bigger ring paints a proportionally thicker stroke
@@ -1159,12 +1159,13 @@ function drawSpirit(g, t, alpha) {
   ctx.restore();
 }
 
-const PROP_SCALE = { tree: 1.3, barrel: 0.9, mine: 1.0, tower: 1.05 };
+const PROP_SCALE = { tree: 1.22, barrel: 0.94, mine: 1.0, tower: 1.28 };
 function drawProp(p) {
   const k = PROP_SCALE[p.type];
   ctx.setTransform(dpr * k, 0, 0, dpr * k, p.x * dpr, p.y * dpr);
   if (p.type === 'tree' || p.type === 'tower') {
     drawLayer(ctx, terrainArt[p.type]);
+    if (p.type === 'tower') drawTowerMagic(ctx, performance.now() / 1000 + p.x);
     return;
   }
   // a barrel about to go off rattles and glows

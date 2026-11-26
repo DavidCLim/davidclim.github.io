@@ -1,6 +1,6 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=215';
-import { TerrainMap, WALL } from './terrain.js?v=215';
-import { installBeasts } from './beasts.js?v=215';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET } from './config.js?v=216';
+import { TerrainMap, WALL } from './terrain.js?v=216';
+import { installBeasts } from './beasts.js?v=216';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -1412,7 +1412,10 @@ export class World {
       const dist = Math.hypot(dx, dy) || 1;
       if (Math.abs(dx) > 3) u.facing = dx > 0 ? 1 : -1;
       if (dist - t.def.radius <= d.reach) {
-        if (u.swingCd <= 0) this.jugStart(u, 'punch', d);
+        if (u.swingCd <= 0) {
+          u.blows = (u.blows || 0) + 1;
+          this.jugStart(u, u.blows % d.slam.every === 0 ? 'slam' : 'punch', d);
+        }
       } else {
         const c = d.charge;
         if (dist - t.def.radius > c.from && u.chargeCd <= 0) {
@@ -1473,14 +1476,18 @@ export class World {
       y += dy * go;
       u.strikeX = x - u.x;
       u.strikeY = y - u.y;
-      this.jugBlow(u, x, y, d.slamRadius, d.damage, d.knock);
-      this.hitProps(x, y, d.slamRadius, d.damage);
-      for (let i = 0; i < 8; i++) {
-        const a = (i / 8) * TAU;
-        this.puffs.push({ x: x + Math.cos(a) * 6, y: y + FEET + Math.sin(a) * 2.5, vx: Math.cos(a) * 32, vy: Math.sin(a) * 10 - 3, age: 0, life: 0.5 + Math.random() * 0.25, size: 1.8 + Math.random(), dust: true });
+      const slam = u.atkKind === 'slam';
+      const radius = slam ? d.slam.radius : d.slamRadius;
+      this.jugBlow(u, x, y, radius, d.damage, d.knock);
+      this.hitProps(x, y, radius, d.damage);
+      const n = slam ? 14 : 8;
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * TAU;
+        const fling = slam ? 48 : 32;
+        this.puffs.push({ x: x + Math.cos(a) * 6, y: y + FEET + Math.sin(a) * 2.5, vx: Math.cos(a) * fling, vy: Math.sin(a) * fling * 0.31 - 3, age: 0, life: 0.5 + Math.random() * 0.25, size: (slam ? 2.4 : 1.8) + Math.random(), dust: true });
       }
     }
-    if (this.sfx) this.sfx('shot', x);
+    if (this.sfx) this.sfx(u.atkKind === 'slam' ? 'slam' : 'shot', x);
   }
 
   stepMelee(u, dt) {

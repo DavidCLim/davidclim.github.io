@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=215';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=215';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=215';
+import { TAU, K } from './config.js?v=216';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=216';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=216';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask
@@ -8,8 +8,8 @@ import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=2
 export const WATER = 1;
 export const ICE = 2;
 export const WALL = 4;
-export const STROKE_W = { wall: 11.5, water: 22, ice: 22 };
-export const WALL_H = 4.6; // the front face of a wall hangs this far below its top
+export const STROKE_W = { wall: 13.5, water: 24.5, ice: 24.5 };
+export const WALL_H = 4.9; // the front face of a wall hangs this far below its top
 
 export class TerrainMap {
   constructor() {
@@ -148,14 +148,14 @@ export function renderGround(ctx, W, H, strokes, clock) {
     }
   };
   for (const [kind, edge, fill] of [
-    ['water', '#72bcc8', '#93d8e0'],
-    ['ice', '#c0d9ee', '#dff0fb'],
+    ['water', '#6fb2c0', '#98dee5'],
+    ['ice', '#b5d3ec', '#dff0fb'],
   ]) {
     const list = of(kind);
     if (!list.length) continue;
     ctx.fillStyle = edge;
     for (const s of list) {
-      blobPath(s, 0.6);
+      blobPath(s, 0.65);
       ctx.fill();
     }
     ctx.fillStyle = fill;
@@ -163,47 +163,48 @@ export function renderGround(ctx, W, H, strokes, clock) {
       blobPath(s, 0);
       ctx.fill();
     }
-    // as in the original: water has big soft patches, lighter and darker by turns, with no stripe down the middle;
-    // ice is flat pale blue crossed here and there by a soft white glint
+    // water is flat with big soft patches, a shade lighter and a shade darker by turns;
+    // ice is flat pale blue, crossed now and then by one broad, faint slanting sheen
     for (const s of list) {
       ctx.save();
       blobPath(s, 0);
       ctx.clip();
-      const marks = [];
+      const gap = kind === 'water' ? 37 : 118;
+      const marks = [s.pts[0]];
       let walked = 0;
-      let next = 18;
-      for (let i = 0; i < s.pts.length; i++) {
-        if (i) walked += Math.hypot(s.pts[i][0] - s.pts[i - 1][0], s.pts[i][1] - s.pts[i - 1][1]);
-        else marks.push(s.pts[0]);
+      let next = gap;
+      for (let i = 1; i < s.pts.length; i++) {
+        walked += Math.hypot(s.pts[i][0] - s.pts[i - 1][0], s.pts[i][1] - s.pts[i - 1][1]);
         if (walked >= next) {
           marks.push(s.pts[i]);
-          next += 36;
+          next += gap;
         }
       }
       if (kind === 'water') {
         marks.forEach(([x, y], i) => {
           const light = i % 2 === 0;
-          const r = s.w * (light ? 0.95 : 0.85);
-          const gr = ctx.createRadialGradient(x, y, 0, x, y, r);
-          gr.addColorStop(0, light ? 'rgba(168, 244, 247, 0.9)' : 'rgba(126, 188, 197, 0.55)');
-          gr.addColorStop(1, light ? 'rgba(168, 244, 247, 0)' : 'rgba(126, 188, 197, 0)');
+          const jx = x + (hash2(x, y) - 0.5) * s.w * 0.35;
+          const jy = y + (hash2(y, x) - 0.5) * s.w * 0.35;
+          const r = s.w * (light ? 0.92 : 1.05);
+          const rgb = light ? '162, 236, 241' : '138, 202, 212';
+          const gr = ctx.createRadialGradient(jx, jy, 0, jx, jy, r);
+          gr.addColorStop(0, `rgba(${rgb}, 1)`);
+          gr.addColorStop(0.4, `rgba(${rgb}, 0.75)`);
+          gr.addColorStop(1, `rgba(${rgb}, 0)`);
           ctx.fillStyle = gr;
-          ctx.fillRect(x - r, y - r, r * 2, r * 2);
+          ctx.fillRect(jx - r, jy - r, r * 2, r * 2);
         });
       } else {
-        ctx.filter = 'blur(1.6px)';
+        ctx.filter = 'blur(0.9px)';
         ctx.lineCap = 'butt';
-        marks.forEach(([x, y], i) => {
-          if (i % 3 !== 1) return;
-          for (const [off, wide, al] of [[0, 0.3, 0.8], [s.w * 0.34, 0.1, 0.65]]) {
-            ctx.strokeStyle = `rgba(255, 255, 255, ${al})`;
-            ctx.lineWidth = s.w * wide;
-            ctx.beginPath();
-            ctx.moveTo(x + off - s.w * 0.36, y - s.w * 0.72);
-            ctx.lineTo(x + off + s.w * 0.36, y + s.w * 0.72);
-            ctx.stroke();
-          }
-        });
+        ctx.strokeStyle = 'rgba(240, 249, 255, 0.7)';
+        ctx.lineWidth = 11;
+        for (const [x, y] of marks.length > 1 ? marks.slice(1) : marks) {
+          ctx.beginPath();
+          ctx.moveTo(x - s.w * 0.55, y - s.w * 0.75);
+          ctx.lineTo(x + s.w * 0.55, y + s.w * 0.75);
+          ctx.stroke();
+        }
       }
       ctx.restore();
     }
@@ -211,67 +212,6 @@ export function renderGround(ctx, W, H, strokes, clock) {
   const walls = of('wall');
   if (!walls.length) return;
   const sc = ctx.getTransform().a || 1;
-  // soft shadow under the slab
-  ctx.save();
-  ctx.shadowColor = 'rgba(30, 30, 40, 0.28)';
-  ctx.shadowBlur = 9 * sc;
-  ctx.shadowOffsetY = 3.5 * sc;
-  ctx.strokeStyle = '#1e1e22';
-  for (const s of walls) {
-    ctx.lineWidth = s.w + 1.8;
-    path(s, WALL_H);
-    ctx.stroke();
-  }
-  ctx.restore();
-  // the front face: a plain dark stone edge with one faint seam
-  ctx.strokeStyle = '#1e1e22';
-  for (const s of walls) {
-    ctx.lineWidth = s.w + 1.6;
-    path(s, WALL_H);
-    ctx.stroke();
-    path(s, 0);
-    ctx.stroke();
-  }
-  ctx.strokeStyle = '#413f40';
-  for (const s of walls) {
-    ctx.lineWidth = s.w;
-    path(s, WALL_H);
-    ctx.stroke();
-  }
-  ctx.strokeStyle = 'rgba(20, 18, 20, 0.45)';
-  for (const s of walls) {
-    ctx.lineWidth = 0.6;
-    path(s, s.w * 0.5 + WALL_H * 0.5);
-    ctx.stroke();
-  }
-  // the flagstone top
-  ctx.strokeStyle = '#78736f';
-  for (const s of walls) {
-    ctx.lineWidth = s.w;
-    path(s, 0);
-    ctx.stroke();
-  }
-  const mk = () => {
-    const c = document.createElement('canvas');
-    c.width = Math.ceil(W * sc);
-    c.height = Math.ceil(H * sc);
-    const g = c.getContext('2d');
-    g.scale(sc, sc);
-    g.lineCap = 'round';
-    g.lineJoin = 'round';
-    return [c, g];
-  };
-  const [mask, mg] = mk();
-  mg.strokeStyle = '#000';
-  for (const s of walls) {
-    mg.lineWidth = s.w - 0.6;
-    mg.beginPath();
-    mg.moveTo(s.pts[0][0], s.pts[0][1]);
-    if (s.pts.length === 1) mg.lineTo(s.pts[0][0] + 0.01, s.pts[0][1]);
-    for (let i = 1; i < s.pts.length; i++) mg.lineTo(s.pts[i][0], s.pts[i][1]);
-    mg.stroke();
-  }
-  const [pat, pg] = mk();
   let x0 = W;
   let x1 = 0;
   let y0 = H;
@@ -284,44 +224,136 @@ export function renderGround(ctx, W, H, strokes, clock) {
       y1 = Math.max(y1, y + s.w);
     }
   }
-  pg.strokeStyle = 'rgba(78, 72, 68, 0.55)';
-  pg.lineWidth = 0.7;
-  const cell = 11;
-  for (let j = Math.floor(y0 / cell) - 1; j <= Math.ceil(y1 / cell) + 1; j++) {
-    for (let i = Math.floor(x0 / cell) - 1; i <= Math.ceil(x1 / cell) + 1; i++) {
-      const cx = (i + (j & 1 ? 0.5 : 0)) * cell + (hash2(i, j) - 0.5) * 5;
-      const cy = j * cell * 0.9 + (hash2(j, i + 9) - 0.5) * 5;
-      for (let k = 0; k < 6; k++) {
-        const a = (k / 6) * TAU + hash2(i + k, j) * 0.8;
-        const r = cell * (0.46 + hash2(k, i * 3 + j) * 0.24);
-        const px = cx + Math.cos(a) * r;
-        const py = cy + Math.sin(a) * r;
-        if (k === 0) {
-          pg.beginPath();
-          pg.moveTo(px, py);
-        } else pg.lineTo(px, py);
-      }
-      pg.closePath();
-      const v = 110 + Math.floor(hash2(i * 7 + 3, j * 5 + 1) * 17);
-      pg.fillStyle = `rgb(${v + 4}, ${v}, ${v - 3})`;
-      pg.fill();
-      pg.stroke();
+  const pad = 8;
+  const bx = Math.max(0, Math.floor(x0 - pad));
+  const by = Math.max(0, Math.floor(y0 - pad));
+  const bw = Math.max(1, Math.min(W, Math.ceil(x1 + pad)) - bx);
+  const bh = Math.max(1, Math.min(H, Math.ceil(y1 + pad)) - by);
+  // the slab's outline is worked out pixel by pixel, so at no finer than this many pixels to a unit (painting stays smooth)
+  const rs = Math.min(sc, 1.9);
+  const pw = Math.ceil(bw * rs);
+  const ph = Math.ceil(bh * rs);
+  // a canvas covering just the walls, drawn in world units
+  const layer = () => {
+    const c = document.createElement('canvas');
+    c.width = pw;
+    c.height = ph;
+    const g = c.getContext('2d');
+    g.setTransform(rs, 0, 0, rs, -bx * rs, -by * rs);
+    g.lineCap = 'round';
+    g.lineJoin = 'round';
+    return [c, g];
+  };
+  const [raw, rg] = layer();
+  rg.strokeStyle = '#000';
+  for (const s of walls) {
+    rg.lineWidth = s.w;
+    rg.beginPath();
+    rg.moveTo(s.pts[0][0], s.pts[0][1]);
+    if (s.pts.length === 1) rg.lineTo(s.pts[0][0] + 0.01, s.pts[0][1]);
+    for (let i = 1; i < s.pts.length; i++) rg.lineTo(s.pts[i][0], s.pts[i][1]);
+    rg.stroke();
+  }
+  // blur (through a shadow thrown from off the canvas, which every browser can do)
+  const sigma = 2.5;
+  const soft = document.createElement('canvas');
+  soft.width = pw;
+  soft.height = ph;
+  const so = soft.getContext('2d', { willReadFrequently: true });
+  so.shadowColor = '#000';
+  so.shadowBlur = sigma * rs * 2;
+  so.shadowOffsetX = pw + 50;
+  so.drawImage(raw, -pw - 50, 0);
+  const blurred = so.getImageData(0, 0, pw, ph).data;
+  // cut the blur back to sharp shapes, all three in one pass: wherever it is at least `level` thick, with a smooth
+  // one-pixel edge. A lower level gives a slightly fatter shape, which makes the black rim.
+  const shapes = [[0.36, [29, 28, 34]], [0.5, [64, 62, 60]], [0.53, [122, 118, 114]]].map(([level, [r, g, b]]) => {
+    const c = document.createElement('canvas');
+    c.width = pw;
+    c.height = ph;
+    const img = c.getContext('2d').createImageData(pw, ph);
+    return { c, img, px: new Uint32Array(img.data.buffer), rgb: (b << 16) | (g << 8) | r, cut: level * 255 };
+  });
+  const gain = (sigma * rs * 2.5) / 255;
+  const floor = shapes[0].cut - 0.5 / gain;
+  for (let i = 0, n = pw * ph; i < n; i++) {
+    const v = blurred[i * 4 + 3];
+    if (v <= floor) continue;
+    for (let k = 0; k < 3; k++) {
+      const s = shapes[k];
+      const a = (v - s.cut) * gain + 0.5;
+      if (a > 0) s.px[i] = ((a >= 1 ? 255 : (a * 255) | 0) << 24) | s.rgb;
     }
   }
-  pg.globalCompositeOperation = 'destination-in';
-  pg.setTransform(1, 0, 0, 1, 0, 0);
-  pg.drawImage(mask, 0, 0);
+  for (const s of shapes) s.c.getContext('2d').putImageData(s.img, 0, 0);
+  const [ink, lipFill, topMask] = shapes.map((s) => s.c);
+  const put = (img, dy) => ctx.drawImage(img, bx, by + dy, pw / rs, ph / rs);
+  // a soft grey shadow thrown below the slab (the blurred paint itself, faint)
   ctx.save();
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.drawImage(pat, 0, 0);
+  ctx.globalAlpha = 0.24;
+  put(soft, WALL_H + 3.2);
   ctx.restore();
-  // a lighter edge along the top of the slab
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-  for (const s of walls) {
-    ctx.lineWidth = 1.2;
-    path(s, -s.w * 0.36);
-    ctx.stroke();
+  const steps = 5;
+  for (let i = steps; i >= 0; i--) put(ink, (WALL_H * i) / steps);
+  // the dark front lip, as tall as the slab is thick, with the seams between its blocks
+  const [lip, lg] = layer();
+  const flat = (img, dy) => lg.drawImage(img, bx, by + dy, pw / rs, ph / rs);
+  for (let i = steps; i >= 1; i--) flat(lipFill, (WALL_H * i) / steps);
+  lg.globalCompositeOperation = 'source-atop';
+  lg.strokeStyle = 'rgba(22, 20, 22, 0.5)';
+  lg.lineWidth = 0.55;
+  lg.beginPath();
+  for (let x = Math.floor(x0 / 12) * 12; x <= x1; x += 12) {
+    const jx = x + (hash2(x, 3) - 0.5) * 6;
+    lg.moveTo(jx, by);
+    lg.lineTo(jx + (hash2(x, 8) - 0.5) * 3, by + bh);
   }
+  lg.stroke();
+  put(lip, 0);
+  put(ink, 0);
+
+  // the top: big irregular flagstones fitted tightly together
+  const [top, tg] = layer();
+  const cell = 15.5;
+  const seed = (i, j) => [(i + 0.5 + (hash2(i, j) - 0.5) * 0.78) * cell, (j + 0.5 + (hash2(j + 31, i + 7) - 0.5) * 0.78) * cell];
+  const shades = ['#767370', '#7a7672', '#7f7c78', '#787470', '#7c7975'];
+  tg.strokeStyle = 'rgba(96, 92, 89, 0.68)';
+  tg.lineWidth = 0.55;
+  for (let j = Math.floor(y0 / cell) - 1; j <= Math.ceil(y1 / cell) + 1; j++) {
+    for (let i = Math.floor(x0 / cell) - 1; i <= Math.ceil(x1 / cell) + 1; i++) {
+      const [px, py] = seed(i, j);
+      // a stone is all the ground nearer its own middle than any neighbour's
+      let poly = [[px - cell * 1.5, py - cell * 1.5], [px + cell * 1.5, py - cell * 1.5], [px + cell * 1.5, py + cell * 1.5], [px - cell * 1.5, py + cell * 1.5]];
+      for (let dj = -2; dj <= 2; dj++) {
+        for (let di = -2; di <= 2; di++) {
+          if (!di && !dj) continue;
+          const [qx, qy] = seed(i + di, j + dj);
+          const side = (p) => (p[0] - (px + qx) / 2) * (qx - px) + (p[1] - (py + qy) / 2) * (qy - py);
+          const next = [];
+          for (let k = 0; k < poly.length; k++) {
+            const a = poly[k];
+            const b = poly[(k + 1) % poly.length];
+            const fa = side(a);
+            const fb = side(b);
+            if (fa <= 0) next.push(a);
+            if (fa * fb < 0) next.push([a[0] + ((b[0] - a[0]) * fa) / (fa - fb), a[1] + ((b[1] - a[1]) * fa) / (fa - fb)]);
+          }
+          poly = next;
+        }
+      }
+      tg.beginPath();
+      poly.forEach(([x, y], k) => (k ? tg.lineTo(x, y) : tg.moveTo(x, y)));
+      tg.closePath();
+      tg.fillStyle = shades[Math.floor(hash2(i * 7 + 3, j * 5 + 1) * shades.length) % shades.length];
+      tg.fill();
+      tg.stroke();
+    }
+  }
+  tg.globalCompositeOperation = 'destination-in';
+  tg.setTransform(1, 0, 0, 1, 0, 0);
+  tg.drawImage(topMask, 0, 0);
+  put(topMask, 0);
+  put(top, 0);
 }
 
 // ------------------------------------------------------------------ single props
@@ -349,174 +381,210 @@ function ink(g, lw) {
   g.lineCap = 'round';
 }
 
-// A land mine: a squat olive disc, rings on top and a red button in the middle.
+// A land mine: a squat olive disc with a ring on top and a dark red button in the middle.
 function drawMine(g, lit) {
-  shadowEll(g, 30, 6, 3);
-  ink(g, 1.7);
-  // the thick olive side
-  g.beginPath();
-  g.ellipse(0, -4.5, 22.5, 9.6, 0, 0, TAU);
-  g.fillStyle = '#3b3f2f';
-  g.fill();
-  g.stroke();
-  // the lighter top with two rings and a dark red button
-  g.beginPath();
-  g.ellipse(0, -12, 22, 9.4, 0, 0, TAU);
-  g.fillStyle = vgrad(g, -22, -2, '#646a4e', '#4f553d');
-  g.fill();
-  g.stroke();
-  g.strokeStyle = 'rgba(38, 48, 26, 0.7)';
-  g.lineWidth = 1.2;
-  g.beginPath();
-  g.ellipse(0, -12, 15.5, 6.4, 0, 0, TAU);
-  g.stroke();
-  g.beginPath();
-  g.ellipse(0, -12, 9.6, 4, 0, 0, TAU);
-  g.stroke();
-  g.fillStyle = lit ? '#ff6a3c' : '#cf4a2b';
-  g.beginPath();
-  g.ellipse(0, -12, 6.2, 3, 0, 0, TAU);
-  g.fill();
-}
-
-// An oil drum: red, banded, with a yellow warning diamond.
-function drawBarrel(g, glow) {
-  shadowEll(g, 26, 5, 2);
-  const body = () => {
-    g.beginPath();
-    g.moveTo(-17, -54);
-    g.quadraticCurveTo(-21.5, -28, -17, -3);
-    g.quadraticCurveTo(0, 3, 17, -3);
-    g.quadraticCurveTo(21.5, -28, 17, -54);
-    g.closePath();
-  };
-  const hg = g.createLinearGradient(-20, 0, 20, 0);
-  hg.addColorStop(0, '#b32d28');
-  hg.addColorStop(0.22, '#e04a3e');
-  hg.addColorStop(0.5, '#d83c33');
-  hg.addColorStop(1, '#a62624');
-  body();
-  g.fillStyle = hg;
-  g.fill();
-  ink(g, 1.7);
-  g.stroke();
   g.save();
-  body();
-  g.clip();
-  g.strokeStyle = '#8f211f';
-  g.lineWidth = 1.8;
-  for (const yy of [-41, -13]) {
-    g.beginPath();
-    g.moveTo(-24, yy);
-    g.quadraticCurveTo(0, yy + 4.6, 24, yy);
-    g.stroke();
-  }
+  g.translate(4, 3);
+  shadowEll(g, 30, 12, 1);
   g.restore();
-  g.strokeStyle = 'rgba(255, 190, 170, 0.45)';
-  g.lineWidth = 1.6;
+  ink(g, 2.4);
+  // the side
   g.beginPath();
-  g.moveTo(-13, -48);
-  g.quadraticCurveTo(-16.5, -28, -13, -9);
-  g.stroke();
-  g.beginPath();
-  g.ellipse(0, -54, 17, 5.8, 0, 0, TAU);
-  g.fillStyle = vgrad(g, -60, -48, '#cf3a31', '#aa2b27');
-  g.fill();
-  ink(g, 1.7);
-  g.stroke();
-  g.fillStyle = INK;
-  g.beginPath();
-  g.ellipse(7, -54.3, 2.4, 1.2, 0, 0, TAU);
-  g.fill();
-  g.beginPath();
-  g.moveTo(0, -37);
-  g.lineTo(9.5, -28);
-  g.lineTo(0, -19);
-  g.lineTo(-9.5, -28);
+  g.ellipse(0, 0, 22, 13, 0, 0, Math.PI);
+  g.lineTo(-22, -9);
+  g.ellipse(0, -9, 22, 13, 0, Math.PI, TAU);
   g.closePath();
-  g.fillStyle = glow ? '#fff08a' : '#f6c935';
+  g.fillStyle = '#4a5130';
+  g.fill();
+  g.stroke();
+  // the top
+  g.beginPath();
+  g.ellipse(0, -9, 22, 13, 0, 0, TAU);
+  g.fillStyle = '#5f6b3f';
+  g.fill();
+  g.stroke();
+  g.beginPath();
+  g.ellipse(0, -9, 12.5, 7.7, 0, 0, TAU);
+  g.fillStyle = '#7d8658';
   g.fill();
   ink(g, 1.6);
   g.stroke();
-  g.fillStyle = INK;
-  g.fillRect(-1, -33, 2, 6.6);
+  g.fillStyle = lit ? '#ff5532' : '#5e1610';
   g.beginPath();
-  g.arc(0, -23.2, 1.2, 0, TAU);
+  g.ellipse(0, -9, 5.3, 5, 0, 0, TAU);
+  g.fill();
+  g.stroke();
+  g.fillStyle = lit ? 'rgba(255, 214, 190, 0.9)' : 'rgba(255, 170, 150, 0.55)';
+  g.beginPath();
+  g.ellipse(-1.8, -10.8, 1.5, 1.1, -0.5, 0, TAU);
   g.fill();
 }
 
-// A tree: one rounded dome of leaves with a scalloped underside, a couple of twigs showing, on a slim dark trunk.
-function drawTree(g) {
-  shadowEll(g, 27, 5.6, 1);
+// An oil drum: red and a little bulged, with two dark bands and a yellow warning diamond.
+function drawBarrel(g, glow) {
+  g.save();
+  g.translate(3, 0);
+  shadowEll(g, 29, 7, 1);
+  g.restore();
+  const body = () => {
+    g.beginPath();
+    g.moveTo(-17.4, -50);
+    g.bezierCurveTo(-20.4, -36, -20.4, -15, -17.4, -3);
+    g.quadraticCurveTo(0, 5, 17.4, -3);
+    g.bezierCurveTo(20.4, -15, 20.4, -36, 17.4, -50);
+    g.closePath();
+  };
+  const hg = g.createLinearGradient(-19, 0, 19, 0);
+  hg.addColorStop(0, '#b4302c');
+  hg.addColorStop(0.2, '#d5453c');
+  hg.addColorStop(0.55, '#c93a34');
+  hg.addColorStop(0.72, '#aa2c29');
+  hg.addColorStop(1, '#8e2221');
+  body();
+  g.fillStyle = hg;
+  g.fill();
+  g.save();
+  body();
+  g.clip();
+  g.fillStyle = '#ee8078';
+  g.fillRect(-12.6, -52, 4, 56);
+  g.strokeStyle = '#6f1510';
+  g.lineWidth = 3.4;
+  for (const yy of [-40, -17]) {
+    g.beginPath();
+    g.moveTo(-23, yy);
+    g.quadraticCurveTo(0, yy + 8, 23, yy);
+    g.stroke();
+  }
+  g.restore();
+  ink(g, 2.4);
+  body();
+  g.stroke();
   g.beginPath();
-  g.moveTo(-12, 2);
-  g.quadraticCurveTo(-4.4, -2, -4.4, -14);
-  g.lineTo(-4, -50);
-  g.lineTo(4, -50);
-  g.lineTo(4.6, -14);
-  g.quadraticCurveTo(4.8, -2, 12, 2);
-  g.quadraticCurveTo(5, 0.5, 2.5, 3);
-  g.quadraticCurveTo(0, 0, -3, 3);
-  g.quadraticCurveTo(-6, 0.5, -12, 2);
-  g.closePath();
-  const tg = g.createLinearGradient(-6, 0, 6, 0);
-  tg.addColorStop(0, '#8a6342');
-  tg.addColorStop(1, '#4a321f');
-  g.fillStyle = tg;
+  g.ellipse(0, -50, 17.6, 5.8, 0, 0, TAU);
+  g.fillStyle = '#d85048';
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#4a0f0c';
+  g.beginPath();
+  g.ellipse(8, -51, 3.2, 1.8, 0, 0, TAU);
+  g.fill();
+  const diamond = (half) => {
+    g.beginPath();
+    g.moveTo(0.5, -26 - half);
+    g.lineTo(0.5 + half, -26);
+    g.lineTo(0.5, -26 + half);
+    g.lineTo(0.5 - half, -26);
+    g.closePath();
+  };
+  diamond(10);
+  g.fillStyle = glow ? '#fff08a' : '#f6c933';
   g.fill();
   ink(g, 1.8);
   g.stroke();
-  const crown = () => {
-    g.beginPath();
-    g.moveTo(-34, -61);
-    g.bezierCurveTo(-41, -74, -33, -87, -23, -89);
-    g.bezierCurveTo(-22, -101, -10, -110, 1, -108);
-    g.bezierCurveTo(13, -110, 25, -101, 24, -91);
-    g.bezierCurveTo(35, -87, 41, -74, 35, -62);
-    g.bezierCurveTo(36, -50, 23, -43, 13, -48);
-    g.bezierCurveTo(7, -39, -7, -39, -13, -47);
-    g.bezierCurveTo(-23, -42, -37, -49, -34, -61);
-    g.closePath();
-  };
-  crown();
-  g.fillStyle = vgrad(g, -108, -42, '#5f9252', '#3e6b37');
-  g.fill();
   g.save();
-  crown();
-  g.clip();
-  const spot = (x, y, r, rgb, al) => {
-    const gr = g.createRadialGradient(x, y, 0, x, y, r);
-    gr.addColorStop(0, `rgba(${rgb}, ${al})`);
-    gr.addColorStop(1, `rgba(${rgb}, 0)`);
-    g.fillStyle = gr;
-    g.fillRect(x - r, y - r, r * 2, r * 2);
-  };
-  spot(-14, -90, 26, '150, 196, 112', 0.75);
-  spot(20, -52, 30, '28, 62, 28', 0.6);
-  spot(-24, -52, 20, '28, 62, 28', 0.45);
-  // leaf clumps picked out with short arcs
-  g.strokeStyle = 'rgba(30, 64, 30, 0.45)';
-  g.lineWidth = 1.5;
-  g.lineCap = 'round';
-  for (const [x, y, r] of [[-20, -74, 9], [2, -86, 11], [18, -70, 9], [-6, -60, 10], [14, -97, 7], [-27, -57, 6]]) {
-    g.beginPath();
-    g.arc(x, y, r, Math.PI * 0.2, Math.PI * 0.82);
-    g.stroke();
-  }
-  // twigs showing through
-  g.strokeStyle = '#5a3c24';
-  g.lineWidth = 2;
-  g.beginPath();
-  g.moveTo(-9, -66);
-  g.lineTo(-1, -61);
-  g.moveTo(-5, -63.5);
-  g.lineTo(-5, -68);
-  g.moveTo(10, -80);
-  g.lineTo(17, -85);
+  g.strokeStyle = '#7a5a10';
+  g.lineWidth = 1;
+  g.setLineDash([2.2, 1.6]);
+  diamond(7.2);
   g.stroke();
   g.restore();
-  crown();
-  ink(g, 2);
+  g.fillStyle = '#2a1c08';
+  g.beginPath();
+  g.roundRect(-0.9, -31, 2.8, 6.8, 1.2);
+  g.fill();
+  g.beginPath();
+  g.arc(0.5, -21.8, 1.5, 0, TAU);
+  g.fill();
+}
+
+// A tree: a bumpy cloud of leaves with a lighter lump on top, on a slim trunk that flares at the foot.
+function drawTree(g) {
+  shadowEll(g, 30, 7, 1);
+  const trunk = () => {
+    g.beginPath();
+    g.moveTo(-13, 2);
+    g.quadraticCurveTo(-6, -1, -6, -15);
+    g.lineTo(-5.4, -56);
+    g.lineTo(5.4, -56);
+    g.lineTo(6, -15);
+    g.quadraticCurveTo(6, -1, 13, 2);
+    g.quadraticCurveTo(6, 1, 3, 4);
+    g.quadraticCurveTo(0, 1, -3, 4);
+    g.quadraticCurveTo(-7, 1, -13, 2);
+    g.closePath();
+  };
+  trunk();
+  g.fillStyle = '#5c3b22';
+  g.fill();
+  g.save();
+  trunk();
+  g.clip();
+  g.fillStyle = '#82562f';
+  g.fillRect(-3.4, -56, 3.8, 56);
+  g.restore();
+  ink(g, 2.2);
+  trunk();
+  g.stroke();
+
+  const puffs = (list, grow) => {
+    g.beginPath();
+    for (const [x, y, r] of list) {
+      g.moveTo(x + r + grow, y);
+      g.arc(x, y, r + grow, 0, TAU);
+    }
+  };
+  const outer = [[0, -90, 22], [-19, -83, 17], [20, -83, 16], [-25, -69, 13], [26, -70, 12], [-8, -66, 17], [12, -65, 16], [8, -101, 12], [-12, -99, 12],
+    [-30, -78, 8.5], [-28, -93, 7.5], [-18, -105, 7.5], [-2, -110, 9], [18, -104, 8], [29, -92, 7.5], [33, -77, 7], [27, -59, 8], [-24, -58, 8], [3, -54, 9], [-10, -53, 7.5], [16, -53, 7]];
+  g.save();
+  g.translate(0, -52);
+  g.scale(1, 0.93);
+  g.translate(0, 52);
+  // outline first, then fill over it, so only the rim of the whole cloud shows
+  puffs(outer, 1.8);
+  g.fillStyle = '#1c2218';
+  g.fill();
+  puffs(outer, 0);
+  g.fillStyle = '#41702f';
+  g.fill();
+  const inner = [[0, -92, 19], [-17, -86, 13], [17, -86, 12], [-6, -76, 14], [12, -76, 13], [6, -100, 11], [-10, -98, 11]];
+  puffs(inner, 0);
+  g.fillStyle = '#649551';
+  g.fill();
+  // little scallops that pick out the clumps
+  g.strokeStyle = '#3a6632';
+  g.lineWidth = 1.7;
+  g.lineCap = 'round';
+  for (const [x, y, r, a, b] of [[-17, -79, 8, 0.15, 0.85], [-5, -68, 9, 0.1, 0.85], [12, -69, 8, 0.12, 0.9], [22, -81, 7, 0.1, 0.75], [-24, -62, 7, 0.2, 0.8], [3, -55, 8, 0.15, 0.8], [23, -59, 6, 0.15, 0.8], [-12, -52, 6, 0.2, 0.75]]) {
+    g.beginPath();
+    g.arc(x, y, r, Math.PI * a, Math.PI * b);
+    g.stroke();
+  }
+  g.fillStyle = '#9cc88e';
+  g.beginPath();
+  g.arc(10, -100, 5.5, 0, TAU);
+  g.fill();
+  g.beginPath();
+  g.arc(-14, -92, 2.2, 0, TAU);
+  g.fill();
+  g.strokeStyle = '#5a3a22';
+  g.lineWidth = 2.2;
+  g.beginPath();
+  g.moveTo(-23, -66);
+  g.lineTo(-15, -62);
+  g.moveTo(-18.4, -63.6);
+  g.lineTo(-18, -68.4);
+  g.stroke();
+  g.restore();
+  // toes of root at the foot
+  ink(g, 1.6);
+  g.beginPath();
+  g.moveTo(-10, 0);
+  g.lineTo(-17, 1.5);
+  g.moveTo(-14, 0.8);
+  g.lineTo(-16, -3);
+  g.moveTo(10, 0);
+  g.lineTo(17, 1);
   g.stroke();
 }
 
@@ -580,14 +648,24 @@ function drawTower(g) {
   // two arched windows
   for (const [x, y] of [[-3, -62], [4, -44]]) {
     g.beginPath();
-    g.moveTo(x - 3, y + 4);
-    g.lineTo(x - 3, y - 1);
-    g.arc(x, y - 1, 3, PI, 0);
-    g.lineTo(x + 3, y + 4);
+    g.moveTo(x - 3.8, y + 5);
+    g.lineTo(x - 3.8, y - 1);
+    g.arc(x, y - 1, 3.8, PI, 0);
+    g.lineTo(x + 3.8, y + 5);
     g.closePath();
-    g.fillStyle = '#34304a';
+    const lamp = g.createRadialGradient(x, y + 1, 0.5, x, y + 1, 5);
+    lamp.addColorStop(0, '#fff3b0');
+    lamp.addColorStop(1, '#f29a2e');
+    g.fillStyle = lamp;
     g.fill();
     ink(g, 1.5);
+    g.stroke();
+    g.lineWidth = 0.9;
+    g.beginPath();
+    g.moveTo(x, y - 4.8);
+    g.lineTo(x, y + 5);
+    g.moveTo(x - 3.8, y);
+    g.lineTo(x + 3.8, y);
     g.stroke();
   }
 
@@ -649,22 +727,85 @@ function drawTower(g) {
   g.beginPath();
   g.ellipse(-14, -108, 9, 4, -0.5, 0, TAU);
   g.fill();
-  g.strokeStyle = 'rgba(30, 22, 70, 0.6)';
-  g.lineWidth = 1.4;
+  // a gold band round the hat, pinned with a star
   g.beginPath();
-  g.moveTo(-31, -97);
-  g.quadraticCurveTo(0, -88, 31, -97);
+  g.moveTo(-30.5, -101);
+  g.quadraticCurveTo(0, -92, 30.5, -101);
+  g.lineTo(32.6, -96.4);
+  g.quadraticCurveTo(0, -86.4, -32.6, -96.4);
+  g.closePath();
+  g.fillStyle = '#e8b33c';
+  g.fill();
+  ink(g, 1.5);
   g.stroke();
+  const star = (x, y, r, fill, lw) => {
+    g.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const a = -PI / 2 + (i * PI) / 5;
+      const rr = i % 2 ? r * 0.45 : r;
+      if (i) g.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr);
+      else g.moveTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr);
+    }
+    g.closePath();
+    g.fillStyle = fill;
+    g.fill();
+    if (lw) {
+      ink(g, lw);
+      g.stroke();
+    }
+  };
+  star(0, -94.4, 7.6, '#ffe27a', 1.5);
+  star(11, -118, 3.2, '#ffe9a6', 0);
+  star(-12, -110, 2.2, '#ffe9a6', 0);
+  // a glowing orb hanging from the bent tip
+  g.beginPath();
+  g.arc(13, -148, 3.8, 0, TAU);
+  g.fillStyle = '#bff6ff';
+  g.fill();
+  ink(g, 1.5);
+  g.stroke();
+}
+
+// The living part of the tower's magic, drawn over it every frame: the windows and orb breathe light and a few
+// sparks circle the tip. Same coordinates as drawTower.
+export function drawTowerMagic(ctx, t) {
+  const glow = (x, y, r, rgb, al) => {
+    const gr = ctx.createRadialGradient(x * K, y * K, 0, x * K, y * K, r * K);
+    gr.addColorStop(0, `rgba(${rgb}, ${al})`);
+    gr.addColorStop(1, `rgba(${rgb}, 0)`);
+    ctx.fillStyle = gr;
+    ctx.beginPath();
+    ctx.arc(x * K, y * K, r * K, 0, TAU);
+    ctx.fill();
+  };
+  const breathe = 0.5 + 0.5 * Math.sin(t * 2.2);
+  glow(13, -148, 13 + 3 * breathe, '130, 235, 255', 0.55 + 0.3 * breathe);
+  glow(-3, -61, 9, '255, 200, 90', 0.2 + 0.18 * breathe);
+  glow(4, -43, 9, '255, 200, 90', 0.2 + 0.18 * (1 - breathe));
+  for (let i = 0; i < 3; i++) {
+    const a = t * 1.5 + (i * TAU) / 3;
+    const x = 12 + Math.cos(a) * 19;
+    const y = -143 + Math.sin(a) * 7 + Math.sin(t * 2.3 + i * 2) * 3;
+    const r = (2.4 + 1.6 * Math.max(0, Math.sin(t * 5 + i * 2.1))) * K;
+    ctx.fillStyle = i === 1 ? '#8fe9ff' : '#ffd54a';
+    ctx.beginPath();
+    ctx.moveTo(x * K, y * K - r * 1.5);
+    ctx.quadraticCurveTo(x * K, y * K, x * K + r * 1.5, y * K);
+    ctx.quadraticCurveTo(x * K, y * K, x * K, y * K + r * 1.5);
+    ctx.quadraticCurveTo(x * K, y * K, x * K - r * 1.5, y * K);
+    ctx.quadraticCurveTo(x * K, y * K, x * K, y * K - r * 1.5);
+    ctx.fill();
+  }
 }
 
 export function buildTerrainArt() {
   return {
-    mine: makeLayer(-30, -26, 30, 8, (g) => drawMine(g, false)),
-    mineLit: makeLayer(-30, -28, 30, 8, (g) => drawMine(g, true)),
-    barrel: makeLayer(-26, -64, 26, 8, (g) => drawBarrel(g, false)),
-    barrelHot: makeLayer(-26, -64, 26, 8, (g) => drawBarrel(g, true)),
-    tree: makeLayer(-46, -118, 46, 8, drawTree),
-    tower: makeLayer(-44, -156, 44, 12, drawTower),
+    mine: makeLayer(-34, -26, 40, 22, (g) => drawMine(g, false)),
+    mineLit: makeLayer(-34, -26, 40, 22, (g) => drawMine(g, true)),
+    barrel: makeLayer(-30, -62, 36, 10, (g) => drawBarrel(g, false)),
+    barrelHot: makeLayer(-30, -62, 36, 10, (g) => drawBarrel(g, true)),
+    tree: makeLayer(-48, -128, 48, 10, drawTree),
+    tower: makeLayer(-44, -158, 44, 12, drawTower),
   };
 }
 
@@ -785,7 +926,7 @@ const ICON_DRAW = {
     drawBarrel(g, false);
   },
   tree: (g) => {
-    g.scale(0.44, 0.44);
+    g.scale(0.42, 0.42);
     drawTree(g);
   },
   tower: (g) => {
@@ -793,7 +934,7 @@ const ICON_DRAW = {
     drawTower(g);
   },
 };
-const ICON_BASE = { wall: 0.82, water: 0.86, ice: 0.84, mine: 0.78, barrel: 0.9, tree: 0.94, tower: 0.96 };
+const ICON_BASE = { wall: 0.82, water: 0.86, ice: 0.84, mine: 0.64, barrel: 0.9, tree: 0.94, tower: 0.96 };
 
 export function hasTerrainIcon(id) {
   return id in ICON_DRAW;

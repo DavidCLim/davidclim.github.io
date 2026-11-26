@@ -105,26 +105,27 @@ export const TROOPER = {
   thrusters: 'walk',
 };
 
-// Robot Juggernaut: a huge, slow, armoured brute. He wades in and brings a great axe down, flattening everyone near
-// where it lands. Bullets and arrows only do part of their damage, and nothing knocks him back.
+// Robot Juggernaut: an armoured brute built like a gorilla. He wades in and brings his fists down, flattening everyone
+// near where they land. Bullets and arrows only do part of their damage, and nothing knocks him back.
 export const JUGGERNAUT = {
   kind: 'jugger',
   hp: 480,
-  radius: 13 * UNIT,
-  scale: 1.15, // the same size as Robo Trooper; his bulk comes from the shoulders and fists
+  radius: 15.5 * UNIT,
+  scale: 1.2, // a bit bigger than Robo Trooper, and built much broader
   bulk: 1,
-  sep: 22 * UNIT,
+  sep: 27 * UNIT,
   speed: 48,
   // riflemen back away from him, so now and then he fires his thrusters to catch up
   charge: { time: 0.85, boost: 2.7, rest: 1.2, from: 30 },
   sight: 560,
-  reach: 21, // from his middle to the edge of whoever he's punching
+  reach: 23, // from his middle to the edge of whoever he's punching
   windup: 0.5,
   recover: 0.45,
   rest: 0.45,
   damage: 60, // two punches fell a soldier
   slamAt: 17, // how far in front of him the punch lands
   slamRadius: 14,
+  slam: { every: 3, radius: 19 }, // every third blow is both fists at once, and lands wider
   lunge: 95, // how fast he throws himself into a punch
   knock: 70,
   armor: 0.75,
@@ -133,7 +134,7 @@ export const JUGGERNAUT = {
   boom: 15,
   thrusters: 'boost',
   parts: ['botplate', 'botplate', 'botpod', 'jugfist', 'juggernaut'],
-  ring: 1.25,
+  ring: 1.6,
   pivot: { x: 0, y: 0 },
   muzzleLen: 0,
 };

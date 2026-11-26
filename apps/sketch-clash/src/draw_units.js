@@ -1,8 +1,8 @@
-import { TAU, K, UNIT, FEET } from './config.js?v=215';
-import { drawLayer, OUT } from './sprites.js?v=215';
-import { drawDrop, trooperEyes, BOT_JETS } from './art_units.js?v=215';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=215';
-import { EGG_DROPS } from './art_eggs.js?v=215';
+import { TAU, K, UNIT, FEET } from './config.js?v=216';
+import { drawLayer, OUT } from './sprites.js?v=216';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg } from './art_units.js?v=216';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=216';
+import { EGG_DROPS } from './art_eggs.js?v=216';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -392,27 +392,139 @@ function drawTrooper(ctx, dpr, sprites, u) {
   }
 }
 
-// Robot Juggernaut: drawn the same way as Robo Trooper, only bigger. He chops with the axe, and spins it when crowded.
-// where his front fist is, `s` seconds into a punch: drawn back, then driven forward
-function jugFistAt(d, s) {
-  const rest = { a: 0.15, x: 21, y: 13 };
-  const back = { a: -0.55, x: 2, y: 5 };
-  const out = { a: 0.28, x: 38, y: 15 };
-  const blend = (p, q, k) => ({ a: p.a + (q.a - p.a) * k, x: p.x + (q.x - p.x) * k, y: p.y + (q.y - p.y) * k });
-  if (s <= 0) return rest;
-  const strike = 0.1;
-  if (s < d.windup - strike) return blend(rest, back, 1 - (1 - s / (d.windup - strike)) ** 2);
-  if (s < d.windup) return blend(back, out, ((s - (d.windup - strike)) / strike) ** 2);
+// Robot Juggernaut: Robo Trooper's armour on a gorilla's frame. He walks on his knuckles, drums on his chest while he
+// waits, throws punches, and every third blow rears up and brings both fists down together.
+// A pose is where his wrists and feet are, in art units, and how far he is reared up (negative) or hunched over.
+const JUG_REST = { near: [-2, 15], far: [41, 13], nearFoot: [-27, 24], farFoot: [-15, 23], tilt: 0, lift: 0, jaw: 0, chin: 0, shove: 0, front: false };
+
+const jugMix = (p, q, k) => [p[0] + (q[0] - p[0]) * k, p[1] + (q[1] - p[1]) * k];
+
+// the two attacks, `s` seconds in: drawn back, driven home, held a moment, and back to rest
+function jugAttackPose(d, kind, s) {
+  const R = JUG_REST;
+  const slam = kind === 'slam';
+  const back = slam
+    ? { near: [-5, -45], far: [35, -43], tilt: -0.24, lift: 5, jaw: 4, shove: -2, front: false }
+    : { near: [-32, -6], far: [43, 13], tilt: -0.1, lift: 1, jaw: 1.5, shove: -4, front: false };
+  const hit = slam
+    ? { near: [24, 15], far: [51, 13], tilt: 0.2, lift: -1, jaw: 3, shove: 6, front: false }
+    : { near: [47, 2], far: [32, 13], tilt: 0.16, lift: 0, jaw: 2.5, shove: 13, front: false };
+  const blend = (p, q, k) => ({
+    ...R,
+    near: jugMix(p.near, q.near, k),
+    far: jugMix(p.far, q.far, k),
+    tilt: p.tilt + (q.tilt - p.tilt) * k,
+    lift: p.lift + (q.lift - p.lift) * k,
+    jaw: p.jaw + (q.jaw - p.jaw) * k,
+    shove: p.shove + (q.shove - p.shove) * k,
+  });
+  const strike = 0.11;
+  if (s < d.windup - strike) return blend(R, back, 1 - (1 - s / (d.windup - strike)) ** 2);
+  if (s < d.windup) return blend(back, hit, ((s - (d.windup - strike)) / strike) ** 2);
   const after = (s - d.windup) / d.recover;
-  return after < 0.4 ? out : blend(out, rest, (after - 0.4) / 0.6);
+  return after < 0.45 ? blend(hit, hit, 0) : blend(hit, R, Math.min(1, (after - 0.45) / 0.55));
 }
 
-function drawJugFistAt(ctx, A, p, k) {
+// chest drumming: reared up, mouth open, one fist then the other
+function jugBeatPose(q) {
+  const k = Math.min(1, q * 7, (1 - q) * 7); // ease in and out
+  const beat = Math.sin(q * Math.PI * 8);
+  const out = (x, y) => [x, y];
+  const near = jugMix(out(-28, -3), out(2, 8), Math.max(0, beat));
+  const far = jugMix(out(52, -8), out(21, 13), Math.max(0, -beat));
+  return {
+    ...JUG_REST,
+    near: jugMix(JUG_REST.near, near, k),
+    far: jugMix(JUG_REST.far, far, k),
+    tilt: -0.2 * k,
+    lift: 4 * k,
+    chin: 7 * k,
+    jaw: (3.2 + Math.sin(q * 60) * 0.6) * k,
+    front: k > 0.5,
+    thump: k > 0.9 && Math.abs(beat) > 0.82 ? Math.sign(beat) : 0,
+  };
+}
+
+// knuckle-walking: each fist plants in turn with the opposite foot; charging, both fists swing through together
+function jugWalkPose(ph, boosting) {
+  const R = JUG_REST;
+  const sn = Math.sin(ph);
+  const cs = Math.cos(ph);
+  const lift = (v) => Math.max(0, v);
+  if (boosting) {
+    return {
+      ...R,
+      near: [R.near[0] + sn * 15, R.near[1] - lift(cs) * 13],
+      far: [R.far[0] + Math.sin(ph - 0.5) * 14, R.far[1] - lift(Math.cos(ph - 0.5)) * 12],
+      nearFoot: [R.nearFoot[0] - sn * 9, R.nearFoot[1] - lift(-cs) * 8],
+      farFoot: [R.farFoot[0] - Math.sin(ph - 0.5) * 9, R.farFoot[1] - lift(-Math.cos(ph - 0.5)) * 7],
+      tilt: 0.11 + cs * 0.07,
+      lift: Math.abs(sn) * 4,
+      jaw: 2.4,
+    };
+  }
+  return {
+    ...R,
+    near: [R.near[0] + sn * 9, R.near[1] - lift(cs) * 8],
+    far: [R.far[0] - sn * 9, R.far[1] - lift(-cs) * 8],
+    nearFoot: [R.nearFoot[0] - sn * 6, R.nearFoot[1] - lift(-cs) * 4.5],
+    farFoot: [R.farFoot[0] + sn * 6, R.farFoot[1] - lift(cs) * 4.5],
+    tilt: 0.03 + sn * 0.05,
+    lift: Math.abs(cs) * 2.2,
+  };
+}
+
+// everything above the ground shadow, from the far leg to the near fist. `eyes` paints his eye (and its glow).
+function drawJugRig(ctx, A, p, eyes) {
+  const inArt = (fn) => {
+    ctx.save();
+    ctx.scale(K, K);
+    fn();
+    ctx.restore();
+  };
+  const at = (layer, x, y) => {
+    ctx.save();
+    ctx.translate(x * K, y * K);
+    drawLayer(ctx, layer);
+    ctx.restore();
+  };
+  // the body rocks about his hips; fists and feet stay where the pose puts them
+  const hx = -18;
+  const hy = 14;
+  const ca = Math.cos(p.tilt);
+  const sa = Math.sin(p.tilt);
+  const onBody = (x, y) => [hx + (x - hx) * ca - (y - hy) * sa + p.shove * 0.45, hy + (x - hx) * sa + (y - hy) * ca - p.lift];
+  const farShoulder = onBody(21 + p.shove * 0.4, -3);
+  const nearShoulder = onBody(-14 + p.shove * 0.75, -11);
+  const farArm = () => inArt(() => drawJugArm(ctx, A.fist, farShoulder[0], farShoulder[1], p.far[0], p.far[1], true));
+
+  inArt(() => drawJugLeg(ctx, ...onBody(-10, 11), p.farFoot[0], p.farFoot[1], true));
+  if (!p.front) farArm();
   ctx.save();
-  ctx.translate(p.x * K, p.y * K);
-  ctx.rotate(p.a);
-  ctx.scale(k, k);
-  drawLayer(ctx, A.fist);
+  ctx.translate((hx + p.shove * 0.45) * K, (hy - p.lift) * K);
+  ctx.rotate(p.tilt);
+  ctx.translate(-hx * K, -hy * K);
+  drawLayer(ctx, A.torso);
+  ctx.restore();
+  inArt(() => drawJugLeg(ctx, ...onBody(-23, 11), p.nearFoot[0], p.nearFoot[1], false));
+  if (p.front) farArm();
+  // the head rides on the front of the body, and stays nearly level
+  const neck = onBody(6, -8);
+  ctx.save();
+  ctx.translate((neck[0] - 6 + 9) * K, (neck[1] + 8 - 2 - p.chin) * K);
+  ctx.rotate(p.tilt * 0.35);
+  drawLayer(ctx, A.head);
+  eyes(ctx);
+  drawLayer(ctx, A.brow);
+  at(A.jaw, 0, p.jaw);
+  ctx.restore();
+  inArt(() => drawJugArm(ctx, A.fist, nearShoulder[0], nearShoulder[1], p.near[0], p.near[1], false));
+  ctx.save();
+  ctx.translate(nearShoulder[0] * K, nearShoulder[1] * K);
+  ctx.rotate(p.tilt * 0.5);
+  ctx.scale(0.86, 0.86);
+  ctx.translate(1 * K, -2.5 * K);
+  drawLayer(ctx, A.shoulder);
   ctx.restore();
 }
 
@@ -437,7 +549,6 @@ function drawZaps(ctx, n) {
   }
 }
 
-// Robot Juggernaut: drawn the same way as Robo Trooper, only broader, and he fights with his fists.
 function drawJuggernaut(ctx, dpr, sprites, u) {
   const A = sprites.juggernaut;
   const d = u.def;
@@ -449,8 +560,9 @@ function drawJuggernaut(ctx, dpr, sprites, u) {
   const moving = u.moving && !dead;
   const boosting = moving && u.chargeT > 0;
   const ph = (u.anim * Math.PI) / 2;
-  const s = dead ? 0 : u.swing || 0;
+  const s = dead || !u.atkKind ? 0 : u.swing || 0; // (a new unit's swing starts non-zero, before he has thrown anything)
   const punching = s > 0;
+  const slam = u.atkKind === 'slam';
 
   placeUnit(ctx, dpr, u, u.hit > 0.16 ? (Math.random() - 0.5) * 1.4 : 0);
 
@@ -463,86 +575,137 @@ function drawJuggernaut(ctx, dpr, sprites, u) {
   };
   if (age > 0.26 && age < 0.8) {
     const q = (age - 0.26) / 0.54;
-    ring(0, FEET + 1, 12 + 28 * q, `rgba(150, 148, 160, ${0.6 * (1 - q)})`, 3 * (1 - q) + 0.5);
+    ring(0, FEET + 1, 14 + 32 * q, `rgba(150, 148, 160, ${0.6 * (1 - q)})`, 3 * (1 - q) + 0.5);
   }
-  if (punching && s >= d.windup && s < d.windup + 0.26) {
-    const q = (s - d.windup) / 0.26;
-    const x = (u.strikeX || u.facing * d.slamAt) * u.facing;
+  // where the blow lands: a shock ring, and under a two-fisted slam the ground cracks too
+  if (punching && s >= d.windup) {
+    const x = (u.strikeX === undefined ? u.facing * d.slamAt : u.strikeX) * u.facing;
     const y = (u.strikeY || 0) + FEET;
-    ring(x, y, d.slamRadius * (0.3 + 0.8 * q), `rgba(150, 148, 160, ${0.75 * (1 - q)})`, 2.8 * (1 - q) + 0.4);
+    const radius = slam ? d.slam.radius : d.slamRadius;
+    const q = (s - d.windup) / 0.28;
+    if (q < 1) {
+      ring(x, y, radius * (0.3 + 0.85 * q), `rgba(150, 148, 160, ${0.78 * (1 - q)})`, (slam ? 4 : 2.8) * (1 - q) + 0.4);
+      if (slam) ring(x, y, radius * (0.15 + 0.6 * q), `rgba(112, 232, 214, ${0.7 * (1 - q)})`, 1.8 * (1 - q) + 0.3);
+    }
+    if (slam) {
+      const fade = Math.max(0, 1 - (s - d.windup) / d.recover);
+      ctx.strokeStyle = `rgba(48, 46, 56, ${0.75 * fade})`;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'miter';
+      for (let i = 0; i < 7; i++) {
+        const an = (i / 7) * TAU + 0.35;
+        const len = radius * (0.85 + 0.35 * ((i * 5) % 3) * 0.5);
+        const kink = i % 2 ? 0.28 : -0.28;
+        ctx.lineWidth = 1.1;
+        ctx.beginPath();
+        ctx.moveTo(x + Math.cos(an) * 2.5, y + Math.sin(an) * 1);
+        ctx.lineTo(x + Math.cos(an + kink) * len * 0.55, y + Math.sin(an + kink) * len * 0.22);
+        ctx.lineTo(x + Math.cos(an) * len, y + Math.sin(an) * len * 0.38);
+        ctx.stroke();
+      }
+    }
   }
 
   if (age < 0.28) ctx.translate(0, -60 * (1 - (age / 0.28) ** 2));
   const squash = age >= 0.28 && age < 0.55 ? Math.sin(((age - 0.28) / 0.27) * Math.PI) : 0;
   ctx.translate(0, FEET);
-  // broader than he is tall
   ctx.scale(d.scale * d.bulk * (1 + 0.2 * squash), d.scale * (1 - 0.22 * squash));
   ctx.translate(0, -FEET);
 
-  drawLayer(ctx, A.feet[moving ? (u.anim | 0) & 3 : 0]);
-  if (moving) {
-    const wk = Math.abs(Math.sin(ph));
-    ctx.translate(0, FEET);
-    ctx.rotate((boosting ? 0.15 : 0.06) + Math.sin(ph) * 0.045);
-    ctx.scale(1 + 0.05 * (1 - wk), 1 - 0.07 * (1 - wk));
-    ctx.translate(0, -FEET - wk * 2);
-  } else if (!dead) ctx.translate(0, Math.sin(t * 2) * 0.6);
-  if (punching) {
-    const lean = s < d.windup - 0.1 ? -0.1 * Math.min(1, s / (d.windup - 0.1)) : s < d.windup + 0.12 ? 0.15 : 0.15 * Math.max(0, 1 - (s - d.windup - 0.12) / (d.recover - 0.12));
-    ctx.translate(0, FEET);
-    ctx.rotate(lean);
-    ctx.translate(0, -FEET);
+  // one wide shadow under fists and feet
+  ctx.save();
+  ctx.scale(K, K);
+  ctx.translate(5, 28);
+  ctx.scale(1, 0.24);
+  const sh = ctx.createRadialGradient(0, 0, 8, 0, 0, 48);
+  sh.addColorStop(0, 'rgba(0, 0, 0, 0.46)');
+  sh.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = sh;
+  ctx.beginPath();
+  ctx.arc(0, 0, 48, 0, TAU);
+  ctx.fill();
+  ctx.restore();
+
+  // he drums his chest once he has landed, and now and then while he waits
+  const cycle = t % 5.2;
+  const beating = !dead && !moving && !punching && !u.target && (age > 0.6 && age < 1.75 ? true : age > 3 && cycle < 1.15);
+  let pose;
+  if (punching) pose = jugAttackPose(d, u.atkKind, s);
+  else if (beating) pose = jugBeatPose(age < 1.75 ? (age - 0.6) / 1.15 : cycle / 1.15);
+  else if (moving) pose = jugWalkPose(ph, boosting);
+  else {
+    const breathe = dead ? 0 : Math.sin(t * 2);
+    pose = { ...JUG_REST, lift: breathe * 0.9, jaw: Math.max(0, -breathe) * 0.5 };
   }
+  // landing, he sinks onto his knuckles
+  if (squash) pose = { ...pose, lift: pose.lift - 3 * squash };
 
-  drawLayer(ctx, A.pack);
-  // the far fist, swinging opposite
-  const swingBack = punching ? Math.sin(Math.min(1, s / (d.windup + d.recover)) * Math.PI) : 0;
-  drawJugFistAt(ctx, A, { a: 2.75 - 0.5 * swingBack + (moving ? Math.sin(ph) * 0.2 : 0), x: -27 - 4 * swingBack + (moving ? Math.sin(ph) * 3.5 : 0), y: 15 - 5 * swingBack + (moving ? 0 : Math.sin(t * 2 + 1.2)) }, 0.92);
-  drawLayer(ctx, A.torso);
-
+  // smoke from the stacks
   if (!dead && age > 0.9) {
-    for (let i = 0; i < 3; i++) {
-      const q = (t * (moving ? 1.2 : 0.55) + i / 3) % 1;
-      botGlow(ctx, (-13 - 9 * q) * K, (-37 - (moving ? 20 : 13) * q) * K, (3.6 + 5 * q) * K, '140, 138, 156', 0.6 * (1 - q));
+    for (const [sx, sy] of [[-13, -49], [-25, -42]]) {
+      for (let i = 0; i < 2; i++) {
+        const q = (t * (moving || punching ? 1.3 : 0.55) + i / 2 + sx * 0.03) % 1;
+        botGlow(ctx, (sx - (moving ? 16 : 6) * q) * K, (sy - pose.lift - (moving ? 12 : 15) * q) * K, (3.4 + 5.5 * q) * K, '140, 138, 156', 0.55 * (1 - q));
+      }
     }
   }
 
   const power = age < 0.5 ? 0 : age < 0.85 ? (Math.sin(age * 70) > 0 ? 1 : 0.15) : 1;
-  const attacking = punching || (u.pose > 0.6 && !!u.target);
+  const attacking = punching || beating || (u.pose > 0.6 && !!u.target);
   const blink = !attacking && t % 3.3 < 0.16 ? Math.sin(((t % 3.3) / 0.16) * Math.PI) : 0;
-  ctx.save();
-  ctx.scale(K, K);
-  trooperEyes(ctx, { lx: attacking ? 1 : Math.sin(t * 0.9) * 0.9, ly: attacking ? 0 : Math.sin(t * 1.7) * 0.5, lid: blink, angry: attacking, power, dead });
-  ctx.restore();
-  if (!dead && power > 0.5) botGlow(ctx, 10.6 * K, -4.6 * K, (attacking ? 14 : 11) * K, '70, 255, 205', attacking ? 0.34 : 0.18);
+  drawJugRig(ctx, A, pose, (g) => {
+    g.save();
+    g.translate(5.4 * K, -2 * K);
+    g.save();
+    g.scale(K, K);
+    trooperEyes(g, { lx: attacking ? 1 : Math.sin(t * 0.9) * 0.9, ly: attacking ? 0.2 : Math.sin(t * 1.7) * 0.5, lid: blink, angry: attacking, power, dead });
+    g.restore();
+    if (!dead && power > 0.5) botGlow(g, 10.6 * K, -4.6 * K, (attacking ? 15 : 11) * K, '70, 255, 205', attacking ? 0.4 : 0.18);
+    g.restore();
+  });
 
-  burnGlow(ctx, u, 20.7 * K, 23 * K);
-  if (!dead) drawHitFlash(ctx, u, 20.9 * K, 23.2 * K);
-
-  let fist = jugFistAt(d, s);
-  if (!punching && !dead) {
-    if (moving) fist = { a: fist.a + Math.sin(ph) * 0.18, x: fist.x - Math.sin(ph) * 3.5, y: fist.y };
-    // now and then, while he waits, he pumps his fist
-    else {
-      const pump = t % 5 < 0.9 ? Math.sin(((t % 5) / 0.9) * Math.PI * 3) ** 2 : 0;
-      fist = { a: fist.a - 0.55 * pump, x: fist.x + 2 * pump, y: fist.y - 8 * pump + Math.sin(t * 2) * 0.8 };
-    }
-  }
-  if (dead) fist = { a: 0.7, x: 20, y: 16 };
-  // speed lines trail the punch
-  if (punching && s > d.windup - 0.08 && s < d.windup + 0.1) {
-    const fade = s < d.windup ? 1 : 1 - (s - d.windup) / 0.1;
-    ctx.strokeStyle = `rgba(120, 126, 144, ${0.7 * fade})`;
-    ctx.lineWidth = 1.5 * K;
+  // each thump on the chest rings out
+  if (pose.thump) {
+    ctx.strokeStyle = 'rgba(112, 118, 138, 0.8)';
+    ctx.lineWidth = 1.4 * K;
     ctx.lineCap = 'round';
-    ctx.beginPath();
-    for (const [dy, len] of [[-8, 22], [0, 30], [8, 19]]) {
-      ctx.moveTo((fist.x - 12) * K, (fist.y + dy) * K);
-      ctx.lineTo((fist.x - 12 - len) * K, (fist.y + dy) * K);
+    const cx = pose.thump > 0 ? 3 : 25;
+    for (const r of [14, 20]) {
+      for (const [a0, a1] of [[-0.55, 0.15], [1.0, 1.6]]) {
+        ctx.beginPath();
+        ctx.arc((cx + 6) * K, 10 * K, r * K, a0, a1);
+        ctx.stroke();
+      }
     }
-    ctx.stroke();
   }
-  drawJugFistAt(ctx, A, fist, 1.12);
+
+  // arcs sweep behind his fists as a blow comes down
+  if (punching && s > d.windup - 0.09 && s < d.windup + 0.12) {
+    const fade = s < d.windup ? 1 : 1 - (s - d.windup) / 0.12;
+    ctx.lineCap = 'round';
+    if (slam) {
+      for (const [x, w] of [[pose.near[0], 1], [pose.far[0], 0.7]]) {
+        ctx.strokeStyle = `rgba(112, 232, 214, ${0.75 * fade * w})`;
+        ctx.lineWidth = 3.4 * K;
+        ctx.beginPath();
+        ctx.moveTo((x - 24) * K, -36 * K);
+        ctx.quadraticCurveTo((x + 12) * K, -34 * K, (x + 11) * K, 6 * K);
+        ctx.stroke();
+      }
+    } else {
+      ctx.strokeStyle = `rgba(120, 126, 144, ${0.75 * fade})`;
+      ctx.lineWidth = 1.7 * K;
+      ctx.beginPath();
+      for (const [dy, len] of [[-9, 26], [0, 36], [9, 23]]) {
+        ctx.moveTo((pose.near[0] - 12) * K, (pose.near[1] + dy) * K);
+        ctx.lineTo((pose.near[0] - 12 - len) * K, (pose.near[1] + dy) * K);
+      }
+      ctx.stroke();
+    }
+  }
+
+  burnGlow(ctx, u, 27 * K, 25 * K);
+  if (!dead) drawHitFlash(ctx, u, 27 * K, 25 * K);
 
   if (!dead && (u.hit > 0.14 || (u.hp < d.hp * 0.4 && Math.sin(t * 7.3) > 0.9))) drawZaps(ctx, 2);
 }
@@ -1230,15 +1393,7 @@ const ICONS = {
     g.rotate(0.2);
     drawLayer(g, S.gunLoaded);
   }],
-  juggernaut: [112, 54, 68, (g, S) => {
-    g.save();
-    g.scale(K, K);
-    trooperEyes(g, { lx: 0.7, ly: 0.2 });
-    g.restore();
-    g.translate(21 * K, 13 * K);
-    g.rotate(0.15);
-    drawLayer(g, S.fist);
-  }],
+  juggernaut: [90, 42, 60, null],
   trooper: [92, 44, 50, (g, S) => {
     g.save();
     g.scale(K, K);
@@ -1319,15 +1474,16 @@ export function paintUnitIcon(canvas, sprites, species) {
   g.save();
   g.translate((ox * canvas.width) / w, (oy * canvas.width) / w);
   g.scale(m, m);
-  if (species === 'trooper' || species === 'juggernaut' || species === 'jettrooper') drawLayer(g, S.pack);
+  if (species === 'trooper' || species === 'jettrooper') drawLayer(g, S.pack);
   if (species === 'juggernaut') {
-    g.save();
-    g.translate(-27 * K, 15 * K);
-    g.rotate(2.75);
-    drawLayer(g, S.fist);
-    g.restore();
-  }
-  if (species === 'cavalry') {
+    drawJugRig(g, S, JUG_REST, () => {
+      g.save();
+      g.translate(5.4 * K, -2 * K);
+      g.scale(K, K);
+      trooperEyes(g, { lx: 0.7, ly: 0.2 });
+      g.restore();
+    });
+  } else if (species === 'cavalry') {
     drawLayer(g, S.shadow);
     drawLayer(g, S.horse[4]);
     g.save();
