@@ -1,9 +1,9 @@
 // MechaZaur's own part of the world: his missiles, and the effects that go with him (the shockwave as he lets loose, the
 // embers and heat rings in his breath, the ground it leaves burning, the great blast when he goes). Only the missiles
 // hurt anyone; the rest is for show.
-import { TAU, K, FEET } from './config.js?v=245';
-import { WATER } from './terrain.js?v=245';
-import { swipeTurn, SWIPE_BACK } from './zordlimbs.js?v=245';
+import { TAU, K, FEET } from './config.js?v=251';
+import { WATER } from './terrain.js?v=251';
+import { swipeTurn, SWIPE_BACK } from './zordlimbs.js?v=251';
 
 const TEAL = '70, 245, 200';
 const GOLD = '255, 196, 80';
@@ -15,6 +15,7 @@ export function resetZordFx(world) {
   world.scorches = [];
   world.missiles = [];
   world.trails = [];
+  world.wisps = [];
 }
 
 // a ring racing outward. flat: lying on the ground. ang: squashed along a direction, as the heat rings in his breath are
@@ -31,9 +32,9 @@ function embers(world, x, y, n, ang, spread, speed) {
 }
 
 // a patch of ground left burning (water won't)
-function scorch(world, x, y, r, life) {
+function scorch(world, x, y, r, life, ghost = false) {
   if (world.terrain.at(x, y) & WATER) return;
-  world.scorches.push({ x, y, r, life, age: 0, seed: Math.random() * 9 });
+  world.scorches.push({ x, y, r, life, ghost, age: 0, seed: Math.random() * 9 });
   if (world.scorches.length > SCORCH_MAX) world.scorches.shift();
 }
 
@@ -128,6 +129,7 @@ function stepBeam(world, u, dt) {
         o.kx += dx * 520 * dt;
         o.ky += dy * 520 * dt;
       }
+      o.spirit = 2;
       world.hurt(o, m.dps * dt, o.x, o.y, 'burn', u);
     });
     for (const p of world.props) {
@@ -137,9 +139,22 @@ function stepBeam(world, u, dt) {
       const along = ox * dx + oy * dy;
       if (along > 0 && along < m.range && Math.abs(ox * dy - oy * dx) <= m.width + 6) world.damageProp(p, m.dps * dt);
     }
-    if (Math.random() < dt * 40) {
-      const along = 20 + Math.random() * (m.range * 0.8);
-      embers(world, from.x + dx * along, from.y + dy * along, 2, -Math.PI / 2, 2.4, 80);
+    // wisps of it tear away and drift up
+    b.wispT = (b.wispT || 0) - dt;
+    while (b.wispT <= 0) {
+      b.wispT += 0.016;
+      const along = 6 + Math.random() * Math.min(m.range, (b.t - m.charge) * 2600) * 0.9;
+      const side = Math.random() < 0.5 ? -1 : 1;
+      const off = side * m.width * (0.6 + Math.random() * 0.7);
+      const out = side * (14 + Math.random() * 40);
+      const run = 40 + Math.random() * 90;
+      world.wisps.push({ x: from.x + dx * along - dy * off, y: from.y + dy * along + dx * off, vx: dx * run - dy * out, vy: dy * run + dx * out - 12, age: 0, life: 0.32 + Math.random() * 0.4, size: 1.3 + Math.random() * 2.1, phase: Math.random() * TAU });
+    }
+    b.fireT = (b.fireT || 0) - dt;
+    if (b.fireT <= 0) {
+      b.fireT = 0.045;
+      const along = 22 + Math.random() * 230;
+      scorch(world, from.x + dx * along + (Math.random() - 0.5) * 14, from.y + dy * along + FEET + (Math.random() - 0.5) * 7, 4 + Math.random() * 4, 1.9 + Math.random() * 1.2, true);
     }
   }
   if (b.t >= m.charge + m.fire) u.beam = null;
@@ -168,17 +183,106 @@ export function stepZordBeam(world, u, dt) {
   return true;
 }
 
-// a long shape from the mouth along +x: narrow where it leaves, quickly full width, with a rippling edge
+// ---- the look of it: the spectral fire of a skeleton dinosaur. A white-mint heart, bright aqua flame and deep teal
+// edges, all in sharp curling tongues that stream back off it, with a dark teal haze and loose wisps round about.
+const GHOST = { haze: 'rgba(12, 140, 122, 0.1)', deep: '#08756a', teal: '#0fb392', aqua: '#33efb8', mint: '#a4ffdf', heart: '#effffa' };
+
+// one tongue of flame: round at its root (x, y) and drawn out along `ang`, swaying one way and then curling its sharp
+// tip over the other by `curl`
+function flameTongue(ctx, x, y, ang, len, wide, curl, fill) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(ang);
+  ctx.fillStyle = fill;
+  ctx.beginPath();
+  ctx.moveTo(0, -wide);
+  ctx.bezierCurveTo(len * 0.42, -wide * 1.25 - curl * 0.55, len * 0.72, -wide * 0.2 + curl * 0.1, len, curl);
+  ctx.bezierCurveTo(len * 0.74, curl * 0.5 + wide * 0.34, len * 0.38, wide * 1.2 - curl * 0.55, 0, wide);
+  ctx.arc(0, 0, wide, Math.PI / 2, Math.PI * 1.5);
+  ctx.fill();
+  ctx.restore();
+}
+
+// a steady made-up number for the i-th of anything, so each flame keeps its own size and sway from frame to frame
+const pick = (i, k) => {
+  const s = Math.sin(i * 127.1 + k * 311.7) * 43758.5453;
+  return s - Math.floor(s);
+};
+
+// a long shape from the jaws along +x: narrow where it leaves, quickly full width, its edge a run of flame crests that
+// each swell forward to a point, fall away, and rush on down it
 function beamShape(ctx, len, wide, ripple, clock, fill) {
-  const edge = (x, side) => side * wide * Math.min(1, 0.28 + x / 34) * (1 + Math.sin(x * 0.11 - clock * 34 + side) * ripple + Math.sin(x * 0.29 - clock * 51) * ripple * 0.6);
+  const edge = (x, side) => {
+    const roll = x / 31 - clock * 8.5 + (side > 0 ? 0.43 : 0) + Math.sin(x * 0.021 - clock * 4 + side) * 0.35;
+    const crest = (roll - Math.floor(roll)) ** 2.3;
+    const roll2 = x / 17 - clock * 15 + side * 0.21;
+    const small = (roll2 - Math.floor(roll2)) ** 2;
+    return side * wide * Math.min(1, 0.26 + x / 36) * (1 + ripple * (crest * 2.5 + small * 0.9 - 0.95));
+  };
   ctx.fillStyle = fill;
   ctx.beginPath();
   ctx.moveTo(0, edge(0, -1));
-  for (let x = 8; x <= len; x += 8) ctx.lineTo(x, edge(x, -1));
-  ctx.quadraticCurveTo(len + wide * 1.5, 0, len, edge(len, 1));
-  for (let x = len; x >= 0; x -= 8) ctx.lineTo(x, edge(x, 1));
+  for (let x = 3; x <= len; x += 3) ctx.lineTo(x, edge(x, -1));
+  ctx.quadraticCurveTo(len + wide * 1.6, 0, len, edge(len, 1));
+  for (let x = len; x >= 0; x -= 3) ctx.lineTo(x, edge(x, 1));
   ctx.closePath();
   ctx.fill();
+}
+
+// flames licking forward off both edges, curling outward at the tips
+function edgeFlames(ctx, len, w, clock, o) {
+  const count = Math.ceil(len / o.gap);
+  for (let i = 0; i < count; i++) {
+    for (const side of [-1, 1]) {
+      const n = i * 2 + (side > 0 ? 1 : 0) + o.seed;
+      const x = (i * o.gap + pick(n, 1) * o.gap + clock * o.speed) % len;
+      const near = Math.min(1, 0.2 + x / 40);
+      const sway = Math.sin(clock * (13 + pick(n, 2) * 9) + n);
+      flameTongue(ctx, x, side * w * o.out * near, side * (o.lean + sway * 0.17), w * (o.long + pick(n, 3) * o.long) * near, w * o.fat * (0.7 + pick(n, 4) * 0.6) * near, side * w * (0.34 + 0.3 * sway) * near, o.fill);
+    }
+  }
+}
+
+// big curling tongues that swell up out of it, hook over, tear away and are gone, each shaded in three flat tones
+function curlFlames(ctx, len, w, clock, swell) {
+  const count = Math.ceil(len / 30);
+  for (let i = 0; i < count; i++) {
+    for (const side of [-1, 1]) {
+      const n = i * 2 + (side > 0 ? 1 : 0) + 211;
+      const q = (clock * (1.5 + pick(n, 1)) + pick(n, 2)) % 1;
+      const x = i * 30 + pick(n, 3) * 26 + q * 58;
+      if (x > len) continue;
+      const near = Math.min(1, 0.15 + x / 55);
+      const grow = Math.sin(Math.PI * Math.min(1, 0.12 + q * 0.88));
+      const ang = side * (0.16 + q * 0.36);
+      const y = side * w * (0.78 + q * 0.5) * near;
+      const long = w * (1.7 + pick(n, 4) * 1.3) * near * (0.5 + 0.5 * grow);
+      const fat = w * (0.42 + pick(n, 5) * 0.24) * near * (0.45 + 0.55 * grow);
+      const hook = side * long * (0.4 + 0.22 * Math.sin(clock * 12 + n));
+      ctx.globalAlpha = Math.min(1, (1 - q) * 2.4) * Math.min(1, swell * 2);
+      flameTongue(ctx, x, y, ang, long, fat, hook, GHOST.deep);
+      flameTongue(ctx, x, y, ang, long * 0.78, fat * 0.7, hook * 0.72, GHOST.aqua);
+      flameTongue(ctx, x, y, ang, long * 0.48, fat * 0.36, hook * 0.4, GHOST.mint);
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
+// a ball of the fire, flames wheeling out of it
+function ghostBall(ctx, x, y, r, clock, spikes) {
+  for (const [fill, k, turn, count] of [[GHOST.deep, 1, 1.7, spikes], [GHOST.aqua, 0.76, -2.4, spikes - 2]]) {
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * TAU + clock * turn;
+      const flick = 0.75 + 0.5 * Math.abs(Math.sin(clock * (11 + i) + i * 2.1));
+      flameTongue(ctx, x + Math.cos(a) * r * 0.45 * k, y + Math.sin(a) * r * 0.45 * k, a + 0.45 * Math.sign(turn), r * 1.5 * k * flick, r * 0.4 * k, Math.sign(turn) * r * 0.5, fill);
+    }
+  }
+  for (const [fill, k] of [[GHOST.teal, 0.92], [GHOST.aqua, 0.74], [GHOST.mint, 0.54], [GHOST.heart, 0.32]]) {
+    ctx.fillStyle = fill;
+    ctx.beginPath();
+    ctx.arc(x, y, r * k * (0.95 + Math.random() * 0.1), 0, TAU);
+    ctx.fill();
+  }
 }
 
 function drawBeam(ctx, u) {
@@ -189,83 +293,136 @@ function drawBeam(ctx, u) {
   ctx.save();
   ctx.translate(from.x, from.y);
   ctx.rotate(b.angle);
+  ctx.lineCap = 'round';
   if (b.t < m.charge) {
     const p = b.t / m.charge;
     // a thin flickering line shows where it is going to go
-    ctx.strokeStyle = `rgba(46, 200, 90, ${0.5 * p * (0.6 + 0.4 * Math.sin(clock * 40))})`;
+    ctx.strokeStyle = `rgba(20, 180, 148, ${0.5 * p * (0.6 + 0.4 * Math.sin(clock * 40))})`;
     ctx.lineWidth = 0.9;
     ctx.beginPath();
-    ctx.moveTo(8, 0);
-    ctx.lineTo(Math.min(m.range, 200), 0);
+    ctx.moveTo(10, 0);
+    ctx.lineTo(Math.min(m.range, 210), 0);
     ctx.stroke();
-    // light is dragged into his mouth from all round
-    ctx.lineCap = 'round';
-    for (let i = 0; i < 18; i++) {
-      const q = (clock * 2 + i / 18) % 1;
-      const an = i * 2.4 + q * 2;
-      const far = (1 - q) * 30 + 3;
-      ctx.strokeStyle = `rgba(52, 220, 96, ${Math.min(1, q * 3) * p})`;
-      ctx.lineWidth = 0.6 + 1.2 * q;
+    // ghost fire is dragged in out of the air, spiralling into his jaws
+    for (let i = 0; i < 20; i++) {
+      const q = (clock * 1.5 + i / 20) % 1;
+      const an = i * 2.4 + q * 3.4;
+      const far = (1 - q) * 40 + 5;
+      ctx.globalAlpha = Math.min(1, q * 2.6) * Math.min(1, p * 1.8);
+      flameTongue(ctx, 5 + Math.cos(an) * far, Math.sin(an) * far, an - 0.85, 6 + 12 * (1 - q), 1 + 1.7 * q, -3, i % 3 === 0 ? GHOST.mint : i % 3 === 1 ? GHOST.aqua : GHOST.teal);
+    }
+    ctx.globalAlpha = 1;
+    // rings closing in as it comes to the full
+    for (let i = 0; i < 3; i++) {
+      const q = (clock * 2.1 + i / 3) % 1;
+      ctx.strokeStyle = `rgba(51, 239, 184, ${0.75 * q * p})`;
+      ctx.lineWidth = 1.3;
       ctx.beginPath();
-      ctx.moveTo(Math.cos(an) * (far + 6), Math.sin(an) * (far + 6));
-      ctx.lineTo(Math.cos(an) * far, Math.sin(an) * far);
+      ctx.arc(5, 0, 6 + 30 * (1 - q), 0, TAU);
       ctx.stroke();
     }
-    const r = 1.2 + 5.6 * p + Math.sin(clock * 50) * 0.5 * p;
-    for (const [col, k] of [['rgba(60, 255, 120, 0.35)', 2], ['#17a94a', 1.15], ['#5cf08a', 0.78], ['#d9ffe2', 0.42]]) {
-      ctx.fillStyle = col;
-      ctx.beginPath();
-      ctx.arc(5, 0, r * k, 0, TAU);
-      ctx.fill();
-    }
+    ghostBall(ctx, 5, 0, 1.5 + 7.5 * p + Math.sin(clock * 48) * 0.6 * p, clock, 9);
     ctx.restore();
     return;
   }
   const since = b.t - m.charge;
-  const len = m.range * Math.min(1, since / 0.12);
+  const len = m.range * Math.min(1, since / 0.13);
   // it swells as it bursts out and thins away at the end
-  const swell = Math.min(1, since / 0.1) * Math.min(1, (m.fire - since) / 0.28);
-  const w = m.width * Math.max(0, swell);
-  beamShape(ctx, len, w * 1.9, 0.1, clock, 'rgba(70, 255, 130, 0.22)');
-  beamShape(ctx, len, w * 1.32, 0.13, clock, '#0c6b30');
-  beamShape(ctx, len, w * 1.13, 0.12, clock + 0.03, '#17a94a');
-  beamShape(ctx, len, w * 0.82, 0.1, clock + 0.07, '#3fe573');
-  beamShape(ctx, len, w * 0.5, 0.09, clock + 0.11, '#9dffb6');
-  beamShape(ctx, len, w * 0.22, 0.08, clock + 0.15, '#e6ffec');
-  // rings of force riding down it
-  ctx.lineWidth = 1.8;
-  for (let i = 0; i < 7; i++) {
-    const x = ((clock * 330 + (i * len) / 7) % len) || 0;
-    ctx.strokeStyle = `rgba(214, 255, 222, ${0.85 * swell * (1 - x / len)})`;
+  const swell = Math.min(1, since / 0.1) * Math.min(1, (m.fire - since) / 0.3);
+  const pulse = 1 + Math.sin(clock * 31) * 0.06 + (since < 0.22 ? 0.4 * (1 - since / 0.22) : 0);
+  const w = m.width * Math.max(0.02, swell) * pulse;
+
+  // the haze, and dark teal smoke boiling off it
+  beamShape(ctx, len, w * 2.2, 0.07, clock * 0.5, GHOST.haze);
+  beamShape(ctx, len, w * 1.65, 0.1, clock * 0.7, GHOST.haze);
+  for (let i = 0; i < 26; i++) {
+    const x = (pick(i, 5) * len + clock * (90 + pick(i, 6) * 90)) % len;
+    const q = (clock * (0.9 + pick(i, 7)) + pick(i, 8)) % 1;
+    const side = i % 2 ? 1 : -1;
+    ctx.fillStyle = `rgba(14, 104, 98, ${0.2 * (1 - q) * swell})`;
     ctx.beginPath();
-    ctx.ellipse(x, 0, 3.4, w * 1.55, 0, 0, TAU);
-    ctx.stroke();
-  }
-  // ghostly crackle along its edges
-  ctx.lineJoin = 'miter';
-  ctx.lineWidth = 1.2;
-  ctx.strokeStyle = `rgba(24, 160, 70, ${0.9 * swell})`;
-  for (let i = 0; i < 9; i++) {
-    let x = Math.random() * len * 0.9;
-    const side = Math.random() < 0.5 ? -1 : 1;
-    let y = side * w * 1.1;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    for (let j = 0; j < 3; j++) {
-      x += 5 + Math.random() * 9;
-      y = side * w * (1.2 + Math.random() * 0.9);
-      ctx.lineTo(x, y);
-    }
-    ctx.stroke();
-  }
-  // the blinding ball at his mouth
-  for (const [col, k] of [['rgba(70, 255, 130, 0.35)', 1.5], ['#17a94a', 0.9], ['#5cf08a', 0.7], ['#d9ffe2', 0.42]]) {
-    ctx.fillStyle = col;
-    ctx.beginPath();
-    ctx.arc(7, 0, w * k * (0.92 + Math.random() * 0.14), 0, TAU);
+    ctx.arc(x - q * 16, side * w * (1.2 + q * 1.5), w * (0.22 + q * 0.5), 0, TAU);
     ctx.fill();
   }
+  // layer on layer of flame, the darkest and biggest underneath
+  edgeFlames(ctx, len, w, clock, { gap: 17, speed: 210, out: 0.9, lean: 0.34, long: 0.95, fat: 0.44, seed: 3, fill: GHOST.deep });
+  beamShape(ctx, len, w * 1.16, 0.22, clock, GHOST.deep);
+  edgeFlames(ctx, len, w, clock, { gap: 20, speed: 300, out: 0.78, lean: 0.28, long: 0.85, fat: 0.36, seed: 71, fill: GHOST.teal });
+  beamShape(ctx, len, w * 0.97, 0.22, clock + 0.035, GHOST.teal);
+  curlFlames(ctx, len, w, clock, swell);
+  edgeFlames(ctx, len, w, clock, { gap: 25, speed: 390, out: 0.6, lean: 0.28, long: 0.85, fat: 0.28, seed: 133, fill: GHOST.aqua });
+  beamShape(ctx, len, w * 0.72, 0.22, clock + 0.07, GHOST.aqua);
+  beamShape(ctx, len, w * 0.44, 0.2, clock + 0.105, GHOST.mint);
+  // quick licks of flame racing through the middle, so it reads as fire and not as a bar of light
+  for (let i = 0; i < 22; i++) {
+    const x = (pick(i, 9) * len + clock * (430 + pick(i, 10) * 190)) % len;
+    const y = (pick(i, 11) - 0.5) * w * 1.5 * Math.min(1, 0.3 + x / 40);
+    flameTongue(ctx, x, y, Math.sin(clock * 17 + i) * 0.16, w * (0.9 + pick(i, 12) * 1.1), w * (0.07 + pick(i, 13) * 0.09), Math.sin(clock * 21 + i * 3) * w * 0.2, i % 3 ? GHOST.mint : GHOST.teal);
+  }
+  beamShape(ctx, len, w * 0.22, 0.14, clock + 0.14, GHOST.heart);
+  // two cords of light twisting round it
+  for (const [phase, col] of [[0, GHOST.heart], [Math.PI, GHOST.mint]]) {
+    let prev = null;
+    for (let x = 8; x <= len; x += 5) {
+      const a = x * 0.062 - clock * 21 + phase;
+      const y = Math.sin(a) * w * 1.08 * Math.min(1, x / 44);
+      if (prev) {
+        const front = Math.cos(a) > 0;
+        ctx.globalAlpha = (front ? 0.95 : 0.28) * swell;
+        ctx.strokeStyle = col;
+        ctx.lineWidth = front ? 1.3 : 0.7;
+        ctx.beginPath();
+        ctx.moveTo(prev[0], prev[1]);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+      }
+      prev = [x, y];
+    }
+  }
+  ctx.globalAlpha = 1;
+  // the blast as it leaves him
+  if (since < 0.4) {
+    const q = since / 0.4;
+    for (const k of [1, 0.62]) {
+      ctx.strokeStyle = `rgba(51, 239, 184, ${0.9 * (1 - q)})`;
+      ctx.lineWidth = 3.4 * (1 - q) + 0.5;
+      ctx.beginPath();
+      ctx.ellipse(8 + 20 * q * k, 0, 9 + 14 * q, (12 + 46 * q) * k, 0, 0, TAU);
+      ctx.stroke();
+    }
+  }
+  // the roaring ball of it at his jaws, and a hard glint across it
+  ghostBall(ctx, 10, 0, w * 0.7, clock, 11);
+  ctx.fillStyle = `rgba(239, 255, 250, ${0.9 * swell})`;
+  ctx.save();
+  ctx.translate(10, 0);
+  ctx.rotate(clock * 6);
+  ctx.beginPath();
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * TAU;
+    const r = i % 2 ? w * 0.12 : w * (i % 4 ? 0.9 : 1.55);
+    if (i) ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+    else ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+  }
+  ctx.closePath();
+  ctx.fill();
   ctx.restore();
+  ctx.restore();
+}
+
+// the loose wisps that peel off and float up, each a little curling flame, tip first the way it is going
+function drawWisps(ctx, world) {
+  for (const s of world.wisps) {
+    const q = s.age / s.life;
+    const ahead = Math.atan2(s.vy, s.vx);
+    const sway = Math.sin(s.age * 11 + s.phase);
+    const size = s.size * (1 - q * 0.45);
+    ctx.globalAlpha = Math.min(1, s.age / 0.06) * (1 - q * q);
+    flameTongue(ctx, s.x, s.y, ahead + sway * 0.3, size * 6, size * 0.8, sway * size * 2.6, GHOST.deep);
+    flameTongue(ctx, s.x, s.y, ahead + sway * 0.3, size * 4.4, size * 0.54, sway * size * 1.9, GHOST.aqua);
+    flameTongue(ctx, s.x, s.y, ahead + sway * 0.3, size * 2.4, size * 0.27, sway * size * 1.1, GHOST.heart);
+  }
+  ctx.globalAlpha = 1;
 }
 
 // ---------------------------------------------------------------- his tail swipe
@@ -547,6 +704,14 @@ export function stepZordFx(world, dt) {
   if (!world.novas.every(live)) world.novas = world.novas.filter(live);
   if (!world.scorches.every(live)) world.scorches = world.scorches.filter(live);
   if (!world.trails.every(live)) world.trails = world.trails.filter(live);
+  for (const s of world.wisps) {
+    s.age += dt;
+    s.x += s.vx * dt;
+    s.y += s.vy * dt;
+    s.vx *= 0.95;
+    s.vy = s.vy * 0.95 - 90 * dt;
+  }
+  if (!world.wisps.every(live)) world.wisps = world.wisps.filter(live);
 }
 
 function drawNova(ctx, n) {
@@ -578,13 +743,13 @@ function tongue(ctx, x, y, w, h, lean, fill) {
 export function drawZordGround(ctx, world) {
   for (const s of world.scorches) {
     const fade = Math.min(1, (s.life - s.age) / 0.9, s.age / 0.12);
-    ctx.fillStyle = `rgba(66, 46, 40, ${0.24 * fade})`;
+    ctx.fillStyle = s.ghost ? `rgba(18, 74, 70, ${0.24 * fade})` : `rgba(66, 46, 40, ${0.24 * fade})`;
     ctx.beginPath();
     ctx.ellipse(s.x, s.y, s.r, s.r * 0.42, 0, 0, TAU);
     ctx.fill();
     const heat = Math.max(0, 1 - s.age / (s.life * 0.74));
     if (heat <= 0) continue;
-    ctx.fillStyle = `rgba(255, 140, 40, ${0.34 * heat * fade})`;
+    ctx.fillStyle = s.ghost ? `rgba(40, 235, 180, ${0.36 * heat * fade})` : `rgba(255, 140, 40, ${0.34 * heat * fade})`;
     ctx.beginPath();
     ctx.ellipse(s.x, s.y, s.r * 0.72, s.r * 0.3, 0, 0, TAU);
     ctx.fill();
@@ -594,8 +759,8 @@ export function drawZordGround(ctx, world) {
       const x = s.x + (i - 1) * s.r * 0.52;
       const h = s.r * (i === 1 ? 1.35 : 0.9) * (0.45 + heat * 0.55) * (1 + 0.24 * Math.sin(beat));
       const lean = Math.sin(beat * 0.7) * 1.4;
-      tongue(ctx, x, s.y, s.r * 0.26, h, lean, '#ff8a2e');
-      tongue(ctx, x, s.y, s.r * 0.14, h * 0.6, lean * 0.6, '#ffd65c');
+      tongue(ctx, x, s.y, s.r * 0.26, h * (s.ghost ? 1.25 : 1), lean, s.ghost ? '#0fb392' : '#ff8a2e');
+      tongue(ctx, x, s.y, s.r * 0.14, h * 0.6, lean * 0.6, s.ghost ? '#a4ffdf' : '#ffd65c');
     }
     ctx.globalAlpha = 1;
   }
@@ -606,6 +771,7 @@ export function drawZordGround(ctx, world) {
 // over the units: the rings in the air and the embers
 export function drawZordAir(ctx, world) {
   for (const u of world.units) if (u.beam && !u.dead && u.def.beam) drawBeam(ctx, u);
+  drawWisps(ctx, world);
   drawTrails(ctx, world);
   for (const k of world.missiles) drawMissile(ctx, k);
   for (const n of world.novas) if (!n.flat) drawNova(ctx, n);

@@ -1,14 +1,14 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=245';
-import { drawLayer, OUT } from './sprites.js?v=245';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt } from './art_units.js?v=245';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=245';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=245';
-import { drawZordGround, drawZordAir } from './zordfx.js?v=245';
-import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=245';
-import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=245';
-import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=245';
-import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=245';
-import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=245';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=251';
+import { drawLayer, OUT } from './sprites.js?v=251';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt } from './art_units.js?v=251';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=251';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=251';
+import { drawZordGround, drawZordAir } from './zordfx.js?v=251';
+import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=251';
+import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=251';
+import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=251';
+import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=251';
+import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=251';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -46,6 +46,14 @@ export function burnOverlay(ctx, u, rx, ry, cx = 0, cy = 0) {
     ctx.beginPath();
     ctx.ellipse(cx, cy, rx, ry, 0, 0, TAU);
     ctx.fill();
+  }
+  // caught in ghost fire it glows with it
+  if (u.spirit > 0) {
+    ctx.fillStyle = `rgba(40, 236, 178, ${(0.5 + 0.14 * Math.sin(u.breath * 22)) * Math.min(1, u.spirit / 0.25)})`;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, TAU);
+    ctx.fill();
+    return; // and that fire stays its own colour
   }
   if (u.burn <= 0) return;
   const t = Math.min(1, u.burn / 1.2);

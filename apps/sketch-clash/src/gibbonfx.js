@@ -1,7 +1,7 @@
 // Gibbondore The Great: how he fights, and what his magic does to the world.
 // Like the original's ape he goes straight in and hits the ground hard enough to send everyone flying; being a gibbon
 // he also swings himself across the gap in one great leap, and being a wizard he throws stars from his staff on the way.
-import { TAU, K, FEET } from './config.js?v=245';
+import { TAU, K, FEET } from './config.js?v=251';
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -94,28 +94,12 @@ function burst(world, s) {
   glints(world, s.x, s.y, 8, 85);
 }
 
-// ---------------------------------------------------------------- the storm ring
-// He beats the ground with his staff twice. The first blow draws a circle on the ground round him; on the second the
-// lightning comes down all along it. Only the circle itself is struck: whoever stands inside it, or beyond it, is safe.
-export const STORM = { tap1: 0.36, tap2: 0.8, strike: 0.98, time: 1.45 };
-const FLAT = 0.62; // a circle on the ground, seen at a slant
-
-// is this one standing on the circle?
-function onCircle(o, x, y, r, width) {
-  const d = Math.hypot(o.x - x, (o.y - y) / FLAT);
-  return Math.abs(d - r) <= width / 2 + o.def.radius;
-}
-
-function worthStorm(world, u) {
-  const m = u.def.storm;
-  let on = 0;
-  let inside = 0;
-  world.eachEnemyNear(u.side, u.x, u.y, m.radius + m.width + 14, (o) => {
-    if (onCircle(o, u.x, u.y, m.radius, m.width)) on++;
-    else if (Math.hypot(o.x - u.x, (o.y - u.y) / FLAT) < m.radius) inside++;
-  });
-  return on > 0 && on >= inside;
-}
+// ---------------------------------------------------------------- the storm
+// He beats the ground with his staff twice, and on the second blow lightning comes down out of the sky on the six
+// enemies nearest him, one hard on the heels of another.
+export const STORM = { tap1: 0.36, tap2: 0.8, strike: 0.9, time: 1.45 };
+const GAP = 0.05; // between one bolt and the next
+const GLOW = 0.36; // how long each is seen
 
 // where the end of his staff lands in the slam pose
 function staffEnd(u) {
@@ -124,7 +108,6 @@ function staffEnd(u) {
 
 function tap(world, u, big) {
   const at = staffEnd(u);
-  world.quakes.push({ x: at.x, y: at.y, r: big ? 22 : 16, age: 0, life: 0.55, seed: Math.random() * TAU });
   glints(world, at.x, at.y - 3, big ? 14 : 8, 90);
   for (let i = 0; i < 6; i++) {
     const a = (i / 6) * TAU;
@@ -133,129 +116,100 @@ function tap(world, u, big) {
   if (world.sfx) world.sfx('slam', at.x);
 }
 
+function callDown(world, u) {
+  const m = u.def.storm;
+  const all = [];
+  world.eachEnemyNear(u.side, u.x, u.y, 3000, (o) => all.push(o));
+  all.sort((a, b) => Math.hypot(a.x - u.x, a.y - u.y) - Math.hypot(b.x - u.x, b.y - u.y));
+  const bolts = all.slice(0, m.targets).map((o, i) => ({ o, x: o.x, y: o.y, at: i * GAP, struck: false }));
+  if (bolts.length) world.storms.push({ bolts, age: 0, life: (bolts.length - 1) * GAP + GLOW, owner: u });
+}
+
 function stepStorm(world, u, dt) {
   const before = u.stormT;
   u.stormT += dt;
-  if (before < STORM.tap1 && u.stormT >= STORM.tap1) {
-    tap(world, u, false);
-    const m = u.def.storm;
-    world.storms.push({ x: u.x, y: u.y, r: m.radius, w: m.width, age: 0, at: STORM.strike - STORM.tap1, life: STORM.strike - STORM.tap1 + 0.55, struck: false, side: u.side, owner: u });
-  }
+  if (before < STORM.tap1 && u.stormT >= STORM.tap1) tap(world, u, false);
   if (before < STORM.tap2 && u.stormT >= STORM.tap2) tap(world, u, true);
+  if (before < STORM.strike && u.stormT >= STORM.strike) callDown(world, u);
   if (u.stormT >= STORM.time) u.stormT = null;
-}
-
-function strike(world, s) {
-  const m = s.owner.def.storm;
-  s.struck = true;
-  world.eachEnemyNear(s.side, s.x, s.y, s.r + s.w + 14, (o) => {
-    if (!onCircle(o, s.x, s.y, s.r, s.w)) return;
-    const dx = o.x - s.x;
-    const dy = o.y - s.y;
-    const dist = Math.hypot(dx, dy) || 1;
-    if (!o.def.noKnock) {
-      o.kx += (dx / dist) * 90;
-      o.ky += (dy / dist) * 90;
-    }
-    glints(world, o.x, o.y - 3, 6, 80);
-    world.hurt(o, m.damage * rand(0.9, 1.1), o.x, o.y, 'blast', s.owner);
-  });
-  for (let i = 0; i < 14; i++) {
-    const a = (i / 14) * TAU;
-    const x = s.x + Math.cos(a) * s.r;
-    const y = s.y + FEET + Math.sin(a) * s.r * FLAT;
-    world.hitProps(x, y - FEET, 6, m.damage * 0.5);
-    if (i % 2 === 0) glints(world, x, y - 2, 3, 70);
-  }
-  if (world.sfx) {
-    world.sfx('boom', s.x);
-    world.sfx('zap', s.x);
-  }
 }
 
 function stepStorms(world, dt) {
   for (const s of world.storms) {
     s.age += dt;
-    // knock him down or finish him before the second blow and the storm never comes
-    if (!s.struck && (s.owner.dead || (s.owner.stormT === null && s.age < s.at))) s.life = 0;
-    else if (!s.struck && s.age >= s.at) strike(world, s);
+    for (const bolt of s.bolts) {
+      if (bolt.struck || s.age < bolt.at) continue;
+      bolt.struck = true;
+      const o = bolt.o;
+      bolt.x = o.x;
+      bolt.y = o.y;
+      glints(world, o.x, o.y + FEET * 0.5, 8, 95);
+      if (!o.dead) world.hurt(o, s.owner.def.storm.damage * rand(0.9, 1.1), o.x, o.y, 'blast', s.owner);
+      world.hitProps(o.x, o.y, 6, s.owner.def.storm.damage * 0.5);
+      if (world.sfx) {
+        world.sfx('zap', o.x);
+        world.sfx('boom', o.x);
+      }
+    }
   }
   if (world.storms.some((s) => s.age >= s.life)) world.storms = world.storms.filter((s) => s.age < s.life);
 }
 
-// the circle on the ground: first a warning that crackles round, then scorched and glowing where the lightning landed
-function drawStormGround(ctx, s) {
-  const y = s.y + FEET;
-  const hit = s.struck;
-  const p = hit ? (s.age - s.at) / (s.life - s.at) : s.age / s.at;
-  const a = hit ? 1 - p : Math.min(1, p * 3);
-  ring(ctx, s.x, y, s.r, s.r * FLAT, hit ? `rgba(120, 140, 255, ${0.3 * a})` : `rgba(120, 140, 255, ${0.2 * a})`, s.w * 0.8);
-  for (const k of [-1, 1]) {
-    const r = s.r + (k * s.w) / 2;
-    ring(ctx, s.x, y, r, r * FLAT, `rgba(76, 96, 230, ${0.75 * a})`, 1.1);
-  }
-  // sparks running round it
-  ctx.strokeStyle = `rgba(90, 120, 255, ${0.95 * a})`;
-  ctx.lineWidth = 1;
-  ctx.lineJoin = 'miter';
-  for (let i = 0; i < 12; i++) {
-    const from = (i / 12) * TAU + s.age * 4;
-    ctx.beginPath();
-    for (let j = 0; j <= 3; j++) {
-      const an = from + j * 0.075;
-      const r = s.r + (Math.random() - 0.5) * s.w * 0.8;
-      if (j) ctx.lineTo(s.x + Math.cos(an) * r, y + Math.sin(an) * r * FLAT);
-      else ctx.moveTo(s.x + Math.cos(an) * r, y + Math.sin(an) * r * FLAT);
-    }
-    ctx.stroke();
-  }
-}
-
-// one bolt out of the sky down to (x, y), a new shape every frame
-function bolt(ctx, x, y, a, thick) {
+// one bolt from above the top of the screen down to (x, y), a new shape every frame, with forks off it
+function lightning(ctx, x, y, a) {
+  const top = -40;
+  const steps = Math.max(5, Math.ceil((y - top) / 15));
   const pts = [[x, y]];
   let px = x;
-  for (let h = 13; h <= 91; h += 13) {
-    px += (Math.random() - 0.5) * 11;
-    pts.push([px, y - h - Math.random() * 5]);
+  for (let i = 1; i <= steps; i++) {
+    px += (Math.random() - 0.5) * 15 + (x - px) * 0.12;
+    pts.push([px, y + ((top - y) * i) / steps + (i < steps ? (Math.random() - 0.5) * 7 : 0)]);
   }
+  const forks = [];
+  for (let i = 2; i < pts.length - 1; i += 3) {
+    const dir = Math.random() < 0.5 ? -1 : 1;
+    const [fx, fy] = pts[i];
+    forks.push([[fx, fy], [fx + dir * (7 + Math.random() * 6), fy + 5 + Math.random() * 6], [fx + dir * (10 + Math.random() * 9), fy + 15 + Math.random() * 9]]);
+  }
+  const trace = (line) => {
+    ctx.beginPath();
+    line.forEach(([qx, qy], i) => (i ? ctx.lineTo(qx, qy) : ctx.moveTo(qx, qy)));
+    ctx.stroke();
+  };
   ctx.lineJoin = 'miter';
   ctx.lineCap = 'round';
-  for (const [col, wide] of [[`rgba(110, 120, 255, ${0.2 * a})`, 5], [`rgba(70, 105, 245, ${a})`, 2.1], [`rgba(255, 255, 255, ${a})`, 0.8]]) {
+  // a soft yellow glow, a deep gold edge so it shows on the white field, bright yellow, and a white-hot thread
+  for (const [col, wide] of [[`rgba(255, 214, 40, ${0.28 * a})`, 10], [`rgba(214, 140, 0, ${a})`, 4.4], [`rgba(255, 216, 24, ${a})`, 3], [`rgba(255, 253, 224, ${a})`, 1.1]]) {
     ctx.strokeStyle = col;
-    ctx.lineWidth = wide * thick;
-    ctx.beginPath();
-    pts.forEach(([qx, qy], i) => (i ? ctx.lineTo(qx, qy) : ctx.moveTo(qx, qy)));
-    ctx.stroke();
+    ctx.lineWidth = wide * (0.6 + 0.4 * a);
+    trace(pts);
+    ctx.lineWidth = wide * 0.45 * (0.6 + 0.4 * a);
+    forks.forEach(trace);
   }
-  // a fork off the side
-  const [fx, fy] = pts[3];
-  const dir = Math.random() < 0.5 ? -1 : 1;
-  ctx.strokeStyle = `rgba(90, 120, 250, ${a * 0.85})`;
-  ctx.lineWidth = 1.4 * thick;
-  ctx.beginPath();
-  ctx.moveTo(fx, fy);
-  ctx.lineTo(fx + dir * 8, fy + 6);
-  ctx.lineTo(fx + dir * 13, fy + 17);
-  ctx.stroke();
 }
 
 function drawStormAir(ctx, s) {
-  if (!s.struck) return;
-  const since = s.age - s.at;
-  const y = s.y + FEET;
-  const n = 11;
-  // the far side of the circle first, so nearer bolts cross in front of farther ones
-  const spots = Array.from({ length: n }, (_, i) => (i / n) * TAU + 0.2).sort((a, b) => Math.sin(a) - Math.sin(b));
-  for (const an of spots) {
-    const a = Math.max(0, 1 - since / 0.34);
-    if (a <= 0) break;
-    const x = s.x + Math.cos(an) * s.r;
-    const by = y + Math.sin(an) * s.r * FLAT;
-    bolt(ctx, x, by, a, 0.75 + a * 0.35);
-    ctx.fillStyle = `rgba(215, 225, 255, ${0.9 * a})`;
+  for (const bolt of s.bolts) {
+    if (!bolt.struck) continue;
+    const since = s.age - bolt.at;
+    if (since > GLOW) continue;
+    const a = 1 - (since / GLOW) ** 2;
+    const y = bolt.y + FEET * 0.45;
+    lightning(ctx, bolt.x, y, a);
+    // the crack where it lands
+    ctx.fillStyle = `rgba(255, 220, 40, ${0.85 * a})`;
     ctx.beginPath();
-    ctx.ellipse(x, by, 5.5 * a + 1, 2.4 * a + 0.5, 0, 0, TAU);
+    for (let i = 0; i < 14; i++) {
+      const an = (i / 14) * TAU;
+      const r = i % 2 ? 2.6 : 6 + Math.random() * 6 * a;
+      if (i) ctx.lineTo(bolt.x + Math.cos(an) * r, y + Math.sin(an) * r * 0.62);
+      else ctx.moveTo(bolt.x + Math.cos(an) * r, y + Math.sin(an) * r * 0.62);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = `rgba(255, 253, 228, ${a})`;
+    ctx.beginPath();
+    ctx.ellipse(bolt.x, y, 3.2 * a + 0.6, 2 * a + 0.4, 0, 0, TAU);
     ctx.fill();
   }
 }
@@ -316,7 +270,7 @@ export function stepGibbon(world, u, dt) {
       const dist = Math.hypot(dx, dy) || 1;
       if (Math.abs(dx) > 3) u.facing = dx > 0 ? 1 : -1;
       const reach = d.reach + t.def.radius * 0.5;
-      if (u.stormCd <= 0 && worthStorm(world, u)) {
+      if (u.stormCd <= 0 && dist <= d.storm.range) {
         u.stormT = 0;
         u.stormCd = STORM.time + rand(d.storm.cooldown[0], d.storm.cooldown[1]);
       } else if (dist <= reach) {
@@ -419,7 +373,6 @@ function fivePoint(ctx, x, y, r, turn) {
 
 // under the units: the ground he has struck, cracked, with a ring of gold light racing out across it
 export function drawGibbonGround(ctx, world) {
-  for (const s of world.storms) drawStormGround(ctx, s);
   for (const q of world.quakes) {
     if (q.air) continue;
     const p = q.age / q.life;

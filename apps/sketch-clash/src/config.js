@@ -440,9 +440,9 @@ export const GIBBONDORE = {
   slam: { radius: 33, damage: 58, knock: 240, time: 0.62, cooldown: [0.55, 0.85] },
   leap: { min: 42, max: 205, time: 0.56, height: 36, cooldown: 3.4 },
   spell: { range: 260, cast: 0.42, cooldown: [1.6, 2.2], bolts: 3, damage: 31, blast: 11, speed: 235 },
-  // two blows of his staff and lightning comes down in a hollow circle round him. radius: of the circle; width: how
-  // thick the struck band is
-  storm: { first: 2.6, cooldown: [8, 10], radius: 54, width: 20, damage: 72 },
+  // two blows of his staff and lightning comes down out of the sky on the nearest `targets` enemies. range: how close
+  // one has to be before he'll bother
+  storm: { first: 2.6, cooldown: [8, 10], range: 280, targets: 6, damage: 72 },
   scale: 1.2,
   ring: 1.7,
   body: [25, 24, -6],
