@@ -497,14 +497,14 @@ export const MECHAZORD = {
   // his third attack: a sweep of the tail along the ground. It does no damage; whoever it catches is flipped off their
   // feet and lies stunned. first: seconds before he can; cooldown: between sweeps; reach: how far the tail gets;
   // time: how long the sweep takes
-  swipe: { first: 1.2, cooldown: [3.6, 4.8], reach: 42, time: 0.85 },
+  swipe: { first: 1.2, cooldown: [3.6, 4.8], reach: 32, time: 0.85 },
   // his second attack: a salvo of homing missiles. first: seconds before the first one; every: between salvos;
   // range: further than his fire; flight: seconds each is in the air
   missiles: { first: 2.4, every: 5.5, count: 6, gap: 0.09, damage: 48, blast: 17, range: 390, flight: 0.9 },
   parts: ['botplate', 'botplate', 'botpod', 'botpod', 'zordhorn', 'zordhorn', 'zordhead'],
   ring: 1.65,
-  body: [33, 33, -34],
-  pivot: { x: 43 * K, y: -15.6 * K }, // his mouth, up where his long legs carry it
+  body: [33, 33, -18],
+  pivot: { x: 43 * K, y: -0.2 * K }, // his mouth, as high as his legs carry it
   muzzleLen: 8 * K,
   footFire: 18, // whoever is pressed this close against him, under his jaws, is caught by the fire too
   plume: { every: 0.021, speed: 2.35, life: 1.7, size: 2.15 },

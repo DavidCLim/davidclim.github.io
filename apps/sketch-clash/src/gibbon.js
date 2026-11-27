@@ -4,9 +4,9 @@
 // round a dark face and white hands and feet. Over that, a wizard's hat, cloak and staff.
 // Drawn in art units, facing +x, with the ground about 28 below the origin. His limbs are drawn live, from where his
 // hands and feet are, so they can move smoothly through any pose.
-import { TAU, K, FEET } from './config.js?v=242';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=242';
-import { rigStep, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=242';
+import { TAU, K, FEET } from './config.js?v=243';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=243';
+import { rigStep, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=243';
 
 const C = {
   fur: '#54403a', furDark: '#382a27', furFar: '#33272a', saddle: '#8a766c', white: '#f4eddf', whiteShade: '#cfc3ae',

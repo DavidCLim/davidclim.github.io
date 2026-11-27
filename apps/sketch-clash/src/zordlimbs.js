@@ -1,10 +1,10 @@
 // MechaZaur's long legs and long tail, drawn from the pencil sketch for them: each leg has a big round hip, a banded
 // thigh and shin and a foot with claws pointing down; the tail is a run of banded segments that ends in one long spike
 // and two curved blades. Drawn in Robo Trooper's coordinates (facing +x), and all painted live so they can move.
-import { TAU, K } from './config.js?v=242';
-import { OUT } from './sprites.js?v=242';
+import { TAU, K } from './config.js?v=243';
+import { OUT } from './sprites.js?v=243';
 
-export const ZORD_LIFT = 17; // how much higher the long legs carry his body
+export const ZORD_LIFT = 6; // how much higher his legs carry his body
 
 const C = { lite: '#b9add2', mid: '#9b8db6', dark: '#746796', far: '#625680', band: '#5f7a74', steel: '#d3d8e3', steelFar: '#a7aec0', navy: '#4a5478', navyFar: '#3a4262' };
 
@@ -44,7 +44,7 @@ function segment(g, a, b, ra, rb, fill, bands) {
   path();
   g.clip();
   g.strokeStyle = C.band;
-  g.lineWidth = 2.5;
+  g.lineWidth = 1.7;
   for (let i = 1; i <= bands; i++) {
     const k = i / (bands + 1);
     const x = lerp(a[0], b[0], k);
@@ -60,10 +60,10 @@ function segment(g, a, b, ra, rb, fill, bands) {
 
 // a claw hooking downward from (x, y)
 function claw(g, x, y, lean, fill) {
-  shape(g, fill, 1.3, () => {
-    g.moveTo(x - 2.6, y - 1.5);
-    g.quadraticCurveTo(x + 4.2 + lean, y + 1, x + 1.2 + lean, y + 7.4);
-    g.quadraticCurveTo(x + 0.4 + lean * 0.5, y + 3, x - 2, y + 2.4);
+  shape(g, fill, 1.1, () => {
+    g.moveTo(x - 1.7, y - 1);
+    g.quadraticCurveTo(x + 2.7 + lean, y + 0.7, x + 0.8 + lean, y + 4.6);
+    g.quadraticCurveTo(x + 0.3 + lean * 0.5, y + 1.9, x - 1.3, y + 1.5);
   });
 }
 
@@ -74,25 +74,25 @@ function leg(g, hip, foot, far) {
   const dx = foot[0] - hip[0];
   const dy = foot[1] - hip[1];
   const d = Math.hypot(dx, dy) || 1;
-  const out = Math.sqrt(Math.max(0, 21 * 21 - (d / 2) * (d / 2)));
+  const out = Math.sqrt(Math.max(0, 9.5 * 9.5 - (d / 2) * (d / 2)));
   // the knee sticks out forward
   const knee = [mx + (dy / d) * out, my - (dx / d) * out];
-  segment(g, hip, knee, 7.4, 4.8, far ? C.far : C.mid, 3);
-  segment(g, knee, foot, 4.4, 3.4, far ? C.far : C.dark, 2);
-  ball(g, far ? C.steelFar : C.steel, knee[0], knee[1], 4.4);
+  segment(g, hip, knee, 4.4, 3, far ? C.far : C.mid, 2);
+  segment(g, knee, foot, 2.8, 2.3, far ? C.far : C.dark, 1);
+  ball(g, far ? C.steelFar : C.steel, knee[0], knee[1], 2.7, 1.3);
   // the foot and its three claws
-  shape(g, far ? C.navyFar : C.navy, 2, () => {
-    g.moveTo(foot[0] - 5, foot[1] - 1);
-    g.quadraticCurveTo(foot[0] + 2, foot[1] - 6.4, foot[0] + 11, foot[1] - 1.4);
-    g.quadraticCurveTo(foot[0] + 13.4, foot[1] + 3, foot[0] + 8, foot[1] + 3.4);
-    g.lineTo(foot[0] - 3.6, foot[1] + 3.6);
+  shape(g, far ? C.navyFar : C.navy, 1.7, () => {
+    g.moveTo(foot[0] - 3.4, foot[1] - 0.6);
+    g.quadraticCurveTo(foot[0] + 1.4, foot[1] - 4.2, foot[0] + 7.4, foot[1] - 0.9);
+    g.quadraticCurveTo(foot[0] + 9, foot[1] + 2, foot[0] + 5.4, foot[1] + 2.3);
+    g.lineTo(foot[0] - 2.4, foot[1] + 2.4);
   });
-  for (const [ox, lean] of [[-1.6, -2.4], [4.4, 0], [10, 2]]) claw(g, foot[0] + ox, foot[1] + 1.4, lean, far ? C.steelFar : C.steel);
+  for (const [ox, lean] of [[-1, -1.5], [2.9, 0], [6.6, 1.3]]) claw(g, foot[0] + ox, foot[1] + 1, lean, far ? C.steelFar : C.steel);
   // the big round hip
-  ball(g, far ? C.far : C.lite, hip[0], hip[1], far ? 7 : 9.2, 2);
+  ball(g, far ? C.far : C.lite, hip[0], hip[1], far ? 4.4 : 5.8, 1.7);
   if (!far) {
-    ball(g, C.band, hip[0], hip[1], 4.6, 1.4);
-    ball(g, '#1fbc9c', hip[0], hip[1], 2.3, 1);
+    ball(g, C.band, hip[0], hip[1], 2.9, 1.1);
+    ball(g, '#1fbc9c', hip[0], hip[1], 1.4, 0.8);
   }
 }
 
@@ -102,12 +102,12 @@ export function drawZordLeg(g, i, m) {
   const far = i === 1;
   const a = (m.phase || 0) + i * Math.PI;
   const lift = Math.max(0, Math.sin(a));
-  const hip = [far ? 9 : -8, (far ? -6 : -4) + (m.ride || 0)];
-  const foot = [(far ? 13 : -9) + (far ? 1 : -1) * (m.spread || 0) - Math.cos(a) * 12 * (m.move || 0), (far ? 21.5 : 23) - lift * 11 * (m.move || 0) + Math.min(0, m.hop || 0)];
+  const hip = [far ? 9 : -7, (far ? 9 : 11) + (m.ride || 0)];
+  const foot = [(far ? 11 : -7) + (far ? 1 : -1) * (m.spread || 0) * 0.6 - Math.cos(a) * 7 * (m.move || 0), (far ? 22.5 : 24.5) - lift * 6 * (m.move || 0) + Math.min(0, m.hop || 0)];
   if (m.air > 0) {
     const sway = Math.sin((m.clock || 0) * 4.2 + i * 2.2);
-    foot[0] += (-6 + sway * 2) * m.air;
-    foot[1] += (-4 + sway * 1.5) * m.air;
+    foot[0] += (-3 + sway * 1.3) * m.air;
+    foot[1] += (-2 + sway) * m.air;
   }
   g.save();
   g.scale(K, K);
@@ -116,8 +116,9 @@ export function drawZordLeg(g, i, m) {
 }
 
 // ---------------------------------------------------------------- the tail
-const ROOT_Y = -8; // where it leaves his back (before the legs lift him)
-const REST = [[-16, -9, 9.4], [-33, -1, 8.2], [-50, 6, 7], [-66, 8, 6], [-81, 4, 5.1], [-93, -4, 4.4]];
+const ROOT_Y = 1; // where it leaves his back (before the legs lift him)
+const REST = [[-18, 1, 6], [-27, 6, 5.2], [-36, 10, 4.5], [-45, 11, 3.9], [-53, 9, 3.3], [-60, 5, 2.9]];
+const GROUND = 27; // and where the ground is, in the space of his raised body
 
 // how far through its full circle the tail has gone, p being how far through the whole swipe he is
 export function swipeTurn(p) {
@@ -139,9 +140,9 @@ export function zordTail(wag, k, droop, swipe) {
     const s = i / (REST.length - 1);
     // swung round flat to the ground, the end trailing behind the root
     const a = angle + s * 0.7 * trail;
-    const far = 14 + 90 * s;
+    const far = 16 + 52 * s;
     // down from his back to just off the ground (which is further down in his raised body's space)
-    return [Math.cos(a) * far, lerp(ROOT_Y, 36, Math.min(1, s * 1.5)) + Math.sin(a) * far * 0.36, r];
+    return [Math.cos(a) * far, lerp(ROOT_Y, GROUND, Math.min(1, s * 1.5)) + Math.sin(a) * far * 0.36, r];
   });
   return { pts: pts.map((p, i) => [lerp(p[0], swung[i][0], w), lerp(p[1], swung[i][1], w), p[2]]), front: w > 0.5 && Math.sin(angle) > 0.12, angle };
 }
@@ -170,15 +171,15 @@ export function drawZordTail(g, tail, lit = 0) {
   const out = Math.atan2(ey - by, ex - bx);
   const up = Math.cos(out) < 0 ? 1 : -1; // whichever way round points the long spike skyward
   const steel = lit > 0.4 ? '#b7f7e6' : C.steel;
-  blade(g, ex, ey, out + up * 0.72, 33, 4, up * 1.5, steel);
-  blade(g, ex, ey, out + up * 0.04, 23, 4.2, up * 7, steel);
-  blade(g, ex, ey, out - up * 0.52, 22, 4.2, up * 8, steel);
+  blade(g, ex, ey, out + up * 0.72, 18, 2.6, up * 0.9, steel);
+  blade(g, ex, ey, out + up * 0.04, 12.5, 2.7, up * 3.8, steel);
+  blade(g, ex, ey, out - up * 0.52, 12, 2.7, up * 4.3, steel);
   for (let i = n - 2; i >= 0; i--) {
     const [x0, y0, r0] = pts[i];
     const [x1, y1, r1] = pts[i + 1];
-    segment(g, [x0, y0], [x1, y1], r0 * 0.96, r1, i % 2 ? C.mid : C.lite, 2);
+    segment(g, [x0, y0], [x1, y1], r0 * 0.96, r1, i % 2 ? C.mid : C.lite, 1);
   }
-  ball(g, C.band, ex, ey, 5, 1.6);
+  ball(g, C.band, ex, ey, 3.3, 1.4);
   g.restore();
 }
 
@@ -190,7 +191,7 @@ export function drawSwoosh(g, swipe, front) {
   g.save();
   g.scale(K, K);
   g.lineCap = 'round';
-  for (const [radius, wide, rgb, a] of [[104, 11, '60, 225, 190', 0.55], [118, 4, '255, 255, 255', 0.9], [118, 1.8, '40, 190, 160', 0.9], [86, 4, '120, 240, 210', 0.5]]) {
+  for (const [radius, wide, rgb, a] of [[68, 8, '60, 225, 190', 0.55], [79, 3.2, '255, 255, 255', 0.9], [79, 1.5, '40, 190, 160', 0.9], [56, 3, '120, 240, 210', 0.5]]) {
     const steps = 18;
     for (let i = 0; i < steps; i++) {
       const a0 = angle + (i / steps) * 1.7;
@@ -199,8 +200,8 @@ export function drawSwoosh(g, swipe, front) {
       g.strokeStyle = `rgba(${rgb}, ${a * strong * (1 - i / steps)})`;
       g.lineWidth = wide * (1 - (i / steps) * 0.7);
       g.beginPath();
-      g.moveTo(Math.cos(a0) * radius, 36 + Math.sin(a0) * radius * 0.36);
-      g.lineTo(Math.cos(a1) * radius, 36 + Math.sin(a1) * radius * 0.36);
+      g.moveTo(Math.cos(a0) * radius, GROUND + Math.sin(a0) * radius * 0.36);
+      g.lineTo(Math.cos(a1) * radius, GROUND + Math.sin(a1) * radius * 0.36);
       g.stroke();
     }
   }

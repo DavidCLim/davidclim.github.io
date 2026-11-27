@@ -1,14 +1,14 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=242';
-import { drawLayer, OUT } from './sprites.js?v=242';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt } from './art_units.js?v=242';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=242';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=242';
-import { drawZordGround, drawZordAir } from './zordfx.js?v=242';
-import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=242';
-import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=242';
-import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=242';
-import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=242';
-import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=242';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=243';
+import { drawLayer, OUT } from './sprites.js?v=243';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt } from './art_units.js?v=243';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=243';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=243';
+import { drawZordGround, drawZordAir } from './zordfx.js?v=243';
+import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=243';
+import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=243';
+import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=243';
+import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=243';
+import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=243';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -2440,7 +2440,7 @@ const ICONS = {
     drawLayer(g, S.hand);
   }],
   gibbondore: [126, 57, 69, null],
-  mechazord: [176, 123, 92, null],
+  mechazord: [136, 86, 65, null],
   trooper: [96, 45, 44, (g, S) => {
     g.save();
     g.scale(K, K);

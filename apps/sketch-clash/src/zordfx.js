@@ -1,9 +1,9 @@
 // MechaZaur's own part of the world: his missiles, and the effects that go with him (the shockwave as he lets loose, the
 // embers and heat rings in his breath, the ground it leaves burning, the great blast when he goes). Only the missiles
 // hurt anyone; the rest is for show.
-import { TAU, K, FEET } from './config.js?v=242';
-import { WATER } from './terrain.js?v=242';
-import { swipeTurn, SWIPE_BACK } from './zordlimbs.js?v=242';
+import { TAU, K, FEET } from './config.js?v=243';
+import { WATER } from './terrain.js?v=243';
+import { swipeTurn, SWIPE_BACK } from './zordlimbs.js?v=243';
 
 const TEAL = '70, 245, 200';
 const GOLD = '255, 196, 80';
@@ -150,7 +150,7 @@ export function stepZordSwipe(world, u, dt) {
 // marked and bursts where it comes down. It reaches further than his fire does.
 
 // where they leave from: the mouth of his upper thruster pod, in Robo Trooper's coordinates
-const RACK = { x: -30, y: -37 };
+const RACK = { x: -30, y: -26 };
 
 function rackOf(u) {
   const d = u.def;

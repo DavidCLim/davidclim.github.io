@@ -1,9 +1,9 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=242';
-import { TerrainMap, WALL } from './terrain.js?v=242';
-import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordSwipe, stepZordFx } from './zordfx.js?v=242';
-import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=242';
-import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=242';
-import { installBeasts } from './beasts.js?v=242';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=243';
+import { TerrainMap, WALL } from './terrain.js?v=243';
+import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordSwipe, stepZordFx } from './zordfx.js?v=243';
+import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=243';
+import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=243';
+import { installBeasts } from './beasts.js?v=243';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -1253,7 +1253,7 @@ export class World {
       u.jetT = (u.jetT || 0) - dt;
       if (u.jetT <= 0) {
         u.jetT = 0.05;
-        for (const [jx, jy] of [[-37, -23], [-36, 1], [-9, 25], [12, 24]]) {
+        for (const [jx, jy] of [[-37, -12], [-36, 12], [-9, 27], [11, 26]]) {
           this.jetFlame(u.x + u.facing * jx * 0.31 * d.scale, u.y + FEET + (jy * 0.31 - FEET) * d.scale - u.alt * d.hoverH, -u.facing * 8, 70, 0.8 * d.scale);
         }
         if (this.sfx && Math.random() < 0.2) this.sfx('flame', u.x);

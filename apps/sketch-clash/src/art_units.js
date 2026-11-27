@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=242';
-import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=242';
-import { buildGibbonArt, drawGibbonHatDrop } from './gibbon.js?v=242';
+import { TAU, K } from './config.js?v=243';
+import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=243';
+import { buildGibbonArt, drawGibbonHatDrop } from './gibbon.js?v=243';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
