@@ -1,8 +1,8 @@
 // Gibbondore The Great: how he fights, and what his magic does to the world.
 // Like the original's ape he goes straight in and hits the ground hard enough to send everyone flying; being a gibbon
 // he also swings himself across the gap in one great leap, and being a wizard he throws stars from his staff on the way.
-import { TAU, K, FEET } from './config.js?v=254';
-import { OUT } from './sprites.js?v=254';
+import { TAU, K, FEET } from './config.js?v=255';
+import { OUT } from './sprites.js?v=255';
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -549,6 +549,8 @@ export function stepGibbon(world, u, dt) {
     u.x = lerp(l.x0, l.x1, p);
     u.y = lerp(l.y0, l.y1, p);
     u.alt = Math.max(0.001, Math.sin(Math.PI * p));
+    // a trail of gold sparks hangs in the air behind him
+    glints(world, u.x - u.facing * 9 + rand(-5, 5), u.y - u.alt * d.leap.height + rand(-8, 8), 1, 34);
     u.kx = u.ky = 0;
     u.pose = 1;
     if (p >= 1) {
@@ -747,18 +749,24 @@ export function drawGibbonAir(ctx, world) {
     fivePoint(ctx, q.x, q.y, r * 0.9, p * 2.4);
     ctx.fill();
   }
-  ctx.lineCap = 'round';
+  // (the gold sparks, gathered by brightness and each lot drawn in one go)
+  const lots = [null, null, null, null, null];
   for (const g of world.glints) {
-    const fade = 1 - (g.age / g.life) ** 2;
-    for (const [col, wide] of [[`rgba(236, 150, 20, ${fade})`, 1.8], [`rgba(255, 240, 170, ${fade})`, 0.8]]) {
-      ctx.strokeStyle = col;
-      ctx.lineWidth = wide;
-      ctx.beginPath();
-      ctx.moveTo(g.x - g.vx * 0.024, g.y - g.vy * 0.024);
-      ctx.lineTo(g.x, g.y);
-      ctx.stroke();
-    }
+    const bright = Math.ceil(Math.max(0, 1 - (g.age / g.life) ** 2) * 4);
+    if (!bright) continue;
+    const path = lots[bright] || (lots[bright] = new Path2D());
+    path.moveTo(g.x - g.vx * 0.024, g.y - g.vy * 0.024);
+    path.lineTo(g.x, g.y);
   }
+  ctx.lineCap = 'round';
+  lots.forEach((path, bright) => {
+    if (!path) return;
+    for (const [rgb, wide] of [['236, 150, 20', 1.8], ['255, 240, 170', 0.8]]) {
+      ctx.strokeStyle = `rgba(${rgb}, ${bright / 4})`;
+      ctx.lineWidth = wide;
+      ctx.stroke(path);
+    }
+  });
   thunderFlash(ctx, world.storms);
   for (const s of world.storms) drawStormAir(ctx, s);
 }

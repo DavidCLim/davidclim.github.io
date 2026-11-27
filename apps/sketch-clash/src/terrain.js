@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=254';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=254';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=254';
+import { TAU, K } from './config.js?v=255';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=255';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=255';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask
@@ -81,7 +81,9 @@ export class TerrainMap {
     const i = (x / this.cell) | 0;
     const j = (y / this.cell) | 0;
     if (i < 0 || j < 0 || i >= this.cols || j >= this.rows) return 0;
-    return this.mask[j * this.cols + i];
+    const v = this.mask[j * this.cols + i];
+    // ice lies over water: whatever is there is standing on the ice
+    return v & ICE ? v & ~WATER : v;
   }
 
   // is there water or a bank of it within r of the point
@@ -109,108 +111,162 @@ export class TerrainMap {
   }
 }
 
-// Paints all strokes onto the ground canvas (already scaled to world units).
-// Water and ice are flat colour with a thin edge; a wall is a raised slab of flagstones with a bricked front.
+// Paints the ice and walls onto the ground canvas (already scaled to world units); the water has a layer of its own
+// under it (water.js). Nothing is painted twice that needn't be: ice is added to as the brush goes, and walls are only
+// rebuilt when one is finished, with a quick stand-in for the one still being drawn.
 function hash2(x, y) {
   const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
   return n - Math.floor(n);
 }
 
-export function renderGround(ctx, W, H, strokes, clock) {
-  ctx.clearRect(0, 0, W, H);
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  const path = (s, dy = 0) => {
-    ctx.beginPath();
-    ctx.moveTo(s.pts[0][0], s.pts[0][1] + dy);
-    if (s.pts.length === 1) ctx.lineTo(s.pts[0][0] + 0.01, s.pts[0][1] + dy);
-    for (let i = 1; i < s.pts.length; i++) ctx.lineTo(s.pts[i][0], s.pts[i][1] + dy);
-  };
-  const of = (kind) => strokes.filter((s) => s.kind === kind);
-  // water and ice are drawn as a chain of slightly uneven discs, so the banks wobble
-  const blobPath = (s, grow) => {
-    ctx.beginPath();
-    const pts = [];
-    for (let i = 0; i < s.pts.length; i++) {
-      if (i === 0) pts.push(s.pts[0]);
-      else {
-        const a = s.pts[i - 1];
-        const b = s.pts[i];
-        const n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 3));
-        for (let k = 1; k <= n; k++) pts.push([a[0] + ((b[0] - a[0]) * k) / n, a[1] + ((b[1] - a[1]) * k) / n]);
-      }
+// a stroke of water or ice is a chain of slightly uneven discs, so that its banks wobble
+export function bankRadius(s, x, y) {
+  const n = Math.sin(x * 0.09 + y * 0.06) * 0.5 + Math.sin(x * 0.037 - y * 0.08 + 1.7) * 0.5 + Math.sin(x * 0.23 + y * 0.19 + 0.6) * 0.35;
+  return (s.w / 2) * (0.91 + 0.17 * n);
+}
+
+// the discs along a stroke from point `from` on, as [x, y, radius]
+export function bankDiscs(s, from) {
+  const out = [];
+  for (let i = from; i < s.pts.length; i++) {
+    const b = s.pts[i];
+    if (i === 0) {
+      out.push([b[0], b[1], bankRadius(s, b[0], b[1])]);
+      continue;
     }
-    for (const [x, y] of pts) {
-      const n = Math.sin(x * 0.09 + y * 0.06) * 0.5 + Math.sin(x * 0.037 - y * 0.08 + 1.7) * 0.5 + Math.sin(x * 0.23 + y * 0.19 + 0.6) * 0.35;
-      const r = (s.w / 2) * (0.9 + 0.2 * n) + grow;
-      ctx.moveTo(x + r, y);
-      ctx.arc(x, y, r, 0, TAU);
-    }
-  };
-  for (const [kind, edge, fill] of [
-    ['water', '#6fb2c0', '#98dee5'],
-    ['ice', '#b5d3ec', '#dff0fb'],
-  ]) {
-    const list = of(kind);
-    if (!list.length) continue;
-    ctx.fillStyle = edge;
-    for (const s of list) {
-      blobPath(s, 0.65);
-      ctx.fill();
-    }
-    ctx.fillStyle = fill;
-    for (const s of list) {
-      blobPath(s, 0);
-      ctx.fill();
-    }
-    // water is flat with big soft patches, a shade lighter and a shade darker by turns;
-    // ice is flat pale blue, crossed now and then by one broad, faint slanting sheen
-    for (const s of list) {
-      ctx.save();
-      blobPath(s, 0);
-      ctx.clip();
-      const gap = kind === 'water' ? 37 : 118;
-      const marks = [s.pts[0]];
-      let walked = 0;
-      let next = gap;
-      for (let i = 1; i < s.pts.length; i++) {
-        walked += Math.hypot(s.pts[i][0] - s.pts[i - 1][0], s.pts[i][1] - s.pts[i - 1][1]);
-        if (walked >= next) {
-          marks.push(s.pts[i]);
-          next += gap;
-        }
-      }
-      if (kind === 'water') {
-        marks.forEach(([x, y], i) => {
-          const light = i % 2 === 0;
-          const jx = x + (hash2(x, y) - 0.5) * s.w * 0.35;
-          const jy = y + (hash2(y, x) - 0.5) * s.w * 0.35;
-          const r = s.w * (light ? 0.92 : 1.05);
-          const rgb = light ? '162, 236, 241' : '138, 202, 212';
-          const gr = ctx.createRadialGradient(jx, jy, 0, jx, jy, r);
-          gr.addColorStop(0, `rgba(${rgb}, 1)`);
-          gr.addColorStop(0.4, `rgba(${rgb}, 0.75)`);
-          gr.addColorStop(1, `rgba(${rgb}, 0)`);
-          ctx.fillStyle = gr;
-          ctx.fillRect(jx - r, jy - r, r * 2, r * 2);
-        });
-      } else {
-        ctx.filter = 'blur(0.9px)';
-        ctx.lineCap = 'butt';
-        ctx.strokeStyle = 'rgba(240, 249, 255, 0.7)';
-        ctx.lineWidth = 11;
-        for (const [x, y] of marks.length > 1 ? marks.slice(1) : marks) {
-          ctx.beginPath();
-          ctx.moveTo(x - s.w * 0.55, y - s.w * 0.75);
-          ctx.lineTo(x + s.w * 0.55, y + s.w * 0.75);
-          ctx.stroke();
-        }
-      }
-      ctx.restore();
+    const a = s.pts[i - 1];
+    const n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 3));
+    for (let k = 1; k <= n; k++) {
+      const x = a[0] + ((b[0] - a[0]) * k) / n;
+      const y = a[1] + ((b[1] - a[1]) * k) / n;
+      out.push([x, y, bankRadius(s, x, y)]);
     }
   }
-  const walls = of('wall');
-  if (!walls.length) return;
+  return out;
+}
+
+export function fillDiscs(g, discs, grow) {
+  g.beginPath();
+  for (const [x, y, r] of discs) {
+    g.moveTo(x + r + grow, y);
+    g.arc(x, y, r + grow, 0, TAU);
+  }
+  g.fill();
+}
+
+// the original's ice: flat and pale with a fine edge and a broad faint slanting sheen now and then; where it lies over
+// water it is a deeper blue, softly shading off, with none of the water's movement showing through
+const ICE_FILL = 'rgb(223, 240, 250)';
+const ICE_EDGE = 'rgb(185, 215, 235)';
+const ICE_ON_WATER = 'rgb(168, 215, 239)';
+const SHEEN_GAP = 118;
+
+const sheet = (w, h) => {
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  return c;
+};
+
+let ice = null;
+function iceLayers(pw, ph, scale, list) {
+  const gone = ice && [...ice.painted.keys()].some((s) => !list.includes(s));
+  if (!ice || gone || ice.pw !== pw || ice.ph !== ph || ice.scale !== scale) {
+    ice = { pw, ph, scale, edge: sheet(pw, ph), fill: sheet(pw, ph), shine: sheet(pw, ph), done: sheet(pw, ph), under: null, painted: new Map(), stamp: 0, drawn: '' };
+  }
+  const on = (c) => {
+    const g = c.getContext('2d');
+    g.setTransform(scale, 0, 0, scale, 0, 0);
+    return g;
+  };
+  for (const s of list) {
+    let p = ice.painted.get(s);
+    if (!p) ice.painted.set(s, (p = { n: 0, walked: 0, next: 30 }));
+    if (p.n >= s.pts.length) continue;
+    const discs = bankDiscs(s, p.n);
+    for (const [c, grow, ink] of [[ice.edge, 0.65, ICE_EDGE], [ice.fill, 0, ICE_FILL]]) {
+      const g = on(c);
+      g.fillStyle = ink;
+      fillDiscs(g, discs, grow);
+    }
+    const g = on(ice.shine);
+    g.lineCap = 'butt';
+    for (let i = Math.max(1, p.n); i < s.pts.length; i++) {
+      p.walked += Math.hypot(s.pts[i][0] - s.pts[i - 1][0], s.pts[i][1] - s.pts[i - 1][1]);
+      if (p.walked < p.next) continue;
+      p.next += SHEEN_GAP;
+      const [x, y] = s.pts[i];
+      for (const [wide, a] of [[13, 0.17], [9, 0.26], [4.5, 0.2]]) {
+        g.strokeStyle = `rgba(246, 251, 255, ${a})`;
+        g.lineWidth = wide;
+        g.beginPath();
+        g.moveTo(x - s.w * 0.55, y - s.w * 0.75);
+        g.lineTo(x + s.w * 0.55, y + s.w * 0.75);
+        g.stroke();
+      }
+    }
+    p.n = s.pts.length;
+    ice.stamp++;
+  }
+  return ice;
+}
+
+// the finished ice picture: the flat fill, the deeper blue over any water, then the sheen, all kept inside the fill
+function composeIce(layers, water) {
+  const key = `${layers.stamp}|${water ? water.stamp : 0}`;
+  if (layers.drawn === key) return layers.done;
+  layers.drawn = key;
+  const g = layers.done.getContext('2d');
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.globalCompositeOperation = 'source-over';
+  g.clearRect(0, 0, layers.pw, layers.ph);
+  g.drawImage(layers.fill, 0, 0);
+  g.globalCompositeOperation = 'source-atop';
+  if (water && water.box) {
+    if (!layers.under) layers.under = sheet(layers.pw, layers.ph);
+    const u = layers.under.getContext('2d');
+    u.globalCompositeOperation = 'source-over';
+    u.clearRect(0, 0, layers.pw, layers.ph);
+    u.drawImage(water.mask, 0, 0);
+    u.globalCompositeOperation = 'source-in';
+    u.fillStyle = ICE_ON_WATER;
+    u.fillRect(0, 0, layers.pw, layers.ph);
+    g.filter = `blur(${(2.2 * layers.scale).toFixed(1)}px)`;
+    g.drawImage(layers.under, 0, 0);
+    g.filter = 'none';
+  }
+  g.drawImage(layers.shine, 0, 0);
+  g.globalCompositeOperation = 'source-over';
+  return layers.done;
+}
+
+// a box blur run three times, which is very nearly a true soft blur
+function soften(src, w, h, radius) {
+  const a = new Float32Array(w * h);
+  const b = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++) a[i] = src[i * 4 + 3];
+  const pass = (from, to, n, step, lines, stride) => {
+    const size = radius * 2 + 1;
+    for (let l = 0; l < lines; l++) {
+      const base = l * stride;
+      let sum = 0;
+      for (let i = 0; i <= radius && i < n; i++) sum += from[base + i * step];
+      for (let i = 0; i < n; i++) {
+        to[base + i * step] = sum / size;
+        if (i + radius + 1 < n) sum += from[base + (i + radius + 1) * step];
+        if (i - radius >= 0) sum -= from[base + (i - radius) * step];
+      }
+    }
+  };
+  for (let k = 0; k < 3; k++) {
+    pass(a, b, w, 1, h, w);
+    pass(b, a, h, w, w, 1);
+  }
+  return a;
+}
+
+// a wall is a raised slab of flagstones with a bricked front
+function paintWalls(ctx, W, H, walls) {
   const sc = ctx.getTransform().a || 1;
   let x0 = W;
   let x1 = 0;
@@ -234,17 +290,15 @@ export function renderGround(ctx, W, H, strokes, clock) {
   const pw = Math.ceil(bw * rs);
   const ph = Math.ceil(bh * rs);
   // a canvas covering just the walls, drawn in world units
-  const layer = () => {
-    const c = document.createElement('canvas');
-    c.width = pw;
-    c.height = ph;
-    const g = c.getContext('2d');
+  const layer = (readOften) => {
+    const c = sheet(pw, ph);
+    const g = c.getContext('2d', readOften ? { willReadFrequently: true } : undefined);
     g.setTransform(rs, 0, 0, rs, -bx * rs, -by * rs);
     g.lineCap = 'round';
     g.lineJoin = 'round';
     return [c, g];
   };
-  const [raw, rg] = layer();
+  const [, rg] = layer(true);
   rg.strokeStyle = '#000';
   for (const s of walls) {
     rg.lineWidth = s.w;
@@ -254,30 +308,23 @@ export function renderGround(ctx, W, H, strokes, clock) {
     for (let i = 1; i < s.pts.length; i++) rg.lineTo(s.pts[i][0], s.pts[i][1]);
     rg.stroke();
   }
-  // blur (through a shadow thrown from off the canvas, which every browser can do)
   const sigma = 2.5;
-  const soft = document.createElement('canvas');
-  soft.width = pw;
-  soft.height = ph;
-  const so = soft.getContext('2d', { willReadFrequently: true });
-  so.shadowColor = '#000';
-  so.shadowBlur = sigma * rs * 2;
-  so.shadowOffsetX = pw + 50;
-  so.drawImage(raw, -pw - 50, 0);
-  const blurred = so.getImageData(0, 0, pw, ph).data;
+  const spread = sigma * rs;
+  const blurred = soften(rg.getImageData(0, 0, pw, ph).data, pw, ph, Math.max(1, Math.round((Math.sqrt(4 * spread * spread + 1) - 1) / 2)));
   // cut the blur back to sharp shapes, all three in one pass: wherever it is at least `level` thick, with a smooth
   // one-pixel edge. A lower level gives a slightly fatter shape, which makes the black rim.
   const shapes = [[0.36, [29, 28, 34]], [0.5, [64, 62, 60]], [0.53, [122, 118, 114]]].map(([level, [r, g, b]]) => {
-    const c = document.createElement('canvas');
-    c.width = pw;
-    c.height = ph;
+    const c = sheet(pw, ph);
     const img = c.getContext('2d').createImageData(pw, ph);
     return { c, img, px: new Uint32Array(img.data.buffer), rgb: (b << 16) | (g << 8) | r, cut: level * 255 };
   });
   const gain = (sigma * rs * 2.5) / 255;
   const floor = shapes[0].cut - 0.5 / gain;
+  const soft = sheet(pw, ph);
+  const shade = soft.getContext('2d').createImageData(pw, ph);
   for (let i = 0, n = pw * ph; i < n; i++) {
-    const v = blurred[i * 4 + 3];
+    const v = blurred[i];
+    shade.data[i * 4 + 3] = v;
     if (v <= floor) continue;
     for (let k = 0; k < 3; k++) {
       const s = shapes[k];
@@ -285,6 +332,7 @@ export function renderGround(ctx, W, H, strokes, clock) {
       if (a > 0) s.px[i] = ((a >= 1 ? 255 : (a * 255) | 0) << 24) | s.rgb;
     }
   }
+  soft.getContext('2d').putImageData(shade, 0, 0);
   for (const s of shapes) s.c.getContext('2d').putImageData(s.img, 0, 0);
   const [ink, lipFill, topMask] = shapes.map((s) => s.c);
   const put = (img, dy) => ctx.drawImage(img, bx, by + dy, pw / rs, ph / rs);
@@ -317,11 +365,24 @@ export function renderGround(ctx, W, H, strokes, clock) {
   const cell = 15.5;
   const seed = (i, j) => [(i + 0.5 + (hash2(i, j) - 0.5) * 0.78) * cell, (j + 0.5 + (hash2(j + 31, i + 7) - 0.5) * 0.78) * cell];
   const shades = ['#767370', '#7a7672', '#7f7c78', '#787470', '#7c7975'];
-  tg.strokeStyle = 'rgba(96, 92, 89, 0.68)';
-  tg.lineWidth = 0.55;
+  // (stones of one shade are gathered into one shape, and only those that come near a wall are cut at all)
+  const stones = shades.map(() => new Path2D());
+  const seams = new Path2D();
+  const onWall = (x, y) => {
+    const i = Math.round((x - bx) * rs);
+    const j = Math.round((y - by) * rs);
+    return i >= 0 && j >= 0 && i < pw && j < ph && blurred[j * pw + i] > floor;
+  };
+  const near = (x, y) => {
+    for (let dy = -cell; dy <= cell; dy += cell / 3) {
+      for (let dx = -cell; dx <= cell; dx += cell / 3) if (onWall(x + dx, y + dy)) return true;
+    }
+    return false;
+  };
   for (let j = Math.floor(y0 / cell) - 1; j <= Math.ceil(y1 / cell) + 1; j++) {
     for (let i = Math.floor(x0 / cell) - 1; i <= Math.ceil(x1 / cell) + 1; i++) {
       const [px, py] = seed(i, j);
+      if (!near(px, py)) continue;
       // a stone is all the ground nearer its own middle than any neighbour's
       let poly = [[px - cell * 1.5, py - cell * 1.5], [px + cell * 1.5, py - cell * 1.5], [px + cell * 1.5, py + cell * 1.5], [px - cell * 1.5, py + cell * 1.5]];
       for (let dj = -2; dj <= 2; dj++) {
@@ -341,19 +402,79 @@ export function renderGround(ctx, W, H, strokes, clock) {
           poly = next;
         }
       }
-      tg.beginPath();
-      poly.forEach(([x, y], k) => (k ? tg.lineTo(x, y) : tg.moveTo(x, y)));
-      tg.closePath();
-      tg.fillStyle = shades[Math.floor(hash2(i * 7 + 3, j * 5 + 1) * shades.length) % shades.length];
-      tg.fill();
-      tg.stroke();
+      const stone = new Path2D();
+      poly.forEach(([x, y], k) => (k ? stone.lineTo(x, y) : stone.moveTo(x, y)));
+      stone.closePath();
+      stones[Math.floor(hash2(i * 7 + 3, j * 5 + 1) * shades.length) % shades.length].addPath(stone);
+      seams.addPath(stone);
     }
   }
+  stones.forEach((path, k) => {
+    tg.fillStyle = shades[k];
+    tg.fill(path);
+  });
+  tg.strokeStyle = 'rgba(96, 92, 89, 0.68)';
+  tg.lineWidth = 0.55;
+  tg.stroke(seams);
   tg.globalCompositeOperation = 'destination-in';
   tg.setTransform(1, 0, 0, 1, 0, 0);
   tg.drawImage(topMask, 0, 0);
   put(topMask, 0);
   put(top, 0);
+}
+
+let walled = { key: '', canvas: null };
+function wallLayer(ctx, W, H, walls) {
+  const { width, height } = ctx.canvas;
+  const scale = ctx.getTransform().a || 1;
+  const key = `${width}x${height}@${scale}:${walls.map((s) => `${s.pts.length},${s.pts[0][0].toFixed(1)},${s.pts[0][1].toFixed(1)},${s.w}`).join(';')}`;
+  if (walled.key !== key) {
+    const canvas = walled.canvas && walled.canvas.width === width && walled.canvas.height === height ? walled.canvas : sheet(width, height);
+    const g = canvas.getContext('2d');
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.clearRect(0, 0, width, height);
+    g.setTransform(scale, 0, 0, scale, 0, 0);
+    if (walls.length) paintWalls(g, W, H, walls);
+    walled = { key, canvas };
+  }
+  return walled.canvas;
+}
+
+// the wall still under the brush: plain grey stone with its dark rim and front, until it is let go
+function wallSketch(ctx, s) {
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  for (const [dy, ink, wide] of [[WALL_H, '#1d1c22', s.w + 1.6], [WALL_H, '#403e3c', s.w - 0.6], [WALL_H / 2, '#403e3c', s.w - 0.6], [0, '#1d1c22', s.w + 1.2], [0, '#7a7672', s.w - 1]]) {
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = wide;
+    ctx.beginPath();
+    ctx.moveTo(s.pts[0][0], s.pts[0][1] + dy);
+    ctx.lineTo(s.pts[0][0] + 0.01, s.pts[0][1] + dy);
+    for (let i = 1; i < s.pts.length; i++) ctx.lineTo(s.pts[i][0], s.pts[i][1] + dy);
+    ctx.stroke();
+  }
+}
+
+// `live` is the stroke still being painted, if any; `water` the water layer, for the ice that lies over it
+export function renderGround(ctx, W, H, strokes, live, water) {
+  const keep = ctx.getTransform();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  const frozen = strokes.filter((s) => s.kind === 'ice');
+  if (frozen.length) {
+    const layers = iceLayers(ctx.canvas.width, ctx.canvas.height, keep.a, frozen);
+    ctx.drawImage(layers.edge, 0, 0);
+    ctx.drawImage(composeIce(layers, water), 0, 0);
+  } else ice = null;
+  const settled = strokes.filter((s) => s.kind === 'wall' && s !== live);
+  ctx.setTransform(keep);
+  if (settled.length) {
+    const layer = wallLayer(ctx, W, H, settled);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(layer, 0, 0);
+    ctx.setTransform(keep);
+  }
+  if (live && live.kind === 'wall') wallSketch(ctx, live);
 }
 
 // ------------------------------------------------------------------ single props

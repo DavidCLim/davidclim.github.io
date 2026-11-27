@@ -1,18 +1,21 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=254';
-import { buildCreatureArt } from './creatures.js?v=254';
-import { buildEggArt } from './art_eggs.js?v=254';
-import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=254';
-import { Sfx } from './sfx.js?v=254';
-import { World } from './world.js?v=254';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=254';
-import { buildUnitArt, drawDrop } from './art_units.js?v=254';
-import { drawGibbonHatWorn } from './gibbon.js?v=254';
-import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=254';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=255';
+import { buildCreatureArt } from './creatures.js?v=255';
+import { buildEggArt } from './art_eggs.js?v=255';
+import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon, WATER } from './terrain.js?v=255';
+import { WaterLayer } from './water.js?v=255';
+import { beginUnitPictures, drawPictured } from './unitcache.js?v=255';
+import { Sfx } from './sfx.js?v=255';
+import { World } from './world.js?v=255';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=255';
+import { buildUnitArt, drawDrop } from './art_units.js?v=255';
+import { drawGibbonHatWorn } from './gibbon.js?v=255';
+import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=255';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
 const groundCanvas = $('ground');
 const stageCanvas = $('stage');
+const water = new WaterLayer($('water'));
 const ctx = stageCanvas.getContext('2d');
 const banner = $('banner');
 const midline = $('midline');
@@ -160,10 +163,11 @@ function resize() {
   W = w / Z;
   H = h / Z;
   dpr = ratio * Z;
-  for (const c of [groundCanvas, stageCanvas]) {
+  for (const c of [$('water'), groundCanvas, stageCanvas]) {
     c.width = Math.floor(w * ratio);
     c.height = Math.floor(h * ratio);
   }
+  water.resize(W, H, dpr);
   world.resize(W, H);
   groundDirty = true;
 }
@@ -210,7 +214,8 @@ const LATTICE = {
 
 // Terrain: walls, water and ice are painted as strokes; the rest are dropped along the drag.
 const TERRAIN_SET = new Set(['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower']);
-const DISCRETE = { mine: { gap: 84, off: 2 }, barrel: { gap: 20, off: 7 }, tree: { gap: 42, off: 15 }, tower: { gap: 74, off: 16 } };
+// room: about how wide one is. off: how far below the pointer its foot goes
+const DISCRETE = { mine: { room: 15, off: 2 }, barrel: { room: 15, off: 7 }, tree: { room: 23, off: 15 }, tower: { room: 34, off: 16 } };
 let tstroke = null;
 const STROKE_BASE = { wall: 13.5, water: 24.5, ice: 24.5 };
 
@@ -220,32 +225,28 @@ function brushWidth() {
 
 function putProp(kind, x, y) {
   const { off } = DISCRETE[kind];
-  if (x < 8 || x > W - 8 || y < 12 || y > H - 12) return;
+  if (x < 8 || x > W - 8 || y < 12 || y > H - 12) return false;
+  if (!world.propFits(kind, x, y + off)) return false;
   world.addProp(kind, x, y + off);
+  return true;
 }
 
-// A tap with a big brush fills the circle with items; a small brush drops one.
+// somewhere at random under the brush
+function underBrush(kind, x, y) {
+  const a = Math.random() * TAU;
+  const r = Math.sqrt(Math.random()) * Math.max(brush, 6);
+  return putProp(kind, x + Math.cos(a) * r, y + Math.sin(a) * r);
+}
+
+// A tap with a small brush drops one right where it lands; with a big brush it fills the circle.
 function propPatch(kind, x, y) {
-  const { gap } = DISCRETE[kind];
-  if (brush < gap * 0.5) {
+  const { room } = DISCRETE[kind];
+  if (brush <= 12) {
     putProp(kind, x, y);
     return;
   }
-  const n = Math.ceil(brush / gap);
-  for (let j = -n; j <= n; j++) {
-    for (let i = -n; i <= n; i++) {
-      const px = x + (i + (j & 1 ? 0.5 : 0)) * gap;
-      const py = y + j * gap * 0.866;
-      if ((px - x) ** 2 + (py - y) ** 2 <= brush * brush) putProp(kind, px, py);
-    }
-  }
-}
-
-// Along a drag the brush drops a row of items across the path.
-function propRow(kind, x, y, ux, uy) {
-  const { gap } = DISCRETE[kind];
-  const n = brush < gap * 0.5 ? 0 : Math.floor(brush / gap);
-  for (let j = -n; j <= n; j++) putProp(kind, x - uy * j * gap, y + ux * j * gap);
+  const tries = Math.ceil((brush / room) ** 2 * 5);
+  for (let n = 0; n < tries; n++) underBrush(kind, x, y);
 }
 
 function terrainDown(x, y) {
@@ -271,14 +272,13 @@ function terrainMove(x, y) {
     t.ly = y;
     return;
   }
-  const { gap } = DISCRETE[t.kind];
+  // along a drag they are tried all the time and go down wherever there is room, as in the original
+  const STEP = 4;
   let d = Math.hypot(x - t.lx, y - t.ly);
-  while (d >= gap) {
-    const ux = (x - t.lx) / d;
-    const uy = (y - t.ly) / d;
-    t.lx += ux * gap;
-    t.ly += uy * gap;
-    propRow(t.kind, t.lx, t.ly, ux, uy);
+  while (d >= STEP) {
+    t.lx += ((x - t.lx) / d) * STEP;
+    t.ly += ((y - t.ly) / d) * STEP;
+    for (let n = 1 + Math.floor(brush / 14); n > 0; n--) underBrush(t.kind, t.lx, t.ly);
     d = Math.hypot(x - t.lx, y - t.ly);
   }
 }
@@ -460,6 +460,7 @@ function endPaint(e) {
   if (ptr.down && stroke && !stroke.started && canPaint() && !erasing) dab(stroke.ox, stroke.oy);
   ptr.down = false;
   stroke = null;
+  if (tstroke && tstroke.st) groundDirty = true;
   tstroke = null;
   if (e.pointerType !== 'mouse') ptr.inside = false;
 }
@@ -928,6 +929,19 @@ const smokeSprite = (() => {
   return c;
 })();
 
+const bulletStreak = (() => {
+  const c = document.createElement('canvas');
+  c.width = 48;
+  c.height = 4;
+  const g = c.getContext('2d');
+  const gr = g.createLinearGradient(0, 0, 48, 0);
+  gr.addColorStop(0, 'rgba(94, 97, 107, 0)');
+  gr.addColorStop(1, 'rgba(82, 85, 96, 1)');
+  g.fillStyle = gr;
+  g.fillRect(0, 0, 48, 4);
+  return c;
+})();
+
 function smooth(a, b, x) {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
@@ -1102,7 +1116,7 @@ function drawSniper(u) {
 function drawBody(u) {
   if (u.species === 'sniper') drawSniper(u);
   else if (u.species === 'soldier') drawSoldier(u);
-  else drawUnit(ctx, dpr, sprites, u);
+  else drawPictured(ctx, dpr, u, (g) => drawUnit(g, dpr, sprites, u));
 }
 
 // A unit swept off its feet: lifted through its somersault, then dizzy on its back with stars going round its head.
@@ -1236,7 +1250,7 @@ function drawProp(p) {
   const k = PROP_SCALE[p.type];
   ctx.setTransform(dpr * k, 0, 0, dpr * k, p.x * dpr, p.y * dpr);
   if (p.type === 'tree' || p.type === 'tower') {
-    drawLayer(ctx, terrainArt[p.type]);
+    drawStanding(p, k, terrainArt[p.type]);
     if (p.type === 'tower') {
       drawTowerMagic(ctx, performance.now() / 1000 + p.x);
       drawTowerGuest(p, k);
@@ -1246,14 +1260,54 @@ function drawProp(p) {
   // a barrel about to go off rattles and glows
   const shake = p.fuse !== undefined ? (Math.random() - 0.5) * 1.6 : 0;
   if (shake) ctx.translate(shake, 0);
-  drawLayer(ctx, p.hot > 0 || p.fuse !== undefined ? terrainArt.barrelHot : terrainArt.barrel);
+  drawStanding(p, k, p.hot > 0 || p.fuse !== undefined ? terrainArt.barrelHot : terrainArt.barrel);
+}
+
+// how deep each sits in water, and how wide it is at the waterline
+const WADE = { barrel: [4.6, 6.4], tree: [3.8, 5.2], tower: [5.5, 18] };
+// As in the original, whatever stands in water has its foot under the surface: seen only faintly, below a pale ripple.
+function drawStanding(p, k, layer) {
+  if (p.wetAt !== world.terrain.version) {
+    p.wetAt = world.terrain.version;
+    p.wet = !!(world.terrain.at(p.x, p.y - 1) & WATER);
+  }
+  if (!p.wet) {
+    drawLayer(ctx, layer);
+    return;
+  }
+  const [deep, half] = WADE[p.type];
+  const line = p.y - deep;
+  const shake = ctx.getTransform();
+  for (const [top, tall, alpha] of [[line - 150, 150, 1], [line, 30, 0.3]]) {
+    ctx.save();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.beginPath();
+    ctx.rect(p.x - 60, top, 120, tall);
+    ctx.clip();
+    ctx.setTransform(shake);
+    ctx.globalAlpha *= alpha;
+    drawLayer(ctx, layer);
+    ctx.restore();
+  }
+  ctx.save();
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+  ctx.lineWidth = 0.75;
+  ctx.lineCap = 'round';
+  const sway = Math.sin(performance.now() / 420 + p.x) * 0.5;
+  ctx.beginPath();
+  ctx.moveTo(p.x - half - 1 - sway, line);
+  ctx.lineTo(p.x + half + 1 + sway, line);
+  ctx.stroke();
+  ctx.restore();
 }
 
 function render() {
+  const live = ptr.down && tstroke && tstroke.st ? tstroke.st : null;
+  water.update(world.terrain, performance.now(), !!live);
   if (groundDirty || groundVer !== world.terrain.version) {
     gctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    gctx.clearRect(0, 0, W, H);
-    renderGround(gctx, W, H, world.terrain.strokes);
+    renderGround(gctx, W, H, world.terrain.strokes, live, water);
     groundDirty = false;
     groundVer = world.terrain.version;
   }
@@ -1334,6 +1388,7 @@ function render() {
   drawFlames(ctx, world, true);
 
   const units = world.units;
+  beginUnitPictures(units);
   drawList.length = 0;
   for (const u of units) {
     u.sk = u.y;
@@ -1377,17 +1432,12 @@ function render() {
     if (b.tracer) continue;
     const sp = Math.hypot(b.vx, b.vy) || 1;
     const len = Math.min(9, 2 + (b.dist || 0));
-    const tx = b.x - (b.vx / sp) * len;
-    const ty = b.y - (b.vy / sp) * len;
-    const gr = ctx.createLinearGradient(tx, ty, b.x, b.y);
-    gr.addColorStop(0, 'rgba(94, 97, 107, 0)');
-    gr.addColorStop(1, 'rgba(82, 85, 96, 1)');
-    ctx.strokeStyle = gr;
-    ctx.beginPath();
-    ctx.moveTo(tx, ty);
-    ctx.lineTo(b.x, b.y);
-    ctx.stroke();
+    const c = b.vx / sp;
+    const s = b.vy / sp;
+    ctx.setTransform(dpr * c, dpr * s, -dpr * s, dpr * c, b.x * dpr, b.y * dpr);
+    ctx.drawImage(bulletStreak, -len, -0.43, len + 0.4, 0.86);
   }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   // sniper rounds: a long thin dark bullet over one thin pale smoke line along its whole path, which lingers
   for (const sk of world.streaks) {

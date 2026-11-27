@@ -1,5 +1,8 @@
-import { TAU, FEET, GAIT } from './config.js?v=254';
-import { WATER, ICE, WALL } from './terrain.js?v=254';
+import { TAU, FEET, GAIT } from './config.js?v=255';
+import { WATER, ICE, WALL } from './terrain.js?v=255';
+
+// half the ground each object takes up: measured as the closest the original will set two of them
+const FOOT = { tree: 11.5, barrel: 7.4, tower: 17, mine: 7.4 };
 
 // Everything the Animals and Mythical tabs add to the world, plus the terrain physics:
 // the beast brain, the mage's bolts, the necromancer's skeletons, zombie infection,
@@ -251,6 +254,26 @@ export function installBeasts(World) {
   };
 
   // ------------------------------------------------------------ props
+  // As in the original: trees, barrels (and our towers) never overlap one another, mines never overlap other mines
+  // (but may lie among the rest), and nothing can be put down inside a wall. x, y: where its foot would be.
+  P.propFits = function (type, x, y) {
+    const wide = type === 'mine' ? 6 : FOOT[type] * 0.6;
+    for (const dx of [-wide, 0, wide]) if (this.terrain.at(x + dx, y) & WALL) return false;
+    for (const p of this.props) {
+      if (p.dead) continue;
+      let room = 0;
+      if (type === 'mine') {
+        if (p.type !== 'mine') continue;
+        room = FOOT.mine * 2;
+      } else {
+        if (p.type === 'mine') continue;
+        room = FOOT[type] + FOOT[p.type];
+      }
+      if ((p.x - x) ** 2 + (p.y - y) ** 2 < room * room) return false;
+    }
+    return true;
+  };
+
   P.addProp = function (type, x, y) {
     const p = { type, x, y, hp: type === 'barrel' ? BARREL_HP : 1, dead: false, age: 0, seed: Math.random() };
     this.props.push(p);

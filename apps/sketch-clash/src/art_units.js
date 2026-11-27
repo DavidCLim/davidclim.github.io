@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=254';
-import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=254';
-import { buildGibbonArt, drawGibbonHatDrop } from './gibbon.js?v=254';
+import { TAU, K } from './config.js?v=255';
+import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=255';
+import { buildGibbonArt, drawGibbonHatDrop } from './gibbon.js?v=255';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -2565,8 +2565,19 @@ export function buildUnitArt() {
   return art;
 }
 
+const dropPictures = new Map();
 export function drawDrop(g, species) {
-  (DROPS[species] || DROPS.soldier)(g);
+  let pic = dropPictures.get(species);
+  if (!pic) {
+    // (a box 120 art px square about the middle, at four picture px to one)
+    pic = document.createElement('canvas');
+    pic.width = pic.height = 480;
+    const c = pic.getContext('2d');
+    c.setTransform(4, 0, 0, 4, 240, 240);
+    (DROPS[species] || DROPS.soldier)(c);
+    dropPictures.set(species, pic);
+  }
+  g.drawImage(pic, -60, -60, 120, 120);
 }
 
 // icon helpers use K to size things in board px

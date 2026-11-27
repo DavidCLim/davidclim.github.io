@@ -5,10 +5,10 @@
 // feet), and a wizard's outfit: hat, cloak, belted robe with wide sleeves, and staff.
 // Drawn in art units, facing +x, with the ground about 28 below the origin. His limbs are drawn live, from where his
 // hands and feet are, so they can move smoothly through any pose.
-import { TAU, K, FEET } from './config.js?v=254';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=254';
-import { rigStep, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=254';
-import { STORM } from './gibbonfx.js?v=254';
+import { TAU, K, FEET } from './config.js?v=255';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=255';
+import { rigStep, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=255';
+import { STORM } from './gibbonfx.js?v=255';
 
 const C = {
   fur: '#5a463e', furDark: '#3d2f2a', furFar: '#342826', white: '#f4eddf', whiteShade: '#c9bda8',
@@ -172,8 +172,12 @@ export function drawGibbonFace(g, o) {
       else g.arc(x, y - 1.4, 2.4, Math.PI * 0.18, Math.PI * 0.82);
     });
   } else {
-    oval(g, '#ffffff', 1, x, y, 2.9, 2.9 * (1 - shut));
-    oval(g, '#c9801c', 0, x + 0.4 + o.lx * 0.6, y + o.ly * 0.6, 1.9, 1.9 * (1 - shut));
+    if (o.angry) {
+      oval(g, 'rgba(255, 206, 40, 0.24)', 0, x, y, 6.6, 5.6);
+      oval(g, 'rgba(255, 224, 70, 0.42)', 0, x, y, 4.6, 4);
+    }
+    oval(g, o.angry ? '#fff3a8' : '#ffffff', 1, x, y, 2.9, 2.9 * (1 - shut));
+    oval(g, o.angry ? '#ffb300' : '#c9801c', 0, x + 0.4 + o.lx * 0.6, y + o.ly * 0.6, 1.9, 1.9 * (1 - shut));
     oval(g, OUT, 0, x + 0.6 + o.lx * 0.7, y + o.ly * 0.7, 1.15, 1.15 * (1 - shut));
     oval(g, '#ffffff', 0, x + 0.2 + o.lx * 0.7, y - 0.7 + o.ly * 0.7, 0.45, 0.45);
   }
@@ -379,6 +383,23 @@ function sleeve(g, s, e, w, far) {
   });
 }
 
+// a broad gold band round the forearm, set with a red stone
+function bracer(g, e, w, far) {
+  const an = Math.atan2(w[1] - e[1], w[0] - e[0]);
+  g.save();
+  g.translate(e[0] + (w[0] - e[0]) * 0.56, e[1] + (w[1] - e[1]) * 0.56);
+  g.rotate(an - Math.PI / 2);
+  const r = far ? 6.6 : 8;
+  shape(g, far ? '#b98a26' : C.gold, 1.3, () => {
+    g.moveTo(-r, -2.6);
+    g.quadraticCurveTo(0, -0.6, r, -2.6);
+    g.lineTo(r, 2.2);
+    g.quadraticCurveTo(0, 4.4, -r, 2.2);
+  });
+  if (!far) oval(g, '#e0477c', 0.9, 0.6, 0.9, 1.9, 1.9);
+  g.restore();
+}
+
 // the ape's arm: a great round shoulder and a thick forearm hardly narrower than the top of it
 function arm(g, shoulder, wrist, far, bend = -1) {
   const elbow = joint(shoulder, wrist, bend < 0 ? 20 : 13, bend);
@@ -395,6 +416,7 @@ function arm(g, shoulder, wrist, far, bend = -1) {
     });
   }
   sleeve(g, shoulder, elbow, wrist, far);
+  bracer(g, elbow, wrist, far);
   fist(g, wrist[0], wrist[1], elbow, far);
 }
 
@@ -414,6 +436,27 @@ function leg(g, hip, ankle, far) {
 
 // the cloak over his shoulders and back, gold at the hem; `sweep` carries it out behind, `wave` ripples it
 function cloak(g, sweep, wave) {
+  const flick = wave * 0.8;
+  shape(g, C.cloakDark, 1.7, () => {
+    g.moveTo(-4, -39);
+    g.quadraticCurveTo(-9 - flick, -47, -14 - flick, -55);
+    g.quadraticCurveTo(-3, -52, 3, -47);
+    g.quadraticCurveTo(7, -53, 9 + flick, -58);
+    g.quadraticCurveTo(14, -48, 19, -34);
+    g.lineTo(6, -31);
+  });
+  shape(g, C.lining, 0, () => {
+    g.moveTo(-8 - flick, -49);
+    g.quadraticCurveTo(-1, -48, 4, -43);
+    g.quadraticCurveTo(6, -48, 8 + flick, -53);
+    g.quadraticCurveTo(11, -45, 13, -37);
+    g.lineTo(2, -38);
+  });
+  stroke(g, C.gold, 1.8, () => {
+    g.moveTo(-14 - flick, -55);
+    g.quadraticCurveTo(-3, -52, 3, -47);
+    g.quadraticCurveTo(7, -53, 9 + flick, -58);
+  });
   const tx = -43 - sweep * 14;
   const ty = 5 - sweep * 21 + wave * 3;
   const hem = () => {
@@ -531,7 +574,7 @@ function posed(u, R, dead, t) {
   }
   if (dead) return { ...REST, mouth: 0.3, nwy: 14, staff: 1.1 };
   let s = u.gib;
-  const dt = Math.min(0.05, Math.max(0, u.breath - (s ? s.at : u.breath)));
+  const dt = Math.min(0.15, Math.max(0, u.breath - (s ? s.at : u.breath)));
   if (!s) {
     s = u.gib = { at: u.breath, p: {} };
     for (const k in REST) s.p[k] = { x: REST[k], v: 0 };
@@ -719,6 +762,29 @@ export function drawGibbondore(ctx, dpr, sprites, u, overlay) {
     farFront: !dead && P.fwy < -26 && R.fidget === 'scratch',
     orb: (g, x, y) => glow(g, x * K, y * K, (11 + 15 * power) * K, '255, 190, 40', 0.45 + 0.4 * power),
     shine: (g, x, y) => {
+      // (the angle is built up bit by bit, so a change of speed never makes them jump)
+      const turned = Math.min(0.15, Math.max(0, t - (u.starAt === undefined ? t : u.starAt)));
+      u.starAt = t;
+      u.starAn = (u.starAn || 0) + turned * (2.4 + 7 * power);
+      g.lineJoin = 'round';
+      for (let i = 0; i < 3; i++) {
+        const an = u.starAn + (i / 3) * TAU;
+        const sx = x + Math.cos(an) * (11 + 4 * power);
+        const sy = y + Math.sin(an) * (4.6 + 2 * power);
+        const r = (2.6 + 0.7 * Math.sin(an)) * (1 + 0.35 * power);
+        g.beginPath();
+        for (let k = 0; k < 10; k++) {
+          const a = (k / 10) * TAU - Math.PI / 2;
+          const q = k % 2 ? r * 0.46 : r;
+          g.lineTo((sx + Math.cos(a) * q) * K, (sy + Math.sin(a) * q) * K);
+        }
+        g.closePath();
+        g.strokeStyle = OUT;
+        g.lineWidth = 1.2 * K;
+        g.stroke();
+        g.fillStyle = '#ffe14a';
+        g.fill();
+      }
       if (storming) {
         const beat = Math.floor(t * 22);
         const noise = (i) => {

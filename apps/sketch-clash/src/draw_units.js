@@ -1,14 +1,14 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=254';
-import { drawLayer, OUT } from './sprites.js?v=254';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt } from './art_units.js?v=254';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=254';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=254';
-import { drawZordGround, drawZordAir } from './zordfx.js?v=254';
-import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=254';
-import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=254';
-import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=254';
-import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=254';
-import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=254';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=255';
+import { drawLayer, OUT } from './sprites.js?v=255';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt } from './art_units.js?v=255';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=255';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=255';
+import { drawZordGround, drawZordAir } from './zordfx.js?v=255';
+import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=255';
+import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=255';
+import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=255';
+import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=255';
+import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=255';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -47,9 +47,9 @@ export function burnOverlay(ctx, u, rx, ry, cx = 0, cy = 0) {
     ctx.ellipse(cx, cy, rx, ry, 0, 0, TAU);
     ctx.fill();
   }
-  // caught in ghost fire it glows with it
+  // caught in his green beam it glows with it
   if (u.spirit > 0) {
-    ctx.fillStyle = `rgba(40, 236, 178, ${(0.5 + 0.14 * Math.sin(u.breath * 22)) * Math.min(1, u.spirit / 0.25)})`;
+    ctx.fillStyle = `rgba(104, 230, 54, ${(0.5 + 0.14 * Math.sin(u.breath * 22)) * Math.min(1, u.spirit / 0.25)})`;
     ctx.beginPath();
     ctx.ellipse(cx, cy, rx, ry, 0, 0, TAU);
     ctx.fill();
@@ -2106,6 +2106,70 @@ function lumpsOf(e) {
   return out;
 }
 
+const flamePuff = (f) => (f.size + f.grow * (f.age / f.life)) * (f.small ? 1 : 1.12);
+
+function drawFlame(ctx, f) {
+  const t = f.age / f.life;
+  const r = flamePuff(f);
+  const spr = t < 0.3 ? blobs.yellow : f.dark && t > 0.62 ? blobs.brown : blobs.orange;
+  ctx.globalAlpha = Math.max(0, (t < 0.1 ? 0.75 + t * 2 : 0.92) * (1 - t * t * t));
+  // teal laid over yellow turns green, so his goes by way of white heat: teal, then white, and only then fire
+  if (f.hot && t < 0.17) {
+    ctx.drawImage(blobs.plasma, f.x - r * 1.12, f.y - r * 1.12, r * 2.24, r * 2.24);
+    ctx.drawImage(blobs.core, f.x - r * 0.72, f.y - r * 0.72, r * 1.44, r * 1.44);
+  } else {
+    ctx.drawImage(spr, f.x - r, f.y - r, r * 2, r * 2);
+    if (f.hot && t < 0.34) {
+      ctx.globalAlpha *= 1 - (t - 0.17) / 0.17;
+      ctx.drawImage(blobs.core, f.x - r * 0.8, f.y - r * 0.8, r * 1.6, r * 1.6);
+    }
+  }
+}
+
+// A lot of fire is a lot of big see-through puffs on top of one another, which is slow to fill in. They are so soft
+// that at half the sharpness they look the same, so past a certain number that is how they are drawn.
+const FINE_FLAMES = 36;
+let coarse = null;
+function drawFlamesCoarse(ctx, flames, under) {
+  const { width, height } = ctx.canvas;
+  const w = Math.ceil(width / 2);
+  const h = Math.ceil(height / 2);
+  if (!coarse) coarse = document.createElement('canvas');
+  if (coarse.width !== w || coarse.height !== h) {
+    coarse.width = w;
+    coarse.height = h;
+  }
+  const m = ctx.getTransform();
+  const g = coarse.getContext('2d');
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.clearRect(0, 0, w, h);
+  g.setTransform(m.a / 2, m.b / 2, m.c / 2, m.d / 2, m.e / 2, m.f / 2);
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (const f of flames) {
+    if (!!f.under !== under) continue;
+    drawFlame(g, f);
+    const r = flamePuff(f) * 1.2;
+    x0 = Math.min(x0, f.x - r);
+    y0 = Math.min(y0, f.y - r);
+    x1 = Math.max(x1, f.x + r);
+    y1 = Math.max(y1, f.y + r);
+  }
+  // only the part with fire in it is laid back over the field
+  const px = Math.max(0, Math.floor((x0 * m.a + m.e) / 2));
+  const py = Math.max(0, Math.floor((y0 * m.d + m.f) / 2));
+  const pw = Math.min(w, Math.ceil((x1 * m.a + m.e) / 2)) - px;
+  const ph = Math.min(h, Math.ceil((y1 * m.d + m.f) / 2)) - py;
+  if (pw <= 0 || ph <= 0) return;
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha = 1;
+  ctx.drawImage(coarse, px, py, pw, ph, px * 2, py * 2, pw * 2, ph * 2);
+  ctx.restore();
+}
+
 export function drawFlames(ctx, world, under) {
   if (!blob) blob = makeBlob();
   if (under) {
@@ -2113,24 +2177,10 @@ export function drawFlames(ctx, world, under) {
     drawGatlingGround(ctx, world);
     drawGibbonGround(ctx, world);
   }
-  for (const f of world.flames) {
-    if (!!f.under !== under) continue;
-    const t = f.age / f.life;
-    const r = (f.size + f.grow * t) * (f.small ? 1 : 1.12);
-    const spr = t < 0.3 ? blobs.yellow : f.dark && t > 0.62 ? blobs.brown : blobs.orange;
-    ctx.globalAlpha = Math.max(0, (t < 0.1 ? 0.75 + t * 2 : 0.92) * (1 - t * t * t));
-    // teal laid over yellow turns green, so his goes by way of white heat: teal, then white, and only then fire
-    if (f.hot && t < 0.17) {
-      ctx.drawImage(blobs.plasma, f.x - r * 1.12, f.y - r * 1.12, r * 2.24, r * 2.24);
-      ctx.drawImage(blobs.core, f.x - r * 0.72, f.y - r * 0.72, r * 1.44, r * 1.44);
-    } else {
-      ctx.drawImage(spr, f.x - r, f.y - r, r * 2, r * 2);
-      if (f.hot && t < 0.34) {
-        ctx.globalAlpha *= 1 - (t - 0.17) / 0.17;
-        ctx.drawImage(blobs.core, f.x - r * 0.8, f.y - r * 0.8, r * 1.6, r * 1.6);
-      }
-    }
-  }
+  let many = 0;
+  for (const f of world.flames) if (!!f.under === under) many++;
+  if (many > FINE_FLAMES) drawFlamesCoarse(ctx, world.flames, under);
+  else for (const f of world.flames) if (!!f.under === under) drawFlame(ctx, f);
   ctx.globalAlpha = 1;
   if (!under) {
     drawSpells(ctx, world);

@@ -1,10 +1,9 @@
 // MechaZaur's own part of the world: his missiles, and the effects that go with him (the shockwave as he lets loose, the
 // embers and heat rings in his breath, the ground it leaves burning, the great blast when he goes). Only the missiles
 // hurt anyone; the rest is for show.
-import { TAU, K, FEET } from './config.js?v=254';
-import { WATER } from './terrain.js?v=254';
-import { OUT } from './sprites.js?v=254';
-import { swipeTurn, SWIPE_BACK } from './zordlimbs.js?v=254';
+import { TAU, K, FEET } from './config.js?v=255';
+import { WATER } from './terrain.js?v=255';
+import { swipeTurn, SWIPE_BACK } from './zordlimbs.js?v=255';
 
 const TEAL = '70, 245, 200';
 const GOLD = '255, 196, 80';
@@ -16,7 +15,6 @@ export function resetZordFx(world) {
   world.scorches = [];
   world.missiles = [];
   world.trails = [];
-  world.wisps = [];
 }
 
 // a ring racing outward. flat: lying on the ground. ang: squashed along a direction, as the heat rings in his breath are
@@ -24,11 +22,11 @@ function nova(world, o) {
   world.novas.push({ age: 0, vx: 0, vy: 0, from: 0.2, flat: false, ang: null, ...o });
 }
 
-function embers(world, x, y, n, ang, spread, speed) {
+function embers(world, x, y, n, ang, spread, speed, green = false) {
   for (let i = 0; i < n; i++) {
     const a = ang + (Math.random() - 0.5) * spread;
     const sp = speed * (0.45 + Math.random() * 0.75);
-    world.embers.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, age: 0, life: 0.3 + Math.random() * 0.45, teal: Math.random() < 0.35 });
+    world.embers.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, age: 0, life: 0.3 + Math.random() * 0.45, teal: Math.random() < 0.35, green });
   }
 }
 
@@ -96,6 +94,16 @@ function beamMouth(u) {
   return { x: u.x + u.facing * 54 * K, y: u.y + 1 * K - (u.alt || 0) * u.def.hoverH };
 }
 
+// how far it is from the jaws to the edge of the field the way he is aiming, and then some, so its end is out of sight
+function beamReach(world, from, angle) {
+  const dx = Math.cos(angle);
+  const dy = Math.sin(angle);
+  let t = Infinity;
+  if (Math.abs(dx) > 1e-4) t = Math.min(t, ((dx > 0 ? world.w : 0) - from.x) / dx);
+  if (Math.abs(dy) > 1e-4) t = Math.min(t, ((dy > 0 ? world.h : 0) - from.y) / dy);
+  return Math.max(0, t) + 90;
+}
+
 function aimBeam(u, t) {
   const m = beamMouth(u);
   return Math.atan2(t.y - 2 - m.y, t.x - m.x);
@@ -116,16 +124,18 @@ function stepBeam(world, u, dt) {
     world.sfx('boom', u.x);
     world.sfx('flame', u.x);
   }
+  b.reach = beamReach(world, beamMouth(u), b.angle);
   if (firing) {
     const from = beamMouth(u);
     const dx = Math.cos(b.angle);
     const dy = Math.sin(b.angle);
-    const half = m.range / 2;
-    world.eachEnemyNear(u.side, from.x + dx * half, from.y + dy * half, half + 30, (o) => {
+    const reach = b.reach;
+    const out = reach * Math.min(1, (b.t - m.charge) / 0.16);
+    world.eachEnemyNear(u.side, from.x + (dx * reach) / 2, from.y + (dy * reach) / 2, reach / 2 + 30, (o) => {
       const ox = o.x - from.x;
       const oy = o.y - 2 - from.y;
       const along = ox * dx + oy * dy;
-      if (along < 0 || along > m.range || Math.abs(ox * dy - oy * dx) > m.width + o.def.radius) return;
+      if (along < 0 || along > out || Math.abs(ox * dy - oy * dx) > m.width + o.def.radius) return;
       if (!o.def.noKnock) {
         o.kx += dx * 520 * dt;
         o.ky += dy * 520 * dt;
@@ -138,23 +148,21 @@ function stepBeam(world, u, dt) {
       const ox = p.x - from.x;
       const oy = p.y - 8 - from.y;
       const along = ox * dx + oy * dy;
-      if (along > 0 && along < m.range && Math.abs(ox * dy - oy * dx) <= m.width + 6) world.damageProp(p, m.dps * dt);
+      if (along > 0 && along < out && Math.abs(ox * dy - oy * dx) <= m.width + 6) world.damageProp(p, m.dps * dt);
     }
-    // wisps of it tear away and drift up
-    b.wispT = (b.wispT || 0) - dt;
-    while (b.wispT <= 0) {
-      b.wispT += 0.07;
-      const along = 6 + Math.random() * Math.min(m.range, (b.t - m.charge) * 2600) * 0.9;
+    // sparks thrown off all along it
+    b.sparkT = (b.sparkT || 0) - dt;
+    while (b.sparkT <= 0) {
+      b.sparkT += 0.016;
+      const along = 8 + Math.random() * Math.max(0, out - 90);
       const side = Math.random() < 0.5 ? -1 : 1;
-      const off = side * m.width * (0.6 + Math.random() * 0.7);
-      const out = side * (14 + Math.random() * 40);
-      const run = 40 + Math.random() * 90;
-      world.wisps.push({ x: from.x + dx * along - dy * off, y: from.y + dy * along + dx * off, vx: dx * run - dy * out, vy: dy * run + dx * out - 12, age: 0, life: 0.32 + Math.random() * 0.4, size: 1.3 + Math.random() * 2.1, phase: Math.random() * TAU });
+      const off = side * m.width * (0.5 + Math.random() * 0.6);
+      embers(world, from.x + dx * along - dy * off, from.y + dy * along + dx * off, 1, b.angle + side * 0.45, 0.7, 190, true);
     }
     b.fireT = (b.fireT || 0) - dt;
     if (b.fireT <= 0) {
-      b.fireT = 0.045;
-      const along = 22 + Math.random() * 230;
+      b.fireT = 0.035;
+      const along = 22 + Math.random() * Math.max(0, Math.min(out - 90, 460));
       scorch(world, from.x + dx * along + (Math.random() - 0.5) * 14, from.y + dy * along + FEET + (Math.random() - 0.5) * 7, 4 + Math.random() * 4, 1.9 + Math.random() * 1.2, true);
     }
   }
@@ -184,106 +192,108 @@ export function stepZordBeam(world, u, dt) {
   return true;
 }
 
-// ---- the look of it: the spectral fire of a skeleton dinosaur, drawn like everything else here: a dark outline round
-// flat colour. Teal tongues of flame lick forward along it round a bright aqua middle and a white-mint heart.
-const GHOST = { deep: '#08756a', teal: '#0fb392', aqua: '#33efb8', mint: '#a4ffdf', heart: '#effffa' };
+// ---- the look of it: his own fire attack, gone green and poured out in one straight torrent. The same soft round
+// puffs: pale where they leave his jaws, then bright, with darker ones tumbling among them, and sparks flying.
+const GREEN = { white: '248, 255, 236', pale: '226, 255, 160', bright: '98, 222, 52', dark: '38, 142, 48' };
 
-// one tongue of flame: round at its root (x, y) and drawn out along `ang`, swaying one way and then curling its sharp
-// tip over the other by `curl`
-function flameTongue(ctx, x, y, ang, len, wide, curl, fill, line = 0) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(ang);
-  ctx.fillStyle = fill;
-  ctx.beginPath();
-  ctx.moveTo(0, -wide);
-  ctx.bezierCurveTo(len * 0.42, -wide * 1.25 - curl * 0.55, len * 0.72, -wide * 0.2 + curl * 0.1, len, curl);
-  ctx.bezierCurveTo(len * 0.74, curl * 0.5 + wide * 0.34, len * 0.38, wide * 1.2 - curl * 0.55, 0, wide);
-  ctx.arc(0, 0, wide, Math.PI / 2, Math.PI * 1.5);
-  if (line) {
-    ctx.strokeStyle = OUT;
-    ctx.lineWidth = line;
-    ctx.lineJoin = 'round';
-    ctx.stroke();
-  }
-  ctx.fill();
-  ctx.restore();
+// one of the soft puffs his fire is made of
+function softPuff(rgb) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const g = c.getContext('2d');
+  const gr = g.createRadialGradient(32, 32, 2, 32, 32, 32);
+  gr.addColorStop(0, `rgba(${rgb}, 1)`);
+  gr.addColorStop(0.55, `rgba(${rgb}, 0.8)`);
+  gr.addColorStop(1, `rgba(${rgb}, 0)`);
+  g.fillStyle = gr;
+  g.fillRect(0, 0, 64, 64);
+  return c;
 }
 
-// a steady made-up number for the i-th of anything, so each flame keeps its own size and sway from frame to frame
+// a steady made-up number for the i-th of anything, so each puff keeps its own size and place from frame to frame
 const pick = (i, k) => {
   const s = Math.sin(i * 127.1 + k * 311.7) * 43758.5453;
   return s - Math.floor(s);
 };
 
-// The outline of the fire, along +x from the jaws: narrow where it leaves them, quickly full width, with one row of
-// tongues down each side, each swelling forward to a point that curls outward, all rushing away from him.
-const BACK = -4; // it starts just inside his mouth
+const PERIOD = 220; // world units of beam before a strip of it repeats
+const HALF = 30; // and how far a strip reaches to each side of the middle
+const FINE = 2.4; // its pixels to a unit
 
-function flamePath(ctx, len, wide, o) {
-  const gone = o.clock * o.speed;
-  const at = (x, k) => Math.min(1, 0.24 + Math.max(0, x - BACK) / 44) * wide * k;
-  const tongues = (side) => {
-    const shift = gone + (side > 0 ? o.gap * 0.5 : 0);
-    const list = [];
-    for (let i = Math.ceil((8 - shift) / o.gap); i * o.gap + shift + o.gap * 1.1 < len; i++) {
-      const x = i * o.gap + shift;
-      const n = i * 2 + (side > 0 ? 1 : 0);
-      const reach = 1.2 + o.lick * pick(Math.abs(n % 97), 1) + 0.07 * Math.sin(o.clock * 19 + n * 2);
-      const tip = x + o.gap * 1.1;
-      const mid = x + o.gap * 0.72;
-      const fall = x + o.gap * 0.92;
-      list.push({
-        root: [x, side * at(x, 0.86)],
-        rise: [mid, side * at(mid, 0.9)],
-        tip: [tip, side * at(tip, reach)],
-        fall: [fall, side * at(fall, 1.04)],
-        next: [x + o.gap, side * at(x + o.gap, 0.86)],
-      });
-    }
-    return list;
-  };
-  ctx.beginPath();
-  ctx.moveTo(BACK, -at(BACK, 1));
-  for (const t of tongues(-1)) {
-    ctx.lineTo(...t.root);
-    ctx.quadraticCurveTo(...t.rise, ...t.tip);
-    ctx.quadraticCurveTo(...t.fall, ...t.next);
-  }
-  // its rounded front end
-  ctx.lineTo(len, -at(len, 0.9));
-  ctx.quadraticCurveTo(len + wide * 1.5, 0, len, at(len, 0.9));
-  for (const t of tongues(1).reverse()) {
-    ctx.lineTo(...t.next);
-    ctx.quadraticCurveTo(...t.fall, ...t.tip);
-    ctx.quadraticCurveTo(...t.rise, ...t.root);
-  }
-  ctx.lineTo(BACK, at(BACK, 1));
-  ctx.closePath();
-}
-
-// a ball of the fire, flames wheeling out of it
-function ghostBall(ctx, x, y, r, clock, spikes) {
-  for (const [fill, k, turn, count] of [[GHOST.deep, 1, 1.7, spikes], [GHOST.aqua, 0.76, -2.4, spikes - 2]]) {
+// Hundreds of puffs would be slow to draw one by one, so the length of the beam is two strips of them, each drawn once,
+// that repeat end to end and rush along at different speeds. `layers`: [puff, how many, size, spread, alpha]
+function strip(layers, seed) {
+  const c = document.createElement('canvas');
+  c.width = PERIOD * FINE;
+  c.height = HALF * 2 * FINE;
+  const g = c.getContext('2d');
+  g.setTransform(FINE, 0, 0, FINE, 0, HALF * FINE);
+  layers.forEach(([puff, count, size, spread, alpha], n) => {
     for (let i = 0; i < count; i++) {
-      const a = (i / count) * TAU + clock * turn;
-      const flick = 0.75 + 0.5 * Math.abs(Math.sin(clock * (11 + i) + i * 2.1));
-      flameTongue(ctx, x + Math.cos(a) * r * 0.45 * k, y + Math.sin(a) * r * 0.45 * k, a + 0.45 * Math.sign(turn), r * 1.5 * k * flick, r * 0.4 * k, Math.sign(turn) * r * 0.5, fill);
+      const id = seed + n * 101 + i;
+      const x = ((i + pick(id, 1) * 0.8) / count) * PERIOD;
+      const y = (pick(id, 2) - 0.5) * 2 * spread;
+      const r = size * (0.75 + 0.5 * pick(id, 3));
+      g.globalAlpha = alpha;
+      // (drawn again a length either side, so the ends meet without a seam)
+      for (const dx of [-PERIOD, 0, PERIOD]) g.drawImage(puff, x + dx - r, y - r, r * 2, r * 2);
     }
-  }
-  for (const [fill, k] of [[GHOST.teal, 0.92], [GHOST.aqua, 0.74], [GHOST.mint, 0.54], [GHOST.heart, 0.32]]) {
-    ctx.fillStyle = fill;
-    ctx.beginPath();
-    ctx.arc(x, y, r * k * (0.95 + Math.random() * 0.1), 0, TAU);
-    ctx.fill();
+  });
+  return c;
+}
+
+let fire = null;
+function beamFire() {
+  if (fire) return fire;
+  const puff = Object.fromEntries(Object.entries(GREEN).map(([k, rgb]) => [k, softPuff(rgb)]));
+  // a rounded end for that light, so it starts softly (its middle line matches the strip it joins)
+  const cap = document.createElement('canvas');
+  cap.width = cap.height = 64;
+  const cg = cap.getContext('2d');
+  const cr = cg.createRadialGradient(32, 32, 0, 32, 32, 32);
+  cr.addColorStop(0, 'rgba(120, 240, 70, 1)');
+  cr.addColorStop(1, 'rgba(120, 240, 70, 0)');
+  cg.fillStyle = cr;
+  cg.fillRect(0, 0, 64, 64);
+  const glow = document.createElement('canvas');
+  glow.width = 4;
+  glow.height = 64;
+  const g = glow.getContext('2d');
+  const gr = g.createLinearGradient(0, 0, 0, 64);
+  gr.addColorStop(0, 'rgba(120, 240, 70, 0)');
+  gr.addColorStop(0.5, 'rgba(120, 240, 70, 1)');
+  gr.addColorStop(1, 'rgba(120, 240, 70, 0)');
+  g.fillStyle = gr;
+  g.fillRect(0, 0, 4, 64);
+  fire = {
+    puff,
+    glow,
+    cap,
+    body: strip([[puff.dark, 30, 14, 12, 0.92], [puff.bright, 38, 13, 8, 0.95], [puff.dark, 9, 7, 17, 0.75], [puff.bright, 12, 6, 15, 0.8]], 11),
+    heart: strip([[puff.pale, 34, 9, 4.5, 0.95], [puff.white, 40, 4.6, 2, 0.95]], 977),
+  };
+  return fire;
+}
+
+// a strip laid along +x from `from` to `to`, having travelled `gone`; `tall` squeezes or swells it
+function lay(ctx, img, from, to, gone, tall) {
+  for (let x = from - (((from - gone) % PERIOD) + PERIOD) % PERIOD; x < to; x += PERIOD) {
+    const a = Math.max(from, x);
+    const b = Math.min(to, x + PERIOD);
+    if (b - a < 0.5) continue;
+    ctx.drawImage(img, (a - x) * FINE, 0, (b - a) * FINE, img.height, a, -HALF * tall, b - a, HALF * 2 * tall);
   }
 }
+
+const stamp = (ctx, img, x, y, r) => ctx.drawImage(img, x - r, y - r, r * 2, r * 2);
 
 function drawBeam(ctx, u) {
   const m = u.def.beam;
   const b = u.beam;
   const from = beamMouth(u);
   const clock = u.breath;
+  const F = beamFire();
+  const P = F.puff;
   ctx.save();
   ctx.translate(from.x, from.y);
   ctx.rotate(b.angle);
@@ -291,70 +301,96 @@ function drawBeam(ctx, u) {
   if (b.t < m.charge) {
     const p = b.t / m.charge;
     // a thin flickering line shows where it is going to go
-    ctx.strokeStyle = `rgba(20, 180, 148, ${0.5 * p * (0.6 + 0.4 * Math.sin(clock * 40))})`;
+    ctx.strokeStyle = `rgba(66, 176, 40, ${0.5 * p * (0.6 + 0.4 * Math.sin(clock * 40))})`;
     ctx.lineWidth = 0.9;
     ctx.beginPath();
     ctx.moveTo(10, 0);
-    ctx.lineTo(Math.min(m.range, 210), 0);
+    ctx.lineTo(210, 0);
     ctx.stroke();
-    // ghost fire is dragged in out of the air, spiralling into his jaws
-    for (let i = 0; i < 20; i++) {
-      const q = (clock * 1.5 + i / 20) % 1;
+    // green fire is dragged in out of the air, spiralling into his jaws
+    for (let i = 0; i < 22; i++) {
+      const q = (clock * 1.5 + i / 22) % 1;
       const an = i * 2.4 + q * 3.4;
-      const far = (1 - q) * 40 + 5;
+      const far = (1 - q) * 40 + 4;
       ctx.globalAlpha = Math.min(1, q * 2.6) * Math.min(1, p * 1.8);
-      flameTongue(ctx, 5 + Math.cos(an) * far, Math.sin(an) * far, an - 0.85, 6 + 12 * (1 - q), 1 + 1.7 * q, -3, i % 3 === 0 ? GHOST.mint : i % 3 === 1 ? GHOST.aqua : GHOST.teal);
+      stamp(ctx, i % 3 === 0 ? P.pale : i % 3 === 1 ? P.bright : P.dark, 5 + Math.cos(an) * far, Math.sin(an) * far, 1.8 + 3.4 * q);
     }
     ctx.globalAlpha = 1;
     // rings closing in as it comes to the full
     for (let i = 0; i < 3; i++) {
       const q = (clock * 2.1 + i / 3) % 1;
-      ctx.strokeStyle = `rgba(51, 239, 184, ${0.75 * q * p})`;
+      ctx.strokeStyle = `rgba(112, 222, 52, ${0.75 * q * p})`;
       ctx.lineWidth = 1.3;
       ctx.beginPath();
       ctx.arc(5, 0, 6 + 30 * (1 - q), 0, TAU);
       ctx.stroke();
     }
-    ghostBall(ctx, 5, 0, 1.5 + 7.5 * p + Math.sin(clock * 48) * 0.6 * p, clock, 9);
+    // the ball of it between his jaws
+    const r = 2 + 9 * p;
+    for (let i = 0; i < 9; i++) {
+      const an = (i / 9) * TAU + clock * 5;
+      const out = r * (0.55 + 0.3 * Math.abs(Math.sin(clock * 13 + i * 2.1)));
+      stamp(ctx, i % 2 ? P.dark : P.bright, 5 + Math.cos(an) * out, Math.sin(an) * out, r * 0.8);
+    }
+    stamp(ctx, P.bright, 5, 0, r * 1.5);
+    stamp(ctx, P.pale, 5, 0, r * 1.1);
+    stamp(ctx, P.white, 5, 0, r * 0.65 * (0.9 + 0.2 * Math.random()));
     ctx.restore();
     return;
   }
   const since = b.t - m.charge;
-  const len = m.range * Math.min(1, since / 0.13);
+  // it runs on past the edge of the field, so its end is never seen
+  const len = (b.reach || m.range) * Math.min(1, since / 0.16);
   // it swells as it bursts out and thins away at the end
   const swell = Math.min(1, since / 0.1) * Math.min(1, (m.fire - since) / 0.3);
   const pulse = 1 + Math.sin(clock * 31) * 0.06 + (since < 0.22 ? 0.4 * (1 - since / 0.22) : 0);
-  const w = m.width * Math.max(0.02, swell) * pulse;
+  const tall = Math.max(0.05, swell) * pulse * (m.width / 14);
+  const fade = Math.max(0, Math.min(1, swell * 1.8));
 
-  // so that it fades out whole, and doesn't thin away to a bare dark line
-  ctx.globalAlpha = Math.max(0, Math.min(1, swell * 2.2));
-  ctx.lineJoin = 'round';
-  flamePath(ctx, len, w, { clock, gap: 34, speed: 230, lick: 0.34 });
-  ctx.strokeStyle = OUT;
-  ctx.lineWidth = 2.2; // half of it is covered by the fill
-  ctx.stroke();
-  ctx.fillStyle = GHOST.teal;
-  ctx.fill();
-  for (const [fill, k, gap, speed, lick] of [[GHOST.aqua, 0.66, 29, 320, 0.26], [GHOST.heart, 0.3, 25, 410, 0.18]]) {
-    flamePath(ctx, len - w * (1 - k) * 0.6, w * k, { clock, gap, speed, lick });
-    ctx.fillStyle = fill;
-    ctx.fill();
+  // the green light it throws round itself
+  ctx.globalAlpha = 0.34 * fade;
+  ctx.drawImage(F.cap, 0, 0, 32, 64, 16, -44 * tall, 44 * tall, 88 * tall);
+  ctx.drawImage(F.glow, 16 + 44 * tall, -44 * tall, Math.max(1, len - 16 - 44 * tall), 88 * tall);
+  // (only while it is still shooting out is there a far end to be seen)
+  if (since < 0.16) ctx.drawImage(F.cap, 32, 0, 32, 64, len - 0.5, -44 * tall, 44 * tall, 88 * tall);
+  // the stream thickens and thickens as it leaves him, then runs on at full strength
+  for (let i = 0; i < 6; i++) {
+    ctx.globalAlpha = fade * ((i + 1) / 7);
+    lay(ctx, F.body, 30 + i * 7, Math.min(len, 37 + i * 7), clock * 430, tall * (0.42 + i * 0.095));
+  }
+  ctx.globalAlpha = fade;
+  lay(ctx, F.body, 72, len, clock * 430, tall);
+
+  // puffs rolling off its sides, swelling and fading as they go, as they do at the edges of his fire
+  const loose = Math.min(46, Math.ceil(len / 19));
+  for (let i = 0; i < loose; i++) {
+    const span = len + 60;
+    const run = clock * (250 + 110 * pick(i, 4)) + pick(i, 5) * span;
+    const s = 34 + (run % span);
+    if (s > len) continue;
+    const age = (clock * (2.2 + pick(i, 6) * 1.6) + pick(i, 7)) % 1;
+    const side = i % 2 ? 1 : -1;
+    ctx.globalAlpha = fade * (1 - age * age) * 0.9;
+    stamp(ctx, i % 3 === 0 ? P.bright : P.dark, s, side * (10 + age * 15 + pick(i, 8) * 4) * tall, (4 + age * 7) * (0.7 + 0.6 * pick(i, 9)) * tall);
+  }
+  ctx.globalAlpha = fade;
+  lay(ctx, F.heart, 26, len, clock * 660, tall);
+
+  // out of his jaws: small and pale, swelling fast into the full torrent
+  for (let i = 15; i >= 0; i--) {
+    const s = (clock * 260 + i * 4.75) % 76;
+    const k = s / 76;
+    const id = Math.floor((clock * 260 + i * 4.75) / 76) * 16 + i;
+    const y = (pick(id % 997, 2) - 0.5) * 13 * k * tall;
+    ctx.globalAlpha = fade * (k > 0.8 ? (1 - k) / 0.2 : 1);
+    stamp(ctx, k < 0.3 ? P.pale : pick(id % 997, 3) < 0.34 && k > 0.55 ? P.dark : P.bright, s, y, (3.4 + 13 * k) * (0.85 + 0.3 * pick(id % 997, 1)) * tall);
+  }
+  ctx.globalAlpha = fade;
+  for (let i = 0; i < 7; i++) {
+    const s = (clock * 300 + i * 6.3) % 44;
+    stamp(ctx, i % 2 ? P.pale : P.white, s, Math.sin(clock * 37 + i * 2) * 1.8 * (s / 44), (3.2 + 4.4 * (s / 44)) * tall);
   }
   ctx.restore();
-}
-
-// the loose wisps that peel off and float up, each a little curling flame, tip first the way it is going
-function drawWisps(ctx, world) {
-  for (const s of world.wisps) {
-    const q = s.age / s.life;
-    const ahead = Math.atan2(s.vy, s.vx);
-    const sway = Math.sin(s.age * 11 + s.phase);
-    const size = s.size * (1 - q * 0.45);
-    ctx.globalAlpha = Math.min(1, s.age / 0.06) * (1 - q * q);
-    flameTongue(ctx, s.x, s.y, ahead + sway * 0.3, size * 5, size, sway * size * 2.2, GHOST.teal, 1.6);
-    flameTongue(ctx, s.x, s.y, ahead + sway * 0.3, size * 2.7, size * 0.46, sway * size * 1.2, GHOST.mint);
-  }
-  ctx.globalAlpha = 1;
 }
 
 // ---------------------------------------------------------------- his tail swipe
@@ -636,14 +672,6 @@ export function stepZordFx(world, dt) {
   if (!world.novas.every(live)) world.novas = world.novas.filter(live);
   if (!world.scorches.every(live)) world.scorches = world.scorches.filter(live);
   if (!world.trails.every(live)) world.trails = world.trails.filter(live);
-  for (const s of world.wisps) {
-    s.age += dt;
-    s.x += s.vx * dt;
-    s.y += s.vy * dt;
-    s.vx *= 0.95;
-    s.vy = s.vy * 0.95 - 90 * dt;
-  }
-  if (!world.wisps.every(live)) world.wisps = world.wisps.filter(live);
 }
 
 function drawNova(ctx, n) {
@@ -671,54 +699,109 @@ function tongue(ctx, x, y, w, h, lean, fill) {
   ctx.fill();
 }
 
+// The burning ground can be seventy patches at once, so a patch is not drawn shape by shape: its black stain, its glow
+// and a short loop of its three little flames are each drawn once, for a patch REF across, and stamped from then on.
+const REF = 8;
+const BEATS = 8;
+const SHARP = 4; // picture px to a unit
+const patchPictures = new Map();
+
+function picture(w, h, draw) {
+  const c = document.createElement('canvas');
+  c.width = w * SHARP;
+  c.height = h * SHARP;
+  const g = c.getContext('2d');
+  g.setTransform(SHARP, 0, 0, SHARP, (w / 2) * SHARP, h * SHARP);
+  draw(g);
+  return c;
+}
+
+function patchArt(green) {
+  let art = patchPictures.get(green);
+  if (art) return art;
+  const oval = (colour, rx, ry) => picture(rx * 2 + 2, ry * 2 + 2, (g) => {
+    g.translate(0, -ry - 1);
+    g.fillStyle = colour;
+    g.beginPath();
+    g.ellipse(0, 0, rx, ry, 0, 0, TAU);
+    g.fill();
+  });
+  art = {
+    stain: oval(green ? 'rgb(30, 74, 28)' : 'rgb(66, 46, 40)', REF, REF * 0.42),
+    glow: oval(green ? 'rgb(104, 228, 52)' : 'rgb(255, 140, 40)', REF * 0.72, REF * 0.3),
+    flames: Array.from({ length: BEATS }, (_, n) => picture(24, 24, (g) => {
+      g.translate(0, -4);
+      for (let i = 0; i < 3; i++) {
+        const beat = (n / BEATS) * TAU + i * 2.1;
+        const x = (i - 1) * REF * 0.52;
+        const h = REF * (i === 1 ? 1.35 : 0.9) * (green ? 1.25 : 1) * (1 + 0.24 * Math.sin(beat * (i === 1 ? 1 : 2)));
+        const lean = Math.sin(beat) * 1.4;
+        tongue(g, x, 0, REF * 0.26, h, lean, green ? '#3cb42c' : '#ff8a2e');
+        tongue(g, x, 0, REF * 0.14, h * 0.6, lean * 0.6, green ? '#e2ff8c' : '#ffd65c');
+      }
+    })),
+  };
+  patchPictures.set(green, art);
+  return art;
+}
+
 // under the units: the burning ground and the rings that race across it
 export function drawZordGround(ctx, world) {
   for (const s of world.scorches) {
-    const fade = Math.min(1, (s.life - s.age) / 0.9, s.age / 0.12);
-    ctx.fillStyle = s.ghost ? `rgba(18, 74, 70, ${0.24 * fade})` : `rgba(66, 46, 40, ${0.24 * fade})`;
-    ctx.beginPath();
-    ctx.ellipse(s.x, s.y, s.r, s.r * 0.42, 0, 0, TAU);
-    ctx.fill();
+    const fade = Math.max(0, Math.min(1, (s.life - s.age) / 0.9, s.age / 0.12));
+    const art = patchArt(!!s.ghost);
+    const k = s.r / REF / SHARP;
+    const put = (img, bottom, tall, alpha) => {
+      ctx.globalAlpha = alpha;
+      ctx.drawImage(img, s.x - (img.width * k) / 2, s.y + (bottom - img.height * tall) * k, img.width * k, img.height * k * tall);
+    };
+    put(art.stain, (art.stain.height / 2), 1, 0.24 * fade);
     const heat = Math.max(0, 1 - s.age / (s.life * 0.74));
     if (heat <= 0) continue;
-    ctx.fillStyle = s.ghost ? `rgba(40, 235, 180, ${0.36 * heat * fade})` : `rgba(255, 140, 40, ${0.34 * heat * fade})`;
-    ctx.beginPath();
-    ctx.ellipse(s.x, s.y, s.r * 0.72, s.r * 0.3, 0, 0, TAU);
-    ctx.fill();
-    ctx.globalAlpha = fade * Math.min(1, heat * 2.2);
-    for (let i = 0; i < 3; i++) {
-      const beat = s.age * (13 + i * 3) + s.seed + i * 2.1;
-      const x = s.x + (i - 1) * s.r * 0.52;
-      const h = s.r * (i === 1 ? 1.35 : 0.9) * (0.45 + heat * 0.55) * (1 + 0.24 * Math.sin(beat));
-      const lean = Math.sin(beat * 0.7) * 1.4;
-      tongue(ctx, x, s.y, s.r * 0.26, h * (s.ghost ? 1.25 : 1), lean, s.ghost ? '#0fb392' : '#ff8a2e');
-      tongue(ctx, x, s.y, s.r * 0.14, h * 0.6, lean * 0.6, s.ghost ? '#a4ffdf' : '#ffd65c');
-    }
-    ctx.globalAlpha = 1;
+    put(art.glow, (art.glow.height / 2), 1, 0.36 * heat * fade);
+    const tall = 0.45 + heat * 0.55;
+    put(art.flames[Math.floor(s.age * 17 + s.seed * 3) % BEATS], 4 * SHARP * tall, tall, fade * Math.min(1, heat * 2.2));
   }
+  ctx.globalAlpha = 1;
   for (const n of world.novas) if (n.flat) drawNova(ctx, n);
   for (const k of world.missiles) drawLock(ctx, k);
+}
+
+const EMBER_INK = {
+  orange: ['255, 128, 30', '255, 238, 150'],
+  teal: ['30, 215, 170', '220, 255, 246'],
+  green: ['52, 176, 40', '232, 255, 168'],
+};
+
+function drawEmbers(ctx, embers) {
+  if (!embers.length) return;
+  const lots = new Map();
+  for (const e of embers) {
+    const kind = e.green ? 'green' : e.teal ? 'teal' : 'orange';
+    const bright = Math.ceil(Math.max(0, 1 - (e.age / e.life) ** 2) * 4);
+    if (!bright) continue;
+    const key = `${kind}|${bright}`;
+    let path = lots.get(key);
+    if (!path) lots.set(key, (path = new Path2D()));
+    path.moveTo(e.x - e.vx * 0.024, e.y - e.vy * 0.024);
+    path.lineTo(e.x, e.y);
+  }
+  ctx.lineCap = 'round';
+  for (const [key, path] of lots) {
+    const [kind, bright] = key.split('|');
+    for (const [i, wide, most] of [[0, 1.9, 0.9], [1, 0.8, 1]]) {
+      ctx.strokeStyle = `rgba(${EMBER_INK[kind][i]}, ${(most * bright) / 4})`;
+      ctx.lineWidth = wide;
+      ctx.stroke(path);
+    }
+  }
 }
 
 // over the units: the rings in the air and the embers
 export function drawZordAir(ctx, world) {
   for (const u of world.units) if (u.beam && !u.dead && u.def.beam) drawBeam(ctx, u);
-  drawWisps(ctx, world);
   drawTrails(ctx, world);
   for (const k of world.missiles) drawMissile(ctx, k);
   for (const n of world.novas) if (!n.flat) drawNova(ctx, n);
-  ctx.lineCap = 'round';
-  for (const e of world.embers) {
-    const fade = 1 - (e.age / e.life) ** 2;
-    const x = e.x - e.vx * 0.024;
-    const y = e.y - e.vy * 0.024;
-    for (const [col, wide] of [[e.teal ? `rgba(30, 215, 170, ${0.85 * fade})` : `rgba(255, 128, 30, ${0.9 * fade})`, 1.9], [e.teal ? `rgba(220, 255, 246, ${fade})` : `rgba(255, 238, 150, ${fade})`, 0.8]]) {
-      ctx.strokeStyle = col;
-      ctx.lineWidth = wide;
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(e.x, e.y);
-      ctx.stroke();
-    }
-  }
+  drawEmbers(ctx, world.embers);
 }

@@ -498,7 +498,8 @@ export const MECHAZORD = {
   boom: 30,
   // his rare one, a huge beam from his jaws. Every `every` seconds he has only a `chance` of using it, and after he has,
   // none for a long while. charge / fire: how long each part lasts; width: half the beam's width; sweep: how fast it can
-  // swing once firing (radians a second)
+  // swing once firing (radians a second). range: how near someone must be for him to start it; once it is out it runs
+  // clean off the edge of the field
   beam: { every: 4, chance: 0.14, cooldown: [24, 34], range: 400, width: 14, dps: 200, charge: 1.15, fire: 1.35, sweep: 0.4 },
   // his third attack: a sweep of the tail along the ground. It does no damage; whoever it catches is flipped off their
   // feet and lies stunned. first: seconds before he can; cooldown: between sweeps; reach: how far the tail gets;
