@@ -1,12 +1,13 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=253';
-import { buildCreatureArt } from './creatures.js?v=253';
-import { buildEggArt } from './art_eggs.js?v=253';
-import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=253';
-import { Sfx } from './sfx.js?v=253';
-import { World } from './world.js?v=253';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=253';
-import { buildUnitArt, drawDrop } from './art_units.js?v=253';
-import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=253';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=254';
+import { buildCreatureArt } from './creatures.js?v=254';
+import { buildEggArt } from './art_eggs.js?v=254';
+import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=254';
+import { Sfx } from './sfx.js?v=254';
+import { World } from './world.js?v=254';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=254';
+import { buildUnitArt, drawDrop } from './art_units.js?v=254';
+import { drawGibbonHatWorn } from './gibbon.js?v=254';
+import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=254';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -1185,11 +1186,19 @@ function drawSpirit(g, t, alpha) {
   ctx.arc(face * 1.6, 4.1, 1.2, 0, TAU);
   ctx.fill();
   // still wearing the hat, a touch askew
-  ctx.translate(0, -8.6);
-  ctx.rotate(-0.09 * face);
-  ctx.scale(face * 0.82, 0.82);
   ctx.globalAlpha = Math.max(0, alpha * 0.86);
-  drawDrop(ctx, g.species);
+  if (g.species === 'gibbondore') {
+    // its brim sits round the top of the ghost's head, clear of the face
+    ctx.translate(face * 0.4, -8.9);
+    ctx.rotate(-0.09 * face);
+    ctx.scale(face * 0.64, 0.64);
+    drawGibbonHatWorn(ctx);
+  } else {
+    ctx.translate(0, -8.6);
+    ctx.rotate(-0.09 * face);
+    ctx.scale(face * 0.82, 0.82);
+    drawDrop(ctx, g.species);
+  }
   ctx.restore();
 }
 

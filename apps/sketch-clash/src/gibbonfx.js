@@ -1,15 +1,17 @@
 // Gibbondore The Great: how he fights, and what his magic does to the world.
 // Like the original's ape he goes straight in and hits the ground hard enough to send everyone flying; being a gibbon
 // he also swings himself across the gap in one great leap, and being a wizard he throws stars from his staff on the way.
-import { TAU, K, FEET } from './config.js?v=253';
+import { TAU, K, FEET } from './config.js?v=254';
+import { OUT } from './sprites.js?v=254';
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const lerp = (a, b, t) => a + (b - a) * t;
 // where the orb of his staff is as he lets a spell go, in his own art px
-const ORB = { x: 67, y: -30 };
+const ORB = { x: 96, y: -42 };
 
 export function resetGibbonFx(world) {
   world.storms = [];
+  world.zapMarks = [];
   world.stars = [];
   world.quakes = [];
   world.glints = [];
@@ -98,12 +100,15 @@ function burst(world, s) {
 // He beats the ground with his staff twice, and on the second blow lightning comes down out of the sky on the six
 // enemies nearest him, one hard on the heels of another.
 export const STORM = { tap1: 0.36, tap2: 0.8, strike: 0.9, time: 1.45 };
-const GAP = 0.05; // between one bolt and the next
-const GLOW = 0.36; // how long each is seen
+const LEAD = 0.14; // the sky darkens and each bolt feels its way down before it hits
+const GAP = 0.065; // between one bolt and the next
+const GLOW = 0.46; // how long each is seen
+const CRAWL = 0.7; // how long sparks go on crawling over whoever was struck
+const UP = 0.24; // the bolt that leaps from his staff into the sky
 
 // where the end of his staff lands in the slam pose
 function staffEnd(u) {
-  return { x: u.x + u.facing * 62 * K * u.def.scale, y: u.y + FEET };
+  return { x: u.x + u.facing * 92 * K * u.def.scale, y: u.y + FEET };
 }
 
 function tap(world, u, big) {
@@ -121,8 +126,13 @@ function callDown(world, u) {
   const all = [];
   world.eachEnemyNear(u.side, u.x, u.y, 3000, (o) => all.push(o));
   all.sort((a, b) => Math.hypot(a.x - u.x, a.y - u.y) - Math.hypot(b.x - u.x, b.y - u.y));
-  const bolts = all.slice(0, m.targets).map((o, i) => ({ o, x: o.x, y: o.y, at: i * GAP, struck: false }));
-  if (bolts.length) world.storms.push({ bolts, age: 0, life: (bolts.length - 1) * GAP + GLOW, owner: u });
+  const bolts = all.slice(0, m.targets).map((o, i) => ({ o, x: o.x, y: o.y, at: LEAD + i * GAP, struck: false, seed: Math.floor(Math.random() * 9000) }));
+  if (!bolts.length) return;
+  // where the orb is as he holds the staff to the sky
+  const orb = { x: u.x + u.facing * 17 * K * u.def.scale, y: u.y + FEET + (-124 * K - FEET) * u.def.scale };
+  world.storms.push({ bolts, age: 0, life: LEAD + (bolts.length - 1) * GAP + Math.max(GLOW, CRAWL), owner: u, orb, seed: Math.floor(Math.random() * 9000) });
+  glints(world, orb.x, orb.y, 14, 120);
+  if (world.sfx) world.sfx('zap', orb.x);
 }
 
 function stepStorm(world, u, dt) {
@@ -143,7 +153,12 @@ function stepStorms(world, dt) {
       const o = bolt.o;
       bolt.x = o.x;
       bolt.y = o.y;
-      glints(world, o.x, o.y + FEET * 0.5, 8, 95);
+      glints(world, o.x, o.y + FEET * 0.5, 14, 130);
+      world.zapMarks.push({ x: o.x, y: o.y + FEET * 0.85, age: 0, life: 2.4, seed: bolt.seed });
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * TAU + Math.random();
+        world.puffs.push({ x: o.x + Math.cos(a) * 5, y: o.y + FEET * 0.7 + Math.sin(a) * 2.4, vx: Math.cos(a) * 30, vy: Math.sin(a) * 10 - 8, age: 0, life: rand(0.35, 0.6), size: rand(1.8, 3.2), dust: true });
+      }
       if (!o.dead) world.hurt(o, s.owner.def.storm.damage * rand(0.9, 1.1), o.x, o.y, 'blast', s.owner);
       world.hitProps(o.x, o.y, 6, s.owner.def.storm.damage * 0.5);
       if (world.sfx) {
@@ -155,62 +170,365 @@ function stepStorms(world, dt) {
   if (world.storms.some((s) => s.age >= s.life)) world.storms = world.storms.filter((s) => s.age < s.life);
 }
 
-// one bolt from above the top of the screen down to (x, y), a new shape every frame, with forks off it
-function lightning(ctx, x, y, a) {
-  const top = -40;
-  const steps = Math.max(5, Math.ceil((y - top) / 15));
-  const pts = [[x, y]];
-  let px = x;
-  for (let i = 1; i <= steps; i++) {
-    px += (Math.random() - 0.5) * 15 + (x - px) * 0.12;
-    pts.push([px, y + ((top - y) * i) / steps + (i < steps ? (Math.random() - 0.5) * 7 : 0)]);
+// the same string of numbers every time for the same seed, so a bolt can hold its shape for a few frames
+const rnd = (seed, i) => {
+  const v = Math.sin(seed * 12.9898 + i * 78.233) * 43758.5453;
+  return v - Math.floor(v);
+};
+
+// a hard zig-zag from (x0, y0) to (x1, y1), kinking to one side and then the other
+function zigzag(x0, y0, x1, y1, seed, kink, step = 21) {
+  const len = Math.hypot(x1 - x0, y1 - y0) || 1;
+  const nx = -(y1 - y0) / len;
+  const ny = (x1 - x0) / len;
+  const n = Math.max(3, Math.round(len / step));
+  const pts = [[x0, y0]];
+  for (let i = 1; i < n; i++) {
+    const q = (i + (rnd(seed, i + 40) - 0.5) * 0.5) / n;
+    // it settles onto its mark as it nears the ground
+    const off = (i % 2 ? 1 : -1) * kink * (0.35 + 0.65 * rnd(seed, i)) * Math.min(1, (1 - q) * 3.2);
+    pts.push([x0 + (x1 - x0) * q + nx * off, y0 + (y1 - y0) * q + ny * off]);
   }
-  const forks = [];
-  for (let i = 2; i < pts.length - 1; i += 3) {
-    const dir = Math.random() < 0.5 ? -1 : 1;
-    const [fx, fy] = pts[i];
-    forks.push([[fx, fy], [fx + dir * (7 + Math.random() * 6), fy + 5 + Math.random() * 6], [fx + dir * (10 + Math.random() * 9), fy + 15 + Math.random() * 9]]);
+  pts.push([x1, y1]);
+  return pts;
+}
+
+// the shape of a bolt: `w0` half as wide where it starts, down to `w1`, and drawn out to a point at its end
+function ribbon(ctx, pts, w0, w1) {
+  const left = [];
+  const right = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[Math.max(0, i - 1)];
+    const b = pts[i + 1];
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    const nx = -(b[1] - a[1]) / len;
+    const ny = (b[0] - a[0]) / len;
+    const w = w0 + (w1 - w0) * (i / (pts.length - 1));
+    left.push([pts[i][0] + nx * w, pts[i][1] + ny * w]);
+    right.push([pts[i][0] - nx * w, pts[i][1] - ny * w]);
   }
-  const trace = (line) => {
+  ctx.moveTo(...left[0]);
+  for (const [x, y] of left) ctx.lineTo(x, y);
+  ctx.lineTo(...pts[pts.length - 1]);
+  for (let i = right.length - 1; i >= 0; i--) ctx.lineTo(...right[i]);
+  ctx.closePath();
+}
+
+function trace(ctx, pts) {
+  ctx.beginPath();
+  for (const [x, y] of pts) ctx.lineTo(x, y);
+  ctx.stroke();
+}
+
+// flat yellow with a white-hot middle, inside the same dark line as everything else in the game. `list` is any number
+// of [points, w0, w1], all drawn in one go
+function boltShapes(ctx, list, edge = 1) {
+  const all = (a, b) => {
     ctx.beginPath();
-    line.forEach(([qx, qy], i) => (i ? ctx.lineTo(qx, qy) : ctx.moveTo(qx, qy)));
-    ctx.stroke();
+    for (const [pts, w0, w1] of list) ribbon(ctx, pts, w0 * a, w1 * b);
   };
+  all(1, 1);
+  if (edge > 0.05) {
+    ctx.lineJoin = 'miter';
+    ctx.miterLimit = 4;
+    ctx.strokeStyle = OUT;
+    ctx.lineWidth = 2.2 * edge; // half of it is covered by the fill
+    ctx.stroke();
+  }
+  ctx.fillStyle = '#ffd51a';
+  ctx.fill();
+  all(0.46, 0.4);
+  ctx.fillStyle = '#fffbe2';
+  ctx.fill();
+}
+
+const boltShape = (ctx, pts, w0, w1, edge) => boltShapes(ctx, [[pts, w0, w1]], edge);
+
+// thin crackles of electricity, any number of lines at once: gold edge, yellow, white thread
+function crackle(ctx, lines, wide) {
   ctx.lineJoin = 'miter';
   ctx.lineCap = 'round';
-  // a soft yellow glow, a deep gold edge so it shows on the white field, bright yellow, and a white-hot thread
-  for (const [col, wide] of [[`rgba(255, 214, 40, ${0.28 * a})`, 10], [`rgba(214, 140, 0, ${a})`, 4.4], [`rgba(255, 216, 24, ${a})`, 3], [`rgba(255, 253, 224, ${a})`, 1.1]]) {
+  ctx.beginPath();
+  for (const pts of lines) {
+    ctx.moveTo(...pts[0]);
+    for (const [x, y] of pts) ctx.lineTo(x, y);
+  }
+  for (const [col, k] of [['#d88a00', 2.6], ['#ffd51a', 1.6], ['#fffbe2', 0.6]]) {
     ctx.strokeStyle = col;
-    ctx.lineWidth = wide * (0.6 + 0.4 * a);
-    trace(pts);
-    ctx.lineWidth = wide * 0.45 * (0.6 + 0.4 * a);
-    forks.forEach(trace);
+    ctx.lineWidth = wide * k;
+    ctx.stroke();
   }
 }
 
+// A great bolt is a lot of shapes, so each is drawn once into a picture and stamped from then on. The picture holds a
+// straight run of it, TALL long with its point at the foot; a strike uses as much of the foot as it needs and leans it
+// to fit. Six different ones, each as it strikes (lined in dark, thin arcs twisting about it) and as it dies (bare light)
+const SHAPES = 6;
+const TALL = 700;
+const HALF = 52; // half the picture's width
+const SHARP = 2.5; // picture px to a world unit
+const boltPictures = new Map();
+
+function boltPicture(n, striking) {
+  const key = n * 2 + (striking ? 1 : 0);
+  let c = boltPictures.get(key);
+  if (c) return c;
+  c = document.createElement('canvas');
+  c.width = HALF * 2 * SHARP;
+  c.height = (TALL + 6) * SHARP;
+  const g = c.getContext('2d');
+  g.setTransform(SHARP, 0, 0, SHARP, HALF * SHARP, 0);
+  const seed = 211 + n * 97;
+  const pts = zigzag(0, 0, 0, TALL, seed, 9);
+  const edge = striking ? 1 : 0;
+  g.lineCap = 'round';
+  g.lineJoin = 'round';
+  for (const [col, wide] of [['rgba(255, 222, 60, 0.2)', 24], ['rgba(255, 232, 90, 0.34)', 14]]) {
+    g.strokeStyle = col;
+    g.lineWidth = wide;
+    trace(g, pts);
+  }
+  if (striking) crackle(g, [0, 1].map((side) => zigzag(side ? 10 : -10, 0, 0, TALL, seed + 101 + side * 53, 11, 15)), 0.6);
+  // forks, splitting off downward
+  const forks = [];
+  for (let i = 2; i < pts.length - 1; i += 2) {
+    const dir = rnd(seed, i + 7) < 0.5 ? -1 : 1;
+    const [fx, fy] = pts[i];
+    const ex = fx + dir * (15 + rnd(seed, i + 9) * 17);
+    const ey = Math.min(TALL + 4, fy + 16 + rnd(seed, i + 11) * 22);
+    forks.push([zigzag(fx, fy, ex, ey, seed + i, 4.5, 10), 2.1, 0.7]);
+  }
+  boltShapes(g, forks, edge);
+  boltShape(g, pts, 7.8, 3.4, edge);
+  boltPictures.set(key, c);
+  return c;
+}
+
+// one great bolt from above the top of the screen down to (x, y). It changes shape every few frames, blinks once as it
+// strikes a second time down the same path, and dies away as light
+function lightning(ctx, x, y, since, seed) {
+  const blink = since > 0.1 && since < 0.145 ? 0.25 : 1;
+  const a = (since < 0.3 ? 1 : Math.max(0, 1 - (since - 0.3) / (GLOW - 0.3))) * blink;
+  if (a <= 0) return;
+  const n = (seed + Math.floor(Math.min(since, 0.24) / 0.06)) % SHAPES;
+  const top = -40;
+  const lean = (rnd(seed, 3) - 0.5) * 36;
+  const len = Math.max(20, y - top);
+  const run = Math.min(TALL, len);
+  const lined = Math.max(0, Math.min(1, 1 - (since - 0.24) / 0.1));
+  ctx.save();
+  // (leant over so its head is `lean` to one side and its point is on the mark)
+  ctx.transform(1, 0, -lean / run, len / run, x + lean, top);
+  for (const [striking, alpha] of [[false, a * (1 - lined)], [true, a * lined]]) {
+    if (alpha <= 0.01) continue;
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(boltPicture(n, striking), 0, (TALL - run) * SHARP, HALF * 2 * SHARP, (run + 5) * SHARP, -HALF, 0, HALF * 2, run + 5);
+  }
+  ctx.restore();
+}
+
+// before it hits, a faint thread feels its way down toward the one it is after
+function leader(ctx, x, y, q, seed, clock) {
+  const pts = zigzag(x + (rnd(seed, 3) - 0.5) * 36, -40, x, y, seed + Math.floor(clock * 30), 8, 14);
+  const n = Math.max(2, Math.ceil(pts.length * q));
+  ctx.save();
+  ctx.globalAlpha = 0.35 + 0.45 * q;
+  crackle(ctx, [pts.slice(0, n)], 0.7);
+  ctx.restore();
+}
+
+// the crack where it lands: a jagged burst, outlined, with sharp shards flying out of it
+function impact(ctx, x, y, since, seed) {
+  if (since > 0.3) return;
+  const p = since / 0.3;
+  const grow = Math.min(1, since / 0.05);
+  ctx.save();
+  ctx.globalAlpha = p < 0.6 ? 1 : 1 - (p - 0.6) / 0.4;
+  ctx.lineJoin = 'miter';
+  for (const [fill, k, line] of [['#ffd51a', 1, 2], ['#fffbe2', 0.5, 0]]) {
+    ctx.beginPath();
+    for (let i = 0; i < 18; i++) {
+      const an = (i / 18) * TAU + rnd(seed, 2) * 3;
+      const r = (i % 2 ? 4.2 : 9 + 8 * rnd(seed, i + 20)) * k * grow;
+      ctx.lineTo(x + Math.cos(an) * r, y + Math.sin(an) * r * 0.62);
+    }
+    ctx.closePath();
+    if (line) {
+      ctx.strokeStyle = OUT;
+      ctx.lineWidth = line;
+      ctx.stroke();
+    }
+    ctx.fillStyle = fill;
+    ctx.fill();
+  }
+  const out = 1 - (1 - p) ** 2;
+  const shards = [];
+  for (let i = 0; i < 7; i++) {
+    const an = (i / 7) * TAU + rnd(seed, i + 60);
+    const r = 12 + 26 * out;
+    const px = x + Math.cos(an) * r;
+    const py = y + Math.sin(an) * r * 0.55 - Math.sin(p * Math.PI) * 9;
+    shards.push([[[px, py], [px + Math.cos(an) * 3 - 1.6, py + Math.sin(an) * 2], [px + Math.cos(an) * 5 + 1.6, py + Math.sin(an) * 3], [px + Math.cos(an) * 9, py + Math.sin(an) * 5]], 1.5 * (1 - p), 0.6 * (1 - p)]);
+  }
+  boltShapes(ctx, shards, p < 0.55 ? 1 : 0);
+  ctx.restore();
+}
+
+// whoever it hit goes on sparking for a moment
+function crawl(ctx, bolt, since) {
+  if (since > CRAWL) return;
+  const o = bolt.o;
+  const x = o.dead ? bolt.x : o.x;
+  const y = (o.dead ? bolt.y : o.y) - 1;
+  const r = (o.def.radius || 6) + 3;
+  const seed = bolt.seed + Math.floor(since / 0.055) * 31;
+  ctx.save();
+  ctx.globalAlpha = 1 - (since / CRAWL) ** 3;
+  const arcs = [];
+  for (let i = 0; i < 2; i++) {
+    const a0 = rnd(seed, i) * TAU;
+    const pts = [];
+    for (let j = 0; j < 5; j++) {
+      const an = a0 + j * 0.42;
+      const k = 0.72 + 0.6 * rnd(seed, i * 7 + j + 3);
+      pts.push([x + Math.cos(an) * r * k, y + Math.sin(an) * r * 0.9 * k]);
+    }
+    arcs.push(pts);
+  }
+  crackle(ctx, arcs, 0.7);
+  ctx.restore();
+}
+
+let cloudGlow = null;
+function makeCloudGlow() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 96;
+  const g = c.getContext('2d');
+  const gr = g.createRadialGradient(48, 48, 2, 48, 48, 48);
+  gr.addColorStop(0, 'rgba(255, 246, 170, 0.95)');
+  gr.addColorStop(1, 'rgba(255, 220, 60, 0)');
+  g.fillStyle = gr;
+  g.fillRect(0, 0, 96, 96);
+  return c;
+}
+
+// dark thunderheads along the top of the screen over everyone who is about to be struck, run together into one
+function clouds(ctx, s) {
+  const grow = Math.min(1, s.age / LEAD);
+  const last = s.bolts[s.bolts.length - 1].at + GLOW;
+  const fade = s.age < last - 0.16 ? 1 : Math.max(0, 1 - (s.age - last + 0.16) / 0.3);
+  if (fade <= 0) return;
+  const puffs = [];
+  for (const b of s.bolts) {
+    const cx = b.x + (rnd(b.seed, 3) - 0.5) * 36;
+    for (const [dx, dy, r] of [[-27, 0, 11], [-13, 6, 15], [3, 2, 19], [18, 7, 13], [30, 0, 10]]) {
+      puffs.push([cx + dx * grow, dy + Math.sin(s.age * 9 + dx) * 0.8 - 14 * (1 - grow), r * (0.5 + 0.5 * grow)]);
+    }
+  }
+  ctx.save();
+  ctx.globalAlpha = fade * 0.96;
+  const all = (extra) => {
+    ctx.beginPath();
+    for (const [x, y, r] of puffs) {
+      ctx.moveTo(x + r + extra, y);
+      ctx.arc(x, y, r + extra, 0, TAU);
+    }
+    ctx.fill();
+  };
+  ctx.fillStyle = OUT;
+  all(1.2);
+  ctx.fillStyle = '#4b4570';
+  all(0);
+  ctx.fillStyle = '#625b8c';
+  ctx.beginPath();
+  for (const [x, y, r] of puffs) {
+    ctx.moveTo(x - 2 + r * 0.66, y - 3);
+    ctx.arc(x - 2, y - 3, r * 0.66, 0, TAU);
+  }
+  ctx.fill();
+  // they light up from inside as each bolt leaves them
+  for (const b of s.bolts) {
+    const since = s.age - b.at;
+    if (since < 0 || since > 0.2) continue;
+    const cx = b.x + (rnd(b.seed, 3) - 0.5) * 36;
+    if (!cloudGlow) cloudGlow = makeCloudGlow();
+    ctx.globalAlpha = fade * (1 - since / 0.2);
+    ctx.drawImage(cloudGlow, cx - 30, -21, 60, 60);
+  }
+  ctx.restore();
+}
+
+// the whole field blinks pale with the thunder: one blink at a time, however many storms are breaking
+function thunderFlash(ctx, storms) {
+  let flash = 0;
+  for (const s of storms) {
+    for (const b of s.bolts) {
+      const since = s.age - b.at;
+      if (since >= 0 && since < 0.12) flash = Math.max(flash, 1 - since / 0.12);
+    }
+  }
+  if (flash <= 0) return;
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = `rgba(255, 236, 130, ${0.1 * flash})`;
+  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.restore();
+}
+
 function drawStormAir(ctx, s) {
-  for (const bolt of s.bolts) {
-    if (!bolt.struck) continue;
-    const since = s.age - bolt.at;
-    if (since > GLOW) continue;
-    const a = 1 - (since / GLOW) ** 2;
-    const y = bolt.y + FEET * 0.45;
-    lightning(ctx, bolt.x, y, a);
-    // the crack where it lands
-    ctx.fillStyle = `rgba(255, 220, 40, ${0.85 * a})`;
+  const clock = performance.now() / 1000;
+  // up from his staff first
+  if (s.age < UP) {
+    const k = 1 - (s.age / UP) ** 2;
+    const pts = zigzag(s.orb.x, s.orb.y, s.orb.x + (rnd(s.seed, 5) - 0.5) * 30, -40, s.seed + Math.floor(s.age / 0.05) * 13, 7, 15);
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, k * 1.5);
+    boltShape(ctx, pts, 3.4 * (0.5 + 0.5 * k), 1.6 * k, Math.max(0, (k - 0.55) / 0.45));
+    ctx.restore();
+  }
+  for (const b of s.bolts) {
+    const since = s.age - b.at;
+    const y = b.y + FEET * 0.45;
+    if (since < 0) {
+      if (since > -LEAD) leader(ctx, b.struck || b.o.dead ? b.x : b.o.x, (b.o.dead ? b.y : b.o.y) + FEET * 0.45, 1 + since / LEAD, b.seed, clock);
+      continue;
+    }
+    if (!b.struck) continue;
+    if (since <= GLOW) lightning(ctx, b.x, y, since, b.seed);
+    impact(ctx, b.x, y, since, b.seed);
+    crawl(ctx, b, since);
+  }
+  clouds(ctx, s);
+}
+
+// under the units: the burnt patch each bolt leaves in the ground
+function drawZapMarks(ctx, world) {
+  for (const m of world.zapMarks) {
+    const fade = m.age < m.life * 0.55 ? 1 : 1 - (m.age - m.life * 0.55) / (m.life * 0.45);
+    const hot = Math.max(0, 1 - m.age / 0.5);
+    ctx.lineJoin = 'miter';
+    ctx.lineCap = 'round';
+    ctx.fillStyle = `rgba(66, 46, 40, ${0.34 * fade})`;
     ctx.beginPath();
     for (let i = 0; i < 14; i++) {
       const an = (i / 14) * TAU;
-      const r = i % 2 ? 2.6 : 6 + Math.random() * 6 * a;
-      if (i) ctx.lineTo(bolt.x + Math.cos(an) * r, y + Math.sin(an) * r * 0.62);
-      else ctx.moveTo(bolt.x + Math.cos(an) * r, y + Math.sin(an) * r * 0.62);
+      const r = (i % 2 ? 7.5 : 11 + 4 * rnd(m.seed, i));
+      ctx.lineTo(m.x + Math.cos(an) * r, m.y + Math.sin(an) * r * 0.42);
     }
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = `rgba(255, 253, 228, ${a})`;
-    ctx.beginPath();
-    ctx.ellipse(bolt.x, y, 3.2 * a + 0.6, 2 * a + 0.4, 0, 0, TAU);
-    ctx.fill();
+    // for a moment the cracks round it still glow
+    if (hot <= 0) continue;
+    for (let i = 0; i < 5; i++) {
+      const an = (i / 5) * TAU + rnd(m.seed, i + 30);
+      const len = 14 + 7 * rnd(m.seed, i + 35);
+      const pts = zigzag(m.x + Math.cos(an) * 5, m.y + Math.sin(an) * 2.1, m.x + Math.cos(an) * len, m.y + Math.sin(an) * len * 0.42, m.seed + i, 1.8, 4);
+      for (const [col, wide] of [[`rgba(216, 138, 0, ${hot})`, 1.8], [`rgba(255, 224, 60, ${hot})`, 0.8]]) {
+        ctx.strokeStyle = col;
+        ctx.lineWidth = wide;
+        trace(ctx, pts);
+      }
+    }
   }
 }
 
@@ -300,6 +618,8 @@ export function stepGibbon(world, u, dt) {
 
 export function stepGibbonFx(world, dt) {
   stepStorms(world, dt);
+  for (const m of world.zapMarks) m.age += dt;
+  if (world.zapMarks.some((m) => m.age >= m.life)) world.zapMarks = world.zapMarks.filter((m) => m.age < m.life);
   for (const s of world.stars) {
     if (s.wait > 0) {
       s.wait -= dt;
@@ -373,6 +693,7 @@ function fivePoint(ctx, x, y, r, turn) {
 
 // under the units: the ground he has struck, cracked, with a ring of gold light racing out across it
 export function drawGibbonGround(ctx, world) {
+  drawZapMarks(ctx, world);
   for (const q of world.quakes) {
     if (q.air) continue;
     const p = q.age / q.life;
@@ -397,7 +718,6 @@ export function drawGibbonGround(ctx, world) {
 
 // over the units: his stars, where they burst, and the gold sparks
 export function drawGibbonAir(ctx, world) {
-  for (const s of world.storms) drawStormAir(ctx, s);
   for (const s of world.stars) {
     if (s.wait > 0) continue;
     for (let i = 0; i < s.trail.length; i++) {
@@ -439,4 +759,6 @@ export function drawGibbonAir(ctx, world) {
       ctx.stroke();
     }
   }
+  thunderFlash(ctx, world.storms);
+  for (const s of world.storms) drawStormAir(ctx, s);
 }

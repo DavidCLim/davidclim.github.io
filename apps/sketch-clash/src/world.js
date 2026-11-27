@@ -1,9 +1,9 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=253';
-import { TerrainMap, WALL } from './terrain.js?v=253';
-import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordBeam, stepZordSwipe, stepZordFx } from './zordfx.js?v=253';
-import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=253';
-import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=253';
-import { installBeasts } from './beasts.js?v=253';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=254';
+import { TerrainMap, WALL } from './terrain.js?v=254';
+import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordBeam, stepZordSwipe, stepZordFx } from './zordfx.js?v=254';
+import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=254';
+import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=254';
+import { installBeasts } from './beasts.js?v=254';
 
 export const CELL = 32;
 const SEP_CELL = 20;

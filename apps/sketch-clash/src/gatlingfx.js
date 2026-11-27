@@ -1,6 +1,6 @@
 // The Gatling Trooper's effects in the world: his glowing tracer rounds, the brass that pours out of the cannon, bounces
 // and piles up, the sparks where his rounds strike, and the blast of his ammo drum when he goes. All of it is for show.
-import { TAU, FEET } from './config.js?v=253';
+import { TAU, FEET } from './config.js?v=254';
 
 const BRASS_MAX = 36;
 

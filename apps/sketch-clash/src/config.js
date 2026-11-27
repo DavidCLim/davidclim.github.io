@@ -445,7 +445,7 @@ export const GIBBONDORE = {
   storm: { first: 2.6, cooldown: [8, 10], range: 280, targets: 6, damage: 72 },
   scale: 1.2,
   ring: 1.7,
-  body: [25, 24, -6],
+  body: [34, 30, -14],
   pivot: { x: 0, y: 0 },
   muzzleLen: 0,
 };
@@ -481,7 +481,7 @@ export const MECHAZORD = {
   airborne: true, // like the dragon, he sometimes takes off and breathes fire from the air, sometimes he stays on the ground
   hoverH: 24,
   scale: 1.4, // of Robo Trooper's drawing; the trooper himself is 1.15, and not as broad
-  hp: 2200,
+  hp: 3300,
   mega: true, // his breath and his end come with their own effects (zordfx.js)
   radius: 10.5,
   sep: 17.5,
