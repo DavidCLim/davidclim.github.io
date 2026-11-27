@@ -1,14 +1,14 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=251';
-import { drawLayer, OUT } from './sprites.js?v=251';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt } from './art_units.js?v=251';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=251';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=251';
-import { drawZordGround, drawZordAir } from './zordfx.js?v=251';
-import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=251';
-import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=251';
-import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=251';
-import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=251';
-import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=251';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=253';
+import { drawLayer, OUT } from './sprites.js?v=253';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt } from './art_units.js?v=253';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=253';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=253';
+import { drawZordGround, drawZordAir } from './zordfx.js?v=253';
+import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=253';
+import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=253';
+import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=253';
+import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=253';
+import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=253';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the

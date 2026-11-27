@@ -1,9 +1,10 @@
 // MechaZaur's own part of the world: his missiles, and the effects that go with him (the shockwave as he lets loose, the
 // embers and heat rings in his breath, the ground it leaves burning, the great blast when he goes). Only the missiles
 // hurt anyone; the rest is for show.
-import { TAU, K, FEET } from './config.js?v=251';
-import { WATER } from './terrain.js?v=251';
-import { swipeTurn, SWIPE_BACK } from './zordlimbs.js?v=251';
+import { TAU, K, FEET } from './config.js?v=253';
+import { WATER } from './terrain.js?v=253';
+import { OUT } from './sprites.js?v=253';
+import { swipeTurn, SWIPE_BACK } from './zordlimbs.js?v=253';
 
 const TEAL = '70, 245, 200';
 const GOLD = '255, 196, 80';
@@ -142,7 +143,7 @@ function stepBeam(world, u, dt) {
     // wisps of it tear away and drift up
     b.wispT = (b.wispT || 0) - dt;
     while (b.wispT <= 0) {
-      b.wispT += 0.016;
+      b.wispT += 0.07;
       const along = 6 + Math.random() * Math.min(m.range, (b.t - m.charge) * 2600) * 0.9;
       const side = Math.random() < 0.5 ? -1 : 1;
       const off = side * m.width * (0.6 + Math.random() * 0.7);
@@ -183,13 +184,13 @@ export function stepZordBeam(world, u, dt) {
   return true;
 }
 
-// ---- the look of it: the spectral fire of a skeleton dinosaur. A white-mint heart, bright aqua flame and deep teal
-// edges, all in sharp curling tongues that stream back off it, with a dark teal haze and loose wisps round about.
-const GHOST = { haze: 'rgba(12, 140, 122, 0.1)', deep: '#08756a', teal: '#0fb392', aqua: '#33efb8', mint: '#a4ffdf', heart: '#effffa' };
+// ---- the look of it: the spectral fire of a skeleton dinosaur, drawn like everything else here: a dark outline round
+// flat colour. Teal tongues of flame lick forward along it round a bright aqua middle and a white-mint heart.
+const GHOST = { deep: '#08756a', teal: '#0fb392', aqua: '#33efb8', mint: '#a4ffdf', heart: '#effffa' };
 
 // one tongue of flame: round at its root (x, y) and drawn out along `ang`, swaying one way and then curling its sharp
 // tip over the other by `curl`
-function flameTongue(ctx, x, y, ang, len, wide, curl, fill) {
+function flameTongue(ctx, x, y, ang, len, wide, curl, fill, line = 0) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(ang);
@@ -199,6 +200,12 @@ function flameTongue(ctx, x, y, ang, len, wide, curl, fill) {
   ctx.bezierCurveTo(len * 0.42, -wide * 1.25 - curl * 0.55, len * 0.72, -wide * 0.2 + curl * 0.1, len, curl);
   ctx.bezierCurveTo(len * 0.74, curl * 0.5 + wide * 0.34, len * 0.38, wide * 1.2 - curl * 0.55, 0, wide);
   ctx.arc(0, 0, wide, Math.PI / 2, Math.PI * 1.5);
+  if (line) {
+    ctx.strokeStyle = OUT;
+    ctx.lineWidth = line;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+  }
   ctx.fill();
   ctx.restore();
 }
@@ -209,63 +216,50 @@ const pick = (i, k) => {
   return s - Math.floor(s);
 };
 
-// a long shape from the jaws along +x: narrow where it leaves, quickly full width, its edge a run of flame crests that
-// each swell forward to a point, fall away, and rush on down it
-function beamShape(ctx, len, wide, ripple, clock, fill) {
-  const edge = (x, side) => {
-    const roll = x / 31 - clock * 8.5 + (side > 0 ? 0.43 : 0) + Math.sin(x * 0.021 - clock * 4 + side) * 0.35;
-    const crest = (roll - Math.floor(roll)) ** 2.3;
-    const roll2 = x / 17 - clock * 15 + side * 0.21;
-    const small = (roll2 - Math.floor(roll2)) ** 2;
-    return side * wide * Math.min(1, 0.26 + x / 36) * (1 + ripple * (crest * 2.5 + small * 0.9 - 0.95));
+// The outline of the fire, along +x from the jaws: narrow where it leaves them, quickly full width, with one row of
+// tongues down each side, each swelling forward to a point that curls outward, all rushing away from him.
+const BACK = -4; // it starts just inside his mouth
+
+function flamePath(ctx, len, wide, o) {
+  const gone = o.clock * o.speed;
+  const at = (x, k) => Math.min(1, 0.24 + Math.max(0, x - BACK) / 44) * wide * k;
+  const tongues = (side) => {
+    const shift = gone + (side > 0 ? o.gap * 0.5 : 0);
+    const list = [];
+    for (let i = Math.ceil((8 - shift) / o.gap); i * o.gap + shift + o.gap * 1.1 < len; i++) {
+      const x = i * o.gap + shift;
+      const n = i * 2 + (side > 0 ? 1 : 0);
+      const reach = 1.2 + o.lick * pick(Math.abs(n % 97), 1) + 0.07 * Math.sin(o.clock * 19 + n * 2);
+      const tip = x + o.gap * 1.1;
+      const mid = x + o.gap * 0.72;
+      const fall = x + o.gap * 0.92;
+      list.push({
+        root: [x, side * at(x, 0.86)],
+        rise: [mid, side * at(mid, 0.9)],
+        tip: [tip, side * at(tip, reach)],
+        fall: [fall, side * at(fall, 1.04)],
+        next: [x + o.gap, side * at(x + o.gap, 0.86)],
+      });
+    }
+    return list;
   };
-  ctx.fillStyle = fill;
   ctx.beginPath();
-  ctx.moveTo(0, edge(0, -1));
-  for (let x = 3; x <= len; x += 3) ctx.lineTo(x, edge(x, -1));
-  ctx.quadraticCurveTo(len + wide * 1.6, 0, len, edge(len, 1));
-  for (let x = len; x >= 0; x -= 3) ctx.lineTo(x, edge(x, 1));
+  ctx.moveTo(BACK, -at(BACK, 1));
+  for (const t of tongues(-1)) {
+    ctx.lineTo(...t.root);
+    ctx.quadraticCurveTo(...t.rise, ...t.tip);
+    ctx.quadraticCurveTo(...t.fall, ...t.next);
+  }
+  // its rounded front end
+  ctx.lineTo(len, -at(len, 0.9));
+  ctx.quadraticCurveTo(len + wide * 1.5, 0, len, at(len, 0.9));
+  for (const t of tongues(1).reverse()) {
+    ctx.lineTo(...t.next);
+    ctx.quadraticCurveTo(...t.fall, ...t.tip);
+    ctx.quadraticCurveTo(...t.rise, ...t.root);
+  }
+  ctx.lineTo(BACK, at(BACK, 1));
   ctx.closePath();
-  ctx.fill();
-}
-
-// flames licking forward off both edges, curling outward at the tips
-function edgeFlames(ctx, len, w, clock, o) {
-  const count = Math.ceil(len / o.gap);
-  for (let i = 0; i < count; i++) {
-    for (const side of [-1, 1]) {
-      const n = i * 2 + (side > 0 ? 1 : 0) + o.seed;
-      const x = (i * o.gap + pick(n, 1) * o.gap + clock * o.speed) % len;
-      const near = Math.min(1, 0.2 + x / 40);
-      const sway = Math.sin(clock * (13 + pick(n, 2) * 9) + n);
-      flameTongue(ctx, x, side * w * o.out * near, side * (o.lean + sway * 0.17), w * (o.long + pick(n, 3) * o.long) * near, w * o.fat * (0.7 + pick(n, 4) * 0.6) * near, side * w * (0.34 + 0.3 * sway) * near, o.fill);
-    }
-  }
-}
-
-// big curling tongues that swell up out of it, hook over, tear away and are gone, each shaded in three flat tones
-function curlFlames(ctx, len, w, clock, swell) {
-  const count = Math.ceil(len / 30);
-  for (let i = 0; i < count; i++) {
-    for (const side of [-1, 1]) {
-      const n = i * 2 + (side > 0 ? 1 : 0) + 211;
-      const q = (clock * (1.5 + pick(n, 1)) + pick(n, 2)) % 1;
-      const x = i * 30 + pick(n, 3) * 26 + q * 58;
-      if (x > len) continue;
-      const near = Math.min(1, 0.15 + x / 55);
-      const grow = Math.sin(Math.PI * Math.min(1, 0.12 + q * 0.88));
-      const ang = side * (0.16 + q * 0.36);
-      const y = side * w * (0.78 + q * 0.5) * near;
-      const long = w * (1.7 + pick(n, 4) * 1.3) * near * (0.5 + 0.5 * grow);
-      const fat = w * (0.42 + pick(n, 5) * 0.24) * near * (0.45 + 0.55 * grow);
-      const hook = side * long * (0.4 + 0.22 * Math.sin(clock * 12 + n));
-      ctx.globalAlpha = Math.min(1, (1 - q) * 2.4) * Math.min(1, swell * 2);
-      flameTongue(ctx, x, y, ang, long, fat, hook, GHOST.deep);
-      flameTongue(ctx, x, y, ang, long * 0.78, fat * 0.7, hook * 0.72, GHOST.aqua);
-      flameTongue(ctx, x, y, ang, long * 0.48, fat * 0.36, hook * 0.4, GHOST.mint);
-    }
-  }
-  ctx.globalAlpha = 1;
 }
 
 // a ball of the fire, flames wheeling out of it
@@ -332,81 +326,20 @@ function drawBeam(ctx, u) {
   const pulse = 1 + Math.sin(clock * 31) * 0.06 + (since < 0.22 ? 0.4 * (1 - since / 0.22) : 0);
   const w = m.width * Math.max(0.02, swell) * pulse;
 
-  // the haze, and dark teal smoke boiling off it
-  beamShape(ctx, len, w * 2.2, 0.07, clock * 0.5, GHOST.haze);
-  beamShape(ctx, len, w * 1.65, 0.1, clock * 0.7, GHOST.haze);
-  for (let i = 0; i < 26; i++) {
-    const x = (pick(i, 5) * len + clock * (90 + pick(i, 6) * 90)) % len;
-    const q = (clock * (0.9 + pick(i, 7)) + pick(i, 8)) % 1;
-    const side = i % 2 ? 1 : -1;
-    ctx.fillStyle = `rgba(14, 104, 98, ${0.2 * (1 - q) * swell})`;
-    ctx.beginPath();
-    ctx.arc(x - q * 16, side * w * (1.2 + q * 1.5), w * (0.22 + q * 0.5), 0, TAU);
+  // so that it fades out whole, and doesn't thin away to a bare dark line
+  ctx.globalAlpha = Math.max(0, Math.min(1, swell * 2.2));
+  ctx.lineJoin = 'round';
+  flamePath(ctx, len, w, { clock, gap: 34, speed: 230, lick: 0.34 });
+  ctx.strokeStyle = OUT;
+  ctx.lineWidth = 2.2; // half of it is covered by the fill
+  ctx.stroke();
+  ctx.fillStyle = GHOST.teal;
+  ctx.fill();
+  for (const [fill, k, gap, speed, lick] of [[GHOST.aqua, 0.66, 29, 320, 0.26], [GHOST.heart, 0.3, 25, 410, 0.18]]) {
+    flamePath(ctx, len - w * (1 - k) * 0.6, w * k, { clock, gap, speed, lick });
+    ctx.fillStyle = fill;
     ctx.fill();
   }
-  // layer on layer of flame, the darkest and biggest underneath
-  edgeFlames(ctx, len, w, clock, { gap: 17, speed: 210, out: 0.9, lean: 0.34, long: 0.95, fat: 0.44, seed: 3, fill: GHOST.deep });
-  beamShape(ctx, len, w * 1.16, 0.22, clock, GHOST.deep);
-  edgeFlames(ctx, len, w, clock, { gap: 20, speed: 300, out: 0.78, lean: 0.28, long: 0.85, fat: 0.36, seed: 71, fill: GHOST.teal });
-  beamShape(ctx, len, w * 0.97, 0.22, clock + 0.035, GHOST.teal);
-  curlFlames(ctx, len, w, clock, swell);
-  edgeFlames(ctx, len, w, clock, { gap: 25, speed: 390, out: 0.6, lean: 0.28, long: 0.85, fat: 0.28, seed: 133, fill: GHOST.aqua });
-  beamShape(ctx, len, w * 0.72, 0.22, clock + 0.07, GHOST.aqua);
-  beamShape(ctx, len, w * 0.44, 0.2, clock + 0.105, GHOST.mint);
-  // quick licks of flame racing through the middle, so it reads as fire and not as a bar of light
-  for (let i = 0; i < 22; i++) {
-    const x = (pick(i, 9) * len + clock * (430 + pick(i, 10) * 190)) % len;
-    const y = (pick(i, 11) - 0.5) * w * 1.5 * Math.min(1, 0.3 + x / 40);
-    flameTongue(ctx, x, y, Math.sin(clock * 17 + i) * 0.16, w * (0.9 + pick(i, 12) * 1.1), w * (0.07 + pick(i, 13) * 0.09), Math.sin(clock * 21 + i * 3) * w * 0.2, i % 3 ? GHOST.mint : GHOST.teal);
-  }
-  beamShape(ctx, len, w * 0.22, 0.14, clock + 0.14, GHOST.heart);
-  // two cords of light twisting round it
-  for (const [phase, col] of [[0, GHOST.heart], [Math.PI, GHOST.mint]]) {
-    let prev = null;
-    for (let x = 8; x <= len; x += 5) {
-      const a = x * 0.062 - clock * 21 + phase;
-      const y = Math.sin(a) * w * 1.08 * Math.min(1, x / 44);
-      if (prev) {
-        const front = Math.cos(a) > 0;
-        ctx.globalAlpha = (front ? 0.95 : 0.28) * swell;
-        ctx.strokeStyle = col;
-        ctx.lineWidth = front ? 1.3 : 0.7;
-        ctx.beginPath();
-        ctx.moveTo(prev[0], prev[1]);
-        ctx.lineTo(x, y);
-        ctx.stroke();
-      }
-      prev = [x, y];
-    }
-  }
-  ctx.globalAlpha = 1;
-  // the blast as it leaves him
-  if (since < 0.4) {
-    const q = since / 0.4;
-    for (const k of [1, 0.62]) {
-      ctx.strokeStyle = `rgba(51, 239, 184, ${0.9 * (1 - q)})`;
-      ctx.lineWidth = 3.4 * (1 - q) + 0.5;
-      ctx.beginPath();
-      ctx.ellipse(8 + 20 * q * k, 0, 9 + 14 * q, (12 + 46 * q) * k, 0, 0, TAU);
-      ctx.stroke();
-    }
-  }
-  // the roaring ball of it at his jaws, and a hard glint across it
-  ghostBall(ctx, 10, 0, w * 0.7, clock, 11);
-  ctx.fillStyle = `rgba(239, 255, 250, ${0.9 * swell})`;
-  ctx.save();
-  ctx.translate(10, 0);
-  ctx.rotate(clock * 6);
-  ctx.beginPath();
-  for (let i = 0; i < 8; i++) {
-    const a = (i / 8) * TAU;
-    const r = i % 2 ? w * 0.12 : w * (i % 4 ? 0.9 : 1.55);
-    if (i) ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-    else ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
-  }
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
   ctx.restore();
 }
 
@@ -418,9 +351,8 @@ function drawWisps(ctx, world) {
     const sway = Math.sin(s.age * 11 + s.phase);
     const size = s.size * (1 - q * 0.45);
     ctx.globalAlpha = Math.min(1, s.age / 0.06) * (1 - q * q);
-    flameTongue(ctx, s.x, s.y, ahead + sway * 0.3, size * 6, size * 0.8, sway * size * 2.6, GHOST.deep);
-    flameTongue(ctx, s.x, s.y, ahead + sway * 0.3, size * 4.4, size * 0.54, sway * size * 1.9, GHOST.aqua);
-    flameTongue(ctx, s.x, s.y, ahead + sway * 0.3, size * 2.4, size * 0.27, sway * size * 1.1, GHOST.heart);
+    flameTongue(ctx, s.x, s.y, ahead + sway * 0.3, size * 5, size, sway * size * 2.2, GHOST.teal, 1.6);
+    flameTongue(ctx, s.x, s.y, ahead + sway * 0.3, size * 2.7, size * 0.46, sway * size * 1.2, GHOST.mint);
   }
   ctx.globalAlpha = 1;
 }

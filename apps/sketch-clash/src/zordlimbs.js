@@ -1,8 +1,8 @@
 // MechaZaur's long legs and long tail, drawn from the pencil sketch for them: each leg has a big round hip, a banded
 // thigh and shin and a foot with claws pointing down; the tail is a run of banded segments that ends in one long spike
 // and two curved blades. Drawn in Robo Trooper's coordinates (facing +x), and all painted live so they can move.
-import { TAU, K } from './config.js?v=251';
-import { OUT } from './sprites.js?v=251';
+import { TAU, K } from './config.js?v=253';
+import { OUT } from './sprites.js?v=253';
 
 export const ZORD_LIFT = 6; // how much higher his legs carry his body
 
