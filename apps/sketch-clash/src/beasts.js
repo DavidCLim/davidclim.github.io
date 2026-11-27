@@ -1,5 +1,5 @@
-import { TAU, FEET, GAIT } from './config.js?v=241';
-import { WATER, ICE, WALL } from './terrain.js?v=241';
+import { TAU, FEET, GAIT } from './config.js?v=242';
+import { WATER, ICE, WALL } from './terrain.js?v=242';
 
 // Everything the Animals and Mythical tabs add to the world, plus the terrain physics:
 // the beast brain, the mage's bolts, the necromancer's skeletons, zombie infection,
@@ -34,19 +34,69 @@ export function installBeasts(World) {
     if (!u.dead) this.applyTerrain(u, ox, oy, dt);
   };
 
+  // As on the original's banana peel: up and over in a somersault, flat on its back seeing stars, then up again.
+  // It does no damage, and while it lasts there is nothing the unit can do.
+  const FLIP = 0.55;
+  const DOWN = 1.45;
+  const RISE = 0.3;
+  const FLAT = -1.45;
+
+  P.trip = function (u, vx, vy) {
+    if (u.dead || u.slip > 0 || (u.rise !== undefined && u.rise < 1)) return false;
+    u.slip = FLIP + DOWN + RISE;
+    u.slipAge = 0;
+    u.slipV = [vx, vy];
+    u.tilt = -0.001;
+    u.tripDX = u.tripDY = 0;
+    // whatever it was in the middle of is lost
+    u.moving = u.atkHit = u.slamHit = u.castFire = u.charging = u.firing = u.laser = false;
+    u.burstLeft = u.castT = u.atk = u.slamT = u.throwT = u.drawT = u.aimT = u.prone = u.flyT = u.alt = u.salvo = u.chargeT = 0;
+    u.atkKind = null;
+    u.form = null;
+    return true;
+  };
+
   P.stepSlip = function (u, dt) {
     u.hit = Math.max(0, u.hit - dt);
     u.flash = Math.max(0, u.flash - dt);
     u.breath += dt;
     u.slip -= dt;
-    const k = Math.max(0, u.slip / 1.15);
-    u.x += u.slipV[0] * k * dt;
-    u.y += u.slipV[1] * k * dt;
-    // a full somersault about the feet
-    u.tilt = (1 - k) * TAU * -1;
+    const before = u.slipAge;
+    const age = (u.slipAge += dt);
+    const slide = Math.max(0, 1 - age / FLIP);
+    u.x += (u.slipV[0] * slide + (u.kx || 0)) * dt;
+    u.y += (u.slipV[1] * slide + (u.ky || 0)) * dt;
+    const decay = Math.max(0, 1 - dt * 5);
+    u.kx = (u.kx || 0) * decay;
+    u.ky = (u.ky || 0) * decay;
+    let angle = FLAT;
+    u.tripDX = u.tripDY = 0;
+    if (age < FLIP) {
+      const p = age / FLIP;
+      angle = (FLAT - TAU) * (p * (1.35 - 0.35 * p));
+      // it turns about its middle while it is in the air, and about its feet as it comes to lie
+      const mid = p < 0.72 ? 1 : 1 - (p - 0.72) / 0.28;
+      u.tripDX = -(u.facing || 1) * FEET * Math.sin(angle) * mid;
+      u.tripDY = (Math.cos(angle) - 1) * FEET * mid - Math.sin(Math.PI * p) * 17;
+    } else if (age >= FLIP + DOWN) {
+      const q = Math.min(1, (age - FLIP - DOWN) / RISE);
+      angle = FLAT * (1 - q * q);
+    }
+    if (before < FLIP && age >= FLIP) {
+      // flat on its back with a puff of dust
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * TAU;
+        this.puffs.push({ x: u.x + Math.cos(a) * 7, y: u.y + FEET + Math.sin(a) * 2.5, vx: Math.cos(a) * 26, vy: Math.sin(a) * 8 - 3, age: 0, life: 0.4, size: 1.6 + Math.random(), dust: true });
+      }
+      if (this.sfx) this.sfx('hit', u.x);
+    }
+    // (never exactly nothing: any tilt shows it with its lights out)
+    u.tilt = angle || -0.001;
     u.moving = false;
     if (u.slip <= 0) {
+      u.slip = 0;
       u.tilt = 0;
+      u.tripDX = u.tripDY = 0;
       u.stun = 0.35;
     }
     this.confine(u);

@@ -1,12 +1,12 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=241';
-import { buildCreatureArt } from './creatures.js?v=241';
-import { buildEggArt } from './art_eggs.js?v=241';
-import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=241';
-import { Sfx } from './sfx.js?v=241';
-import { World } from './world.js?v=241';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=241';
-import { buildUnitArt, drawDrop } from './art_units.js?v=241';
-import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=241';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=242';
+import { buildCreatureArt } from './creatures.js?v=242';
+import { buildEggArt } from './art_eggs.js?v=242';
+import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon } from './terrain.js?v=242';
+import { Sfx } from './sfx.js?v=242';
+import { World } from './world.js?v=242';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=242';
+import { buildUnitArt, drawDrop } from './art_units.js?v=242';
+import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=242';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -1104,6 +1104,42 @@ function drawBody(u) {
   else drawUnit(ctx, dpr, sprites, u);
 }
 
+// A unit swept off its feet: lifted through its somersault, then dizzy on its back with stars going round its head.
+function drawTripped(u) {
+  const { x, y } = u;
+  u.x += u.tripDX || 0;
+  u.y += u.tripDY || 0;
+  drawBody(u);
+  u.x = x;
+  u.y = y;
+  if (u.slipAge < 0.55 || u.slip < 0.3) return;
+  if (!u.def.robot && u.species !== 'gibbondore') {
+    placeUnit(ctx, dpr, u);
+    drawDizzyEyes(ctx, u);
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#f7cd3a';
+  ctx.strokeStyle = '#e0902a';
+  ctx.lineWidth = 0.6;
+  for (let i = 0; i < 3; i++) {
+    const ang = u.slipAge * 9 + (i / 3) * TAU;
+    // they circle over its head, further out and higher the bigger it is
+    const size = Math.max(1, Math.min(2.2, u.def.radius / 5.5));
+    const sx = u.x - u.facing * 9 * UNIT * size + Math.cos(ang) * 12 * UNIT * size;
+    const sy = u.y + FEET * 0.45 - 6 * size + Math.sin(ang) * 4 * UNIT * size;
+    ctx.beginPath();
+    for (let p = 0; p < 10; p++) {
+      const r = (p % 2 === 0 ? 4.2 : 1.8) * UNIT;
+      const q = (p / 10) * TAU - Math.PI / 2;
+      if (p === 0) ctx.moveTo(sx + Math.cos(q) * r, sy + Math.sin(q) * r);
+      else ctx.lineTo(sx + Math.cos(q) * r, sy + Math.sin(q) * r);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+}
+
 const GHOST_START = 0.33;
 
 function drawSpirit(g, t, alpha) {
@@ -1312,7 +1348,8 @@ function render() {
       drawLayer(ctx, sprites.ring[u.team]);
     }
     const inside = u.perch && u.perch.state !== 'walk';
-    if (!inside) drawBody(u);
+    if (!inside && u.slip > 0) drawTripped(u);
+    else if (!inside) drawBody(u);
     else if (u.perch.state === 'enter') {
       // slipping in at the door
       const q = Math.min(1, u.perch.t / u.def.perch.enter);

@@ -1,13 +1,14 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=241';
-import { drawLayer, OUT } from './sprites.js?v=241';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt } from './art_units.js?v=241';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=241';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=241';
-import { drawZordGround, drawZordAir } from './zordfx.js?v=241';
-import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=241';
-import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=241';
-import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=241';
-import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=241';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=242';
+import { drawLayer, OUT } from './sprites.js?v=242';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt } from './art_units.js?v=242';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=242';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=242';
+import { drawZordGround, drawZordAir } from './zordfx.js?v=242';
+import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=242';
+import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=242';
+import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=242';
+import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=242';
+import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=242';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -1064,13 +1065,14 @@ function drawMechaZord(ctx, dpr, sprites, u) {
   const idleRoar = !dead && u.rig && u.rig.fidget === 'roar' ? (u.rig.t - u.rig.fidgetAt) / u.rig.fidgetFor : 1;
   const roarAt = age > 0.75 && age < 2.1 ? (age - 0.75) / 1.35 : idleRoar < 1 ? idleRoar : 1;
   const roar = roarAt < 1 ? Math.max(0, Math.min(1, roarAt * 5, (1 - roarAt) * 4)) : 0;
+  const swipe = !dead && u.swipeT !== undefined && u.swipeT !== null ? Math.min(1, u.swipeT / d.swipe.time) : null;
   const R = rigStep(u, {
     age, dead, moving, alt,
     bang: u.launch || 0, // each missile leaving kicks him
     kick: 0.6,
     cadence: 1.55,
-    calm: !u.target && !moving && alt < 0.1 && age > 2.2,
-    busy: firing || u.salvo > 0,
+    calm: !u.target && !moving && alt < 0.1 && age > 2.2 && swipe === null,
+    busy: firing || u.salvo > 0 || swipe !== null,
     fidgets: ['look', 'chomp', 'yawn', 'sniff', 'roar', 'stretch'],
     // he gathers himself back to charge, then throws his weight into the breath
     aim: {
@@ -1096,6 +1098,17 @@ function drawMechaZord(ctx, dpr, sprites, u) {
     }
   }
   u.wasBreathing = firing;
+  if (u.rig && swipe !== null && !u.wasSwiping) {
+    u.rig.s.squash.v += 3.2;
+    u.rig.s.lean.v -= 2.4;
+    u.rig.s.cap.v -= 40;
+  }
+  if (u.rig && swipe !== null && swipe >= 0.26 && u.wasSwiping < 0.26) {
+    u.rig.s.lean.v += 4.2;
+    u.rig.s.cap.v -= 95;
+    u.rig.s.ant.v -= 140;
+  }
+  u.wasSwiping = swipe === null ? 0 : swipe || 0.001;
 
   placeUnit(ctx, dpr, u, u.hit > 0.16 ? (Math.random() - 0.5) * 1.4 : 0);
   const ring = (x, y, rx, col, width) => {
@@ -1164,16 +1177,27 @@ function drawMechaZord(ctx, dpr, sprites, u) {
   // roaring he shudders
   if (roar > 0) ctx.translate(Math.sin(t * 62) * 0.5 * roar, 0);
 
-  ctx.save();
-  ctx.translate(0, FEET);
-  ctx.scale(ZORD_WIDE, 1);
-  ctx.translate(0, -FEET);
-  drawBotFeet(ctx, A, R, { spread: firing ? 2.6 : 2 * charge, air: alt > 0.12 ? alt : 0, clock: t, shadow: false });
-  ctx.restore();
+  // his long legs stand on the ground; the hips ride with his body
+  const legs = {
+    phase: R.phase,
+    move: dead ? 0 : R.move,
+    ride: R.hop + R.bob * 0.8 + (R.sx - 1) * 34,
+    hop: R.hop,
+    spread: swipe !== null ? 6 : firing ? 3.5 : 3 * charge,
+    air: alt > 0.12 ? alt : 0,
+    clock: t,
+  };
+  const ground = ctx.getTransform();
+  const tail = zordTail(dead ? 0 : t * (R.move > 0.3 ? 6.5 : 2.2), dead ? 0 : 0.9 + R.move * 0.5, alt, swipe);
+  const tailLit = swipe !== null ? 1 : firing ? 0.8 : charge;
+  drawZordLeg(ctx, 1, legs);
 
   // drawing breath he swells up; firing, he trembles with it
   applyBotBody(ctx, R, 0.065 * charge);
+  ctx.translate(0, -ZORD_LIFT * K);
   if (firing) ctx.translate(Math.sin(t * 83) * 0.35, 0);
+  drawSwoosh(ctx, swipe, false);
+  if (!tail.front) drawZordTail(ctx, tail, tailLit);
 
   const power = age < 0.55 ? 0 : age < 0.9 ? (Math.sin(age * 70) > 0 ? 1 : 0.15) : 1;
   const angry = firing || charge > 0 || roar > 0.3;
@@ -1247,6 +1271,14 @@ function drawMechaZord(ctx, dpr, sprites, u) {
       }
     }
   });
+
+  const raised = ctx.getTransform();
+  ctx.setTransform(ground);
+  drawZordLeg(ctx, 0, legs);
+  ctx.setTransform(raised);
+  // coming past the near side, the tail goes in front of everything
+  if (tail.front) drawZordTail(ctx, tail, tailLit);
+  drawSwoosh(ctx, swipe, true);
 
   burnGlow(ctx, u, 24 * K, 23 * K);
   // he is shot at too much to flash solid white like the others (his face would hardly ever show): a soft glow instead
@@ -1860,7 +1892,7 @@ export function drawShortCircuit(ctx, dpr, c) {
   const rx = zord ? 28 * K * s : big || (wide ? 36 : 23) * K * s;
   const ry = zord ? 27 * K * s : big ? big * 0.8 : (wide ? 29 : 25) * K * s;
   const cx = u.x - (wide ? u.facing * 2 * K * s : 0);
-  const cy = u.y + FEET + ((wide ? -8 : 0) * K - FEET) * s;
+  const cy = u.y + FEET + ((zord ? -ZORD_LIFT : wide ? -8 : 0) * K - FEET) * s;
   const feet = u.y + FEET;
   // the shapes hold for a twentieth of a second, then jump
   let seed = (Math.floor(age * 22) + 1) * 97 + (u.id || 0) * 31;
@@ -2408,7 +2440,7 @@ const ICONS = {
     drawLayer(g, S.hand);
   }],
   gibbondore: [126, 57, 69, null],
-  mechazord: [108, 51, 50, null],
+  mechazord: [176, 123, 92, null],
   trooper: [96, 45, 44, (g, S) => {
     g.save();
     g.scale(K, K);
@@ -2498,15 +2530,15 @@ export function paintUnitIcon(canvas, sprites, species) {
     g.restore();
   }
   if (species === 'mechazord') {
+    drawZordLeg(g, 1, {});
     g.save();
-    g.translate(0, FEET);
-    g.scale(ZORD_WIDE, 1);
-    g.translate(0, -FEET);
-    drawLayer(g, S.feet[0]);
-    g.restore();
+    g.translate(0, -ZORD_LIFT * K);
+    drawZordTail(g, zordTail(0, 0, 0, null));
     drawZordRig(g, S, ZORD_STILL, (c, layer) => {
       if (layer === 'eye') zordLook(c, { lx: 0.7, ly: 0.2 });
     });
+    g.restore();
+    drawZordLeg(g, 0, {});
   } else if (species === 'gibbondore') {
     drawGibbonStill(g, S);
   } else if (species === 'juggernaut') {

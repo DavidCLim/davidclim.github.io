@@ -469,8 +469,8 @@ export const SKELETON = {
 export const GAIT = { boar: 8, rat: 15, ant: 15, ape: 7, alligator: 7, piranha: 11, snake: 7, cheetah: 13, slime: 6, giant: 5, dragon: 7, mechazord: 7, zombie: 4.5, skeleton: 8 };
 
 // ------------------------------------------------------------------ terrain items
-// MechaZaur: Robo Trooper built bulkier, with a dragon's head, and the biggest of the robots. He has two attacks,
-// his fire breath and a salvo of homing missiles; he walks, and now and then lifts off on jets and breathes from the air.
+// MechaZaur: Robo Trooper built bulkier, with a dragon's head, and the biggest of the robots. He has three attacks:
+// fire breath, a salvo of homing missiles and a tail swipe that knocks people over; he walks, and now and then lifts off on jets and breathes from the air.
 export const MECHAZORD = {
   ...DRAGON,
   robot: true,
@@ -494,13 +494,17 @@ export const MECHAZORD = {
   offTime: 0.85,
   explodes: true, // and goes to pieces when he dies, like the other robots
   boom: 30,
+  // his third attack: a sweep of the tail along the ground. It does no damage; whoever it catches is flipped off their
+  // feet and lies stunned. first: seconds before he can; cooldown: between sweeps; reach: how far the tail gets;
+  // time: how long the sweep takes
+  swipe: { first: 1.2, cooldown: [3.6, 4.8], reach: 42, time: 0.85 },
   // his second attack: a salvo of homing missiles. first: seconds before the first one; every: between salvos;
   // range: further than his fire; flight: seconds each is in the air
   missiles: { first: 2.4, every: 5.5, count: 6, gap: 0.09, damage: 48, blast: 17, range: 390, flight: 0.9 },
   parts: ['botplate', 'botplate', 'botpod', 'botpod', 'zordhorn', 'zordhorn', 'zordhead'],
   ring: 1.65,
-  body: [33, 33, -10],
-  pivot: { x: 43 * K, y: 8.2 * K }, // his mouth
+  body: [33, 33, -34],
+  pivot: { x: 43 * K, y: -15.6 * K }, // his mouth, up where his long legs carry it
   muzzleLen: 8 * K,
   footFire: 18, // whoever is pressed this close against him, under his jaws, is caught by the fire too
   plume: { every: 0.021, speed: 2.35, life: 1.7, size: 2.15 },

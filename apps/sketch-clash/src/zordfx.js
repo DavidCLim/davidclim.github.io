@@ -1,8 +1,9 @@
 // MechaZaur's own part of the world: his missiles, and the effects that go with him (the shockwave as he lets loose, the
 // embers and heat rings in his breath, the ground it leaves burning, the great blast when he goes). Only the missiles
 // hurt anyone; the rest is for show.
-import { TAU, K, FEET } from './config.js?v=241';
-import { WATER } from './terrain.js?v=241';
+import { TAU, K, FEET } from './config.js?v=242';
+import { WATER } from './terrain.js?v=242';
+import { swipeTurn, SWIPE_BACK } from './zordlimbs.js?v=242';
 
 const TEAL = '70, 245, 200';
 const GOLD = '255, 196, 80';
@@ -80,12 +81,76 @@ export function zordDeath(world, u) {
   }
 }
 
+// ---------------------------------------------------------------- his tail swipe
+// who the tail could knock over: on the ground, on their feet and not tucked away in a tower
+function standing(o) {
+  return !(o.slip > 0) && !o.def.flying && !(o.alt > 0.3) && !o.leap && !(o.perch && o.perch.state !== 'walk');
+}
+
+// distance as the swipe measures it: it runs flat along the ground, which we see at a slant
+const sweptAt = (u, o) => Math.hypot(o.x - u.x, (o.y - u.y) / 0.62);
+
+// returns true while he is busy sweeping
+export function stepZordSwipe(world, u, dt) {
+  const s = u.def.swipe;
+  if (u.swipeCd === undefined) u.swipeCd = s.first;
+  if (u.swipeT === undefined || u.swipeT === null) {
+    u.swipeCd -= dt;
+    if (u.swipeCd > 0 || u.alt > 0.15) return false;
+    let near = false;
+    world.eachEnemyNear(u.side, u.x, u.y, s.reach + 20, (o) => {
+      if (standing(o) && sweptAt(u, o) <= s.reach + o.def.radius) near = true;
+    });
+    if (!near) return false;
+    u.swipeT = 0;
+    u.swiped = new Set();
+    if (world.sfx) world.sfx('whoosh', u.x);
+    return true;
+  }
+  u.swipeT += dt;
+  const p = u.swipeT / s.time;
+  const turned = swipeTurn(p);
+  if (turned > 0) {
+    world.eachEnemyNear(u.side, u.x, u.y, s.reach + 24, (o) => {
+      if (u.swiped.has(o) || !standing(o)) return;
+      const far = sweptAt(u, o);
+      if (far > s.reach + o.def.radius) return;
+      // the tail starts behind him and comes round past the near side first: has it got to them yet?
+      const a = Math.atan2((o.y - u.y) / 0.62, (o.x - u.x) * u.facing);
+      const round = (((Math.PI - a) % TAU) + TAU) % TAU;
+      if (turned < Math.min(0.995, (SWIPE_BACK + round) / (TAU + SWIPE_BACK))) return;
+      u.swiped.add(o);
+      const dx = o.x - u.x;
+      const dy = o.y - u.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      if (!world.trip(o, (dx / dist) * 62, (dy / dist) * 40)) return;
+      nova(world, { x: o.x, y: o.y + FEET - 3, r: 11, life: 0.25, rgb: TEAL, wide: 2.2 });
+      embers(world, o.x, o.y + FEET - 3, 5, -Math.PI / 2, 2.6, 90);
+      if (world.sfx) world.sfx('slip', o.x);
+    });
+    // the dust it drags up
+    u.dustT = (u.dustT || 0) - dt;
+    if (u.dustT <= 0 && turned < 0.98) {
+      u.dustT = 0.035;
+      const an = Math.PI + SWIPE_BACK - (TAU + SWIPE_BACK) * turned;
+      const x = u.x + u.facing * Math.cos(an) * s.reach * 0.86;
+      const y = u.y + FEET + Math.sin(an) * s.reach * 0.4;
+      world.puffs.push({ x, y, vx: u.facing * Math.cos(an) * 18, vy: -6 - Math.random() * 8, age: 0, life: 0.4 + Math.random() * 0.2, size: 1.8 + Math.random() * 1.4, dust: true });
+    }
+  }
+  if (p >= 1) {
+    u.swipeT = null;
+    u.swipeCd = s.cooldown[0] + Math.random() * (s.cooldown[1] - s.cooldown[0]);
+  }
+  return true;
+}
+
 // ---------------------------------------------------------------- his second attack
 // A salvo of little homing missiles out of his back. Each is lobbed high, over walls and heads, chases the enemy it has
 // marked and bursts where it comes down. It reaches further than his fire does.
 
 // where they leave from: the mouth of his upper thruster pod, in Robo Trooper's coordinates
-const RACK = { x: -30, y: -20 };
+const RACK = { x: -30, y: -37 };
 
 function rackOf(u) {
   const d = u.def;

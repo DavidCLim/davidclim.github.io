@@ -1,9 +1,9 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=241';
-import { TerrainMap, WALL } from './terrain.js?v=241';
-import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordFx } from './zordfx.js?v=241';
-import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=241';
-import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=241';
-import { installBeasts } from './beasts.js?v=241';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=242';
+import { TerrainMap, WALL } from './terrain.js?v=242';
+import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordSwipe, stepZordFx } from './zordfx.js?v=242';
+import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=242';
+import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=242';
+import { installBeasts } from './beasts.js?v=242';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -438,7 +438,7 @@ export class World {
       dustAcc: 0,
       castT: 0, // mage / necromancer casting
       stun: 0,
-      slip: 0, // slipping on a banana peel
+      slip: 0, // swept off its feet, as on the original's banana peel
       poison: 0,
       slow: 0, // frozen by a frost bolt
       iv: null, // sliding velocity on ice
@@ -822,7 +822,7 @@ export class World {
       // killed at the top of a tower, his ghost rises from up there and nothing falls to the ground
       const aloft = u.perch && (u.perch.state === 'up' || u.perch.state === 'rise');
       this.ghosts.push({ x: u.x, y: aloft ? u.perch.p.y - u.def.perch.height : u.y, age: zapped ? -ZAP_TIME : 0, seed: Math.random(), species: u.species, facing: u.facing || 1 });
-      if (!aloft) this.corpses.push({ u: { ...u, dead: false, moving: false, hit: 0, flash: 0, burn: 0, charred: kind === 'burn' }, age: 0, zap: zapped });
+      if (!aloft) this.corpses.push({ u: { ...u, slip: 0, dead: false, moving: false, hit: 0, flash: 0, burn: 0, charred: kind === 'burn' }, age: 0, zap: zapped });
       if (u.def.smoke) {
         for (let i = 0; i < 2; i++) {
           this.puffs.push({
@@ -1253,7 +1253,7 @@ export class World {
       u.jetT = (u.jetT || 0) - dt;
       if (u.jetT <= 0) {
         u.jetT = 0.05;
-        for (const [jx, jy] of [[-37, -6], [-36, 18], [-9, 27], [11, 27]]) {
+        for (const [jx, jy] of [[-37, -23], [-36, 1], [-9, 25], [12, 24]]) {
           this.jetFlame(u.x + u.facing * jx * 0.31 * d.scale, u.y + FEET + (jy * 0.31 - FEET) * d.scale - u.alt * d.hoverH, -u.facing * 8, 70, 0.8 * d.scale);
         }
         if (this.sfx && Math.random() < 0.2) this.sfx('flame', u.x);
@@ -1268,6 +1268,15 @@ export class World {
     if (d.missiles) stepZordSalvo(this, u, dt);
     const speed = d.speed * u.speedMul * (u.air ? 1.7 : 1);
     u.firing = false;
+    // while his tail goes round he stands where he is and holds his fire
+    if (d.swipe && stepZordSwipe(this, u, dt)) {
+      u.burstLeft = 0;
+      u.burstT = Math.max(u.burstT || 0, 0.45);
+      if (u.airT !== undefined) u.airT = Math.max(u.airT, 0.2);
+      u.aim -= u.aim * Math.min(1, dt * 6);
+      this.readyUp(u, dt);
+      return;
+    }
     if (t) {
       const dx = t.x - u.x;
       const dy = t.y - u.y;
