@@ -107,7 +107,7 @@ export const TROOPER = {
   thrusters: 'walk',
 };
 
-// Gatling Trooper: between the Jet Trooper and MechaZord. A heavier Robo Trooper whose rotary cannon pours out a long
+// Gatling Trooper: between the Jet Trooper and MechaZaur. A heavier Robo Trooper whose rotary cannon pours out a long
 // stream of rounds, then winds down for a moment. He doesn't back away from anyone.
 export const GATLING = {
   ...TROOPER,
@@ -469,7 +469,7 @@ export const SKELETON = {
 export const GAIT = { boar: 8, rat: 15, ant: 15, ape: 7, alligator: 7, piranha: 11, snake: 7, cheetah: 13, slime: 6, giant: 5, dragon: 7, mechazord: 7, zombie: 4.5, skeleton: 8 };
 
 // ------------------------------------------------------------------ terrain items
-// MechaZord: Robo Trooper built bulkier, with a dragon's head, and the biggest of the robots. He has two attacks,
+// MechaZaur: Robo Trooper built bulkier, with a dragon's head, and the biggest of the robots. He has two attacks,
 // his fire breath and a salvo of homing missiles; he walks, and now and then lifts off on jets and breathes from the air.
 export const MECHAZORD = {
   ...DRAGON,
@@ -519,7 +519,7 @@ export const SPECIES = {
   archer: { id: 'archer', label: 'Archer', def: ARCHER },
   cowboy: { id: 'cowboy', label: 'Cowboy', def: COWBOY },
   ninja: { id: 'ninja', label: 'Samurai', def: NINJA },
-  mechazord: { id: 'mechazord', label: 'MechaZord', def: MECHAZORD },
+  mechazord: { id: 'mechazord', label: 'MechaZaur', def: MECHAZORD },
   trooper: { id: 'trooper', label: 'Robo Trooper', def: TROOPER },
   jettrooper: { id: 'jettrooper', label: 'Jet Trooper', def: JETTROOPER },
   gatlingtrooper: { id: 'gatlingtrooper', label: 'Gatling Trooper', def: GATLING },

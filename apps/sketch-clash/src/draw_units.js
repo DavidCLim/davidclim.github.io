@@ -1,13 +1,13 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=240';
-import { drawLayer, OUT } from './sprites.js?v=240';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt } from './art_units.js?v=240';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=240';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=240';
-import { drawZordGround, drawZordAir } from './zordfx.js?v=240';
-import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=240';
-import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=240';
-import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=240';
-import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=240';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=241';
+import { drawLayer, OUT } from './sprites.js?v=241';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt } from './art_units.js?v=241';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=241';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=241';
+import { drawZordGround, drawZordAir } from './zordfx.js?v=241';
+import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=241';
+import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=241';
+import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=241';
+import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=241';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -858,7 +858,7 @@ function drawJuggernaut(ctx, dpr, sprites, u) {
   if (!dead && (u.hit > 0.14 || (u.hp < d.hp * 0.4 && Math.sin(t * 7.3) > 0.9))) drawZaps(ctx, 2);
 }
 
-// MechaZord: Robo Trooper built bulkier, with a dragon's head. He waddles like a trooper; before he breathes, his horns
+// MechaZaur: Robo Trooper built bulkier, with a dragon's head. He waddles like a trooper; before he breathes, his horns
 // light up with lightning between them, then his jaw drops and he pours out fire. Now and then he lifts off on jets.
 // Everything is drawn in a trooper's coordinates. m: { jaw (radians open), headTilt, sway (antenna), hand (how far his
 // hands are raised), lit (0..1, the grooves in his horns) }; `eyes` paints his eye

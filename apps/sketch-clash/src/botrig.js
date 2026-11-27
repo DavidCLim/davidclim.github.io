@@ -1,12 +1,12 @@
 // How the robots move. One rig for all of them, so they walk, kick, flinch, cheer and fidget like one family.
 //
 // Nothing here is keyed frame by frame. Every loose part (the lean and squash of the body, the helmet, the weapon, the
-// antenna, the pack, the MechaZord's head and jaw) hangs on a spring. Things that happen to a robot (a footfall, a shot,
+// antenna, the pack, the MechaZaur's head and jaw) hangs on a spring. Things that happen to a robot (a footfall, a shot,
 // a hit, a landing) just give the springs a shove, and they overshoot and settle on their own.
 // All of it is for show; none of it changes what a robot does. It runs on the unit's own time (u.breath, which only
 // moves while the world does), so a paused robot holds still.
-import { TAU, K, FEET } from './config.js?v=240';
-import { drawLayer } from './sprites.js?v=240';
+import { TAU, K, FEET } from './config.js?v=241';
+import { drawLayer } from './sprites.js?v=241';
 
 // [stiffness, damping]: low damping rings on longer
 const SPRINGS = {
@@ -17,7 +17,7 @@ const SPRINGS = {
   gunX: [300, 19], // the weapon's slide, art px (- is back)
   ant: [95, 4.2], // the antenna tip, art px
   pack: [210, 9], // the pack, art px
-  head: [190, 15], // MechaZord: the tip of his head, radians
+  head: [190, 15], // MechaZaur: the tip of his head, radians
   jaw: [430, 19], // and how far his jaw hangs open
 };
 

@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=240';
-import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=240';
-import { buildGibbonArt, drawGibbonHatDrop } from './gibbon.js?v=240';
+import { TAU, K } from './config.js?v=241';
+import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=241';
+import { buildGibbonArt, drawGibbonHatDrop } from './gibbon.js?v=241';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -2092,7 +2092,7 @@ function drawJugFist(g) {
   g.fill();
 }
 
-// ---------------------------------------------------------------- MechaZord
+// ---------------------------------------------------------------- MechaZaur
 // Robo Trooper himself, built bulkier, with a dragon's head: the same egg, helmet, visor band, lens eye, antenna,
 // thruster pack and little navy feet, with a snout and hinged jaw, swept-back horns and two little clawed hands.
 // Drawn in Robo Trooper's own coordinates; the whole of him is scaled up as one.

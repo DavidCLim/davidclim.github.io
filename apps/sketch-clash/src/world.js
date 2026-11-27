@@ -1,9 +1,9 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=240';
-import { TerrainMap, WALL } from './terrain.js?v=240';
-import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordFx } from './zordfx.js?v=240';
-import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=240';
-import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=240';
-import { installBeasts } from './beasts.js?v=240';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=241';
+import { TerrainMap, WALL } from './terrain.js?v=241';
+import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordFx } from './zordfx.js?v=241';
+import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=241';
+import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=241';
+import { installBeasts } from './beasts.js?v=241';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -1235,7 +1235,7 @@ export class World {
     if (u.moving) u.anim += dt * 7.3;
   }
 
-  // MechaZord alternates between walking and flying, like the dragon: he lifts off for a few seconds, then lands.
+  // MechaZaur alternates between walking and flying, like the dragon: he lifts off for a few seconds, then lands.
   airMode(u, dt) {
     const d = u.def;
     if (u.airT === undefined) {
