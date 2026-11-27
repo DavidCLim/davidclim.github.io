@@ -4,10 +4,10 @@
 // round a dark face and white hands and feet. Over that, a wizard's hat, cloak and staff.
 // Drawn in art units, facing +x, with the ground about 28 below the origin. His limbs are drawn live, from where his
 // hands and feet are, so they can move smoothly through any pose.
-import { TAU, K, FEET } from './config.js?v=244';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=244';
-import { rigStep, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=244';
-import { STORM } from './gibbonfx.js?v=244';
+import { TAU, K, FEET } from './config.js?v=245';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=245';
+import { rigStep, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=245';
+import { STORM } from './gibbonfx.js?v=245';
 
 const C = {
   fur: '#54403a', furDark: '#382a27', furFar: '#33272a', saddle: '#8a766c', white: '#f4eddf', whiteShade: '#cfc3ae',
@@ -345,10 +345,6 @@ const POSES = {
   draw: { nwx: 4, nwy: -30, fwx: -19, fwy: -2, staff: -0.75, lean: -0.17, head: -0.1, mouth: 0.15 },
   cast: { nwx: 36, nwy: -11, fwx: -21, fwy: -13, staff: 1.12, lean: 0.12, head: 0.04, mouth: 0.65 },
   cheer: { nwx: 17, nwy: -46, fwx: -21, fwy: -38, staff: 0, lean: -0.08, head: -0.14, mouth: 0.9 },
-  // reared back while the light gathers in his mouth...
-  gather: { nwx: 30, nwy: 2, fwx: -12, fwy: 14, staff: 0.28, lean: -0.24, head: -0.3, mouth: 0.75 },
-  // ...then braced on all fours, head thrust out, roaring it forth
-  roar: { nwx: 40, nwy: 11, fwx: 21, fwy: 23, staff: 0.55, lean: 0.1, head: 0, mouth: 1 },
 };
 const STIFF = { calm: [230, 21], snap: [620, 35] };
 
@@ -377,13 +373,6 @@ function posed(u, R, dead, t) {
       // coming down, he hauls the staff back to strike
       if (u.leap.t / d.leap.time > 0.62) want = { ...want, ...POSES.raise, nfx: -18, nfy: 18, ffx: -5, ffy: 21 };
       snap = true;
-    } else if (u.beam) {
-      const firing = u.beam.t >= d.beam.charge;
-      // his head follows where the beam is pointed
-      const aim = Math.atan2(Math.sin(u.beam.angle), Math.cos(u.beam.angle) * u.facing);
-      const base = firing ? POSES.roar : POSES.gather;
-      want = { ...want, ...base, head: base.head + Math.max(-0.45, Math.min(0.45, aim * 0.7)) };
-      snap = firing;
     } else if (u.stormT !== null && u.stormT !== undefined) {
       // up, down; up again, higher; and down
       const up = u.stormT < STORM.tap1 - 0.1 || (u.stormT > STORM.tap1 + 0.1 && u.stormT < STORM.tap2 - 0.1);
@@ -521,7 +510,7 @@ export function drawGibbondore(ctx, dpr, sprites, u, overlay) {
   const age = dead ? 9 : clock - u.born;
   const alt = dead ? 0 : u.alt || 0;
   const storming = u.stormT !== null && u.stormT !== undefined;
-  const busy = !!u.leap || u.slamT > 0 || u.castT > 0 || u.landT > 0 || !!u.beam || storming;
+  const busy = !!u.leap || u.slamT > 0 || u.castT > 0 || u.landT > 0 || storming;
   const R = rigStep(u, {
     age, dead, moving: u.moving && !dead, alt,
     bang: u.castFlash > 0 ? 1 : 0,
@@ -534,8 +523,7 @@ export function drawGibbondore(ctx, dpr, sprites, u, overlay) {
   });
   const P = posed(u, R, dead, t);
 
-  const quake = !dead && u.beam && u.beam.t >= d.beam.charge ? (Math.random() - 0.5) * 1.2 : 0;
-  const wobble = quake + (u.hit > 0.14 ? (Math.random() - 0.5) * 1.4 : 0);
+  const wobble = u.hit > 0.14 ? (Math.random() - 0.5) * 1.4 : 0;
   ctx.setTransform(u.facing * dpr, 0, 0, dpr, (u.x + wobble) * dpr, u.y * dpr);
   if (u.tilt) {
     ctx.translate(0, FEET);
@@ -577,7 +565,7 @@ export function drawGibbondore(ctx, dpr, sprites, u, overlay) {
   let shut = !busy && blink < 0.15 ? Math.sin((blink / 0.15) * Math.PI) : 0;
   if (R.fidget === 'scratch' || R.fidget === 'hoot') shut = 1;
   const look = u.target ? [1, 0.2] : R.fidget === 'look' ? [Math.sin(R.q * TAU) * 1.4, -0.2] : [Math.sin(t * 0.8) * 0.8, Math.sin(t * 1.5) * 0.5];
-  const power = dead ? 0 : u.beam || storming ? 1 : u.castT > 0 ? 1 - u.castT / d.spell.cast : u.castFlash > 0 ? u.castFlash / 0.28 : u.slamT > 0 || u.leap ? 0.8 : 0.16 + 0.06 * Math.sin(t * 3);
+  const power = dead ? 0 : storming ? 1 : u.castT > 0 ? 1 - u.castT / d.spell.cast : u.castFlash > 0 ? u.castFlash / 0.28 : u.slamT > 0 || u.leap ? 0.8 : 0.16 + 0.06 * Math.sin(t * 3);
   paint(ctx, A, P, { lx: look[0], ly: look[1], shut, happy: R.happy, angry: busy && !R.happy, mouth: Math.max(0, Math.min(1, P.mouth)), dead }, {
     sweep: dead ? 0 : Math.max(0.1 + Math.sin(t * 1.9) * 0.1, R.move * 0.7 + Math.sin(R.phase) * 0.08 * R.move, alt, busy ? 0.5 : 0),
     wave: dead ? 0 : Math.sin(t * (R.move > 0.3 || busy ? 11 : 2.6)),

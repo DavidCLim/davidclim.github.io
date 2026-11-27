@@ -1,9 +1,9 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=244';
-import { TerrainMap, WALL } from './terrain.js?v=244';
-import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordSwipe, stepZordFx } from './zordfx.js?v=244';
-import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=244';
-import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=244';
-import { installBeasts } from './beasts.js?v=244';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=245';
+import { TerrainMap, WALL } from './terrain.js?v=245';
+import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordBeam, stepZordSwipe, stepZordFx } from './zordfx.js?v=245';
+import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=245';
+import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=245';
+import { installBeasts } from './beasts.js?v=245';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -1268,8 +1268,8 @@ export class World {
     if (d.missiles) stepZordSalvo(this, u, dt);
     const speed = d.speed * u.speedMul * (u.air ? 1.7 : 1);
     u.firing = false;
-    // while his tail goes round he stands where he is and holds his fire
-    if (d.swipe && stepZordSwipe(this, u, dt)) {
+    // while his great beam or his tail is at work he stands where he is and holds his fire
+    if ((d.beam && stepZordBeam(this, u, dt)) || (d.swipe && stepZordSwipe(this, u, dt))) {
       u.burstLeft = 0;
       u.burstT = Math.max(u.burstT || 0, 0.45);
       if (u.airT !== undefined) u.airT = Math.max(u.airT, 0.2);

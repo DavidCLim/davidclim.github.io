@@ -1,7 +1,7 @@
 // Gibbondore The Great: how he fights, and what his magic does to the world.
 // Like the original's ape he goes straight in and hits the ground hard enough to send everyone flying; being a gibbon
 // he also swings himself across the gap in one great leap, and being a wizard he throws stars from his staff on the way.
-import { TAU, K, FEET } from './config.js?v=244';
+import { TAU, K, FEET } from './config.js?v=245';
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -260,183 +260,12 @@ function drawStormAir(ctx, s) {
   }
 }
 
-// ---------------------------------------------------------------- the great beam
-// His rare one. He rears back while the light gathers in his open mouth, then pours out a huge beam that burns through
-// everything in a long straight line. It can only swing slowly once it has started.
-const clampTurn = (from, to, most) => {
-  const d = Math.atan2(Math.sin(to - from), Math.cos(to - from));
-  return from + Math.max(-most, Math.min(most, d));
-};
-
-export function beamMouth(u) {
-  const s = u.def.scale;
-  return { x: u.x + u.facing * 27 * K * s, y: u.y + FEET + (-15 * K - FEET) * s };
-}
-
-function aimBeam(u, t) {
-  const m = beamMouth(u);
-  return Math.atan2(t.y - 2 - m.y, t.x - m.x);
-}
-
-function stepBeam(world, u, dt) {
-  const m = u.def.beam;
-  const b = u.beam;
-  const before = b.t;
-  b.t += dt;
-  const firing = b.t >= m.charge;
-  const t = u.target;
-  if (t && !t.dead) {
-    if (!firing && Math.abs(t.x - u.x) > 3) u.facing = t.x > u.x ? 1 : -1;
-    b.angle = clampTurn(b.angle, aimBeam(u, t), dt * (firing ? m.sweep : 3));
-  }
-  if (before < m.charge && firing && world.sfx) {
-    world.sfx('boom', u.x);
-    world.sfx('flame', u.x);
-  }
-  if (firing) {
-    const from = beamMouth(u);
-    const dx = Math.cos(b.angle);
-    const dy = Math.sin(b.angle);
-    const half = m.range / 2;
-    world.eachEnemyNear(u.side, from.x + dx * half, from.y + dy * half, half + 30, (o) => {
-      const ox = o.x - from.x;
-      const oy = o.y - 2 - from.y;
-      const along = ox * dx + oy * dy;
-      if (along < 0 || along > m.range || Math.abs(ox * dy - oy * dx) > m.width + o.def.radius) return;
-      if (!o.def.noKnock) {
-        o.kx += dx * 520 * dt;
-        o.ky += dy * 520 * dt;
-      }
-      world.hurt(o, m.dps * dt, o.x, o.y, 'burn', u);
-    });
-    for (const p of world.props) {
-      if (p.dead || p.type !== 'barrel') continue;
-      const ox = p.x - from.x;
-      const oy = p.y - 8 - from.y;
-      const along = ox * dx + oy * dy;
-      if (along > 0 && along < m.range && Math.abs(ox * dy - oy * dx) <= m.width + 6) world.damageProp(p, m.dps * dt);
-    }
-    if (Math.random() < dt * 40) {
-      const along = 20 + Math.random() * (m.range * 0.8);
-      glints(world, from.x + dx * along, from.y + dy * along, 1, 50);
-      world.glints[world.glints.length - 1].ghost = true;
-    }
-  }
-  if (b.t >= m.charge + m.fire) u.beam = null;
-}
-
-// a long shape from the mouth along +x: narrow where it leaves, quickly full width, with a rippling edge
-function beamShape(ctx, len, wide, ripple, clock, fill) {
-  const edge = (x, side) => side * wide * Math.min(1, 0.28 + x / 34) * (1 + Math.sin(x * 0.11 - clock * 34 + side) * ripple + Math.sin(x * 0.29 - clock * 51) * ripple * 0.6);
-  ctx.fillStyle = fill;
-  ctx.beginPath();
-  ctx.moveTo(0, edge(0, -1));
-  for (let x = 8; x <= len; x += 8) ctx.lineTo(x, edge(x, -1));
-  ctx.quadraticCurveTo(len + wide * 1.5, 0, len, edge(len, 1));
-  for (let x = len; x >= 0; x -= 8) ctx.lineTo(x, edge(x, 1));
-  ctx.closePath();
-  ctx.fill();
-}
-
-function drawBeam(ctx, u) {
-  const m = u.def.beam;
-  const b = u.beam;
-  const from = beamMouth(u);
-  const clock = u.breath;
-  ctx.save();
-  ctx.translate(from.x, from.y);
-  ctx.rotate(b.angle);
-  if (b.t < m.charge) {
-    const p = b.t / m.charge;
-    // a thin flickering line shows where it is going to go
-    ctx.strokeStyle = `rgba(46, 200, 90, ${0.5 * p * (0.6 + 0.4 * Math.sin(clock * 40))})`;
-    ctx.lineWidth = 0.9;
-    ctx.beginPath();
-    ctx.moveTo(8, 0);
-    ctx.lineTo(Math.min(m.range, 200), 0);
-    ctx.stroke();
-    // light is dragged into his mouth from all round
-    ctx.lineCap = 'round';
-    for (let i = 0; i < 18; i++) {
-      const q = (clock * 2 + i / 18) % 1;
-      const an = i * 2.4 + q * 2;
-      const far = (1 - q) * 30 + 3;
-      ctx.strokeStyle = `rgba(52, 220, 96, ${Math.min(1, q * 3) * p})`;
-      ctx.lineWidth = 0.6 + 1.2 * q;
-      ctx.beginPath();
-      ctx.moveTo(Math.cos(an) * (far + 6), Math.sin(an) * (far + 6));
-      ctx.lineTo(Math.cos(an) * far, Math.sin(an) * far);
-      ctx.stroke();
-    }
-    const r = 1.2 + 5.6 * p + Math.sin(clock * 50) * 0.5 * p;
-    for (const [col, k] of [['rgba(60, 255, 120, 0.35)', 2], ['#17a94a', 1.15], ['#5cf08a', 0.78], ['#d9ffe2', 0.42]]) {
-      ctx.fillStyle = col;
-      ctx.beginPath();
-      ctx.arc(5, 0, r * k, 0, TAU);
-      ctx.fill();
-    }
-    ctx.restore();
-    return;
-  }
-  const since = b.t - m.charge;
-  const len = m.range * Math.min(1, since / 0.12);
-  // it swells as it bursts out and thins away at the end
-  const swell = Math.min(1, since / 0.1) * Math.min(1, (m.fire - since) / 0.28);
-  const w = m.width * Math.max(0, swell);
-  beamShape(ctx, len, w * 1.9, 0.1, clock, 'rgba(70, 255, 130, 0.22)');
-  beamShape(ctx, len, w * 1.32, 0.13, clock, '#0c6b30');
-  beamShape(ctx, len, w * 1.13, 0.12, clock + 0.03, '#17a94a');
-  beamShape(ctx, len, w * 0.82, 0.1, clock + 0.07, '#3fe573');
-  beamShape(ctx, len, w * 0.5, 0.09, clock + 0.11, '#9dffb6');
-  beamShape(ctx, len, w * 0.22, 0.08, clock + 0.15, '#e6ffec');
-  // rings of force riding down it
-  ctx.lineWidth = 1.8;
-  for (let i = 0; i < 7; i++) {
-    const x = ((clock * 330 + (i * len) / 7) % len) || 0;
-    ctx.strokeStyle = `rgba(214, 255, 222, ${0.85 * swell * (1 - x / len)})`;
-    ctx.beginPath();
-    ctx.ellipse(x, 0, 3.4, w * 1.55, 0, 0, TAU);
-    ctx.stroke();
-  }
-  // ghostly crackle along its edges
-  ctx.lineJoin = 'miter';
-  ctx.lineWidth = 1.2;
-  ctx.strokeStyle = `rgba(24, 160, 70, ${0.9 * swell})`;
-  for (let i = 0; i < 9; i++) {
-    let x = Math.random() * len * 0.9;
-    const side = Math.random() < 0.5 ? -1 : 1;
-    let y = side * w * 1.1;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    for (let j = 0; j < 3; j++) {
-      x += 5 + Math.random() * 9;
-      y = side * w * (1.2 + Math.random() * 0.9);
-      ctx.lineTo(x, y);
-    }
-    ctx.stroke();
-  }
-  // the blinding ball at his mouth
-  for (const [col, k] of [['rgba(70, 255, 130, 0.35)', 1.5], ['#17a94a', 0.9], ['#5cf08a', 0.7], ['#d9ffe2', 0.42]]) {
-    ctx.fillStyle = col;
-    ctx.beginPath();
-    ctx.arc(7, 0, w * k * (0.92 + Math.random() * 0.14), 0, TAU);
-    ctx.fill();
-  }
-  ctx.restore();
-}
-
 export function stepGibbon(world, u, dt) {
   const d = u.def;
   u.cdT -= dt;
   u.leapCd = (u.leapCd === undefined ? 0.7 : u.leapCd) - dt;
   u.spellCd = (u.spellCd === undefined ? 0.5 : u.spellCd) - dt;
   u.stormCd = (u.stormCd === undefined ? d.storm.first : u.stormCd) - dt;
-  // the rare one waits on a roll of the dice, made every few seconds once any rest after the last is over
-  u.beamCd = (u.beamCd === undefined ? d.beam.every : u.beamCd) - dt;
-  if (u.beamCd <= 0 && !u.beamReady) {
-    if (Math.random() < d.beam.chance) u.beamReady = true;
-    else u.beamCd = d.beam.every;
-  }
   u.castFlash = Math.max(0, (u.castFlash || 0) - dt);
   u.landT = Math.max(0, (u.landT || 0) - dt);
 
@@ -461,10 +290,9 @@ export function stepGibbon(world, u, dt) {
   }
 
   const t = world.acquire(u, dt);
-  // in the middle of either of his big ones he stands where he is
-  if (u.beam || (u.stormT !== null && u.stormT !== undefined)) {
-    if (u.beam) stepBeam(world, u, dt);
-    else stepStorm(world, u, dt);
+  // in the middle of calling down the storm he stands where he is
+  if (u.stormT !== null && u.stormT !== undefined) {
+    stepStorm(world, u, dt);
     u.pose = 1;
     return;
   }
@@ -488,12 +316,7 @@ export function stepGibbon(world, u, dt) {
       const dist = Math.hypot(dx, dy) || 1;
       if (Math.abs(dx) > 3) u.facing = dx > 0 ? 1 : -1;
       const reach = d.reach + t.def.radius * 0.5;
-      if (u.beamReady && dist <= d.beam.range * 0.8) {
-        u.beamReady = false;
-        u.beam = { t: 0, angle: aimBeam(u, t) };
-        u.beamCd = d.beam.charge + d.beam.fire + rand(d.beam.cooldown[0], d.beam.cooldown[1]);
-        if (world.sfx) world.sfx('magic', u.x);
-      } else if (u.stormCd <= 0 && worthStorm(world, u)) {
+      if (u.stormCd <= 0 && worthStorm(world, u)) {
         u.stormT = 0;
         u.stormCd = STORM.time + rand(d.storm.cooldown[0], d.storm.cooldown[1]);
       } else if (dist <= reach) {
@@ -568,7 +391,7 @@ export function stepGibbonFx(world, dt) {
     g.x += g.vx * dt;
     g.y += g.vy * dt;
     g.vx *= 0.94;
-    g.vy = g.vy * 0.94 + (g.ghost ? -60 : 90) * dt;
+    g.vy = g.vy * 0.94 + 90 * dt;
   }
   const live = (o) => o.age < o.life;
   if (!world.quakes.every(live)) world.quakes = world.quakes.filter(live);
@@ -621,7 +444,6 @@ export function drawGibbonGround(ctx, world) {
 
 // over the units: his stars, where they burst, and the gold sparks
 export function drawGibbonAir(ctx, world) {
-  for (const u of world.units) if (u.beam && !u.dead) drawBeam(ctx, u);
   for (const s of world.storms) drawStormAir(ctx, s);
   for (const s of world.stars) {
     if (s.wait > 0) continue;
@@ -655,7 +477,7 @@ export function drawGibbonAir(ctx, world) {
   ctx.lineCap = 'round';
   for (const g of world.glints) {
     const fade = 1 - (g.age / g.life) ** 2;
-    for (const [col, wide] of g.ghost ? [[`rgba(24, 170, 76, ${fade})`, 2.4], [`rgba(214, 255, 220, ${fade})`, 1]] : [[`rgba(236, 150, 20, ${fade})`, 1.8], [`rgba(255, 240, 170, ${fade})`, 0.8]]) {
+    for (const [col, wide] of [[`rgba(236, 150, 20, ${fade})`, 1.8], [`rgba(255, 240, 170, ${fade})`, 0.8]]) {
       ctx.strokeStyle = col;
       ctx.lineWidth = wide;
       ctx.beginPath();

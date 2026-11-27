@@ -443,10 +443,6 @@ export const GIBBONDORE = {
   // two blows of his staff and lightning comes down in a hollow circle round him. radius: of the circle; width: how
   // thick the struck band is
   storm: { first: 2.6, cooldown: [8, 10], radius: 54, width: 20, damage: 72 },
-  // the great beam: kept rare. Every `every` seconds he has only a `chance` of using it, and after he has, none for a
-  // long while. charge / fire: how long each part lasts; width: half the beam's width; sweep: how fast it can swing
-  // once firing (radians a second)
-  beam: { every: 4, chance: 0.14, cooldown: [24, 34], range: 380, width: 12, dps: 190, charge: 1.15, fire: 1.35, sweep: 0.4 },
   scale: 1.2,
   ring: 1.7,
   body: [25, 24, -6],
@@ -476,12 +472,11 @@ export const SKELETON = {
 export const GAIT = { boar: 8, rat: 15, ant: 15, ape: 7, alligator: 7, piranha: 11, snake: 7, cheetah: 13, slime: 6, giant: 5, dragon: 7, mechazord: 7, zombie: 4.5, skeleton: 8 };
 
 // ------------------------------------------------------------------ terrain items
-// MechaZaur: Robo Trooper built bulkier, with a dragon's head, and the biggest of the robots. He has three attacks:
-// fire breath, a salvo of homing missiles and a tail swipe that knocks people over; he walks, and now and then lifts off on jets and breathes from the air.
+// MechaZaur: Robo Trooper built bulkier, with a dragon's head, and the biggest of the robots. His attacks: fire
+// breath, a salvo of homing missiles, a tail swipe that knocks people over and, rarely, a great beam; he walks, and now and then lifts off on jets and breathes from the air.
 export const MECHAZORD = {
   ...DRAGON,
   robot: true,
-  unique: true, // only one on the whole map at a time, whichever team he is on
   flying: false,
   airborne: true, // like the dragon, he sometimes takes off and breathes fire from the air, sometimes he stays on the ground
   hoverH: 24,
@@ -501,6 +496,10 @@ export const MECHAZORD = {
   offTime: 0.85,
   explodes: true, // and goes to pieces when he dies, like the other robots
   boom: 30,
+  // his rare one, a huge beam from his jaws. Every `every` seconds he has only a `chance` of using it, and after he has,
+  // none for a long while. charge / fire: how long each part lasts; width: half the beam's width; sweep: how fast it can
+  // swing once firing (radians a second)
+  beam: { every: 4, chance: 0.14, cooldown: [24, 34], range: 400, width: 14, dps: 200, charge: 1.15, fire: 1.35, sweep: 0.4 },
   // his third attack: a sweep of the tail along the ground. It does no damage; whoever it catches is flipped off their
   // feet and lies stunned. first: seconds before he can; cooldown: between sweeps; reach: how far the tail gets;
   // time: how long the sweep takes

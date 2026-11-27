@@ -1,14 +1,14 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=244';
-import { drawLayer, OUT } from './sprites.js?v=244';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt } from './art_units.js?v=244';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=244';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=244';
-import { drawZordGround, drawZordAir } from './zordfx.js?v=244';
-import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=244';
-import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=244';
-import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=244';
-import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=244';
-import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=244';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=245';
+import { drawLayer, OUT } from './sprites.js?v=245';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt } from './art_units.js?v=245';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=245';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=245';
+import { drawZordGround, drawZordAir } from './zordfx.js?v=245';
+import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=245';
+import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=245';
+import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=245';
+import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=245';
+import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=245';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -1066,16 +1066,21 @@ function drawMechaZord(ctx, dpr, sprites, u) {
   const roarAt = age > 0.75 && age < 2.1 ? (age - 0.75) / 1.35 : idleRoar < 1 ? idleRoar : 1;
   const roar = roarAt < 1 ? Math.max(0, Math.min(1, roarAt * 5, (1 - roarAt) * 4)) : 0;
   const swipe = !dead && u.swipeT !== undefined && u.swipeT !== null ? Math.min(1, u.swipeT / d.swipe.time) : null;
+  // the great beam: gathering it, then firing it, his head following where it points
+  const beam = !dead && u.beam ? u.beam : null;
+  const gather = beam && beam.t < d.beam.charge ? beam.t / d.beam.charge : 0;
+  const blast = !!beam && beam.t >= d.beam.charge;
+  const beamAim = beam ? Math.max(-0.38, Math.min(0.38, Math.atan2(Math.sin(beam.angle), Math.cos(beam.angle) * u.facing) * 0.65)) : 0;
   const R = rigStep(u, {
     age, dead, moving, alt,
     bang: u.launch || 0, // each missile leaving kicks him
     kick: 0.6,
     cadence: 1.55,
-    calm: !u.target && !moving && alt < 0.1 && age > 2.2 && swipe === null,
-    busy: firing || u.salvo > 0 || swipe !== null,
+    calm: !u.target && !moving && alt < 0.1 && age > 2.2 && swipe === null && !beam,
+    busy: firing || u.salvo > 0 || swipe !== null || !!beam,
     fidgets: ['look', 'chomp', 'yawn', 'sniff', 'roar', 'stretch'],
     // he gathers himself back to charge, then throws his weight into the breath
-    aim: {
+    aim: beam ? { lean: blast ? 0.12 : -0.2 * gather, squash: blast ? 0.03 : 0.1 * gather, head: beamAim - (blast ? 0 : 0.24 * (1 - gather * 0.6)), jaw: blast ? 0.76 : 0.1 + 0.58 * gather } : {
       lean: firing ? 0.11 : -0.19 * charge - 0.08 * roar + (alt > 0.12 ? 0.08 : 0),
       squash: firing ? 0.02 : 0.1 * charge,
       head: firing ? Math.max(-0.2, Math.min(0.3, u.aim * 0.55)) : roar > 0 ? -0.3 * roar : -0.18 * charge,
@@ -1098,6 +1103,16 @@ function drawMechaZord(ctx, dpr, sprites, u) {
     }
   }
   u.wasBreathing = firing;
+  // the beam bursting out kicks him back on his heels
+  if (u.rig && blast && !u.wasBlasting) {
+    const s = u.rig.s;
+    s.lean.v -= 3.6;
+    s.squash.v += 3.4;
+    s.cap.v -= 130;
+    s.ant.v -= 170;
+    s.jaw.v += 9;
+  }
+  u.wasBlasting = blast;
   if (u.rig && swipe !== null && !u.wasSwiping) {
     u.rig.s.squash.v += 3.2;
     u.rig.s.lean.v -= 2.4;
@@ -1183,24 +1198,24 @@ function drawMechaZord(ctx, dpr, sprites, u) {
     move: dead ? 0 : R.move,
     ride: R.hop + R.bob * 0.8 + (R.sx - 1) * 34,
     hop: R.hop,
-    spread: swipe !== null ? 6 : firing ? 3.5 : 3 * charge,
+    spread: swipe !== null ? 6 : beam ? 5 : firing ? 3.5 : 3 * charge,
     air: alt > 0.12 ? alt : 0,
     clock: t,
   };
   const ground = ctx.getTransform();
   const tail = zordTail(dead ? 0 : t * (R.move > 0.3 ? 6.5 : 2.2), dead ? 0 : 0.9 + R.move * 0.5, alt, swipe);
-  const tailLit = swipe !== null ? 1 : firing ? 0.8 : charge;
+  const tailLit = swipe !== null || beam ? 1 : firing ? 0.8 : charge;
   drawZordLeg(ctx, 1, legs);
 
   // drawing breath he swells up; firing, he trembles with it
   applyBotBody(ctx, R, 0.065 * charge);
   ctx.translate(0, -ZORD_LIFT * K);
-  if (firing) ctx.translate(Math.sin(t * 83) * 0.35, 0);
+  if (firing || blast) ctx.translate(Math.sin(t * 83) * (blast ? 0.75 : 0.35), 0);
   drawSwoosh(ctx, swipe, false);
   if (!tail.front) drawZordTail(ctx, tail, tailLit);
 
   const power = age < 0.55 ? 0 : age < 0.9 ? (Math.sin(age * 70) > 0 ? 1 : 0.15) : 1;
-  const angry = firing || charge > 0 || roar > 0.3;
+  const angry = firing || charge > 0 || roar > 0.3 || !!beam;
   const blink = !angry && t % 3.7 < 0.16 ? Math.sin(((t % 3.7) / 0.16) * Math.PI) : 0;
   // his little hands paddle as he walks, come up to roar, and clap along when he is pleased
   const paddle = Math.sin(R.phase) * 4 * R.move;
@@ -1217,10 +1232,10 @@ function drawMechaZord(ctx, dpr, sprites, u) {
     reach: R.happy ? 2 : R.gunX * 0.3,
     hand: dead ? 0 : lifted + paddle,
     handFar: dead ? 0 : lifted * 0.7 - paddle,
-    lit: dead ? 0 : firing ? 0.8 + 0.2 * Math.sin(t * 16) : Math.max(charge, roar),
+    lit: dead ? 0 : firing || blast ? 0.8 + 0.2 * Math.sin(t * 16) : Math.max(charge, roar, gather),
     rack: dead ? 0 : u.salvo > 0 ? 1 : u.missileT !== undefined && u.missileT < 0.7 && u.target ? 1 - Math.max(0, u.missileT) / 0.7 : 0,
   };
-  if (!dead && (firing || charge > 0.15)) zordVents(ctx, firing ? 1 : charge, t);
+  if (!dead && (firing || charge > 0.15 || beam)) zordVents(ctx, firing || blast ? 1 : Math.max(charge, gather), t);
   let lid = blink;
   if (R.fidget === 'yawn') lid = Math.max(lid, Math.min(1, Math.sin(R.q * Math.PI) * 1.3));
   const gaze = angry ? [1, 0.2] : R.fidget === 'look' ? [Math.sin(R.q * TAU) * 1.5, -0.2] : R.fidget === 'sniff' ? [0.9, 1] : [Math.sin(t * 0.8) * 0.8 + 0.2, Math.sin(t * 1.5) * 0.5];
@@ -1231,8 +1246,8 @@ function drawMechaZord(ctx, dpr, sprites, u) {
     }
     if (!dead && power > 0.5) botGlow(g, ZORD_EYE.x * K, ZORD_EYE.y * K, (angry ? 15 : 11) * K, '70, 255, 205', angry ? 0.42 : 0.2);
     // his eye blazes, with a glare right across it
-    if (!dead && (firing || charge > 0.3)) {
-      const k = firing ? 1 : charge;
+    if (!dead && (firing || charge > 0.3 || beam)) {
+      const k = firing || beam ? 1 : charge;
       zordGlint(g, ZORD_EYE.x, ZORD_EYE.y, (19 + 2 * Math.sin(t * 29)) * k, 0.9, 0, `rgba(185, 255, 235, ${0.9 * k})`);
     }
     if (firing) zordFlare(g, t);
