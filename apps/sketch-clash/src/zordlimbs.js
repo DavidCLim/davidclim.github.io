@@ -1,8 +1,8 @@
 // MechaZaur's long legs and long tail, drawn from the pencil sketch for them: each leg has a big round hip, a banded
 // thigh and shin and a foot with claws pointing down; the tail is a run of banded segments that ends in one long spike
 // and two curved blades. Drawn in Robo Trooper's coordinates (facing +x), and all painted live so they can move.
-import { TAU, K } from './config.js?v=243';
-import { OUT } from './sprites.js?v=243';
+import { TAU, K } from './config.js?v=244';
+import { OUT } from './sprites.js?v=244';
 
 export const ZORD_LIFT = 6; // how much higher his legs carry his body
 
@@ -117,7 +117,7 @@ export function drawZordLeg(g, i, m) {
 
 // ---------------------------------------------------------------- the tail
 const ROOT_Y = 1; // where it leaves his back (before the legs lift him)
-const REST = [[-18, 1, 6], [-27, 6, 5.2], [-36, 10, 4.5], [-45, 11, 3.9], [-53, 9, 3.3], [-60, 5, 2.9]];
+const REST = [[-18, 13, 5], [-24, 17, 4.5], [-30, 19, 4], [-36, 18.5, 3.5], [-41, 16, 3]];
 const GROUND = 27; // and where the ground is, in the space of his raised body
 
 // how far through its full circle the tail has gone, p being how far through the whole swipe he is
@@ -140,7 +140,7 @@ export function zordTail(wag, k, droop, swipe) {
     const s = i / (REST.length - 1);
     // swung round flat to the ground, the end trailing behind the root
     const a = angle + s * 0.7 * trail;
-    const far = 16 + 52 * s;
+    const far = 16 + 34 * s;
     // down from his back to just off the ground (which is further down in his raised body's space)
     return [Math.cos(a) * far, lerp(ROOT_Y, GROUND, Math.min(1, s * 1.5)) + Math.sin(a) * far * 0.36, r];
   });
@@ -171,9 +171,9 @@ export function drawZordTail(g, tail, lit = 0) {
   const out = Math.atan2(ey - by, ex - bx);
   const up = Math.cos(out) < 0 ? 1 : -1; // whichever way round points the long spike skyward
   const steel = lit > 0.4 ? '#b7f7e6' : C.steel;
-  blade(g, ex, ey, out + up * 0.72, 18, 2.6, up * 0.9, steel);
-  blade(g, ex, ey, out + up * 0.04, 12.5, 2.7, up * 3.8, steel);
-  blade(g, ex, ey, out - up * 0.52, 12, 2.7, up * 4.3, steel);
+  blade(g, ex, ey, out + up * 0.72, 13, 2.3, up * 0.7, steel);
+  blade(g, ex, ey, out + up * 0.04, 9, 2.3, up * 2.8, steel);
+  blade(g, ex, ey, out - up * 0.52, 8.6, 2.3, up * 3.1, steel);
   for (let i = n - 2; i >= 0; i--) {
     const [x0, y0, r0] = pts[i];
     const [x1, y1, r1] = pts[i + 1];
@@ -191,7 +191,7 @@ export function drawSwoosh(g, swipe, front) {
   g.save();
   g.scale(K, K);
   g.lineCap = 'round';
-  for (const [radius, wide, rgb, a] of [[68, 8, '60, 225, 190', 0.55], [79, 3.2, '255, 255, 255', 0.9], [79, 1.5, '40, 190, 160', 0.9], [56, 3, '120, 240, 210', 0.5]]) {
+  for (const [radius, wide, rgb, a] of [[52, 7, '60, 225, 190', 0.55], [62, 3, '255, 255, 255', 0.9], [62, 1.4, '40, 190, 160', 0.9], [43, 2.6, '120, 240, 210', 0.5]]) {
     const steps = 18;
     for (let i = 0; i < steps; i++) {
       const a0 = angle + (i / steps) * 1.7;

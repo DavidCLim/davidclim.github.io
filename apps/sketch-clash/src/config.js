@@ -440,6 +440,13 @@ export const GIBBONDORE = {
   slam: { radius: 33, damage: 58, knock: 240, time: 0.62, cooldown: [0.55, 0.85] },
   leap: { min: 42, max: 205, time: 0.56, height: 36, cooldown: 3.4 },
   spell: { range: 260, cast: 0.42, cooldown: [1.6, 2.2], bolts: 3, damage: 31, blast: 11, speed: 235 },
+  // two blows of his staff and lightning comes down in a hollow circle round him. radius: of the circle; width: how
+  // thick the struck band is
+  storm: { first: 2.6, cooldown: [8, 10], radius: 54, width: 20, damage: 72 },
+  // the great beam: kept rare. Every `every` seconds he has only a `chance` of using it, and after he has, none for a
+  // long while. charge / fire: how long each part lasts; width: half the beam's width; sweep: how fast it can swing
+  // once firing (radians a second)
+  beam: { every: 4, chance: 0.14, cooldown: [24, 34], range: 380, width: 12, dps: 190, charge: 1.15, fire: 1.35, sweep: 0.4 },
   scale: 1.2,
   ring: 1.7,
   body: [25, 24, -6],
@@ -497,7 +504,7 @@ export const MECHAZORD = {
   // his third attack: a sweep of the tail along the ground. It does no damage; whoever it catches is flipped off their
   // feet and lies stunned. first: seconds before he can; cooldown: between sweeps; reach: how far the tail gets;
   // time: how long the sweep takes
-  swipe: { first: 1.2, cooldown: [3.6, 4.8], reach: 32, time: 0.85 },
+  swipe: { first: 1.2, cooldown: [3.6, 4.8], reach: 27, time: 0.85 },
   // his second attack: a salvo of homing missiles. first: seconds before the first one; every: between salvos;
   // range: further than his fire; flight: seconds each is in the air
   missiles: { first: 2.4, every: 5.5, count: 6, gap: 0.09, damage: 48, blast: 17, range: 390, flight: 0.9 },
