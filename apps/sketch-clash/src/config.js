@@ -613,9 +613,9 @@ export const CHIMERA = {
   bigFire: true, // sparks and burning ground with its breath (chimera.js)
   plume: { every: 0.019, speed: 2.15, life: 1.58, size: 2.35 },
   footFire: 24, // whoever is pressed right up against it is caught too
-  // the goat's mouth (see GOAT in chimera.js: it turns about 24 across and 57 up as it crouches to breathe, and reaches 21)
-  pivot: { x: 24 * K * 2.75, y: FEET + (-57 * K - FEET) * 2.75 },
-  muzzleLen: 21 * K * 2.75,
+  // the goat's mouth (see GOAT in chimera.js: it turns about 37 across and 64 up as it crouches to breathe, and reaches 19)
+  pivot: { x: 37 * K * 2.75, y: FEET + (-64 * K - FEET) * 2.75 },
+  muzzleLen: 19 * K * 2.75,
   // each move: first: seconds before it can; cooldown: between times.
   // the lion's leap. min / max: how far off the mark may be; damage: to the one it lands on, splash: to others within radius
   pounce: { first: 1.4, cooldown: [6, 8], min: 82, max: 230, windup: 0.36, time: 0.56, recover: 0.3, height: 52, damage: 90, splash: 48, radius: 50, knock: 320 },
