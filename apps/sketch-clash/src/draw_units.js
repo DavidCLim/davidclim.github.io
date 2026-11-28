@@ -1,18 +1,18 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=268';
-import { drawLayer, OUT, drawArcLine } from './sprites.js?v=268';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt, MALF_CORE, MALF_SPOTS } from './art_units.js?v=268';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=268';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=268';
-import { drawZordGround, drawZordAir } from './zordfx.js?v=268';
-import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=268';
-import { drawMalfAir, limpPose } from './malf.js?v=268';
-import { drawShieldAir } from './shield.js?v=268';
-import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=268';
-import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=268';
-import { drawGandalligator, drawGatorStill, drawGatorGround, drawGatorAir } from './gator.js?v=268';
-import { drawChimera, drawChimeraStill, drawChimeraGround, drawChimeraAir } from './chimera.js?v=268';
-import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=268';
-import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=268';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=269';
+import { drawLayer, OUT, drawArcLine } from './sprites.js?v=269';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt, MALF_CORE, MALF_SPOTS } from './art_units.js?v=269';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=269';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=269';
+import { drawZordGround, drawZordAir } from './zordfx.js?v=269';
+import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=269';
+import { drawMalfAir, limpPose } from './malf.js?v=269';
+import { drawShieldAir } from './shield.js?v=269';
+import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=269';
+import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=269';
+import { drawGandalligator, drawGatorStill, drawGatorGround, drawGatorAir } from './gator.js?v=269';
+import { drawChimera, drawChimeraStill, drawChimeraGround, drawChimeraAir } from './chimera.js?v=269';
+import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=269';
+import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=269';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the

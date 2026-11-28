@@ -3,10 +3,10 @@
 // stood a little higher so there is room for a beard, and dressed as a wizard: a tall grey hat, a grey cloak with a
 // silver hem, a long white beard and a wooden staff, which he leans on as he walks. His magic is blue and silver.
 // Drawn in art units, facing +x, with the ground 25 below the origin (as the alligator is).
-import { TAU, K, FEET } from './config.js?v=268';
-import { OUT } from './sprites.js?v=268';
-import { blob, ribbon, stick, poly, circ, ell, vgrad } from './art_kit.js?v=268';
-import { rigStep, applyBotBody } from './botrig.js?v=268';
+import { TAU, K, FEET } from './config.js?v=269';
+import { OUT } from './sprites.js?v=269';
+import { blob, ribbon, stick, poly, circ, ell, vgrad } from './art_kit.js?v=269';
+import { rigStep, applyBotBody } from './botrig.js?v=269';
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const lerp = (a, b, t) => a + (b - a) * t;

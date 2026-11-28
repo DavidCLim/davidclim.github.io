@@ -5,8 +5,8 @@
 // a hit, a landing) just give the springs a shove, and they overshoot and settle on their own.
 // All of it is for show; none of it changes what a robot does. It runs on the unit's own time (u.breath, which only
 // moves while the world does), so a paused robot holds still.
-import { TAU, K, FEET } from './config.js?v=268';
-import { drawLayer } from './sprites.js?v=268';
+import { TAU, K, FEET } from './config.js?v=269';
+import { drawLayer } from './sprites.js?v=269';
 
 // [stiffness, damping]: low damping rings on longer
 const SPRINGS = {
