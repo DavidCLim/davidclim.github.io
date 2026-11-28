@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=255';
-import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=255';
-import { buildGibbonArt, drawGibbonHatDrop } from './gibbon.js?v=255';
+import { TAU, K } from './config.js?v=256';
+import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=256';
+import { buildGibbonArt, drawGibbonHatDrop } from './gibbon.js?v=256';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -1480,6 +1480,13 @@ export const DROPS = {
     drawJugFist(g);
     g.restore();
   },
+  malftrooper(g) {
+    g.save();
+    g.scale(0.66, 0.66);
+    g.translate(0, 18);
+    drawMalfCap(g);
+    g.restore();
+  },
   jettrooper(g) {
     g.save();
     g.scale(0.72, 0.72);
@@ -1756,6 +1763,160 @@ function drawTrooperCap(g) {
   g.beginPath();
   g.ellipse(-9, -22.4, 4, 2, -0.5, 0, TAU);
   g.fill();
+}
+
+// ---------------------------------------------------------------- Malfunction Trooper
+// Robo Trooper's own armour, half blown away: a great hole torn in his side showing the works and the bomb inside, a
+// bite out of his back and his helmet, one pod broken off, and a bent foot.
+export const MALF_CORE = [-11.5, 9]; // the bomb, in art px
+// where the sparks jump from: the hole, the broken helmet and the broken pod
+export const MALF_SPOTS = [[-15, 3], [-12, -23], [-28, -12]];
+const HOLE = [[-26, -2], [-15, -4], [-11, 1.5], [-4, 0], [-5.5, 7.5], [1, 11], [-6, 13.5], [-3, 20], [-11.5, 18.5], [-14, 27], [-28, 24]];
+const BITE = [[-27, -12], [-17, -10], [-19.5, -7], [-14.5, -5.5], [-27, -2]];
+const CAP_BITE = [[-27, -38], [-6, -38], [-11, -27.5], [-5.5, -24.5], [-13.5, -22], [-10, -18], [-16.5, -17], [-27, -18]];
+
+function jagged(g, pts) {
+  g.beginPath();
+  pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
+  g.closePath();
+}
+
+function line(g, colour, wide, pts) {
+  g.strokeStyle = colour;
+  g.lineWidth = wide;
+  g.beginPath();
+  pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
+  g.stroke();
+}
+
+function soot(g, x, y, r, a) {
+  const gr = g.createRadialGradient(x, y, 0, x, y, r);
+  gr.addColorStop(0, `rgba(34, 22, 38, ${a})`);
+  gr.addColorStop(1, 'rgba(34, 22, 38, 0)');
+  g.fillStyle = gr;
+  g.beginPath();
+  g.arc(x, y, r, 0, TAU);
+  g.fill();
+}
+
+// a bite taken right out of whatever has been drawn, leaving a torn edge. `inside` clips the edge to what was there
+function biteOut(g, pts, inside) {
+  g.save();
+  g.globalCompositeOperation = 'destination-out';
+  jagged(g, pts);
+  g.fillStyle = '#000';
+  g.fill();
+  g.restore();
+  g.save();
+  g.beginPath();
+  inside();
+  g.clip();
+  jagged(g, pts);
+  g.strokeStyle = OUT;
+  g.lineWidth = 3.4;
+  g.lineJoin = 'miter';
+  g.stroke();
+  g.restore();
+}
+
+function drawMalfPack(g) {
+  botPoly(g, BOT.noz, [[-22, -12], [-14, -8], [-14, 8], [-22, 10]]);
+  // the bottom thruster is still there, dented
+  botPoly(g, BOT.noz, [[-26, 3], [-33, 7], [-31, 15], [-25, 13]]);
+  g.fillStyle = BOT.hole;
+  g.beginPath();
+  g.ellipse(-32.2, 11, 1.7, 4, 0.35, 0, TAU);
+  g.fill();
+  botBall(g, BOT.podDark, -21, 8, 8.2, 1.7);
+  line(g, OUT, 1.1, [[-25, 3.5], [-22, 7], [-24.5, 9.5]]);
+  // the top one is a torn stump with its pipe showing
+  botPoly(g, BOT.podDark, [[-28, -12], [-24, -10], [-24.5, -16], [-19.5, -13], [-17.5, -18.5], [-14, -12], [-14, -5], [-24, -4], [-29, -7]], 1.7);
+  botPoly(g, BOT.hole, [[-25, -11.5], [-20.5, -10.5], [-18, -13.5], [-16.5, -9.5], [-23, -7.5]], 1);
+  line(g, OUT, 2.6, [[-22, -10], [-26, -15], [-29.5, -13.5]]);
+  line(g, '#e8a33c', 1.2, [[-22, -10], [-26, -15], [-29.5, -13.5]]);
+  soot(g, -24, -9, 9, 0.5);
+}
+
+function drawMalfBody(g) {
+  drawTrooperBody(g, true);
+  const egg = () => g.ellipse(0, 0, 20.7, 23, 0, 0, TAU);
+  g.save();
+  g.beginPath();
+  egg();
+  g.clip();
+  soot(g, -13, 5, 19, 0.55);
+  soot(g, 13, 15, 9, 0.4);
+  soot(g, 2, -15, 7, 0.35);
+  // ---- the hole, and what is inside him
+  g.save();
+  jagged(g, HOLE);
+  g.fillStyle = '#242b38';
+  g.fill();
+  g.clip();
+  for (const y of [3, 15.5]) line(g, '#4a5a6b', 2.6, [[-27, y - 1], [-2, y + 1]]);
+  line(g, '#35414f', 3.4, [[-17, -6], [-19, 26]]);
+  // a cog
+  for (let i = 0; i < 8; i++) {
+    const an = (i / 8) * TAU;
+    line(g, '#8c9bbd', 2.2, [[-17 + Math.cos(an) * 3, 15 + Math.sin(an) * 3], [-17 + Math.cos(an) * 5.6, 15 + Math.sin(an) * 5.6]]);
+  }
+  botBall(g, '#8c9bbd', -17, 15, 4, 1);
+  botBall(g, '#353e60', -17, 15, 1.5, 0.8);
+  for (const [colour, pts] of [['#e4503c', [[-7, 9], [-5, 15], [-10, 17], [-9, 23]]], ['#f2c63a', [[-10, 5], [-15, 0], [-20, 3], [-25, 1]]], ['#4fc9e8', [[-14, 10], [-20, 9], [-22, 18], [-27, 19]]]]) {
+    line(g, OUT, 2.8, pts);
+    line(g, colour, 1.4, pts);
+  }
+  // the bomb in its housing
+  botBall(g, '#5a6379', ...MALF_CORE, 6, 1.3);
+  botBall(g, '#e0542f', ...MALF_CORE, 3.9, 1.1);
+  g.fillStyle = '#ffc47a';
+  g.beginPath();
+  g.arc(MALF_CORE[0] - 1.2, MALF_CORE[1] - 1.3, 1.4, 0, TAU);
+  g.fill();
+  g.restore();
+  // the torn edge of his plating
+  jagged(g, HOLE);
+  g.strokeStyle = OUT;
+  g.lineWidth = 1.9;
+  g.lineJoin = 'miter';
+  g.stroke();
+  line(g, '#d8d0ee', 0.9, [[-15, -5.4], [-10.4, -0.4], [-2.4, -1.6], [-3.8, 6.6], [2.8, 10.8], [-4.2, 14.4], [-1.6, 20.8]]);
+  // cracks running on from it, and across his visor
+  line(g, OUT, 1.1, [[-4, 0], [0.5, -3], [-1, -7.5], [3.5, -12.5], [2.5, -15]]);
+  line(g, OUT, 1, [[1, 11], [6, 14], [5, 17.5], [9.5, 21]]);
+  line(g, OUT, 0.8, [[0.5, -3], [4, -2]]);
+  // a dent in his front
+  line(g, OUT, 1.1, [[12, 11], [15, 13.5], [13.5, 15.5]]);
+  line(g, '#c9bfe2', 0.9, [[13, 10.4], [16.4, 13.4]]);
+  g.restore();
+  biteOut(g, BITE, egg);
+}
+
+// his helmet, cracked, with the back of it broken off
+function drawMalfCap(g) {
+  drawTrooperCap(g);
+  line(g, OUT, 1.2, [[3, -26.8], [0.5, -23], [5, -20.5], [3.5, -15.4]]);
+  line(g, OUT, 0.9, [[0.5, -23], [-4, -21.5]]);
+  g.save();
+  g.beginPath();
+  g.rect(-24, -17.5, 20, 7);
+  g.clip();
+  soot(g, -13, -14, 8, 0.5);
+  g.restore();
+  biteOut(g, CAP_BITE, () => {
+    g.moveTo(-19, -13.4);
+    g.bezierCurveTo(-18, -31, 19, -31, 20, -13.6);
+    g.lineTo(23, -11.4);
+    g.lineTo(-22, -11.4);
+    g.closePath();
+  });
+}
+
+// his bad foot: bent over, cracked across, with a bolt sticking out
+function drawMalfFoot(g) {
+  botPart(g, '#3d4563', 1.3, () => g.ellipse(0, 0.4, 6.6, 3.5, 0.12, 0, TAU));
+  line(g, OUT, 1, [[-1, -3], [0.8, -0.6], [-1.4, 1.2], [0.4, 3.6]]);
+  botBall(g, '#8c9bbd', -4.6, -2.4, 1.7, 0.9);
 }
 
 // The eyes are drawn live so they can look about, blink, narrow, spin up and die.
@@ -2431,6 +2592,17 @@ export function buildUnitArt() {
     foot: makeLayer(-9, -6, 9, 6, botFoot),
     shade: makeLayer(-32, -10, 32, 10, botShade),
     gun: makeLayer(-18, -14, 44, 14, drawTrooperGun),
+    ghost: makeLayer(-26, -30, 26, 26, (g) => ghostBody(g)),
+  };
+
+  art.malftrooper = {
+    feet: art.trooper.feet,
+    pack: makeLayer(-40, -24, -8, 22, drawMalfPack),
+    torso: makeLayer(-40, -38, 36, 28, drawMalfBody),
+    cap: makeLayer(-26, -34, 28, -8, drawMalfCap),
+    foot: art.trooper.foot,
+    badFoot: makeLayer(-9, -6, 9, 6, drawMalfFoot),
+    shade: art.trooper.shade,
     ghost: makeLayer(-26, -30, 26, 26, (g) => ghostBody(g)),
   };
 

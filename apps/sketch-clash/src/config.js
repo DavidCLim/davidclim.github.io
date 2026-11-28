@@ -107,6 +107,27 @@ export const TROOPER = {
   thrusters: 'walk',
 };
 
+// Malfunction Trooper: a Robo Trooper half blown to bits, with no gun. All he does is limp into the biggest crowd of
+// enemies he can find and blow up. Shot down on the way, he blows up where he drops (water just shorts him out).
+export const MALF = {
+  ...TROOPER,
+  kind: 'malf',
+  hp: 600, // a Robo Trooper has 170: he has to last long enough to get there
+  armor: 0.65, // and shots mostly go into holes that are already there
+  speed: 38,
+  burst: 0,
+  kick: false,
+  casing: false,
+  noDrop: true,
+  thrusters: undefined, // his are broken
+  boom: 20,
+  // his bomb. radius: how far the blast reaches; damage: at the middle of it (less further out); wind: seconds he stands
+  // shaking before it goes; crowd: how close together enemies count as one group; rush: this close to them he breaks into
+  // a frantic hobble, `hurry` times as fast, since many back away from anyone coming at them
+  bomb: { radius: 68, damage: 220, knock: 460, wind: 0.65, crowd: 46, rush: 125, hurry: 2.1 },
+  parts: ['botplate', 'botplate', 'botplate', 'botpod', 'botlens', 'malftrooper'],
+};
+
 // Gatling Trooper: between the Jet Trooper and MechaZaur. A heavier Robo Trooper whose rotary cannon pours out a long
 // stream of rounds, then winds down for a moment. He doesn't back away from anyone.
 export const GATLING = {
@@ -496,11 +517,12 @@ export const MECHAZORD = {
   offTime: 0.85,
   explodes: true, // and goes to pieces when he dies, like the other robots
   boom: 30,
-  // his rare one, a huge beam from his jaws. Every `every` seconds he has only a `chance` of using it, and after he has,
-  // none for a long while. charge / fire: how long each part lasts; width: half the beam's width; sweep: how fast it can
-  // swing once firing (radians a second). range: how near someone must be for him to start it; once it is out it runs
-  // clean off the edge of the field
-  beam: { every: 4, chance: 0.14, cooldown: [24, 34], range: 400, width: 14, dps: 200, charge: 1.15, fire: 1.35, sweep: 0.4 },
+  // his rare one, a huge beam of green fire from his jaws: his fire breath, only bigger. Every `every` seconds he has only
+  // a `chance` of using it, and after he has, none for a long while. charge / fire: how long each part lasts; width: half
+  // its width at his jaws, growing by `widen` as the fire swells; speed: how fast the fire rushes out; sweep: how fast he
+  // can swing it once firing (radians a second). range: how near someone must be for him to start it; once it is out it
+  // runs clean off the edge of the field
+  beam: { every: 4, chance: 0.14, cooldown: [24, 34], range: 400, width: 12, widen: 16, speed: 1100, dps: 200, charge: 1.15, fire: 1.35, sweep: 0.4 },
   // his third attack: a sweep of the tail along the ground. It does no damage; whoever it catches is flipped off their
   // feet and lies stunned. first: seconds before he can; cooldown: between sweeps; reach: how far the tail gets;
   // time: how long the sweep takes
@@ -533,6 +555,7 @@ export const SPECIES = {
   mechazord: { id: 'mechazord', label: 'MechaZaur', def: MECHAZORD },
   trooper: { id: 'trooper', label: 'Robo Trooper', def: TROOPER },
   jettrooper: { id: 'jettrooper', label: 'Jet Trooper', def: JETTROOPER },
+  malftrooper: { id: 'malftrooper', label: 'Malfunction Trooper', def: MALF },
   gatlingtrooper: { id: 'gatlingtrooper', label: 'Gatling Trooper', def: GATLING },
   juggernaut: { id: 'juggernaut', label: 'Robot Juggernaut', def: JUGGERNAUT },
   boar: { id: 'boar', label: 'Boar', def: BOAR },
@@ -559,7 +582,7 @@ export const SPECIES = {
 // The order of the palette (the knight only ever comes from a cavalry).
 export const TABS = [
   { id: 'army', label: 'Army', items: ['soldier', 'flamethrower', 'sniper', 'grenadier', 'archer', 'cowboy', 'ninja'] },
-  { id: 'robots', label: 'Robots', items: ['trooper', 'jettrooper', 'gatlingtrooper', 'mechazord'] }, // the Juggernaut's code is kept, but he isn't in the palette
+  { id: 'robots', label: 'Robots', items: ['trooper', 'jettrooper', 'malftrooper', 'gatlingtrooper', 'mechazord'] }, // the Juggernaut's code is kept, but he isn't in the palette
   { id: 'magic', label: 'Magic', items: ['mage', 'gibbondore'] },
   { id: 'terrain', label: 'Terrain', items: ['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower'] },
 ];

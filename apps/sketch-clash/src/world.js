@@ -1,9 +1,10 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=255';
-import { TerrainMap, WALL } from './terrain.js?v=255';
-import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordBeam, stepZordSwipe, stepZordFx } from './zordfx.js?v=255';
-import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=255';
-import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=255';
-import { installBeasts } from './beasts.js?v=255';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=256';
+import { TerrainMap, WALL } from './terrain.js?v=256';
+import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordBeam, stepZordSwipe, stepZordFx, moveBeamPuff } from './zordfx.js?v=256';
+import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=256';
+import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=256';
+import { installBeasts } from './beasts.js?v=256';
+import { resetMalfFx, stepMalf, stepMalfFx, queueBoom } from './malf.js?v=256';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -81,6 +82,7 @@ export class World {
     resetZordFx(this);
     resetGatlingFx(this);
     resetGibbonFx(this);
+    resetMalfFx(this);
     this.bombs = []; // grenades in the air
     this.arrows = []; // arrows in the air
     this.blasts = []; // explosions
@@ -474,6 +476,7 @@ export class World {
     resetZordFx(this);
     resetGatlingFx(this);
     resetGibbonFx(this);
+    resetMalfFx(this);
     this.terrain.clear();
     this.groups = [];
     this.started = false;
@@ -822,7 +825,8 @@ export class World {
       // killed at the top of a tower, his ghost rises from up there and nothing falls to the ground
       const aloft = u.perch && (u.perch.state === 'up' || u.perch.state === 'rise');
       this.ghosts.push({ x: u.x, y: aloft ? u.perch.p.y - u.def.perch.height : u.y, age: zapped ? -ZAP_TIME : 0, seed: Math.random(), species: u.species, facing: u.facing || 1 });
-      if (!aloft) this.corpses.push({ u: { ...u, slip: 0, dead: false, moving: false, hit: 0, flash: 0, burn: 0, charred: kind === 'burn' }, age: 0, zap: zapped });
+      // (one carrying a bomb is blown to bits, so there is nothing left to topple over)
+      if (!aloft && !(u.def.bomb && !zapped)) this.corpses.push({ u: { ...u, slip: 0, dead: false, moving: false, hit: 0, flash: 0, burn: 0, charred: kind === 'burn' }, age: 0, zap: zapped });
       if (u.def.smoke) {
         for (let i = 0; i < 2; i++) {
           this.puffs.push({
@@ -846,6 +850,7 @@ export class World {
       } else if ((kind === 'blast' || kind === 'snipe') && !u.def.noDrop && !u.def.creature) this.launchDrop(u);
       else if (this.onDeath) this.onDeath(u);
       if (u.def.explodes && !zapped) this.blowApart(u); // water doesn't blow him apart: he just drops
+      if (u.def.bomb && !zapped) queueBoom(this, u);
       this.afterDeath(u, kind, src);
     }
   }
@@ -1041,6 +1046,7 @@ export class World {
       case 'melee': this.stepMelee(u, dt); break;
       case 'jugger': this.stepJugger(u, dt); break;
       case 'jet': this.stepJet(u, dt); break;
+      case 'malf': stepMalf(this, u, dt); break;
       case 'grenade': this.stepGrenade(u, dt); break;
       case 'archer': this.stepArcher(u, dt); break;
       case 'cavalry': this.stepCavalry(u, dt); break;
@@ -2098,9 +2104,14 @@ export class World {
     stepZordFx(this, dt);
     stepGatlingFx(this, dt);
     stepGibbonFx(this, dt);
+    stepMalfFx(this, dt);
 
     for (const f of this.flames) {
       f.age += dt;
+      if (f.beam) {
+        moveBeamPuff(f);
+        continue;
+      }
       f.x += f.vx * dt;
       f.y += f.vy * dt;
       f.vx *= 0.975;

@@ -1,9 +1,9 @@
 // MechaZaur's own part of the world: his missiles, and the effects that go with him (the shockwave as he lets loose, the
 // embers and heat rings in his breath, the ground it leaves burning, the great blast when he goes). Only the missiles
 // hurt anyone; the rest is for show.
-import { TAU, K, FEET } from './config.js?v=255';
-import { WATER } from './terrain.js?v=255';
-import { swipeTurn, SWIPE_BACK } from './zordlimbs.js?v=255';
+import { TAU, K, FEET } from './config.js?v=256';
+import { WATER } from './terrain.js?v=256';
+import { swipeTurn, SWIPE_BACK } from './zordlimbs.js?v=256';
 
 const TEAL = '70, 245, 200';
 const GOLD = '255, 196, 80';
@@ -18,11 +18,11 @@ export function resetZordFx(world) {
 }
 
 // a ring racing outward. flat: lying on the ground. ang: squashed along a direction, as the heat rings in his breath are
-function nova(world, o) {
+export function nova(world, o) {
   world.novas.push({ age: 0, vx: 0, vy: 0, from: 0.2, flat: false, ang: null, ...o });
 }
 
-function embers(world, x, y, n, ang, spread, speed, green = false) {
+export function embers(world, x, y, n, ang, spread, speed, green = false) {
   for (let i = 0; i < n; i++) {
     const a = ang + (Math.random() - 0.5) * spread;
     const sp = speed * (0.45 + Math.random() * 0.75);
@@ -31,7 +31,7 @@ function embers(world, x, y, n, ang, spread, speed, green = false) {
 }
 
 // a patch of ground left burning (water won't)
-function scorch(world, x, y, r, life, ghost = false) {
+export function scorch(world, x, y, r, life, ghost = false) {
   if (world.terrain.at(x, y) & WATER) return;
   world.scorches.push({ x, y, r, life, ghost, age: 0, seed: Math.random() * 9 });
   if (world.scorches.length > SCORCH_MAX) world.scorches.shift();
@@ -104,6 +104,51 @@ function beamReach(world, from, angle) {
   return Math.max(0, t) + 90;
 }
 
+const BEAM_SWELL = 240; // how far the fire travels before it is as big as it gets
+const BEAM_GAP = 8; // how far apart its puffs are
+
+// The beam is made of the very same puffs as his fire breath, in green: bigger ones, poured out much faster and
+// straighter, each living long enough to get well off the field.
+function pourBeam(world, u, from, dx, dy, dt) {
+  const m = u.def.beam;
+  const b = u.beam;
+  const every = BEAM_GAP / m.speed;
+  b.pourT = (b.pourT || 0) + dt;
+  while (b.pourT >= every) {
+    b.pourT -= every;
+    const v = m.speed * (0.97 + Math.random() * 0.06);
+    world.flames.push({
+      beam: true,
+      x: from.x,
+      y: from.y,
+      x0: from.x,
+      y0: from.y,
+      dx,
+      dy,
+      v,
+      far: 0,
+      // (the world moves it on by this frame straight after, so it starts a frame back: puffs made in the same frame
+      // then come out spaced along the stream, not in one lump)
+      age: b.pourT - dt,
+      life: (b.reach + 70) / v,
+      size: 7,
+      grow: 15 + Math.random() * 6,
+      lat: (Math.random() - 0.5) * 38,
+      phase: Math.random() * TAU,
+      dark: Math.random() < 0.42,
+    });
+  }
+}
+
+// where a puff of the beam has got to: dead straight, spreading a little as it leaves him and rolling as it goes
+export function moveBeamPuff(f) {
+  f.far = Math.max(0, f.v * f.age);
+  const k = Math.min(1, f.far / BEAM_SWELL);
+  const side = (f.lat + Math.sin(f.far * 0.025 + f.phase) * 3) * k;
+  f.x = f.x0 + f.dx * f.far - f.dy * side;
+  f.y = f.y0 + f.dy * f.far + f.dx * side;
+}
+
 function aimBeam(u, t) {
   const m = beamMouth(u);
   return Math.atan2(t.y - 2 - m.y, t.x - m.x);
@@ -120,9 +165,13 @@ function stepBeam(world, u, dt) {
     if (!firing && Math.abs(t.x - u.x) > 3) u.facing = t.x > u.x ? 1 : -1;
     b.angle = clampTurn(b.angle, aimBeam(u, t), dt * (firing ? m.sweep : 3));
   }
-  if (before < m.charge && firing && world.sfx) {
-    world.sfx('boom', u.x);
-    world.sfx('flame', u.x);
+  if (before < m.charge && firing) {
+    const mouth = beamMouth(u);
+    embers(world, mouth.x, mouth.y, 30, b.angle, 1.3, 270, true);
+    if (world.sfx) {
+      world.sfx('boom', u.x);
+      world.sfx('flame', u.x);
+    }
   }
   b.reach = beamReach(world, beamMouth(u), b.angle);
   if (firing) {
@@ -130,12 +179,15 @@ function stepBeam(world, u, dt) {
     const dx = Math.cos(b.angle);
     const dy = Math.sin(b.angle);
     const reach = b.reach;
-    const out = reach * Math.min(1, (b.t - m.charge) / 0.16);
+    // the fire only burns as far as it has got
+    const out = Math.min(reach, m.speed * (b.t - m.charge));
+    const halfAt = (along) => m.width + m.widen * Math.min(1, along / BEAM_SWELL);
+    pourBeam(world, u, from, dx, dy, dt);
     world.eachEnemyNear(u.side, from.x + (dx * reach) / 2, from.y + (dy * reach) / 2, reach / 2 + 30, (o) => {
       const ox = o.x - from.x;
       const oy = o.y - 2 - from.y;
       const along = ox * dx + oy * dy;
-      if (along < 0 || along > out || Math.abs(ox * dy - oy * dx) > m.width + o.def.radius) return;
+      if (along < 0 || along > out || Math.abs(ox * dy - oy * dx) > halfAt(along) + o.def.radius) return;
       if (!o.def.noKnock) {
         o.kx += dx * 520 * dt;
         o.ky += dy * 520 * dt;
@@ -148,7 +200,7 @@ function stepBeam(world, u, dt) {
       const ox = p.x - from.x;
       const oy = p.y - 8 - from.y;
       const along = ox * dx + oy * dy;
-      if (along > 0 && along < out && Math.abs(ox * dy - oy * dx) <= m.width + 6) world.damageProp(p, m.dps * dt);
+      if (along > 0 && along < out && Math.abs(ox * dy - oy * dx) <= halfAt(along) + 6) world.damageProp(p, m.dps * dt);
     }
     // sparks thrown off all along it
     b.sparkT = (b.sparkT || 0) - dt;
@@ -156,8 +208,14 @@ function stepBeam(world, u, dt) {
       b.sparkT += 0.016;
       const along = 8 + Math.random() * Math.max(0, out - 90);
       const side = Math.random() < 0.5 ? -1 : 1;
-      const off = side * m.width * (0.5 + Math.random() * 0.6);
+      const off = side * halfAt(along) * (0.5 + Math.random() * 0.6);
       embers(world, from.x + dx * along - dy * off, from.y + dy * along + dx * off, 1, b.angle + side * 0.45, 0.7, 190, true);
+    }
+    // sparks spat from his jaws, as with his breath
+    b.spitT = (b.spitT || 0) - dt;
+    while (b.spitT <= 0) {
+      b.spitT += 0.022;
+      embers(world, from.x, from.y, 1, b.angle, 0.7, 300, true);
     }
     b.fireT = (b.fireT || 0) - dt;
     if (b.fireT <= 0) {
@@ -192,8 +250,8 @@ export function stepZordBeam(world, u, dt) {
   return true;
 }
 
-// ---- the look of it: his own fire attack, gone green and poured out in one straight torrent. The same soft round
-// puffs: pale where they leave his jaws, then bright, with darker ones tumbling among them, and sparks flying.
+// ---- the gathering before it: green fire dragged into his jaws. (The beam itself is drawn with the rest of the fire,
+// puff by puff: see pourBeam.)
 const GREEN = { white: '248, 255, 236', pale: '226, 255, 160', bright: '98, 222, 52', dark: '38, 142, 48' };
 
 // one of the soft puffs his fire is made of
@@ -210,79 +268,10 @@ function softPuff(rgb) {
   return c;
 }
 
-// a steady made-up number for the i-th of anything, so each puff keeps its own size and place from frame to frame
-const pick = (i, k) => {
-  const s = Math.sin(i * 127.1 + k * 311.7) * 43758.5453;
-  return s - Math.floor(s);
-};
-
-const PERIOD = 220; // world units of beam before a strip of it repeats
-const HALF = 30; // and how far a strip reaches to each side of the middle
-const FINE = 2.4; // its pixels to a unit
-
-// Hundreds of puffs would be slow to draw one by one, so the length of the beam is two strips of them, each drawn once,
-// that repeat end to end and rush along at different speeds. `layers`: [puff, how many, size, spread, alpha]
-function strip(layers, seed) {
-  const c = document.createElement('canvas');
-  c.width = PERIOD * FINE;
-  c.height = HALF * 2 * FINE;
-  const g = c.getContext('2d');
-  g.setTransform(FINE, 0, 0, FINE, 0, HALF * FINE);
-  layers.forEach(([puff, count, size, spread, alpha], n) => {
-    for (let i = 0; i < count; i++) {
-      const id = seed + n * 101 + i;
-      const x = ((i + pick(id, 1) * 0.8) / count) * PERIOD;
-      const y = (pick(id, 2) - 0.5) * 2 * spread;
-      const r = size * (0.75 + 0.5 * pick(id, 3));
-      g.globalAlpha = alpha;
-      // (drawn again a length either side, so the ends meet without a seam)
-      for (const dx of [-PERIOD, 0, PERIOD]) g.drawImage(puff, x + dx - r, y - r, r * 2, r * 2);
-    }
-  });
-  return c;
-}
-
 let fire = null;
 function beamFire() {
-  if (fire) return fire;
-  const puff = Object.fromEntries(Object.entries(GREEN).map(([k, rgb]) => [k, softPuff(rgb)]));
-  // a rounded end for that light, so it starts softly (its middle line matches the strip it joins)
-  const cap = document.createElement('canvas');
-  cap.width = cap.height = 64;
-  const cg = cap.getContext('2d');
-  const cr = cg.createRadialGradient(32, 32, 0, 32, 32, 32);
-  cr.addColorStop(0, 'rgba(120, 240, 70, 1)');
-  cr.addColorStop(1, 'rgba(120, 240, 70, 0)');
-  cg.fillStyle = cr;
-  cg.fillRect(0, 0, 64, 64);
-  const glow = document.createElement('canvas');
-  glow.width = 4;
-  glow.height = 64;
-  const g = glow.getContext('2d');
-  const gr = g.createLinearGradient(0, 0, 0, 64);
-  gr.addColorStop(0, 'rgba(120, 240, 70, 0)');
-  gr.addColorStop(0.5, 'rgba(120, 240, 70, 1)');
-  gr.addColorStop(1, 'rgba(120, 240, 70, 0)');
-  g.fillStyle = gr;
-  g.fillRect(0, 0, 4, 64);
-  fire = {
-    puff,
-    glow,
-    cap,
-    body: strip([[puff.dark, 30, 14, 12, 0.92], [puff.bright, 38, 13, 8, 0.95], [puff.dark, 9, 7, 17, 0.75], [puff.bright, 12, 6, 15, 0.8]], 11),
-    heart: strip([[puff.pale, 34, 9, 4.5, 0.95], [puff.white, 40, 4.6, 2, 0.95]], 977),
-  };
+  if (!fire) fire = Object.fromEntries(Object.entries(GREEN).map(([k, rgb]) => [k, softPuff(rgb)]));
   return fire;
-}
-
-// a strip laid along +x from `from` to `to`, having travelled `gone`; `tall` squeezes or swells it
-function lay(ctx, img, from, to, gone, tall) {
-  for (let x = from - (((from - gone) % PERIOD) + PERIOD) % PERIOD; x < to; x += PERIOD) {
-    const a = Math.max(from, x);
-    const b = Math.min(to, x + PERIOD);
-    if (b - a < 0.5) continue;
-    ctx.drawImage(img, (a - x) * FINE, 0, (b - a) * FINE, img.height, a, -HALF * tall, b - a, HALF * 2 * tall);
-  }
 }
 
 const stamp = (ctx, img, x, y, r) => ctx.drawImage(img, x - r, y - r, r * 2, r * 2);
@@ -290,15 +279,15 @@ const stamp = (ctx, img, x, y, r) => ctx.drawImage(img, x - r, y - r, r * 2, r *
 function drawBeam(ctx, u) {
   const m = u.def.beam;
   const b = u.beam;
+  if (b.t >= m.charge) return;
   const from = beamMouth(u);
   const clock = u.breath;
-  const F = beamFire();
-  const P = F.puff;
+  const P = beamFire();
   ctx.save();
   ctx.translate(from.x, from.y);
   ctx.rotate(b.angle);
   ctx.lineCap = 'round';
-  if (b.t < m.charge) {
+  {
     const p = b.t / m.charge;
     // a thin flickering line shows where it is going to go
     ctx.strokeStyle = `rgba(66, 176, 40, ${0.5 * p * (0.6 + 0.4 * Math.sin(clock * 40))})`;
@@ -335,60 +324,6 @@ function drawBeam(ctx, u) {
     stamp(ctx, P.bright, 5, 0, r * 1.5);
     stamp(ctx, P.pale, 5, 0, r * 1.1);
     stamp(ctx, P.white, 5, 0, r * 0.65 * (0.9 + 0.2 * Math.random()));
-    ctx.restore();
-    return;
-  }
-  const since = b.t - m.charge;
-  // it runs on past the edge of the field, so its end is never seen
-  const len = (b.reach || m.range) * Math.min(1, since / 0.16);
-  // it swells as it bursts out and thins away at the end
-  const swell = Math.min(1, since / 0.1) * Math.min(1, (m.fire - since) / 0.3);
-  const pulse = 1 + Math.sin(clock * 31) * 0.06 + (since < 0.22 ? 0.4 * (1 - since / 0.22) : 0);
-  const tall = Math.max(0.05, swell) * pulse * (m.width / 14);
-  const fade = Math.max(0, Math.min(1, swell * 1.8));
-
-  // the green light it throws round itself
-  ctx.globalAlpha = 0.34 * fade;
-  ctx.drawImage(F.cap, 0, 0, 32, 64, 16, -44 * tall, 44 * tall, 88 * tall);
-  ctx.drawImage(F.glow, 16 + 44 * tall, -44 * tall, Math.max(1, len - 16 - 44 * tall), 88 * tall);
-  // (only while it is still shooting out is there a far end to be seen)
-  if (since < 0.16) ctx.drawImage(F.cap, 32, 0, 32, 64, len - 0.5, -44 * tall, 44 * tall, 88 * tall);
-  // the stream thickens and thickens as it leaves him, then runs on at full strength
-  for (let i = 0; i < 6; i++) {
-    ctx.globalAlpha = fade * ((i + 1) / 7);
-    lay(ctx, F.body, 30 + i * 7, Math.min(len, 37 + i * 7), clock * 430, tall * (0.42 + i * 0.095));
-  }
-  ctx.globalAlpha = fade;
-  lay(ctx, F.body, 72, len, clock * 430, tall);
-
-  // puffs rolling off its sides, swelling and fading as they go, as they do at the edges of his fire
-  const loose = Math.min(46, Math.ceil(len / 19));
-  for (let i = 0; i < loose; i++) {
-    const span = len + 60;
-    const run = clock * (250 + 110 * pick(i, 4)) + pick(i, 5) * span;
-    const s = 34 + (run % span);
-    if (s > len) continue;
-    const age = (clock * (2.2 + pick(i, 6) * 1.6) + pick(i, 7)) % 1;
-    const side = i % 2 ? 1 : -1;
-    ctx.globalAlpha = fade * (1 - age * age) * 0.9;
-    stamp(ctx, i % 3 === 0 ? P.bright : P.dark, s, side * (10 + age * 15 + pick(i, 8) * 4) * tall, (4 + age * 7) * (0.7 + 0.6 * pick(i, 9)) * tall);
-  }
-  ctx.globalAlpha = fade;
-  lay(ctx, F.heart, 26, len, clock * 660, tall);
-
-  // out of his jaws: small and pale, swelling fast into the full torrent
-  for (let i = 15; i >= 0; i--) {
-    const s = (clock * 260 + i * 4.75) % 76;
-    const k = s / 76;
-    const id = Math.floor((clock * 260 + i * 4.75) / 76) * 16 + i;
-    const y = (pick(id % 997, 2) - 0.5) * 13 * k * tall;
-    ctx.globalAlpha = fade * (k > 0.8 ? (1 - k) / 0.2 : 1);
-    stamp(ctx, k < 0.3 ? P.pale : pick(id % 997, 3) < 0.34 && k > 0.55 ? P.dark : P.bright, s, y, (3.4 + 13 * k) * (0.85 + 0.3 * pick(id % 997, 1)) * tall);
-  }
-  ctx.globalAlpha = fade;
-  for (let i = 0; i < 7; i++) {
-    const s = (clock * 300 + i * 6.3) % 44;
-    stamp(ctx, i % 2 ? P.pale : P.white, s, Math.sin(clock * 37 + i * 2) * 1.8 * (s / 44), (3.2 + 4.4 * (s / 44)) * tall);
   }
   ctx.restore();
 }

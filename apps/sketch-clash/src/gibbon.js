@@ -5,15 +5,15 @@
 // feet), and a wizard's outfit: hat, cloak, belted robe with wide sleeves, and staff.
 // Drawn in art units, facing +x, with the ground about 28 below the origin. His limbs are drawn live, from where his
 // hands and feet are, so they can move smoothly through any pose.
-import { TAU, K, FEET } from './config.js?v=255';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=255';
-import { rigStep, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=255';
-import { STORM } from './gibbonfx.js?v=255';
+import { TAU, K, FEET } from './config.js?v=256';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=256';
+import { rigStep, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=256';
+import { STORM } from './gibbonfx.js?v=256';
 
 const C = {
   fur: '#5a463e', furDark: '#3d2f2a', furFar: '#342826', white: '#f4eddf', whiteShade: '#c9bda8',
-  skin: '#6e5054', robe: '#7a45b8', robeDark: '#55298d', robeFar: '#3c2063', cloak: '#47227c', cloakDark: '#2d1552',
-  lining: '#a8355f', gold: '#f3bf37', goldLite: '#ffe58a', belt: '#8a5426', wood: '#8f5f2e', woodDark: '#65401d',
+  skin: '#6e5054', robe: '#6c3db0', robeDark: '#4c2587', robeFar: '#381e66', cloak: '#35206a', cloakDark: '#1f1244',
+  lining: '#b03a6c', gold: '#f3bf37', goldLite: '#ffe58a', wood: '#8f5f2e', woodDark: '#65401d',
 };
 
 function shape(g, fill, lw, path) {
@@ -53,7 +53,7 @@ function star(g, x, y, r, fill) {
 
 // ---------------------------------------------------------------- the parts that keep their shape
 // the ape's trunk: a big back that humps up to the shoulders, over a belly that tucks in at the hips. It is dressed in
-// his robe: hem round the belly, a skirt hanging in points, a belt with a gold buckle, and stars
+// a plain robe: a skirt with a gold hem and one gold sash
 function drawBody(g) {
   const outline = () => {
     g.moveTo(-32.5, -6.3);
@@ -66,22 +66,16 @@ function drawBody(g) {
     g.bezierCurveTo(-12, 3.3, -24, 1.2, -29, -1.5);
     g.bezierCurveTo(-31.6, -3, -32.7, -4.6, -32.5, -6.3);
   };
-  // the skirt of the robe, hanging below the belly
+  // the skirt of the robe, hanging in one smooth sweep below the belly
   shape(g, C.robeDark, 1.7, () => {
     g.moveTo(-23, -3);
     g.lineTo(13, -3);
-    g.lineTo(12.6, 10.5);
-    g.quadraticCurveTo(8, 6.6, 4.6, 12);
-    g.quadraticCurveTo(0, 6.8, -4.6, 12.6);
-    g.quadraticCurveTo(-9, 7, -13.6, 11.6);
-    g.quadraticCurveTo(-18, 6, -23.6, 8.4);
+    g.lineTo(13.4, 9.4);
+    g.quadraticCurveTo(-5, 15, -24, 8.6);
   });
-  stroke(g, C.gold, 1.7, () => {
-    g.moveTo(-22.4, 6.6);
-    g.quadraticCurveTo(-17.6, 4.4, -13.6, 9.4);
-    g.quadraticCurveTo(-9, 4.8, -4.6, 10.4);
-    g.quadraticCurveTo(0, 4.6, 4.6, 9.8);
-    g.quadraticCurveTo(8, 4.6, 11.6, 8.2);
+  stroke(g, C.gold, 2.2, () => {
+    g.moveTo(-22.8, 6.8);
+    g.quadraticCurveTo(-5, 12.6, 12.4, 7.4);
   });
   const gr = g.createLinearGradient(0, -36, 0, 4);
   gr.addColorStop(0, C.robe);
@@ -91,25 +85,13 @@ function drawBody(g) {
   g.beginPath();
   outline();
   g.clip();
-  // the gold hem round his belly
-  stroke(g, C.gold, 4.6, () => {
-    g.moveTo(-32, -3.4);
-    g.bezierCurveTo(-22, 3, -10, 4.4, -1.7, 3.2);
-    g.bezierCurveTo(9, 2.4, 15, 0, 20, -5.4);
-  });
-  // the belt
-  const belt = () => {
+  const sash = () => {
     g.moveTo(-16.5, -34);
     g.quadraticCurveTo(-4.6, -17, -6.4, 6);
   };
-  stroke(g, OUT, 8, belt);
-  stroke(g, C.belt, 5.6, belt);
+  stroke(g, OUT, 7.4, sash);
+  stroke(g, C.gold, 4.8, sash);
   g.restore();
-  shape(g, C.gold, 1.2, () => g.rect(-10.8, -9, 7.2, 6.6));
-  shape(g, C.belt, 0.9, () => g.rect(-9, -7.3, 3.6, 3.2));
-  star(g, 3, -6.4, 2.9, C.goldLite);
-  star(g, -0.6, -13.6, 1.7, C.goldLite);
-  star(g, -15.6, -3.6, 1.9, C.goldLite);
   g.strokeStyle = OUT;
   g.lineWidth = 1.8;
   g.beginPath();
@@ -231,9 +213,7 @@ function drawHat(g) {
     g.quadraticCurveTo(0, -17.8, -8.8, -15.6);
   });
   oval(g, C.robe, 1.7, 1, -9.2, 18.5, 3.9, 0.04);
-  star(g, 1.6, -23, 3.6, C.goldLite);
-  star(g, -5.4, -33, 2.2, C.goldLite);
-  star(g, 6.2, -20.6, 1.5, C.goldLite);
+  star(g, 1.8, -23, 4.6, C.goldLite);
 }
 
 export function drawGibbonHatDrop(g) {
@@ -383,23 +363,6 @@ function sleeve(g, s, e, w, far) {
   });
 }
 
-// a broad gold band round the forearm, set with a red stone
-function bracer(g, e, w, far) {
-  const an = Math.atan2(w[1] - e[1], w[0] - e[0]);
-  g.save();
-  g.translate(e[0] + (w[0] - e[0]) * 0.56, e[1] + (w[1] - e[1]) * 0.56);
-  g.rotate(an - Math.PI / 2);
-  const r = far ? 6.6 : 8;
-  shape(g, far ? '#b98a26' : C.gold, 1.3, () => {
-    g.moveTo(-r, -2.6);
-    g.quadraticCurveTo(0, -0.6, r, -2.6);
-    g.lineTo(r, 2.2);
-    g.quadraticCurveTo(0, 4.4, -r, 2.2);
-  });
-  if (!far) oval(g, '#e0477c', 0.9, 0.6, 0.9, 1.9, 1.9);
-  g.restore();
-}
-
 // the ape's arm: a great round shoulder and a thick forearm hardly narrower than the top of it
 function arm(g, shoulder, wrist, far, bend = -1) {
   const elbow = joint(shoulder, wrist, bend < 0 ? 20 : 13, bend);
@@ -416,7 +379,6 @@ function arm(g, shoulder, wrist, far, bend = -1) {
     });
   }
   sleeve(g, shoulder, elbow, wrist, far);
-  bracer(g, elbow, wrist, far);
   fist(g, wrist[0], wrist[1], elbow, far);
 }
 
@@ -452,7 +414,7 @@ function cloak(g, sweep, wave) {
     g.quadraticCurveTo(11, -45, 13, -37);
     g.lineTo(2, -38);
   });
-  stroke(g, C.gold, 1.8, () => {
+  stroke(g, C.gold, 2, () => {
     g.moveTo(-14 - flick, -55);
     g.quadraticCurveTo(-3, -52, 3, -47);
     g.quadraticCurveTo(7, -53, 9 + flick, -58);
@@ -474,12 +436,6 @@ function cloak(g, sweep, wave) {
     g.bezierCurveTo(-12, -40, -22, -34, -28, -28);
     g.bezierCurveTo(-35 - sweep * 4, -21 - sweep * 5, -36 - sweep * 9 + wave * 2, -7 - sweep * 10, tx, ty);
   });
-  shape(g, C.lining, 0, () => {
-    g.moveTo(tx, ty);
-    g.quadraticCurveTo(-37 - sweep * 9, -5 - sweep * 11 + wave * 2, -30 - sweep * 3, -10 - sweep * 3);
-    g.quadraticCurveTo(-32 - sweep * 5, -1 - sweep * 7, -31 - sweep * 6, 3 - sweep * 9 - wave * 2);
-    g.quadraticCurveTo(tx + 7, ty + 5 - sweep * 3 + wave * 2, tx, ty);
-  });
   g.lineCap = 'round';
   for (const [col, wide] of [[OUT, 4.6], [C.gold, 2.4]]) {
     g.strokeStyle = col;
@@ -488,15 +444,17 @@ function cloak(g, sweep, wave) {
     hem();
     g.stroke();
   }
-  star(g, -15, -31 + wave * 0.4, 2.9, C.goldLite);
-  star(g, -27 - sweep * 4, -17 - sweep * 5 + wave * 1.2, 2.1, C.goldLite);
-  star(g, -3, -36, 1.8, C.goldLite);
 }
 
-// the clasp that holds it
+// the gold star that holds it
 function clasp(g) {
-  oval(g, C.gold, 1.4, 11.5, -27.5, 3.4, 3.4);
-  oval(g, '#c2386b', 0.9, 11.5, -27.5, 1.6, 1.6);
+  shape(g, C.gold, 1.3, () => {
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * TAU - Math.PI / 2;
+      const r = i % 2 ? 2.7 : 5.6;
+      g.lineTo(11.5 + Math.cos(a) * r, -27.5 + Math.sin(a) * r);
+    }
+  });
 }
 
 // ---------------------------------------------------------------- poses
@@ -784,32 +742,6 @@ export function drawGibbondore(ctx, dpr, sprites, u, overlay) {
         g.stroke();
         g.fillStyle = '#ffe14a';
         g.fill();
-      }
-      if (storming) {
-        const beat = Math.floor(t * 22);
-        const noise = (i) => {
-          const v = Math.sin(beat * 12.9898 + i * 78.233) * 43758.5453;
-          return v - Math.floor(v);
-        };
-        const build = Math.min(1, u.stormT / STORM.strike);
-        g.lineJoin = 'miter';
-        g.lineCap = 'round';
-        for (let i = 0; i < 5; i++) {
-          let a = (i / 5) * TAU + noise(i) * 1.3;
-          const pts = [[x + Math.cos(a) * 5, y + Math.sin(a) * 5]];
-          for (let j = 1; j <= 3; j++) {
-            const r = 5 + j * (3 + 4 * build);
-            const b = a + (noise(i * 5 + j) - 0.5) * 0.9;
-            pts.push([x + Math.cos(b) * r, y + Math.sin(b) * r]);
-          }
-          for (const [col, wide] of [[OUT, 2.8], ['#ffd51a', 1.6], ['#fffbe2', 0.6]]) {
-            g.strokeStyle = col;
-            g.lineWidth = wide * K;
-            g.beginPath();
-            for (const [px, py] of pts) g.lineTo(px * K, py * K);
-            g.stroke();
-          }
-        }
       }
       if (power < 0.3) return;
       g.fillStyle = `rgba(255, 250, 215, ${power})`;
