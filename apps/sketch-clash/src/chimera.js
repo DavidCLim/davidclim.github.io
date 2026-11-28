@@ -5,10 +5,10 @@
 // Each head has its own tricks. The lion leaps, rakes with its claws and roars (leaving those near it seeing stars);
 // the goat breathes fire and charges horns first; and the snake, all the while, lashes out and leaves poison behind.
 // Drawn in art units, facing +x, with the ground 25 below the origin.
-import { TAU, K, FEET } from './config.js?v=270';
-import { poly, circ, ell } from './art_kit.js?v=270';
-import { rigStep, applyBotBody } from './botrig.js?v=270';
-import { scorch } from './zordfx.js?v=270';
+import { TAU, K, FEET } from './config.js?v=271';
+import { poly, circ, ell } from './art_kit.js?v=271';
+import { rigStep, applyBotBody } from './botrig.js?v=271';
+import { scorch } from './zordfx.js?v=271';
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -21,8 +21,8 @@ const C = {
   fur: '#d9a23f', furDark: '#c18a31', furFar: '#9d7029', belly: '#f1d89c',
   mane: '#97572b', maneDark: '#7c431f', nose: '#4a2a26', maw: '#6a1f28', tongue: '#d96a75', tooth: '#fdfbf2', claw: '#f6f2e6',
   goat: '#6a6176', goatDark: '#554d61', goatFar: '#463f51', throat: '#b3a8bd', hoof: '#2e2735', pink: '#d99aa6', brow: '#3a2a2c',
-  horn: '#efe8d8', hornFar: '#cdc4b0',
-  snake: '#7fac43', snakeDark: '#517a2c', snakeBelly: '#cfdc8c',
+  horn: '#efe8d8', hornFar: '#cdc4b0', hornTip: '#8d7c64', maneLight: '#b8723a', scar: '#f7dfae', blaze: '#8b8298',
+  snake: '#7fac43', snakeDark: '#486f27', snakeBelly: '#cfdc8c', snakeMark: '#e6d55a',
 };
 
 // where the goat's head turns on its neck, and how far along from there its mouth is. (config.js puts the fire there)
@@ -143,15 +143,45 @@ function limbShape(g, hip, ankle, top, mid, low, bow, fill) {
   shape(g, fill, LW, path);
 }
 
-// the lion's forelegs: golden, ending in a round paw with three little white claws
+// a small ragged tuft at (x, y) on a leg, its points streaming back
+function tuft(g, x, y, size, fill) {
+  poly(g, [[x + 3 * size, y - 5 * size], [x - 5.4 * size, y - 1.6 * size], [x - 1.8 * size, y - 0.4 * size], [x - 7 * size, y + 3.8 * size], [x - 1.4 * size, y + 2.6 * size], [x - 3.4 * size, y + 7.4 * size], [x + 3 * size, y + 3.6 * size]], fill, 0.95);
+}
+
+// where a leg's knee comes, for the tuft behind it
+function kneeAt(hip, ankle, bow) {
+  const dx = ankle[0] - hip[0];
+  const dy = ankle[1] - hip[1];
+  const d = Math.hypot(dx, dy) || 1;
+  return [hip[0] + dx * 0.56 - (dy / d) * bow, hip[1] + dy * 0.56 + (dx / d) * bow];
+}
+
+// the lion's forelegs: golden, ending in a round paw with big curved white claws
 function foreleg(g, hip, foot, turn, far) {
   const fill = far ? C.furFar : C.fur;
   const ankle = [foot[0] - 1.4, foot[1] - 4.6];
+  const elbow = kneeAt(hip, ankle, 3.2);
+  tuft(g, elbow[0] - 3.4, elbow[1] - 1, far ? 0.8 : 1, far ? C.maneDark : C.mane);
   limbShape(g, hip, ankle, far ? 9 : 10.6, 5.4, 4.9, 3.2, fill);
+  if (!far) {
+    lines(g, 0.95, () => {
+      // the muscle of its shoulder, and a sinew down the arm
+      g.moveTo(hip[0] - 7.4, hip[1] - 0.6);
+      g.bezierCurveTo(hip[0] - 4, hip[1] + 7.6, hip[0] + 4, hip[1] + 7.4, hip[0] + 6.6, hip[1] + 0.6);
+      g.moveTo(elbow[0] + 1.4, elbow[1] - 2);
+      g.quadraticCurveTo(elbow[0] + 3.4, elbow[1] + 3, ankle[0] + 0.4, ankle[1] - 1.6);
+    }, 'rgba(78, 48, 12, 0.6)');
+  }
   g.save();
   g.translate(foot[0], foot[1]);
   g.rotate(turn);
-  for (const [x, y] of [[7.4, -3.4], [8.6, -1.4], [8, 0.4]]) poly(g, [[x - 1.2, y - 1.5], [x + 3.4, y + 0.9], [x - 1.2, y + 0.9]], C.claw, 0.7);
+  for (const [x, y] of [[7, -4], [8.6, -1.8], [8.2, 0.2]]) {
+    shape(g, C.claw, 0.75, () => {
+      g.moveTo(x - 1.4, y - 1.8);
+      g.quadraticCurveTo(x + 3.8, y - 2, x + 5.2, y + 2);
+      g.quadraticCurveTo(x + 2.4, y + 0.4, x - 1.2, y + 1);
+    });
+  }
   const pad = () => {
     g.moveTo(-6.2, -5.4);
     g.bezierCurveTo(-1, -8.2, 7, -7.4, 9, -3);
@@ -168,8 +198,10 @@ function foreleg(g, hip, foot, turn, far) {
   g.quadraticCurveTo(-7.2, 0.8, -6.4, -3.6);
   ink(g);
   lines(g, 0.8, () => {
-    g.moveTo(3.6, 1.2);
-    g.quadraticCurveTo(4.8, -1.2, 3.4, -2.8);
+    for (const x of [0.6, 4.4]) {
+      g.moveTo(x, 1.2);
+      g.quadraticCurveTo(x + 1.2, -1.2, x - 0.2, -2.8);
+    }
   });
   g.restore();
 }
@@ -177,7 +209,15 @@ function foreleg(g, hip, foot, turn, far) {
 // the goat's hind legs: the same build, dark, on split hooves
 function hindleg(g, hip, foot, turn, far) {
   const ankle = [foot[0] - 1, foot[1] - 5.4];
+  const hock = kneeAt(hip, ankle, 6.2);
+  tuft(g, hock[0] - 2.4, hock[1] - 0.6, 0.8, far ? C.goatFar : C.goatDark);
   limbShape(g, hip, ankle, far ? 9.4 : 11.2, 4.6, 3.8, 6.2, far ? C.goatFar : C.goat);
+  if (!far) {
+    lines(g, 0.95, () => {
+      g.moveTo(hip[0] - 7.6, hip[1] - 1);
+      g.bezierCurveTo(hip[0] - 5, hip[1] + 8, hip[0] + 4, hip[1] + 8, hip[0] + 7, hip[1]);
+    }, 'rgba(26, 18, 36, 0.55)');
+  }
   g.save();
   g.translate(foot[0], foot[1]);
   g.rotate(turn);
@@ -188,6 +228,7 @@ function hindleg(g, hip, foot, turn, far) {
     g.lineTo(-5.2, 1.4);
     g.quadraticCurveTo(-5.6, -2.6, -4.6, -5.8);
   });
+  poly(g, [[-5.4, -8], [3.6, -8.4], [4.4, -3.4], [2, -5.4], [0.4, -2.6], [-1.6, -5.2], [-3.6, -2.8], [-4.4, -5], [-7.2, -3.6]], far ? C.goatDark : C.blaze, 0.9);
   lines(g, 0.8, () => {
     g.moveTo(1.2, 1.2);
     g.lineTo(0.6, -2.6);
@@ -218,6 +259,21 @@ function torso(g) {
       g.bezierCurveTo(-14, -1, 12, 3, 38, -5);
       g.lineTo(44, 18);
     });
+    // slanting strokes across the pale belly, as on the game's dragon
+    lines(g, 1, () => {
+      for (const x of [-6, 2, 10, 18, 26]) {
+        g.moveTo(x, -4);
+        g.lineTo(x + 6, 10);
+      }
+    }, 'rgba(150, 104, 40, 0.45)');
+    // tawny stripes running down from its back
+    for (const [x, len] of [[-8, 13], [1, 16], [10, 12]]) {
+      shape(g, '#9c6a24', 0, () => {
+        g.moveTo(x - 3.4, -30);
+        g.quadraticCurveTo(x - 1, -22 + len * 0.4, x - 2.6, -26 + len);
+        g.quadraticCurveTo(x + 3, -22 + len * 0.3, x + 3.4, -30);
+      });
+    }
     // the goat's hindquarters, in the same two flat tones
     const rear = () => {
       g.moveTo(-50, -34);
@@ -237,6 +293,9 @@ function torso(g) {
       g.bezierCurveTo(-6, -18, -24, -10, -16, 18);
     });
   });
+  // shaggy hair under its chest and off its rump
+  poly(g, [[16, 6], [34, 2], [31, 9], [35.4, 13], [28, 11.4], [28.4, 16.4], [22.6, 11], [20, 14.6], [18.4, 9.4]], C.mane, 1);
+  poly(g, [[-36, 2], [-44.6, 5], [-39.6, 5.4], [-43, 11], [-36.4, 8.4], [-37, 13], [-30, 7]], C.goatDark, 1);
   g.beginPath();
   round();
   g.closePath();
@@ -244,7 +303,7 @@ function torso(g) {
 }
 
 // ---------------------------------------------------------------- eyes, as the game's animals have them
-// a small round eye: its colour, and a pupil (slot: lying flat, as a goat's does)
+// a small round eye: its colour, and a pupil (slot: true, lying flat as a goat's does; 'up', an upright slit)
 function beastEye(g, x, y, r, o, iris, slot) {
   if (o.dead) {
     lines(g, 1.3, () => {
@@ -264,7 +323,8 @@ function beastEye(g, x, y, r, o, iris, slot) {
     return;
   }
   ell(g, x, y, r, r * 0.92 * open, iris, 0.95);
-  if (slot) ell(g, x + r * 0.18, y + 0.2, r * 0.62, r * 0.27 * open, '#17121a', 0);
+  if (slot === 'up') ell(g, x + r * 0.2, y + 0.1, r * 0.2, r * 0.74 * open, '#17121a', 0);
+  else if (slot) ell(g, x + r * 0.18, y + 0.2, r * 0.62, r * 0.27 * open, '#17121a', 0);
   else ell(g, x + r * 0.26, y + 0.15, r * 0.46, r * 0.52 * open, '#17121a', 0);
   circ(g, x + r * 0.08, y - r * 0.28 * open, r * 0.17, '#ffffff', 0);
 }
@@ -296,12 +356,18 @@ function horn(g, root, c1, c2, tip, wide, fill, heat) {
     through(g, L);
     through(g, [...R].reverse());
   });
-  lines(g, 0.75, () => {
-    for (const i of [3, 6, 9]) {
+  // the dark tip, and the rings it has grown
+  shape(g, C.hornTip, LW, () => {
+    g.moveTo(L[12][0], L[12][1]);
+    through(g, L.slice(12));
+    through(g, R.slice(12).reverse());
+  });
+  lines(g, 0.95, () => {
+    for (const i of [2, 4, 6, 8, 10]) {
       g.moveTo(L[i][0], L[i][1]);
-      g.lineTo((pts[i + 1][0] + R[i][0]) / 2, (pts[i + 1][1] + R[i][1]) / 2);
+      g.quadraticCurveTo(pts[i + 1][0], pts[i + 1][1], R[i][0], R[i][1]);
     }
-  }, 'rgba(60, 48, 40, 0.45)');
+  }, 'rgba(60, 48, 40, 0.6)');
   if (heat > 0.02) {
     g.beginPath();
     g.moveTo(pts[0][0], pts[0][1]);
@@ -325,7 +391,7 @@ function goat(g, o) {
   };
   // little dark points down the back of the neck, like the crest on the game's dragon
   for (const [x, y, a] of [[gx - 9, gy - 4.6, -2.5], [gx - 14, gy + 2.6, -2.75], [-9.4, -34, -2.95], [-11.4, -27, -3.05], [-13.4, -21, -3.15]]) {
-    poly(g, [[x + 3, y - 2.6], [x + Math.cos(a) * 7.4, y + Math.sin(a) * 7.4], [x + 1.4, y + 3.4]], C.goatDark, 0.95);
+    poly(g, [[x + 3, y - 3], [x + Math.cos(a) * 10.4, y + Math.sin(a) * 10.4], [x + 1.4, y + 3.8]], C.goatDark, 0.95);
   }
   shape(g, C.goat, 0, neck);
   within(g, neck, () => {
@@ -337,7 +403,7 @@ function goat(g, o) {
       g.lineTo(gx + 14, gy);
     });
     lines(g, 0.9, () => {
-      for (const [x, y] of [[gx - 1, gy + 13], [9.4, -31], [9.6, -23.4]]) {
+      for (const [x, y] of [[gx + 2, gy + 8], [gx - 1, gy + 13], [11, -37], [9.4, -31], [9.2, -25], [9.6, -19]]) {
         g.moveTo(x - 1, y - 3);
         g.lineTo(x + 6, y + 3);
       }
@@ -351,9 +417,9 @@ function goat(g, o) {
   g.translate(GOAT.x, gy);
   g.rotate(o.aim);
   if (o.heat > 0.02) glow(g, GOAT.mouth, 2, 15 + 10 * o.heat, '255, 130, 30', 0.6 * o.heat);
-  horn(g, [3, -10], [-1, -25], [-18, -28], [-28, -17], 5.4, C.hornFar, o.heat * 0.7);
-  // a little pointed beard
-  poly(g, [[6, 5], [5.4 - o.wave * 0.7, 15], [12.6, 5.6]], C.goatDark, 1);
+  horn(g, [3, -10], [2, -31], [-21, -35], [-35, -19], 7, C.hornFar, o.heat * 0.7);
+  // a long forked beard
+  poly(g, [[3.4, 5], [2 - o.wave, 19.6], [7.4, 11], [9.6 - o.wave * 0.7, 17], [13.6, 5.6]], C.goatDark, 1);
   const open = o.jaw * 0.5;
   const swing = (x, y) => [5 + (x - 5) * Math.cos(open) - (y - 1.4) * Math.sin(open), 1.4 + (x - 5) * Math.sin(open) + (y - 1.4) * Math.cos(open)];
   if (o.jaw > 0.1) {
@@ -385,12 +451,26 @@ function goat(g, o) {
     g.bezierCurveTo(3, 7.6, -7, 6.4, -8, -2);
   };
   shape(g, C.goat, 0, head);
-  within(g, head, () => ell(g, 3, -14, 20, 7.4, C.goatDark, 0, 0.16));
+  within(g, head, () => {
+    ell(g, 3, -14, 20, 7.4, C.goatDark, 0, 0.16);
+    // a pale blaze down its long face
+    shape(g, C.blaze, 0, () => {
+      g.moveTo(11, -12);
+      g.quadraticCurveTo(19, -7.4, 30, -4.4);
+      g.quadraticCurveTo(19, -4.6, 9, -9.4);
+    });
+  });
   g.beginPath();
   head();
   g.closePath();
   ink(g);
   circ(g, 23.6, -3.4, 1.15, '#1c1620', 0);
+  lines(g, 0.85, () => {
+    g.moveTo(20.4, -2);
+    g.quadraticCurveTo(23, -0.6, 26.2, -1.4);
+    g.moveTo(1.6, -2.4);
+    g.quadraticCurveTo(6, 0.2, 12, -1.6);
+  }, 'rgba(24, 16, 34, 0.7)');
   beastEye(g, 6.6, -6.2, 3.5, o, o.heat > 0.3 || o.fury > 0.3 ? '#ff8a1e' : '#f2c232', true);
   brow(g, 1.6, -9.6, 12.4, -8.6, C.brow, 2.2);
   // a long ear, drooping back
@@ -408,7 +488,7 @@ function goat(g, o) {
     g.bezierCurveTo(-8, 4, -4.4, 2.2, -2.2, 1);
   });
   g.restore();
-  horn(g, [-1, -10.4], [-7, -28], [-27, -29], [-35, -13], 6.6, C.horn, Math.max(o.heat * 0.7, o.fury));
+  horn(g, [-1, -10.4], [-5, -35], [-32, -37], [-44, -14], 8.8, C.horn, Math.max(o.heat * 0.7, o.fury));
   if (o.fury > 0.05) glow(g, -18, -18, 25, '190, 60, 255', 0.45 * o.fury);
   // fire gathering at its lips: motes spiralling in to a ball that swells
   if (o.charge > 0.04) {
@@ -430,42 +510,50 @@ function goat(g, o) {
 }
 
 // ---------------------------------------------------------------- the lion's head
-// the mane: one flat shaggy shape with short points all round, longer at the back, and a darker patch low behind
-function mane(g, o) {
-  const p = 1 + o.puff * 0.1;
-  const n = 21;
-  const cx = -4;
-  const cy = 0;
-  const rim = (a) => [cx + Math.cos(a) * 21.5 * p, cy + Math.sin(a) * 22.5 * p];
+// the mane: two flat shaggy shapes, one inside the other, with short points all round that are longest at the back
+function shag(g, o, n, cx, cy, rx, ry, reach, turn, fill) {
+  const rim = (a) => [cx + Math.cos(a) * rx, cy + Math.sin(a) * ry];
   const round = () => {
-    g.moveTo(...rim(0));
+    g.moveTo(...rim(turn));
     for (let i = 0; i < n; i++) {
-      const a0 = (i / n) * TAU;
-      const a1 = ((i + 1) / n) * TAU;
+      const a0 = turn + (i / n) * TAU;
+      const a1 = turn + ((i + 1) / n) * TAU;
       const back = Math.max(0, -Math.cos(a0)); // 0 in front, 1 straight behind
-      const long = 3.6 + back * 5.4 + (i % 2) * 1.4;
+      const long = reach + back * reach * 1.5 + (i % 2) * 1.6;
       // each point is swept toward the back
-      const am = (a0 + a1) / 2 + (Math.sin(a0) > 0 ? 0.13 : -0.13);
-      const sway = Math.sin(o.clock * o.wind * 0.7 + i * 1.9) * 0.8 * (0.3 + back);
-      const tip = [cx + Math.cos(am) * (21.5 * p + long), cy + Math.sin(am) * (22.5 * p + long) + sway];
-      const end = rim(a1);
+      const am = (a0 + a1) / 2 + (Math.sin(a0) > 0 ? 0.14 : -0.14);
+      const sway = Math.sin(o.clock * o.wind * 0.7 + i * 1.9 + turn * 9) * 0.9 * (0.3 + back);
+      const tip = [cx + Math.cos(am) * (rx + long), cy + Math.sin(am) * (ry + long) + sway];
       g.quadraticCurveTo(...rim(a0 + (a1 - a0) * 0.7), ...tip);
-      g.lineTo(...end);
+      g.lineTo(...rim(a1));
     }
   };
-  shape(g, C.mane, 0, round);
-  within(g, round, () => ell(g, cx - 12, cy + 11, 25, 18, C.maneDark, 0, 0.35));
+  shape(g, fill, 0, round);
+  return round;
+}
+
+function mane(g, o) {
+  const p = 1 + o.puff * 0.1;
+  // the outer layer, with a darker patch low behind
+  const outer = shag(g, o, 21, -5, 0, 24 * p, 25 * p, 4.4, 0, C.mane);
+  within(g, outer, () => ell(g, -17, 12, 26, 19, C.maneDark, 0, 0.35));
   g.beginPath();
-  round();
+  outer();
   g.closePath();
   ink(g);
-  // a few short strokes, as on the game's boar
-  lines(g, 0.9, () => {
-    for (const [x, y] of [[-19, -12], [-22, -1], [-18, 10], [-10, -18], [-8, 17]]) {
+  lines(g, 0.95, () => {
+    for (const [x, y] of [[-23, -13], [-27, -1], [-22, 11], [-13, -20], [-11, 19]]) {
       g.moveTo(x, y);
-      g.lineTo(x - 5, y + 1.4);
+      g.lineTo(x - 6, y + 1.6);
     }
   }, 'rgba(48, 24, 10, 0.55)');
+  // the lighter layer round its face
+  const inner = shag(g, o, 17, -1.4, 0.6, 18.4 * p, 19.4 * p, 3.2, 0.19, C.maneLight);
+  within(g, inner, () => ell(g, -17, 14, 17, 11, C.mane, 0, 0.4));
+  g.beginPath();
+  inner();
+  g.closePath();
+  ink(g, 0.95);
 }
 
 // jaw: 0..1. Shut, two small teeth still show, as on the game's dragon and alligator
@@ -520,7 +608,9 @@ function lionHead(g, o) {
   g.closePath();
   ink(g);
   // teeth along the top of the mouth
-  for (const x of open > 0.1 ? [24.6, 20.4, 16.2, 12.4] : [23.4, 18.6]) poly(g, [[x - 1.6, 5.9], [x, 5.9 + (open > 0.1 ? 4 : 3)], [x + 1.6, 6]], C.tooth, 0.7);
+  for (const [x, long] of open > 0.1 ? [[24.6, 5.6], [20.4, 3.4], [16.2, 3.4], [12.4, 4.4]] : [[23.6, 5.2], [18.8, 3.2], [13.4, 2.4]]) poly(g, [[x - 1.7, 5.9], [x + 0.2, 5.9 + long], [x + 1.7, 6]], C.tooth, 0.7);
+  // one lower fang standing up over its lip
+  if (open <= 0.1) poly(g, [[19.8, 6.2], [21.2, 2.8], [22.6, 6.2]], C.tooth, 0.7);
   // the mouth line, turning down a little at the corner
   lines(g, LW, () => {
     g.moveTo(27, 6.1);
@@ -539,8 +629,38 @@ function lionHead(g, o) {
     g.quadraticCurveTo(29, 1.6, 27.4, 3);
   });
   for (const [x, y] of [[21.4, 0.8], [24, 2], [20.6, 3.2]]) circ(g, x, y, 0.65, '#6b4522', 0);
-  beastEye(g, 7, -5, 3.9, o, '#f6efd6', false);
-  brow(g, 1.4, -9.8, 13.4, -8, C.brow, 2.6);
+  // whiskers, and the creases of its muzzle and cheek
+  lines(g, 0.6, () => {
+    for (const [x, y, tx, ty] of [[21.6, 1.4, 36, -0.6], [21.8, 2.8, 36.4, 4], [21, 3.8, 33.4, 9]]) {
+      g.moveTo(x, y);
+      g.quadraticCurveTo((x + tx) / 2, (y + ty) / 2 - 1.6, tx, ty);
+    }
+  }, 'rgba(60, 40, 24, 0.8)');
+  lines(g, 0.9, () => {
+    g.moveTo(15.6, -4.6);
+    g.quadraticCurveTo(18.4, -2.8, 19.6, 0.4);
+    g.moveTo(-6, 2.4);
+    g.lineTo(-0.4, 3.2);
+    g.moveTo(-5, 5.6);
+    g.lineTo(0, 5.4);
+  }, 'rgba(78, 48, 12, 0.65)');
+  // an old slash through its eye, with stitch marks across it
+  for (const [wide, colour] of [[2.5, '#6e2f1c'], [1.1, C.scar]]) {
+    lines(g, wide, () => {
+      g.moveTo(2.4, -14.4);
+      g.lineTo(12.6, 4.2);
+    }, colour);
+  }
+  lines(g, 0.85, () => {
+    for (const [x, y] of [[3.6, -12.2], [10.2, 0], [11.7, 2.7]]) {
+      g.moveTo(x - 2, y + 1.1);
+      g.lineTo(x + 2, y - 1.1);
+    }
+  }, '#6e2f1c');
+  beastEye(g, 7, -4.6, 4, o, '#ffb92a', 'up');
+  brow(g, 1.2, -10.2, 13.8, -7.4, C.brow, 2.8);
+  // a forelock falling forward between its ears
+  poly(g, [[-9.6, -10.4], [-7, -19.4], [-1, -16], [1, -22.6], [5.6, -16.4], [11.4, -19], [10.4, -13.8], [15.6, -13.4], [9, -11.2], [2, -13.4], [-4, -11]], C.maneLight, 1);
 }
 
 // ---------------------------------------------------------------- the serpent that is its tail, like the game's snake
@@ -580,17 +700,33 @@ function serpentBody(g, pts, from) {
     through(g, l);
     through(g, [...r].reverse());
   };
+  // little spines along the top of it
+  for (let i = 3; i < n - 2; i += 3) {
+    if (i < from) continue;
+    const ox = pts[i][0] - under[i][0];
+    const oy = pts[i][1] - under[i][1];
+    const d = Math.hypot(ox, oy) || 1;
+    const w = d * 0.9;
+    const ax = pts[i + 1][0] - pts[i - 1][0];
+    const ay = pts[i + 1][1] - pts[i - 1][1];
+    const len = Math.hypot(ax, ay) || 1;
+    poly(g, [[pts[i][0] + (ox / d) * w - (ax / len) * 2.6, pts[i][1] + (oy / d) * w - (ay / len) * 2.6], [pts[i][0] + (ox / d) * (w + 4.6) - (ax / len) * 3.6, pts[i][1] + (oy / d) * (w + 4.6) - (ay / len) * 3.6], [pts[i][0] + (ox / d) * w + (ax / len) * 2.6, pts[i][1] + (oy / d) * w + (ay / len) * 2.6]], C.snakeDark, 0.9);
+  }
   shape(g, C.snake, 0, round);
   within(g, round, () => {
-    // dark bands round it
-    lines(g, 3.6, () => {
-      for (let i = 2; i < n - 1; i += 4) {
-        if (i < from - 1) continue;
-        const slant = pts[Math.min(n - 1, i + 1)];
-        g.moveTo(L[i][0] * 1.2 - pts[i][0] * 0.2, L[i][1] * 1.2 - pts[i][1] * 0.2);
-        g.lineTo(slant[0] * 2 - L[Math.min(n - 1, i + 1)][0] * 1.2 + pts[Math.min(n - 1, i + 1)][0] * 0.2, slant[1] * 2 - L[Math.min(n - 1, i + 1)][1] * 1.2 + pts[Math.min(n - 1, i + 1)][1] * 0.2);
+    // dark diamonds down its back, each with a yellow heart
+    for (let i = 2; i < n - 2; i += 4) {
+      if (i < from - 1) continue;
+      const over = [pts[i][0] * 2 - under[i][0], pts[i][1] * 2 - under[i][1]];
+      const cx = lerp(pts[i][0], over[0], 0.3);
+      const cy = lerp(pts[i][1], over[1], 0.3);
+      const ax = pts[i + 1][0] - pts[i - 1][0];
+      const ay = pts[i + 1][1] - pts[i - 1][1];
+      const d = Math.hypot(ax, ay) || 1;
+      for (const [along, wide, colour] of [[5.2, 4.6, C.snakeDark], [2.2, 1.8, C.snakeMark]]) {
+        poly(g, [[cx - (ax / d) * along, cy - (ay / d) * along], [cx - (ay / d) * wide, cy + (ax / d) * wide], [cx + (ax / d) * along, cy + (ay / d) * along], [cx + (ay / d) * wide, cy - (ax / d) * wide]], colour, 0);
       }
-    }, C.snakeDark);
+    }
     g.beginPath();
     let first = true;
     for (let i = Math.max(0, from - 1); i < n; i++) {
@@ -648,6 +784,9 @@ function serpentHead(g, pts, s, o) {
   });
   if (s.gape > 0.5) poly(g, [[11.4, 1.8], [12.8, -2], [14.2, 1.8]], C.tooth, 0.6);
   g.restore();
+  // two little horns swept back over its eyes
+  poly(g, [[2.4, -7], [-6.4, -12.6], [6.4, -8]], C.hornFar, 0.9);
+  poly(g, [[5.6, -7.6], [-1, -14.4], [9.6, -7.4]], C.horn, 0.9);
   const skull = () => {
     g.moveTo(-5, -3.6);
     g.bezierCurveTo(-1, -9.4, 9, -8.8, 14, -5.4);
@@ -668,7 +807,9 @@ function serpentHead(g, pts, s, o) {
     g.quadraticCurveTo(10, 1.4, 3, -0.2);
   });
   circ(g, 15.4, -3, 0.7, INK, 0);
-  beastEye(g, 6.8, -3.9, 3.5, o, '#fdfdf6', false);
+  if (s.gape <= 0.1) poly(g, [[12, 1], [13.2, 4.4], [14.6, 0.9]], C.tooth, 0.6);
+  beastEye(g, 6.8, -3.9, 3.5, o, '#ffd32e', 'up');
+  brow(g, 2.8, -7.4, 11.2, -5.4, C.snakeDark, 1.4);
   g.restore();
 }
 
@@ -1036,7 +1177,7 @@ function rubble(world, x, y, n, wide, power) {
 // the lion comes down on them
 function land(world, u) {
   const a = u.def.pounce;
-  const cx = u.x + u.facing * 34;
+  const cx = u.x + u.facing * 39;
   const cy = u.y;
   const main = u.act.mark;
   world.eachEnemyNear(u.side, cx, cy, a.radius + 24, (o) => {
@@ -1049,8 +1190,8 @@ function land(world, u) {
   world.stomps.push({ x: cx, y: cy + FEET, r: a.radius * 1.2, age: 0, life: 0.8, seed: Math.random() * TAU });
   dust(world, cx, cy + FEET - 1, 18, a.radius);
   rubble(world, cx, cy + FEET, 14, a.radius, 80);
-  claws(world, cx + u.facing * 6, cy - 8, 0.95, 36, u.facing);
-  claws(world, cx - u.facing * 4, cy - 4, -0.75, 28, u.facing, 0.09);
+  claws(world, cx + u.facing * 7, cy - 9, 0.95, 42, u.facing);
+  claws(world, cx - u.facing * 5, cy - 5, -0.75, 33, u.facing, 0.09);
   if (world.sfx) world.sfx('slam', cx);
 }
 
@@ -1101,8 +1242,8 @@ function butt(world, u) {
 // one stroke of its claws: everyone in front of it and within reach
 function swipe(world, u, i) {
   const a = u.def.rake;
-  const cx = u.x + u.facing * 30;
-  claws(world, u.x + u.facing * 52, u.y - (i ? 4 : 8), i ? -0.8 : 0.95, i ? 32 : 28, u.facing);
+  const cx = u.x + u.facing * 34;
+  claws(world, u.x + u.facing * 60, u.y - (i ? 5 : 9), i ? -0.8 : 0.95, i ? 37 : 33, u.facing);
   let struck = false;
   world.eachEnemyNear(u.side, cx, u.y, a.reach + 24, (o) => {
     if ((o.x - u.x) * u.facing < -8 || Math.hypot(o.x - cx, (o.y - u.y) * 1.3) > a.reach + o.def.radius || o.def.flying) return;
@@ -1111,7 +1252,7 @@ function swipe(world, u, i) {
     world.hurt(o, a.damage * rand(0.9, 1.1), o.x, o.y, undefined, u);
   });
   world.hitProps(cx, u.y, a.reach * 0.6, a.damage);
-  dust(world, u.x + u.facing * 40, u.y + FEET - 2, 6, 16);
+  dust(world, u.x + u.facing * 46, u.y + FEET - 2, 6, 18);
   if (world.sfx) world.sfx(struck ? 'smash' : 'whoosh', u.x);
 }
 
@@ -1193,7 +1334,7 @@ function stepAct(world, u, dt) {
       const dx = t.x - u.x;
       const dy = t.y - u.y;
       const dist = Math.hypot(dx, dy) || 1;
-      const go = Math.max(0, Math.min(a.max, dist) - 40);
+      const go = Math.max(0, Math.min(a.max, dist) - 46);
       m.x0 = u.x;
       m.y0 = u.y;
       m.x1 = u.x + (dx / dist) * go;

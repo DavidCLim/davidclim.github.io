@@ -85,8 +85,8 @@ export const TROOPER = {
   ...SOLDIER,
   robot: true, // water short-circuits him
   hp: 170, // a soldier has 100
-  radius: 13 * UNIT,
-  sep: 21 * UNIT,
+  radius: 11 * UNIT, // drawn at the same size as the army
+  sep: 17 * UNIT,
   speed: 48,
   sight: 400,
   range: 300,
@@ -97,9 +97,8 @@ export const TROOPER = {
   cooldownMax: 1.8,
   damage: 16, // three a volley: a bit more than a soldier does over the same time
   spread: 0.07,
-  ring: 1.2,
-  pivot: { x: 9.2 * K, y: 8.9 * K }, // the drawing is scaled up 1.15 about the feet
-  muzzleLen: 45 * K,
+  pivot: { x: 8 * K, y: 11 * K }, // where he holds his blaster
+  muzzleLen: 39 * K,
   kick: true, // he rocks back with every round
   casing: true, // and spits out shells
   explodes: true, // and goes to pieces when he dies
@@ -115,7 +114,7 @@ export const MALF = {
   hp: 600, // a Robo Trooper has 170: he has to last long enough to get there
   armor: 0.65, // and shots mostly go into holes that are already there
   speed: 30,
-  stride: 17, // how far one whole limping step takes him (his feet reach just far enough to match it, so they never slide)
+  stride: 14.8, // how far one whole limping step takes him (his feet reach just far enough to match it, so they never slide)
   burst: 0,
   kick: false,
   casing: false,
@@ -146,12 +145,12 @@ export const SHIELD = {
   casing: false,
   noDrop: true,
   boom: 16,
-  ring: 1.3,
+  ring: 1.15,
   // the shield. hp: what it takes to shatter it; ahead: how far in front of him it stands; half: half of how far it
   // reaches up and down the field; recharge: seconds before it is back. The charge: rushFrom: how near someone must be;
   // rushTime / rushSpeed: how long and fast; every: seconds between; shove: how hard it throws; bash: damage.
   // keepOff: with no shield, how far he tries to stay from them
-  guard: { hp: 440, ahead: 17, half: 22, recharge: 5.5, rushFrom: 62, rushTime: 0.34, rushSpeed: 200, every: 2.6, shove: 360, bash: 16, keepOff: 200 },
+  guard: { hp: 440, ahead: 15, half: 19, recharge: 5.5, rushFrom: 62, rushTime: 0.34, rushSpeed: 200, every: 2.6, shove: 360, bash: 16, keepOff: 200 },
   parts: ['botplate', 'botplate', 'botpod', 'botpod', 'botlens', 'shieldtrooper'],
 };
 
@@ -160,8 +159,8 @@ export const SHIELD = {
 export const GATLING = {
   ...TROOPER,
   hp: 520,
-  radius: 14 * UNIT,
-  sep: 22 * UNIT,
+  radius: 12 * UNIT,
+  sep: 19 * UNIT,
   speed: 40,
   sight: 440,
   range: 300,
@@ -174,13 +173,13 @@ export const GATLING = {
   damage: 9,
   spread: 0.1,
   armor: 0.85,
-  scale: 1.18, // of Robo Trooper's drawing; the trooper himself is 1.15
+  scale: 1, // the same size as the army
   rapid: true, // a rotary cannon: tracers, and his own muzzle and shell effects (gatlingfx.js)
   casing: false,
   noDrop: true,
-  ring: 1.3,
-  pivot: { x: 7.1 * K, y: 10.8 * K }, // the drawing is scaled up 1.18 about the feet
-  muzzleLen: 53 * K,
+  ring: 1.1,
+  pivot: { x: 6 * K, y: 13 * K }, // where he holds his cannon
+  muzzleLen: 45 * K,
   boom: 19,
   parts: ['botplate', 'botplate', 'botpod', 'botpod', 'gatlingbarrel', 'trooper'],
 };
@@ -228,8 +227,8 @@ export const JETTROOPER = {
   robot: true,
   kind: 'jet',
   hp: 260,
-  radius: 13 * UNIT,
-  sep: 22 * UNIT,
+  radius: 11 * UNIT,
+  sep: 18 * UNIT,
   speed: 46,
   sight: 460,
   range: 300,
@@ -241,11 +240,10 @@ export const JETTROOPER = {
   rocketSpeed: 250,
   spread: 0.05,
   armor: 0.9,
-  scale: 1.15, // the same size as Robo Trooper
+  scale: 1, // the same size as the army
   fly: { time: 3.2, rest: 5, height: 28, boost: 1.8 },
-  ring: 1.2,
-  pivot: { x: 9.2 * K, y: 7.75 * K }, // the drawing is scaled up 1.15 about the feet
-  muzzleLen: 44 * K,
+  pivot: { x: 8 * K, y: 10 * K }, // where he holds his launcher
+  muzzleLen: 38.3 * K,
   kick: true,
   casing: false,
   noDrop: true,
@@ -528,11 +526,11 @@ export const MECHAZORD = {
   flying: false,
   airborne: true, // like the dragon, he sometimes takes off and breathes fire from the air, sometimes he stays on the ground
   hoverH: 24,
-  scale: 1.4, // of Robo Trooper's drawing; the trooper himself is 1.15, and not as broad
+  scale: 1.25, // of the troopers' drawing, which is the army's size; and he is broader
   hp: 3300,
   mega: true, // his breath and his end come with their own effects (zordfx.js)
-  radius: 10.5,
-  sep: 17.5,
+  radius: 9.4,
+  sep: 15.6,
   speed: 38,
   sight: 560,
   dps: 82, // the dragon's is 38; half as much again from the air
@@ -553,16 +551,16 @@ export const MECHAZORD = {
   // his third attack: a sweep of the tail along the ground. It does no damage; whoever it catches is flipped off their
   // feet and lies stunned. first: seconds before he can; cooldown: between sweeps; reach: how far the tail gets;
   // time: how long the sweep takes
-  swipe: { first: 1.2, cooldown: [3.6, 4.8], reach: 27, time: 0.85 },
+  swipe: { first: 1.2, cooldown: [3.6, 4.8], reach: 24, time: 0.85 },
   // his second attack: a salvo of homing missiles. first: seconds before the first one; every: between salvos;
   // range: further than his fire; flight: seconds each is in the air
   missiles: { first: 2.4, every: 5.5, count: 6, gap: 0.09, damage: 48, blast: 17, range: 390, flight: 0.9 },
   parts: ['botplate', 'botplate', 'botpod', 'botpod', 'zordhorn', 'zordhorn', 'zordhead'],
-  ring: 1.65,
+  ring: 1.47,
   body: [33, 33, -18],
-  pivot: { x: 43 * K, y: -0.2 * K }, // his mouth, as high as his legs carry it
-  muzzleLen: 8 * K,
-  footFire: 18, // whoever is pressed this close against him, under his jaws, is caught by the fire too
+  pivot: { x: 38.4 * K, y: 2.5 * K }, // his mouth, as high as his legs carry it
+  muzzleLen: 7.1 * K,
+  footFire: 16, // whoever is pressed this close against him, under his jaws, is caught by the fire too
   plume: { every: 0.021, speed: 2.35, life: 1.7, size: 2.15 },
 };
 
@@ -597,42 +595,42 @@ export const GATOR = {
 export const CHIMERA = {
   kind: 'chimera',
   hp: 4800,
-  radius: 26,
-  sep: 40,
+  radius: 29,
+  sep: 46,
   speed: 46,
   sight: 420,
   range: 175,
-  holdDist: 118,
+  holdDist: 128,
   dps: 56, // the dragon's is 38, MechaZaur's 82: fire is only one of the things it does
   cone: 0.34,
   burnTime: 3,
   burnDps: 14,
   onTime: 1.7,
   offTime: 1.4,
-  scale: 2.75,
+  scale: 3.15,
   bigFire: true, // sparks and burning ground with its breath (chimera.js)
   plume: { every: 0.019, speed: 2.15, life: 1.58, size: 2.35 },
-  footFire: 24, // whoever is pressed right up against it is caught too
+  footFire: 27, // whoever is pressed right up against it is caught too
   // the goat's mouth (see GOAT in chimera.js: it turns about 17 across and 49 up as it crouches to breathe, and reaches 24)
-  pivot: { x: 17 * K * 2.75, y: FEET + (-49 * K - FEET) * 2.75 },
-  muzzleLen: 24 * K * 2.75,
+  pivot: { x: 17 * K * 3.15, y: FEET + (-49 * K - FEET) * 3.15 },
+  muzzleLen: 24 * K * 3.15,
   // each move: first: seconds before it can; cooldown: between times.
   // the lion's leap. min / max: how far off the mark may be; damage: to the one it lands on, splash: to others within radius
-  pounce: { first: 1.4, cooldown: [6, 8], min: 82, max: 230, windup: 0.36, time: 0.56, recover: 0.3, height: 52, damage: 90, splash: 48, radius: 50, knock: 320 },
+  pounce: { first: 1.4, cooldown: [6, 8], min: 92, max: 245, windup: 0.36, time: 0.56, recover: 0.3, height: 58, damage: 90, splash: 48, radius: 56, knock: 320 },
   // the goat's charge. light units are flipped onto their backs
-  ram: { first: 3.4, cooldown: [8, 10], min: 48, max: 155, windup: 0.46, time: 0.48, recover: 0.28, speed: 235, damage: 56, knock: 400 },
+  ram: { first: 3.4, cooldown: [8, 10], min: 54, max: 172, windup: 0.46, time: 0.48, recover: 0.28, speed: 235, damage: 56, knock: 400 },
   // the lion's roar. daze: seconds they stand seeing stars
-  roar: { first: 4.5, cooldown: [11, 13], radius: 116, windup: 0.42, time: 1.2, daze: 1.5, damage: 18, knock: 170 },
+  roar: { first: 4.5, cooldown: [11, 13], radius: 130, windup: 0.42, time: 1.2, daze: 1.5, damage: 18, knock: 170 },
   // the claw rake, for whoever comes close: one paw and then the other (hits: when each lands). near: how far past
   // touching it will start one; reach: how far round a spot just ahead of it the claws sweep
-  rake: { first: 0.6, cooldown: [2.8, 3.6], near: 30, reach: 44, hits: [0.24, 0.5], time: 0.84, damage: 38, knock: 190 },
+  rake: { first: 0.6, cooldown: [2.8, 3.6], near: 32, reach: 50, hits: [0.24, 0.5], time: 0.84, damage: 38, knock: 190 },
   // the snake's bite, which goes on whatever else it is doing. hit: when in the strike it lands; cloud: how long the
   // poison hangs where it struck
-  venom: { cooldown: [2.5, 3.3], reach: 96, time: 0.72, hit: 0.34, damage: 26, poison: 5, poisonDps: 12, cloud: 2.2, cloudRadius: 28 },
+  venom: { cooldown: [2.5, 3.3], reach: 108, time: 0.72, hit: 0.34, damage: 26, poison: 5, poisonDps: 12, cloud: 2.2, cloudRadius: 30 },
   creature: true,
   noKnock: true,
   body: [52, 24, -8],
-  ring: 4.5,
+  ring: 5.1,
 };
 
 export const TERRAIN_IDS = ['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower'];

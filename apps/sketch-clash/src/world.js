@@ -1,13 +1,13 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=270';
-import { TerrainMap, WALL } from './terrain.js?v=270';
-import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordBeam, stepZordSwipe, stepZordFx, moveBeamPuff } from './zordfx.js?v=270';
-import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=270';
-import { resetGatorFx, stepGator, stepGatorFx } from './gator.js?v=270';
-import { stepChimera, chimeraIgnite, chimeraBreath, resetChimeraFx, stepChimeraFx } from './chimera.js?v=270';
-import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=270';
-import { installBeasts } from './beasts.js?v=270';
-import { resetMalfFx, stepMalf, stepMalfFx, queueBoom } from './malf.js?v=270';
-import { resetShieldFx, stepShield, stepShieldFx, findShields, shieldCross, shieldHit } from './shield.js?v=270';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=271';
+import { TerrainMap, WALL } from './terrain.js?v=271';
+import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordBeam, stepZordSwipe, stepZordFx, moveBeamPuff } from './zordfx.js?v=271';
+import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=271';
+import { resetGatorFx, stepGator, stepGatorFx } from './gator.js?v=271';
+import { stepChimera, chimeraIgnite, chimeraBreath, resetChimeraFx, stepChimeraFx } from './chimera.js?v=271';
+import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=271';
+import { installBeasts } from './beasts.js?v=271';
+import { resetMalfFx, stepMalf, stepMalfFx, queueBoom } from './malf.js?v=271';
+import { resetShieldFx, stepShield, stepShieldFx, findShields, shieldCross, shieldHit } from './shield.js?v=271';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -639,7 +639,7 @@ export class World {
     u.jetT = (u.jetT || 0) - dt;
     if (u.jetT > 0) return;
     u.jetT = 0.07;
-    const k = d.thrusters === 'walk' ? d.scale || 1.15 : d.scale;
+    const k = d.thrusters === 'walk' ? d.scale || 1 : d.scale;
     const wide = d.bulk || 1;
     for (const [jx, jy] of d.jets || [[-33, -15], [-32, 11]]) {
       this.jetFlame(u.x + u.facing * jx * 0.31 * k * wide, u.y + FEET + (jy * 0.31 - FEET) * k, -u.facing * 48, 6, d.thrusters === 'walk' ? 0.62 : 0.95);

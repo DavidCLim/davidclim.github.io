@@ -1,8 +1,8 @@
 // Malfunction Trooper: how he picks his crowd, limps over to it and blows himself up, and the sparks that keep jumping off
 // him on the way. Only the blast hurts anyone; the sparks are for show.
-import { TAU, K, FEET } from './config.js?v=270';
-import { nova, embers, scorch } from './zordfx.js?v=270';
-import { MALF_SPOTS } from './art_units.js?v=270';
+import { TAU, K, FEET } from './config.js?v=271';
+import { nova, embers, scorch } from './zordfx.js?v=271';
+import { MALF_SPOTS } from './art_units.js?v=271';
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const ease = (q) => q * q * (3 - 2 * q);
@@ -257,7 +257,7 @@ function boom(world, b) {
 
 function fizzFrom(world, u, spot, n) {
   const [ax, ay] = MALF_SPOTS[spot];
-  const size = u.def.scale || 1.15;
+  const size = u.def.scale || 1;
   const x = u.x + u.facing * ax * K * size;
   const y = u.y + FEET + (ay * K - FEET) * size;
   for (let i = 0; i < n; i++) {

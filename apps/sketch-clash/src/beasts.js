@@ -1,5 +1,5 @@
-import { TAU, FEET, GAIT } from './config.js?v=270';
-import { WATER, ICE, WALL } from './terrain.js?v=270';
+import { TAU, FEET, GAIT } from './config.js?v=271';
+import { WATER, ICE, WALL } from './terrain.js?v=271';
 
 // half the ground each object takes up: measured as the closest the original will set two of them
 const FOOT = { tree: 11.5, barrel: 7.4, tower: 17, mine: 7.4 };
