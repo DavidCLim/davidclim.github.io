@@ -1,17 +1,17 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=262';
-import { drawLayer, OUT, drawArcLine } from './sprites.js?v=262';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt, MALF_CORE, MALF_SPOTS } from './art_units.js?v=262';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=262';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=262';
-import { drawZordGround, drawZordAir } from './zordfx.js?v=262';
-import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=262';
-import { drawMalfAir, limpPose } from './malf.js?v=262';
-import { drawShieldAir } from './shield.js?v=262';
-import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=262';
-import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=262';
-import { drawGandalligator, drawGatorStill, drawGatorGround, drawGatorAir } from './gator.js?v=262';
-import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=262';
-import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=262';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=263';
+import { drawLayer, OUT, drawArcLine } from './sprites.js?v=263';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt, MALF_CORE, MALF_SPOTS } from './art_units.js?v=263';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=263';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=263';
+import { drawZordGround, drawZordAir } from './zordfx.js?v=263';
+import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=263';
+import { drawMalfAir, limpPose } from './malf.js?v=263';
+import { drawShieldAir } from './shield.js?v=263';
+import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=263';
+import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=263';
+import { drawGandalligator, drawGatorStill, drawGatorGround, drawGatorAir } from './gator.js?v=263';
+import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=263';
+import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=263';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
