@@ -1,8 +1,8 @@
 // Gibbondore The Great: how he fights, and what his magic does to the world.
 // Like the original's ape he goes straight in and hits the ground hard enough to send everyone flying; being a gibbon
 // he also swings himself across the gap in one great leap, and being a wizard he throws stars from his staff on the way.
-import { TAU, K, FEET } from './config.js?v=263';
-import { drawArcLine } from './sprites.js?v=263';
+import { TAU, K, FEET } from './config.js?v=264';
+import { drawArcLine } from './sprites.js?v=264';
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const lerp = (a, b, t) => a + (b - a) * t;

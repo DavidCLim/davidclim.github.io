@@ -638,6 +638,7 @@ export const TABS = [
   { id: 'army', label: 'Army', items: ['soldier', 'flamethrower', 'sniper', 'grenadier', 'archer', 'cowboy', 'ninja'] },
   { id: 'robots', label: 'Robots', items: ['trooper', 'shieldtrooper', 'jettrooper', 'malftrooper', 'gatlingtrooper', 'mechazord'] }, // the Juggernaut's code is kept, but he isn't in the palette
   { id: 'magic', label: 'Magic', items: ['mage', 'gibbondore'] }, // Gandalligator's code is kept, but he isn't in the palette for now: add 'gandalligator' here to bring him back
+  { id: 'beasts', label: 'Beasts', items: [], locked: true }, // greyed out until it has something in it
   { id: 'terrain', label: 'Terrain', items: ['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower'] },
 ];
 export const TERRAIN_LABELS = { wall: 'Wall', water: 'Water', ice: 'Ice', mine: 'Mines', barrel: 'Barrel', tree: 'Tree', tower: 'Wizard Tower' };

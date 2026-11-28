@@ -5,10 +5,10 @@
 // feet), and a wizard's outfit: hat, cloak, belted robe with wide sleeves, and staff.
 // Drawn in art units, facing +x, with the ground about 28 below the origin. His limbs are drawn live, from where his
 // hands and feet are, so they can move smoothly through any pose.
-import { TAU, K, FEET } from './config.js?v=263';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=263';
-import { rigStep, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=263';
-import { STORM } from './gibbonfx.js?v=263';
+import { TAU, K, FEET } from './config.js?v=264';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=264';
+import { rigStep, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=264';
+import { STORM } from './gibbonfx.js?v=264';
 
 const C = {
   fur: '#5a463e', furDark: '#3d2f2a', furFar: '#342826', white: '#f4eddf', whiteShade: '#c9bda8',
