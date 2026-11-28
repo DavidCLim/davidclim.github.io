@@ -1,10 +1,10 @@
 // MechaZaur's own part of the world: his missiles, and the effects that go with him (the shockwave as he lets loose, the
 // embers and heat rings in his breath, the ground it leaves burning, the great blast when he goes). Only the missiles
 // hurt anyone; the rest is for show.
-import { TAU, K, FEET } from './config.js?v=261';
-import { WATER } from './terrain.js?v=261';
-import { shieldCross, shieldHit } from './shield.js?v=261';
-import { swipeTurn, SWIPE_BACK } from './zordlimbs.js?v=261';
+import { TAU, K, FEET } from './config.js?v=262';
+import { WATER } from './terrain.js?v=262';
+import { shieldCross, shieldHit } from './shield.js?v=262';
+import { swipeTurn, SWIPE_BACK } from './zordlimbs.js?v=262';
 
 const TEAL = '70, 245, 200';
 const GOLD = '255, 196, 80';

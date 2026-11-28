@@ -1,16 +1,17 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=261';
-import { drawLayer, OUT, drawArcLine } from './sprites.js?v=261';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt, MALF_CORE, MALF_SPOTS } from './art_units.js?v=261';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=261';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=261';
-import { drawZordGround, drawZordAir } from './zordfx.js?v=261';
-import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=261';
-import { drawMalfAir, limpPose } from './malf.js?v=261';
-import { drawShieldAir } from './shield.js?v=261';
-import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=261';
-import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=261';
-import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=261';
-import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=261';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=262';
+import { drawLayer, OUT, drawArcLine } from './sprites.js?v=262';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt, MALF_CORE, MALF_SPOTS } from './art_units.js?v=262';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=262';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=262';
+import { drawZordGround, drawZordAir } from './zordfx.js?v=262';
+import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=262';
+import { drawMalfAir, limpPose } from './malf.js?v=262';
+import { drawShieldAir } from './shield.js?v=262';
+import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=262';
+import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=262';
+import { drawGandalligator, drawGatorStill, drawGatorGround, drawGatorAir } from './gator.js?v=262';
+import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=262';
+import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=262';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -2287,6 +2288,7 @@ const DRAWERS = {
   malftrooper: drawMalf,
   shieldtrooper: drawShieldBot,
   gibbondore: (ctx, dpr, sprites, u) => drawGibbondore(ctx, dpr, sprites, u, burnOverlay),
+  gandalligator: (ctx, dpr, sprites, u) => drawGandalligator(ctx, dpr, sprites, u, burnOverlay),
   jettrooper: drawJetTrooper,
   juggernaut: drawJuggernaut,
   mechazord: drawMechaZord,
@@ -2610,6 +2612,7 @@ export function drawFlames(ctx, world, under) {
     drawZordGround(ctx, world);
     drawGatlingGround(ctx, world);
     drawGibbonGround(ctx, world);
+    drawGatorGround(ctx, world);
   }
   let many = 0;
   for (const f of world.flames) if (!!f.under === under) many++;
@@ -2621,6 +2624,7 @@ export function drawFlames(ctx, world, under) {
     drawZordAir(ctx, world);
     drawGatlingAir(ctx, world);
     drawGibbonAir(ctx, world);
+    drawGatorAir(ctx, world);
     drawMalfAir(ctx, world);
     drawShieldAir(ctx, world);
   }
@@ -2951,6 +2955,7 @@ const ICONS = {
     drawLayer(g, S.hand);
   }],
   gibbondore: [134, 63, 68, null],
+  gandalligator: [102, 47, 50, null],
   mechazord: [122, 70, 60, null],
   trooper: [96, 45, 44, (g, S) => {
     g.save();
@@ -3066,6 +3071,8 @@ export function paintUnitIcon(canvas, sprites, species) {
     drawZordLeg(g, 0, {});
   } else if (species === 'gibbondore') {
     drawGibbonStill(g, S);
+  } else if (species === 'gandalligator') {
+    drawGatorStill(g);
   } else if (species === 'shieldtrooper') {
     drawLayer(g, S.torso);
     g.save();

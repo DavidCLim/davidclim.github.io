@@ -1,15 +1,16 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=261';
-import { buildCreatureArt } from './creatures.js?v=261';
-import { buildEggArt } from './art_eggs.js?v=261';
-import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon, WATER } from './terrain.js?v=261';
-import { WaterLayer } from './water.js?v=261';
-import { beginUnitPictures, drawPictured } from './unitcache.js?v=261';
-import { Sfx } from './sfx.js?v=261';
-import { World } from './world.js?v=261';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=261';
-import { buildUnitArt, drawDrop } from './art_units.js?v=261';
-import { drawGibbonHatWorn } from './gibbon.js?v=261';
-import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=261';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=262';
+import { buildCreatureArt } from './creatures.js?v=262';
+import { buildEggArt } from './art_eggs.js?v=262';
+import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon, WATER } from './terrain.js?v=262';
+import { WaterLayer } from './water.js?v=262';
+import { beginUnitPictures, drawPictured } from './unitcache.js?v=262';
+import { Sfx } from './sfx.js?v=262';
+import { World } from './world.js?v=262';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=262';
+import { buildUnitArt, drawDrop } from './art_units.js?v=262';
+import { drawGibbonHatWorn } from './gibbon.js?v=262';
+import { drawGatorHatWorn } from './gator.js?v=262';
+import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=262';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -212,6 +213,7 @@ const LATTICE = {
   mechazord: [40, 29, true],
   mage: [16, 13, true],
   gibbondore: [34, 28, true],
+  gandalligator: [48, 32, true],
 };
 
 // Terrain: walls, water and ice are painted as strokes; the rest are dropped along the drag.
@@ -1130,7 +1132,7 @@ function drawTripped(u) {
   u.x = x;
   u.y = y;
   if (u.slipAge < 0.55 || u.slip < 0.3) return;
-  if (!u.def.robot && u.species !== 'gibbondore') {
+  if (!u.def.robot && u.species !== 'gibbondore' && u.species !== 'gandalligator') {
     placeUnit(ctx, dpr, u);
     drawDizzyEyes(ctx, u);
   }
@@ -1209,6 +1211,12 @@ function drawSpirit(g, t, alpha) {
     ctx.rotate(-0.09 * face);
     ctx.scale(face * 0.64, 0.64);
     drawGibbonHatWorn(ctx);
+  } else if (g.species === 'gandalligator') {
+    // his ghost wears the grey hat just the same
+    ctx.translate(face * 0.4, -9.2);
+    ctx.rotate(-0.09 * face);
+    ctx.scale(face * 0.64, 0.64);
+    drawGatorHatWorn(ctx);
   } else {
     ctx.translate(0, -8.6);
     ctx.rotate(-0.09 * face);
@@ -1357,7 +1365,7 @@ function render() {
       ctx.ellipse(0, 0, 20.5 * 0.31, 22.8 * 0.31, 0, 0, TAU);
       ctx.fill();
     }
-    if (c.u.species !== 'sniper' && c.u.species !== 'trooper' && c.u.species !== 'jettrooper' && c.u.species !== 'malftrooper' && c.u.species !== 'shieldtrooper' && c.u.species !== 'gatlingtrooper' && c.u.species !== 'juggernaut' && c.u.species !== 'mechazord' && c.u.species !== 'gibbondore') {
+    if (c.u.species !== 'sniper' && c.u.species !== 'trooper' && c.u.species !== 'jettrooper' && c.u.species !== 'malftrooper' && c.u.species !== 'shieldtrooper' && c.u.species !== 'gatlingtrooper' && c.u.species !== 'juggernaut' && c.u.species !== 'mechazord' && c.u.species !== 'gibbondore' && c.u.species !== 'gandalligator') {
       placeUnit(ctx, dpr, c.u);
       ctx.globalAlpha = a;
       drawDizzyEyes(ctx, c.u);

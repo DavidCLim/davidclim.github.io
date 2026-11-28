@@ -566,6 +566,31 @@ export const MECHAZORD = {
   plume: { every: 0.021, speed: 2.35, life: 1.7, size: 2.15 },
 };
 
+// Gandalligator the Grey: a wizard built on the original's alligator. About as strong as Gibbondore, but slower, and he
+// can't leap, so those who shoot and back away can hold him off. Up close he snaps and then brings his tail down,
+// throwing back everyone round him; from further off he throws firework sparks from his staff; and now and then he plants
+// it and a wall of white light throws back everyone in front of him ("you shall not pass").
+export const GATOR = {
+  kind: 'gator',
+  hp: 1080, // about the same as Gibbondore's 1050
+  armor: 0.68, // the same ward against bullets and arrows
+  radius: 12,
+  sep: 18.5,
+  speed: 40, // Gibbondore's is 61
+  sight: 440,
+  reach: 22,
+  bite: { damage: 36, cooldown: [0.55, 0.8] },
+  lash: { damage: 32, radius: 34, knock: 240 },
+  spell: { range: 265, cast: 0.44, cooldown: [1.7, 2.3], bolts: 3, damage: 31, blast: 11, speed: 230 },
+  // trigger: how near someone must be for him to start it; reach: how far the wave runs
+  wave: { first: 3.5, cooldown: [10, 12], trigger: 92, reach: 120, damage: 46, knock: 500 },
+  scale: 1.45,
+  ring: 2.1,
+  body: [40, 14, 6],
+  pivot: { x: 0, y: 0 },
+  muzzleLen: 0,
+};
+
 export const TERRAIN_IDS = ['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower'];
 
 // `faction` decides who fights whom in free-for-all (defaults to the
@@ -598,6 +623,7 @@ export const SPECIES = {
   slime: { id: 'slime', label: 'Slime', def: SLIME },
   mage: { id: 'mage', label: 'Wizard', def: MAGE },
   gibbondore: { id: 'gibbondore', label: 'Gibbondore The Great', def: GIBBONDORE },
+  gandalligator: { id: 'gandalligator', label: 'Gandalligator the Grey', def: GATOR },
   giant: { id: 'giant', label: 'Giant', def: GIANT },
   dragon: { id: 'dragon', label: 'Dragon', def: DRAGON },
   necromancer: { id: 'necromancer', label: 'Necromancer', def: NECROMANCER },
@@ -611,7 +637,7 @@ export const SPECIES = {
 export const TABS = [
   { id: 'army', label: 'Army', items: ['soldier', 'flamethrower', 'sniper', 'grenadier', 'archer', 'cowboy', 'ninja'] },
   { id: 'robots', label: 'Robots', items: ['trooper', 'shieldtrooper', 'jettrooper', 'malftrooper', 'gatlingtrooper', 'mechazord'] }, // the Juggernaut's code is kept, but he isn't in the palette
-  { id: 'magic', label: 'Magic', items: ['mage', 'gibbondore'] },
+  { id: 'magic', label: 'Magic', items: ['mage', 'gibbondore', 'gandalligator'] },
   { id: 'terrain', label: 'Terrain', items: ['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower'] },
 ];
 export const TERRAIN_LABELS = { wall: 'Wall', water: 'Water', ice: 'Ice', mine: 'Mines', barrel: 'Barrel', tree: 'Tree', tower: 'Wizard Tower' };

@@ -7,6 +7,7 @@
 // above and below (world units, generous enough for his leaps, flights and swung weapons)
 const PICTURED = {
   gibbondore: { weight: 8, half: 52, up: 88, down: 26 },
+  gandalligator: { weight: 7, half: 54, up: 92, down: 26, planted: true }, // (planted: see below)
   mechazord: { weight: 8, half: 52, up: 108, down: 32 },
   gatlingtrooper: { weight: 6, half: 36, up: 76, down: 24 },
   juggernaut: { weight: 6, half: 38, up: 94, down: 22 },

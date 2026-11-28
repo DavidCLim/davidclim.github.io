@@ -1,11 +1,12 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=261';
-import { TerrainMap, WALL } from './terrain.js?v=261';
-import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordBeam, stepZordSwipe, stepZordFx, moveBeamPuff } from './zordfx.js?v=261';
-import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=261';
-import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=261';
-import { installBeasts } from './beasts.js?v=261';
-import { resetMalfFx, stepMalf, stepMalfFx, queueBoom } from './malf.js?v=261';
-import { resetShieldFx, stepShield, stepShieldFx, findShields, shieldCross, shieldHit } from './shield.js?v=261';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=262';
+import { TerrainMap, WALL } from './terrain.js?v=262';
+import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordBeam, stepZordSwipe, stepZordFx, moveBeamPuff } from './zordfx.js?v=262';
+import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=262';
+import { resetGatorFx, stepGator, stepGatorFx } from './gator.js?v=262';
+import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=262';
+import { installBeasts } from './beasts.js?v=262';
+import { resetMalfFx, stepMalf, stepMalfFx, queueBoom } from './malf.js?v=262';
+import { resetShieldFx, stepShield, stepShieldFx, findShields, shieldCross, shieldHit } from './shield.js?v=262';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -83,6 +84,7 @@ export class World {
     resetZordFx(this);
     resetGatlingFx(this);
     resetGibbonFx(this);
+    resetGatorFx(this);
     resetMalfFx(this);
     resetShieldFx(this);
     this.bombs = []; // grenades in the air
@@ -478,6 +480,7 @@ export class World {
     resetZordFx(this);
     resetGatlingFx(this);
     resetGibbonFx(this);
+    resetGatorFx(this);
     resetMalfFx(this);
     resetShieldFx(this);
     this.terrain.clear();
@@ -1075,6 +1078,7 @@ export class World {
       case 'beast': this.stepBeast(u, dt); break;
       case 'mage': this.stepMage(u, dt); break;
       case 'gibbon': stepGibbon(this, u, dt); break;
+      case 'gator': stepGator(this, u, dt); break;
       case 'necro': this.stepNecro(u, dt); break;
       default: this.stepSoldier(u, dt);
     }
@@ -2149,6 +2153,7 @@ export class World {
     stepZordFx(this, dt);
     stepGatlingFx(this, dt);
     stepGibbonFx(this, dt);
+    stepGatorFx(this, dt);
     stepMalfFx(this, dt);
     stepShieldFx(this, dt);
 
