@@ -9,7 +9,7 @@ const PICTURED = {
   gibbondore: { weight: 8, half: 52, up: 88, down: 26 },
   gandalligator: { weight: 7, half: 54, up: 92, down: 26, planted: true }, // (planted: see below)
   mechazord: { weight: 8, half: 52, up: 108, down: 32 },
-  chimera: { weight: 12, half: 112, up: 150, down: 44, planted: true },
+  chimera: { weight: 16, half: 160, up: 215, down: 60, planted: true },
   gatlingtrooper: { weight: 6, half: 36, up: 76, down: 24 },
   juggernaut: { weight: 6, half: 38, up: 94, down: 22 },
   trooper: { weight: 1.5, half: 46, up: 74, down: 20 },

@@ -596,39 +596,43 @@ export const GATOR = {
 // reach. It is far too big to be knocked about.
 export const CHIMERA = {
   kind: 'chimera',
-  hp: 2300,
-  radius: 21,
-  sep: 31,
+  hp: 4800,
+  radius: 26,
+  sep: 40,
   speed: 46,
   sight: 420,
   range: 175,
-  holdDist: 105,
+  holdDist: 118,
   dps: 56, // the dragon's is 38, MechaZaur's 82: fire is only one of the things it does
   cone: 0.34,
   burnTime: 3,
   burnDps: 14,
   onTime: 1.7,
   offTime: 1.4,
-  scale: 2.3,
+  scale: 2.75,
   bigFire: true, // sparks and burning ground with its breath (chimera.js)
   plume: { every: 0.019, speed: 2.15, life: 1.58, size: 2.35 },
   footFire: 24, // whoever is pressed right up against it is caught too
-  // the goat's mouth (see GOAT in chimera.js: it turns about 15 across and 37 up in the drawing, and reaches 19)
-  pivot: { x: 15 * K * 2.3, y: FEET + (-37 * K - FEET) * 2.3 },
-  muzzleLen: 19 * K * 2.3,
+  // the goat's mouth (see GOAT in chimera.js: it turns about 24 across and 57 up as it crouches to breathe, and reaches 21)
+  pivot: { x: 24 * K * 2.75, y: FEET + (-57 * K - FEET) * 2.75 },
+  muzzleLen: 21 * K * 2.75,
   // each move: first: seconds before it can; cooldown: between times.
   // the lion's leap. min / max: how far off the mark may be; damage: to the one it lands on, splash: to others within radius
-  pounce: { first: 1.4, cooldown: [6, 8], min: 62, max: 200, windup: 0.36, time: 0.56, recover: 0.3, height: 42, damage: 68, splash: 36, radius: 40, knock: 300 },
+  pounce: { first: 1.4, cooldown: [6, 8], min: 82, max: 230, windup: 0.36, time: 0.56, recover: 0.3, height: 52, damage: 90, splash: 48, radius: 50, knock: 320 },
   // the goat's charge. light units are flipped onto their backs
-  ram: { first: 3.4, cooldown: [8, 10], min: 34, max: 128, windup: 0.46, time: 0.46, recover: 0.28, speed: 215, damage: 40, knock: 380 },
+  ram: { first: 3.4, cooldown: [8, 10], min: 48, max: 155, windup: 0.46, time: 0.48, recover: 0.28, speed: 235, damage: 56, knock: 400 },
   // the lion's roar. daze: seconds they stand seeing stars
-  roar: { first: 4.5, cooldown: [11, 13], radius: 92, windup: 0.42, time: 1.2, daze: 1.5, damage: 12, knock: 150 },
-  // the snake's bite, which goes on whatever else it is doing. hit: when in the strike it lands
-  venom: { cooldown: [2.5, 3.3], reach: 74, time: 0.72, hit: 0.34, damage: 22, poison: 5, poisonDps: 11 },
+  roar: { first: 4.5, cooldown: [11, 13], radius: 116, windup: 0.42, time: 1.2, daze: 1.5, damage: 18, knock: 170 },
+  // the claw rake, for whoever comes close: one paw and then the other (hits: when each lands). near: how far past
+  // touching it will start one; reach: how far round a spot just ahead of it the claws sweep
+  rake: { first: 0.6, cooldown: [2.8, 3.6], near: 30, reach: 44, hits: [0.24, 0.5], time: 0.84, damage: 38, knock: 190 },
+  // the snake's bite, which goes on whatever else it is doing. hit: when in the strike it lands; cloud: how long the
+  // poison hangs where it struck
+  venom: { cooldown: [2.5, 3.3], reach: 96, time: 0.72, hit: 0.34, damage: 26, poison: 5, poisonDps: 12, cloud: 2.2, cloudRadius: 28 },
   creature: true,
   noKnock: true,
-  body: [48, 24, 2],
-  ring: 3.7,
+  body: [56, 28, 0],
+  ring: 4.5,
 };
 
 export const TERRAIN_IDS = ['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower'];

@@ -1,16 +1,16 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=266';
-import { buildCreatureArt } from './creatures.js?v=266';
-import { buildEggArt } from './art_eggs.js?v=266';
-import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon, WATER } from './terrain.js?v=266';
-import { WaterLayer } from './water.js?v=266';
-import { beginUnitPictures, drawPictured } from './unitcache.js?v=266';
-import { Sfx } from './sfx.js?v=266';
-import { World } from './world.js?v=266';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=266';
-import { buildUnitArt, drawDrop } from './art_units.js?v=266';
-import { drawGibbonHatWorn } from './gibbon.js?v=266';
-import { drawGatorHatWorn } from './gator.js?v=266';
-import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=266';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=267';
+import { buildCreatureArt } from './creatures.js?v=267';
+import { buildEggArt } from './art_eggs.js?v=267';
+import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon, WATER } from './terrain.js?v=267';
+import { WaterLayer } from './water.js?v=267';
+import { beginUnitPictures, drawPictured } from './unitcache.js?v=267';
+import { Sfx } from './sfx.js?v=267';
+import { World } from './world.js?v=267';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=267';
+import { buildUnitArt, drawDrop } from './art_units.js?v=267';
+import { drawGibbonHatWorn } from './gibbon.js?v=267';
+import { drawGatorHatWorn } from './gator.js?v=267';
+import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=267';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -214,7 +214,7 @@ const LATTICE = {
   mage: [16, 13, true],
   gibbondore: [34, 28, true],
   gandalligator: [48, 32, true],
-  chimera: [92, 64, true],
+  chimera: [116, 82, true],
 };
 
 // Terrain: walls, water and ice are painted as strokes; the rest are dropped along the drag.
