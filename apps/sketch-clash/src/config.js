@@ -151,7 +151,7 @@ export const SHIELD = {
   // reaches up and down the field; recharge: seconds before it is back. The charge: rushFrom: how near someone must be;
   // rushTime / rushSpeed: how long and fast; every: seconds between; shove: how hard it throws; bash: damage.
   // keepOff: with no shield, how far he tries to stay from them
-  guard: { hp: 520, ahead: 17, half: 18, recharge: 5.5, rushFrom: 62, rushTime: 0.34, rushSpeed: 200, every: 2.6, shove: 360, bash: 16, keepOff: 200 },
+  guard: { hp: 360, ahead: 17, half: 22, recharge: 5.5, rushFrom: 62, rushTime: 0.34, rushSpeed: 200, every: 2.6, shove: 360, bash: 16, keepOff: 200 },
   parts: ['botplate', 'botplate', 'botpod', 'botpod', 'botlens', 'shieldtrooper'],
 };
 
@@ -488,9 +488,9 @@ export const GIBBONDORE = {
   slam: { radius: 33, damage: 58, knock: 240, time: 0.62, cooldown: [0.55, 0.85] },
   leap: { min: 42, max: 205, time: 0.56, height: 36, cooldown: 3.4 },
   spell: { range: 260, cast: 0.42, cooldown: [1.6, 2.2], bolts: 3, damage: 31, blast: 11, speed: 235 },
-  // two blows of his staff and lightning comes down out of the sky on the nearest `targets` enemies. range: how close
-  // one has to be before he'll bother
-  storm: { first: 2.6, cooldown: [8, 10], range: 280, targets: 6, damage: 72 },
+  // two blows of his staff, then lightning leaps off its orb to the nearest `targets` enemies within `range`. In all it
+  // is worth about two volleys of his stars
+  storm: { first: 3.5, cooldown: [9, 11], range: 230, targets: 4, damage: 46 },
   scale: 1.2,
   ring: 1.7,
   body: [34, 30, -14],

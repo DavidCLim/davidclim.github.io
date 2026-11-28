@@ -13,7 +13,7 @@ const PICTURED = {
   trooper: { weight: 1.5, half: 46, up: 74, down: 20 },
   jettrooper: { weight: 1.2, half: 30, up: 92, down: 20 },
   malftrooper: { weight: 2.8, half: 34, up: 76, down: 20, planted: true },
-  shieldtrooper: { weight: 3, half: 38, up: 78, down: 22 },
+  shieldtrooper: { weight: 3, half: 40, up: 80, down: 24 },
 };
 const BUDGET = 16; // how much weight is drawn afresh in a frame before they start taking turns
 const SLOWEST = 6; // and the longest any of them waits, in frames

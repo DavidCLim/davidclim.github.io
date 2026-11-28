@@ -1,15 +1,15 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=259';
-import { buildCreatureArt } from './creatures.js?v=259';
-import { buildEggArt } from './art_eggs.js?v=259';
-import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon, WATER } from './terrain.js?v=259';
-import { WaterLayer } from './water.js?v=259';
-import { beginUnitPictures, drawPictured } from './unitcache.js?v=259';
-import { Sfx } from './sfx.js?v=259';
-import { World } from './world.js?v=259';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=259';
-import { buildUnitArt, drawDrop } from './art_units.js?v=259';
-import { drawGibbonHatWorn } from './gibbon.js?v=259';
-import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=259';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=260';
+import { buildCreatureArt } from './creatures.js?v=260';
+import { buildEggArt } from './art_eggs.js?v=260';
+import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon, WATER } from './terrain.js?v=260';
+import { WaterLayer } from './water.js?v=260';
+import { beginUnitPictures, drawPictured } from './unitcache.js?v=260';
+import { Sfx } from './sfx.js?v=260';
+import { World } from './world.js?v=260';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=260';
+import { buildUnitArt, drawDrop } from './art_units.js?v=260';
+import { drawGibbonHatWorn } from './gibbon.js?v=260';
+import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=260';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');

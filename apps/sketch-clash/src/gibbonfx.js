@@ -1,8 +1,8 @@
 // Gibbondore The Great: how he fights, and what his magic does to the world.
 // Like the original's ape he goes straight in and hits the ground hard enough to send everyone flying; being a gibbon
 // he also swings himself across the gap in one great leap, and being a wizard he throws stars from his staff on the way.
-import { TAU, K, FEET } from './config.js?v=259';
-import { drawArcLine } from './sprites.js?v=259';
+import { TAU, K, FEET } from './config.js?v=260';
+import { drawArcLine } from './sprites.js?v=260';
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -96,11 +96,11 @@ function burst(world, s) {
 }
 
 // ---------------------------------------------------------------- the storm
-// He beats the ground with his staff twice, and on the second blow lightning comes down out of the sky on the six
-// enemies nearest him, one hard on the heels of another.
-export const STORM = { tap1: 0.36, tap2: 0.8, strike: 0.9, time: 1.45 };
-const LEAD = 0.05; // the breath between the second blow and the first bolt
-const GAP = 0.07; // between one bolt and the next
+// He beats the ground with his staff twice and raises it, and lightning leaps off its orb to the few enemies nearest
+// him, one hard on the heels of another, each ending in the same burst as one of his stars.
+export const STORM = { tap1: 0.36, tap2: 0.8, strike: 0.9, time: 1.68 };
+const LEAD = 0.14; // after the second blow, the moment it takes him to get the staff up
+const GAP = 0.09; // between one bolt and the next
 const GLOW = 0.36; // how long each is seen (as long as the Wizard's)
 
 // where the end of his staff lands in the slam pose
@@ -118,17 +118,21 @@ function tap(world, u, big) {
   if (world.sfx) world.sfx('slam', at.x);
 }
 
+// where the orb of his staff is as he holds it to the sky
+function raisedOrb(u) {
+  return { x: u.x + u.facing * 17 * K * u.def.scale, y: u.y + FEET + (-124 * K - FEET) * u.def.scale };
+}
+
 function callDown(world, u) {
   const m = u.def.storm;
   const all = [];
-  world.eachEnemyNear(u.side, u.x, u.y, 3000, (o) => all.push(o));
+  world.eachEnemyNear(u.side, u.x, u.y, m.range + 40, (o) => {
+    if (Math.hypot(o.x - u.x, o.y - u.y) <= m.range + o.def.radius) all.push(o);
+  });
   all.sort((a, b) => Math.hypot(a.x - u.x, a.y - u.y) - Math.hypot(b.x - u.x, b.y - u.y));
   const bolts = all.slice(0, m.targets).map((o, i) => ({ o, x: o.x, y: o.y, at: LEAD + i * GAP, struck: false, seed: Math.floor(Math.random() * 9000) }));
   if (!bolts.length) return;
-  // where the orb is as he holds the staff to the sky
-  const orb = { x: u.x + u.facing * 17 * K * u.def.scale, y: u.y + FEET + (-124 * K - FEET) * u.def.scale };
-  world.storms.push({ bolts, age: 0, life: LEAD + (bolts.length - 1) * GAP + GLOW, owner: u });
-  if (world.sfx) world.sfx('zap', orb.x);
+  world.storms.push({ bolts, age: 0, life: LEAD + (bolts.length - 1) * GAP + GLOW, owner: u, orb: raisedOrb(u) });
 }
 
 function stepStorm(world, u, dt) {
@@ -143,6 +147,8 @@ function stepStorm(world, u, dt) {
 function stepStorms(world, dt) {
   for (const s of world.storms) {
     s.age += dt;
+    // the bolts stay on the orb while he has hold of it
+    if (!s.owner.dead) s.orb = raisedOrb(s.owner);
     for (const bolt of s.bolts) {
       if (bolt.struck || s.age < bolt.at) continue;
       bolt.struck = true;
@@ -151,25 +157,24 @@ function stepStorms(world, dt) {
       bolt.y = o.y;
       if (!o.dead) world.hurt(o, s.owner.def.storm.damage * rand(0.9, 1.1), o.x, o.y, 'blast', s.owner);
       world.hitProps(o.x, o.y, 6, s.owner.def.storm.damage * 0.5);
-      if (world.sfx) {
-        world.sfx('zap', o.x);
-        world.sfx('boom', o.x);
-      }
+      // it ends just as one of his stars does: the same ring and flash of a star, and the same gold sparks
+      world.quakes.push({ x: o.x, y: o.y - 2, r: 13, age: 0, life: 0.34, air: true });
+      glints(world, o.x, o.y - 2, 8, 85);
+      glints(world, s.orb.x, s.orb.y, 5, 70);
+      if (world.sfx) world.sfx('zap', o.x);
     }
   }
   if (world.storms.some((s) => s.age >= s.life)) world.storms = world.storms.filter((s) => s.age < s.life);
 }
 
-// the Wizard's lightning in gold, coming down from above the top of the screen
+// the Wizard's lightning in the gold of his stars, leaping from his staff
 const GOLD_ARC = [['255, 210, 40', 0.3, 6.5], ['250, 188, 10', 0.9, 3], ['255, 255, 232', 1, 1.1]];
 
 function drawStormAir(ctx, s) {
   for (const b of s.bolts) {
     const since = s.age - b.at;
     if (!b.struck || since < 0 || since >= GLOW) continue;
-    // (each comes in at its own slight slant)
-    const lean = (((b.seed % 97) / 97) - 0.5) * 40;
-    drawArcLine(ctx, [[b.x + lean, -12], [b.x, b.y - 2]], since, b.seed, Math.min(1, (GLOW - since) / 0.2), GOLD_ARC);
+    drawArcLine(ctx, [[s.orb.x, s.orb.y], [b.x, b.y - 2]], since, b.seed, Math.min(1, (GLOW - since) / 0.2), GOLD_ARC);
   }
 }
 
