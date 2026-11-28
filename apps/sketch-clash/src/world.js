@@ -1,13 +1,13 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=269';
-import { TerrainMap, WALL } from './terrain.js?v=269';
-import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordBeam, stepZordSwipe, stepZordFx, moveBeamPuff } from './zordfx.js?v=269';
-import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=269';
-import { resetGatorFx, stepGator, stepGatorFx } from './gator.js?v=269';
-import { stepChimera, chimeraIgnite, chimeraBreath, resetChimeraFx, stepChimeraFx } from './chimera.js?v=269';
-import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=269';
-import { installBeasts } from './beasts.js?v=269';
-import { resetMalfFx, stepMalf, stepMalfFx, queueBoom } from './malf.js?v=269';
-import { resetShieldFx, stepShield, stepShieldFx, findShields, shieldCross, shieldHit } from './shield.js?v=269';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=270';
+import { TerrainMap, WALL } from './terrain.js?v=270';
+import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordBeam, stepZordSwipe, stepZordFx, moveBeamPuff } from './zordfx.js?v=270';
+import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=270';
+import { resetGatorFx, stepGator, stepGatorFx } from './gator.js?v=270';
+import { stepChimera, chimeraIgnite, chimeraBreath, resetChimeraFx, stepChimeraFx } from './chimera.js?v=270';
+import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=270';
+import { installBeasts } from './beasts.js?v=270';
+import { resetMalfFx, stepMalf, stepMalfFx, queueBoom } from './malf.js?v=270';
+import { resetShieldFx, stepShield, stepShieldFx, findShields, shieldCross, shieldHit } from './shield.js?v=270';
 
 export const CELL = 32;
 const SEP_CELL = 20;

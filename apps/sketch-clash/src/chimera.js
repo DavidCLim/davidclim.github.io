@@ -1,38 +1,35 @@
 // The Chimera: what it looks like, how it moves and how it fights.
-// A great lean lion in a streaming mane; a dark goat with long ridged horns rising from its back, whose legs are its hind
-// legs; and a heavy green serpent, red underneath, for a tail. Drawn with fine lines, clean and calm: few strokes, level
-// eyes, and its teeth only to be seen when it opens its mouth.
+// A lion with a shaggy mane; a goat with curling horns rising from its back, whose legs are its hind legs; and a banded
+// green snake for a tail. Drawn the way the game draws its animals: standing side on, flat colours, one even dark line,
+// round-topped legs, small eyes under flat brows.
 // Each head has its own tricks. The lion leaps, rakes with its claws and roars (leaving those near it seeing stars);
 // the goat breathes fire and charges horns first; and the snake, all the while, lashes out and leaves poison behind.
 // Drawn in art units, facing +x, with the ground 25 below the origin.
-import { TAU, K, FEET } from './config.js?v=269';
-import { poly, circ, ell, vgrad } from './art_kit.js?v=269';
-import { rigStep, applyBotBody } from './botrig.js?v=269';
-import { scorch } from './zordfx.js?v=269';
+import { TAU, K, FEET } from './config.js?v=270';
+import { poly, circ, ell } from './art_kit.js?v=270';
+import { rigStep, applyBotBody } from './botrig.js?v=270';
+import { scorch } from './zordfx.js?v=270';
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const lerp = (a, b, t) => a + (b - a) * t;
 const ease = (q) => q * q * (3 - 2 * q);
 const clamp01 = (q) => Math.max(0, Math.min(1, q));
 
-const INK = '#1d1119'; // the fine dark line round everything
-const LW = 0.95; // and how fine it is
+const INK = '#1f1a24'; // the dark line round everything
+const LW = 1.1; // as heavy on screen as the other animals'
 const C = {
-  fur: '#d6a94e', furLight: '#ecc974', furDark: '#a97a30', furFar: '#8a6128', furDeep: '#7c5620',
-  muzzle: '#ead39a', nose: '#33191a', maw: '#58121a', tongue: '#c4515c', tooth: '#fbf6e6', claw: '#2c1c18',
-  maneBack: '#7c2f19', maneMid: '#a34c28', maneShine: '#f3cd74', maneGold: '#c28a38',
-  gum: '#8d2a33', socket: '#7a4c1c',
-  goat: '#44375a', goatLight: '#5e4e7a', goatDark: '#2c223c', goatFar: '#241b31', hoof: '#1b1520',
-  horn: '#c3b69a', hornShade: '#8d8069', hornFar: '#857964',
-  snake: '#658f36', snakeLight: '#86ad49', snakeDark: '#3d5c22', belly: '#842523', bellyDark: '#561514',
+  fur: '#d9a23f', furDark: '#c18a31', furFar: '#9d7029', belly: '#f1d89c',
+  mane: '#97572b', maneDark: '#7c431f', nose: '#4a2a26', maw: '#6a1f28', tongue: '#d96a75', tooth: '#fdfbf2', claw: '#f6f2e6',
+  goat: '#6a6176', goatDark: '#554d61', goatFar: '#463f51', throat: '#b3a8bd', hoof: '#2e2735', pink: '#d99aa6', brow: '#3a2a2c',
+  horn: '#efe8d8', hornFar: '#cdc4b0',
+  snake: '#7fac43', snakeDark: '#517a2c', snakeBelly: '#cfdc8c',
 };
 
 // where the goat's head turns on its neck, and how far along from there its mouth is. (config.js puts the fire there)
-export const GOAT = { x: 33, y: -63, mouth: 21 };
-const GOAT_SIZE = 0.9; // its head, beside the rest
-const HEAD = [34, -18]; // the middle of the mane
-const FACE = { x: 16, y: 8, size: 0.76 }; // the lion's face within it: small, in all that mane
-export const LIFT = 9; // how far the whole upper half stands above where it is laid out, so its legs are long and lean
+export const GOAT = { x: 14, y: -55, mouth: 24 };
+const GOAT_REST = 0.1; // how its head is tipped when it is minding its own business
+const HEAD = [39, -15]; // the middle of the lion's head
+export const LIFT = 0;
 
 // ---------------------------------------------------------------- walking
 // A paw on the ground is moved back exactly as far as the beast goes forward, so it stays where it was put
@@ -117,255 +114,199 @@ function edges(pts, wide) {
   return [L, R];
 }
 
-// a muscled limb through its joints, as thick at each as `widths` says; `shade` darkens its back edge
-function limb(g, joints, widths, fill, shade) {
-  const [L, R] = edges(joints, (i) => widths[i]);
-  const n = joints.length;
-  const round = () => {
-    g.moveTo(L[0][0], L[0][1]);
-    through(g, L);
-    const end = joints[n - 1];
-    const before = joints[n - 2];
-    const d = Math.hypot(end[0] - before[0], end[1] - before[1]) || 1;
-    const reach = widths[n - 1] * 0.55;
-    g.quadraticCurveTo(end[0] + ((end[0] - before[0]) / d) * reach, end[1] + ((end[1] - before[1]) / d) * reach, R[n - 1][0], R[n - 1][1]);
-    through(g, [...R].reverse());
+// ---- built like the game's own animals: a few flat shapes, one even dark line, legs with round tops laid over the body
+
+// a leg: round at the top where it lies over the body, bending a little at the knee, narrower to the ankle. `bow`: how
+// far back the knee goes
+function limbShape(g, hip, ankle, top, mid, low, bow, fill) {
+  const dx = ankle[0] - hip[0];
+  const dy = ankle[1] - hip[1];
+  const d = Math.hypot(dx, dy) || 1;
+  const ux = dx / d;
+  const uy = dy / d;
+  const lx = -uy; // out to its back
+  const ly = ux;
+  const knee = [hip[0] + dx * 0.56 + lx * bow, hip[1] + dy * 0.56 + ly * bow];
+  const at = (p, k, along = 0) => [p[0] + lx * k + ux * along, p[1] + ly * k + uy * along];
+  const kneeBack = at(knee, mid);
+  const kneeFront = at(knee, -mid);
+  const path = () => {
+    g.moveTo(...at(hip, top));
+    g.bezierCurveTo(...at(hip, top, d * 0.22), ...at(knee, mid + 0.8, -d * 0.16), ...kneeBack);
+    g.quadraticCurveTo(...at(knee, mid - 0.8, d * 0.16), ...at(ankle, low));
+    g.quadraticCurveTo(...at(ankle, 0, low * 0.9), ...at(ankle, -low));
+    g.quadraticCurveTo(...at(knee, -mid + 0.6, d * 0.14), ...kneeFront);
+    g.bezierCurveTo(...at(knee, -mid - 0.6, -d * 0.18), ...at(hip, -top, d * 0.22), ...at(hip, -top));
+    // the round top
+    g.bezierCurveTo(...at(hip, -top, -top * 1.32), ...at(hip, top, -top * 1.32), ...at(hip, top));
   };
-  g.beginPath();
-  round();
-  g.closePath();
-  g.fillStyle = fill;
-  g.fill();
-  if (shade) {
-    within(g, round, () => {
-      g.beginPath();
-      g.moveTo(L[0][0], L[0][1]);
-      through(g, L);
-      ink(g, 5.4, shade);
-    });
-  }
-  // lined down both sides and round the end, but open at the top, where it grows out of the body
-  g.beginPath();
-  g.moveTo(L[0][0], L[0][1]);
-  through(g, L);
-  const end = joints[n - 1];
-  const before = joints[n - 2];
-  const d = Math.hypot(end[0] - before[0], end[1] - before[1]) || 1;
-  const reach = widths[n - 1] * 0.55;
-  g.quadraticCurveTo(end[0] + ((end[0] - before[0]) / d) * reach, end[1] + ((end[1] - before[1]) / d) * reach, R[n - 1][0], R[n - 1][1]);
-  through(g, [...R].reverse());
-  ink(g);
+  shape(g, fill, LW, path);
 }
 
-// two bones, a and b long, from `top` to `end`: where the joint between them is (side: which way it bends)
-function bend(top, end, a, b, side) {
-  const dx = end[0] - top[0];
-  const dy = end[1] - top[1];
-  const real = Math.hypot(dx, dy) || 1;
-  const d = Math.max(Math.abs(a - b) + 0.1, Math.min(a + b - 0.05, real));
-  const base = Math.atan2(dy, dx);
-  const turn = Math.acos(clamp01(((a * a + d * d - b * b) / (2 * a * d) + 1) / 2) * 2 - 1);
-  const at = base + side * turn;
-  return { joint: [top[0] + Math.cos(at) * a, top[1] + Math.sin(at) * a], end: [top[0] + Math.cos(base) * d, top[1] + Math.sin(base) * d] };
-}
-
-// a lion's paw with its claws out. (x, y): the sole under the middle of it. turn: how it is tipped
-function paw(g, x, y, turn, far) {
-  g.save();
-  g.translate(x, y);
-  g.rotate(turn);
+// the lion's forelegs: golden, ending in a round paw with three little white claws
+function foreleg(g, hip, foot, turn, far) {
   const fill = far ? C.furFar : C.fur;
-  // short claws, only just showing
-  for (const [cx, cy, len] of [[7.2, -3, 4.2], [9, -1, 4.6], [8.8, 0.6, 3.8]]) {
-    shape(g, C.claw, 0.5, () => {
-      g.moveTo(cx - 1, cy - 1.1);
-      g.quadraticCurveTo(cx + len * 0.75, cy - 1.4, cx + len, cy + 1.6);
-      g.quadraticCurveTo(cx + len * 0.45, cy + 0.6, cx - 0.8, cy + 1);
-    });
-  }
+  const ankle = [foot[0] - 1.4, foot[1] - 4.6];
+  limbShape(g, hip, ankle, far ? 9 : 10.6, 5.4, 4.9, 3.2, fill);
+  g.save();
+  g.translate(foot[0], foot[1]);
+  g.rotate(turn);
+  for (const [x, y] of [[7.4, -3.4], [8.6, -1.4], [8, 0.4]]) poly(g, [[x - 1.2, y - 1.5], [x + 3.4, y + 0.9], [x - 1.2, y + 0.9]], C.claw, 0.7);
   const pad = () => {
-    g.moveTo(-6, -3.4);
-    g.bezierCurveTo(-3, -8, 5, -8.4, 8, -4.6);
-    g.bezierCurveTo(10.6, -3.4, 10.8, 0.4, 8, 1);
-    g.lineTo(-3, 1);
-    g.bezierCurveTo(-6.4, 0.8, -7.2, -1.6, -6, -3.4);
+    g.moveTo(-6.2, -5.4);
+    g.bezierCurveTo(-1, -8.2, 7, -7.4, 9, -3);
+    g.quadraticCurveTo(10.4, 1.2, 6, 1.4);
+    g.lineTo(-3.8, 1.4);
+    g.quadraticCurveTo(-7.4, 0.6, -6.2, -5.4);
   };
   shape(g, fill, 0, pad);
-  within(g, pad, () => ell(g, 1, 1.6, 10, 2.6, far ? C.furDeep : C.furDark, 0));
+  // (lined round the bottom only, so it runs on from the leg)
   g.beginPath();
-  pad();
-  g.closePath();
+  g.moveTo(8.2, -4.6);
+  g.quadraticCurveTo(10.8, 1.2, 6, 1.4);
+  g.lineTo(-3.8, 1.4);
+  g.quadraticCurveTo(-7.2, 0.8, -6.4, -3.6);
   ink(g);
-  lines(g, 0.65, () => {
-    for (const [a, b] of [[2.2, -4.6], [5.6, -3.2]]) {
-      g.moveTo(a - 1, b - 1.6);
-      g.quadraticCurveTo(a + 2, b + 0.8, a + 1.2, b + 3.8);
-    }
+  lines(g, 0.8, () => {
+    g.moveTo(3.6, 1.2);
+    g.quadraticCurveTo(4.8, -1.2, 3.4, -2.8);
   });
   g.restore();
 }
 
-// a foreleg: heavy at the shoulder, the elbow well back, the forearm reaching down and forward
-function foreleg(g, top, foot, turn, far) {
-  const wrist = [foot[0] - 5.4, foot[1] - 4];
-  const k = far ? bend(top, wrist, 22, 32, 1) : bend(top, wrist, 20, 30, 1);
-  const [e, w] = [k.joint, k.end];
-  const upper = [(top[0] + e[0]) / 2 - 2.2, (top[1] + e[1]) / 2];
-  const fore = [lerp(e[0], w[0], 0.34), lerp(e[1], w[1], 0.34) - 0.6];
-  limb(g, [top, upper, e, fore, [lerp(e[0], w[0], 0.75), lerp(e[1], w[1], 0.75)], [w[0] + 1.2, w[1] + 1]], [far ? 16 : 21, far ? 13.4 : 17.4, 9.2, 11.4, 6.8, 7.8], far ? C.furFar : C.fur, far ? C.furDeep : C.furDark);
-  if (!far) {
-    lines(g, 0.6, () => {
-      // the muscle over its shoulder and down the arm
-      g.moveTo(top[0] - 8, top[1] + 1);
-      g.bezierCurveTo(top[0] - 6, top[1] - 9, top[0] + 8, top[1] - 8, top[0] + 7, top[1] + 4);
-      g.moveTo(upper[0] - 1, upper[1] - 5);
-      g.quadraticCurveTo(upper[0] + 7, upper[1] + 1, e[0] + 3.4, e[1] - 1);
-    });
-  }
-  paw(g, w[0] + 5.4, w[1] + 4, turn, far);
-}
-
-// a goat's hind leg: the thigh running back to a high hock, then a slim shank down and forward to a cloven hoof.
-// back: where the hock is from the foot
-function hindleg(g, top, foot, back, turn, far) {
-  const hock = [foot[0] + back[0], foot[1] + back[1]];
-  const knee = [(top[0] + hock[0]) / 2, (top[1] + hock[1]) / 2 + 2.6];
-  const ankle = [foot[0] - 1.6, foot[1] - 4.6];
-  limb(g, [top, [(top[0] + knee[0]) / 2, (top[1] + knee[1]) / 2], knee, hock, [lerp(hock[0], ankle[0], 0.55) - 1.4, lerp(hock[1], ankle[1], 0.55) + 0.6], ankle], [far ? 13 : 16, far ? 11 : 13.6, far ? 9 : 10.6, far ? 7 : 8, 4.6, 5.2], far ? C.goatFar : C.goat, far ? '#191222' : C.goatDark);
-  if (!far) {
-    lines(g, 0.65, () => {
-      g.moveTo(top[0] - 4, top[1] + 1);
-      g.quadraticCurveTo(knee[0], knee[1] - 3, hock[0] + 3, hock[1] - 0.6);
-      g.moveTo(hock[0] + 2, hock[1] + 2);
-      g.lineTo(ankle[0] - 0.4, ankle[1] - 1);
-    }, C.goatLight);
-  }
+// the goat's hind legs: the same build, dark, on split hooves
+function hindleg(g, hip, foot, turn, far) {
+  const ankle = [foot[0] - 1, foot[1] - 5.4];
+  limbShape(g, hip, ankle, far ? 9.4 : 11.2, 4.6, 3.8, 6.2, far ? C.goatFar : C.goat);
   g.save();
-  g.translate(ankle[0], ankle[1]);
+  g.translate(foot[0], foot[1]);
   g.rotate(turn);
   shape(g, C.hoof, LW, () => {
-    g.moveTo(-2.8, -0.8);
-    g.lineTo(2.6, -1.2);
-    g.quadraticCurveTo(6.4, 1.4, 7, 5);
-    g.lineTo(-3.6, 5);
-    g.quadraticCurveTo(-4, 1.8, -2.8, -0.8);
+    g.moveTo(-4.6, -5.8);
+    g.lineTo(2.8, -6.2);
+    g.quadraticCurveTo(5.8, -2.6, 6.4, 1.4);
+    g.lineTo(-5.2, 1.4);
+    g.quadraticCurveTo(-5.6, -2.6, -4.6, -5.8);
   });
-  lines(g, 0.6, () => {
-    g.moveTo(2.2, 5);
-    g.lineTo(1, 1.2);
-    g.moveTo(-2.4, 0.4);
-    g.quadraticCurveTo(0.6, 1.4, 3.6, 0.2);
-  }, '#6b5c7c');
+  lines(g, 0.8, () => {
+    g.moveTo(1.2, 1.2);
+    g.lineTo(0.6, -2.6);
+  }, '#6d6378');
   g.restore();
 }
 
-// the lion's body, tawny in front and turning into the dark goat's haunches behind
+// the body: golden in front and goat behind, a darker flat band along its back and a pale one under its belly
 function torso(g) {
   const round = () => {
-    g.moveTo(-34, -18);
-    g.bezierCurveTo(-22, -27, -8, -22, 4, -24);
-    g.bezierCurveTo(18, -31, 34, -29, 42, -18);
-    g.bezierCurveTo(50, -8, 47, 7, 36, 15);
-    g.bezierCurveTo(26, 22, 13, 22, 5, 15);
-    g.bezierCurveTo(-2, 6, -12, 3, -20, 7);
-    g.bezierCurveTo(-30, 13, -42, 7, -42, -4);
-    g.bezierCurveTo(-42, -12, -39, -16, -34, -18);
+    g.moveTo(-41, -9);
+    g.bezierCurveTo(-41, -23, -25, -26, -9, -23.5);
+    g.bezierCurveTo(7, -21.5, 18, -29, 31, -23);
+    g.bezierCurveTo(42, -16, 42, 1, 31, 7);
+    g.bezierCurveTo(19, 13, -3, 8.6, -18, 9.6);
+    g.bezierCurveTo(-34, 11.6, -41, 4, -41, -9);
   };
-  shape(g, vgrad(g, -28, 20, C.furLight, C.furDark), 0, round);
+  shape(g, C.fur, 0, round);
   within(g, round, () => {
-    // belly shadow
-    ell(g, 10, 24, 34, 11, C.furDark, 0, -0.12);
-    // the goat's dark coat along its back and rump, with a ragged edge where it meets the gold
-    shape(g, vgrad(g, -28, 8, C.goatLight, C.goatDark), 0.8, () => {
-      g.moveTo(-54, -40);
-      g.lineTo(10, -40);
-      g.quadraticCurveTo(5, -28, 7, -20);
-      g.quadraticCurveTo(-2, -18, -6, -10);
-      g.quadraticCurveTo(-16, -11, -20, -3);
-      g.quadraticCurveTo(-30, -4, -36, 6);
-      g.lineTo(-34, 20);
-      g.lineTo(-54, 20);
+    shape(g, C.furDark, 0, () => {
+      g.moveTo(-46, -34);
+      g.lineTo(46, -34);
+      g.lineTo(46, -17);
+      g.bezierCurveTo(20, -18, 0, -11, -46, -14);
+    });
+    shape(g, C.belly, 0, () => {
+      g.moveTo(-20, 18);
+      g.bezierCurveTo(-14, -1, 12, 3, 38, -5);
+      g.lineTo(44, 18);
+    });
+    // the goat's hindquarters, in the same two flat tones
+    const rear = () => {
+      g.moveTo(-50, -34);
+      g.lineTo(-12, -34);
+      g.bezierCurveTo(-6, -18, -24, -10, -16, 18);
+      g.lineTo(-50, 18);
+    };
+    shape(g, C.goat, 0, rear);
+    within(g, rear, () => shape(g, C.goatDark, 0, () => {
+      g.moveTo(-50, -34);
+      g.lineTo(0, -34);
+      g.lineTo(0, -17);
+      g.bezierCurveTo(-18, -14, -34, -13, -46, -12);
+    }));
+    lines(g, 1, () => {
+      g.moveTo(-12, -34);
+      g.bezierCurveTo(-6, -18, -24, -10, -16, 18);
     });
   });
   g.beginPath();
   round();
   g.closePath();
   ink(g);
-  lines(g, 0.6, () => {
-    // shoulder
-    g.moveTo(6, -22);
-    g.bezierCurveTo(-2, -10, 0, 0, 10, 10);
-  });
 }
 
-// the lion's golden haunch, folded up in front of the goat's own hind legs. sway: how far its leg has stepped
-function haunch(g, sway) {
-  const round = () => {
-    g.moveTo(-31, -13);
-    g.bezierCurveTo(-21, -17, -11, -9, -13, 0);
-    g.bezierCurveTo(-14, 6, -17 + sway * 0.7, 11, -18.6 + sway, 17);
-    g.quadraticCurveTo(-18.4 + sway, 22.6, -24 + sway, 21.6);
-    g.quadraticCurveTo(-28 + sway, 20, -27.6 + sway, 15);
-    g.quadraticCurveTo(-31 + sway * 0.6, 9, -35, 4);
-    g.bezierCurveTo(-39, -4, -37, -10, -31, -13);
-  };
-  shape(g, vgrad(g, -15, 22, C.fur, C.furDark), 0, round);
-  within(g, round, () => {
-    g.beginPath();
-    g.moveTo(-31, -13);
-    g.bezierCurveTo(-37, -10, -39, -4, -35, 4);
-    g.quadraticCurveTo(-31 + sway * 0.6, 9, -27.6 + sway, 15);
-    g.quadraticCurveTo(-28 + sway, 20, -24 + sway, 21.6);
-    ink(g, 5.4, C.furDark);
+// ---------------------------------------------------------------- eyes, as the game's animals have them
+// a small round eye: its colour, and a pupil (slot: lying flat, as a goat's does)
+function beastEye(g, x, y, r, o, iris, slot) {
+  if (o.dead) {
+    lines(g, 1.3, () => {
+      g.moveTo(x - r * 0.8, y - r * 0.8);
+      g.lineTo(x + r * 0.8, y + r * 0.8);
+      g.moveTo(x + r * 0.8, y - r * 0.8);
+      g.lineTo(x - r * 0.8, y + r * 0.8);
+    });
+    return;
+  }
+  const open = 1 - (o.shut || 0);
+  if (open < 0.4) {
+    lines(g, 1.2, () => {
+      g.moveTo(x - r, y);
+      g.quadraticCurveTo(x, y + 1.4, x + r, y);
+    });
+    return;
+  }
+  ell(g, x, y, r, r * 0.92 * open, iris, 0.95);
+  if (slot) ell(g, x + r * 0.18, y + 0.2, r * 0.62, r * 0.27 * open, '#17121a', 0);
+  else ell(g, x + r * 0.26, y + 0.15, r * 0.46, r * 0.52 * open, '#17121a', 0);
+  circ(g, x + r * 0.08, y - r * 0.28 * open, r * 0.17, '#ffffff', 0);
+}
+
+// the flat bar of a brow over it
+function brow(g, x0, y0, x1, y1, colour, wide) {
+  lines(g, wide + 1.5, () => {
+    g.moveTo(x0, y0);
+    g.quadraticCurveTo((x0 + x1) / 2, (y0 + y1) / 2 - 1.6, x1, y1);
   });
-  g.beginPath();
-  round();
-  g.closePath();
-  ink(g);
-  lines(g, 0.6, () => {
-    g.moveTo(-29, -9);
-    g.bezierCurveTo(-18, -10, -15, 0, -20, 7);
-  });
+  lines(g, wide, () => {
+    g.moveTo(x0, y0);
+    g.quadraticCurveTo((x0 + x1) / 2, (y0 + y1) / 2 - 1.6, x1, y1);
+  }, colour);
 }
 
 // ---------------------------------------------------------------- the goat
-function horn(g, root, c1, c2, tip, wide, fill, shade, heat) {
+// a clean pale horn, curving back to a point. heat: glowing as the fire builds
+function horn(g, root, c1, c2, tip, wide, fill, heat) {
   const pts = [];
-  for (let i = 0; i <= 18; i++) {
-    const t = i / 18;
+  for (let i = 0; i <= 16; i++) {
+    const t = i / 16;
     const at = (j) => (1 - t) ** 3 * root[j] + 3 * (1 - t) ** 2 * t * c1[j] + 3 * (1 - t) * t * t * c2[j] + t ** 3 * tip[j];
     pts.push([at(0), at(1)]);
   }
-  const across = (i) => wide * (1 - (i / 18) ** 1.4 * 0.92);
-  const [L, R] = edges(pts, across);
-  const round = () => {
+  const [L, R] = edges(pts, (i) => wide * (1 - (i / 16) * 0.94));
+  shape(g, fill, LW, () => {
     g.moveTo(L[0][0], L[0][1]);
     through(g, L);
     through(g, [...R].reverse());
-  };
-  shape(g, fill, 0, round);
-  within(g, round, () => {
-    g.beginPath();
-    g.moveTo(R[0][0], R[0][1]);
-    through(g, R);
-    ink(g, wide * 0.55, shade);
   });
-  g.beginPath();
-  round();
-  g.closePath();
-  ink(g);
-  // ridges all the way along
-  lines(g, 0.7, () => {
-    for (let i = 3; i < 15; i += 3) {
+  lines(g, 0.75, () => {
+    for (const i of [3, 6, 9]) {
       g.moveTo(L[i][0], L[i][1]);
-      g.quadraticCurveTo(pts[i + 1][0], pts[i + 1][1], R[i][0], R[i][1]);
+      g.lineTo((pts[i + 1][0] + R[i][0]) / 2, (pts[i + 1][1] + R[i][1]) / 2);
     }
-  }, 'rgba(50, 36, 24, 0.55)');
+  }, 'rgba(60, 48, 40, 0.45)');
   if (heat > 0.02) {
     g.beginPath();
     g.moveTo(pts[0][0], pts[0][1]);
     through(g, pts);
-    ink(g, wide * 0.42, `rgba(255, 96, 30, ${0.65 * heat})`);
+    ink(g, wide * 0.5, `rgba(255, 110, 30, ${0.7 * heat})`);
     glow(g, tip[0], tip[1], 6 + 3 * heat, '255, 90, 30', 0.75 * heat);
   }
 }
@@ -373,364 +314,241 @@ function horn(g, root, c1, c2, tip, wide, fill, shade, heat) {
 // the goat's neck and head. aim: radians (+ down); jaw 0..1; heat: how fiercely the fire is going in it; charge: how
 // much fire has gathered before it breathes; fury: its horns wreathed as it charges
 function goat(g, o) {
-  const lean = (o.aim - 0.55) * 4;
+  const lean = (o.aim - GOAT_REST) * 4;
   const gx = GOAT.x;
-  const gy = GOAT.y + lean * 0.4;
+  const gy = GOAT.y + lean * 0.5;
   const neck = () => {
-    g.moveTo(-27, -17);
-    g.bezierCurveTo(-18, -45, 2, -58, gx - 7, gy - 10);
-    g.lineTo(gx + 3, gy + 8);
-    g.bezierCurveTo(gx - 6, -40, 24, -28, 27, -8);
+    g.moveTo(-15, -16);
+    g.bezierCurveTo(-10, -32, -8, gy - 4, gx - 4, gy - 9);
+    g.lineTo(gx + 6, gy + 4);
+    g.bezierCurveTo(gx - 2, gy + 14, 14, -32, 18, -17);
   };
-  // a soft dark ruff down the back of the neck
-  shape(g, C.goatDark, 0.75, () => {
-    g.moveTo(gx - 5, gy - 8);
-    for (const [vx, vy, tx, ty] of [[7, -60, -6, -57], [-8, -46, -22, -40], [-21, -30, -31, -19]]) {
-      g.quadraticCurveTo((vx + tx) / 2 + 3, ty - 5, tx, ty);
-      g.quadraticCurveTo(tx + 8, ty, vx, vy + 5);
-    }
-    g.lineTo(-6, -20);
-    g.lineTo(gx - 2, gy);
-  });
-  shape(g, vgrad(g, gy - 10, -10, C.goat, C.goatDark), 0, neck);
+  // little dark points down the back of the neck, like the crest on the game's dragon
+  for (const [x, y, a] of [[gx - 9, gy - 4.6, -2.5], [gx - 14, gy + 2.6, -2.75], [-9.4, -34, -2.95], [-11.4, -27, -3.05], [-13.4, -21, -3.15]]) {
+    poly(g, [[x + 3, y - 2.6], [x + Math.cos(a) * 7.4, y + Math.sin(a) * 7.4], [x + 1.4, y + 3.4]], C.goatDark, 0.95);
+  }
+  shape(g, C.goat, 0, neck);
   within(g, neck, () => {
-    g.beginPath();
-    g.moveTo(gx + 1, gy + 7);
-    g.bezierCurveTo(gx - 7, -40, 22, -28, 25, -8);
-    ink(g, 7, C.goatLight);
+    // a pale throat with a few slanted strokes
+    shape(g, C.throat, 0, () => {
+      g.moveTo(gx + 9, gy + 3);
+      g.bezierCurveTo(gx - 5, gy + 11, 5, -30, 7, -12);
+      g.lineTo(24, -12);
+      g.lineTo(gx + 14, gy);
+    });
+    lines(g, 0.9, () => {
+      for (const [x, y] of [[gx - 1, gy + 13], [9.4, -31], [9.6, -23.4]]) {
+        g.moveTo(x - 1, y - 3);
+        g.lineTo(x + 6, y + 3);
+      }
+    }, 'rgba(50, 38, 62, 0.45)');
   });
   g.beginPath();
   neck();
   ink(g);
-  lines(g, 0.6, () => {
-    g.moveTo(-6, -24);
-    g.quadraticCurveTo(2, -48, gx - 8, gy + 4);
-  }, C.goatLight);
 
   g.save();
-  g.translate(GOAT.x, GOAT.y);
+  g.translate(GOAT.x, gy);
   g.rotate(o.aim);
-  g.scale(GOAT_SIZE, GOAT_SIZE);
-  if (o.heat > 0.02) glow(g, GOAT.mouth, 1, 15 + 10 * o.heat, '255, 130, 30', 0.6 * o.heat);
-  horn(g, [3, -10.4], [-9, -9], [-28, 3], [-47, 8], 5.8, C.hornFar, '#5f5546', o.heat * 0.7);
-  // the long pointed beard
-  shape(g, C.goatDark, 0.8, () => {
-    g.moveTo(3, 3.6);
-    g.quadraticCurveTo(4, 9, 0.4 - o.wave, 13.6);
-    g.quadraticCurveTo(6.4, 11, 7.6, 7.8);
-    g.quadraticCurveTo(8.4, 10.4, 7.4 - o.wave, 12.4);
-    g.quadraticCurveTo(12.6, 9, 12.4, 4);
-  });
-  const open = o.jaw * 0.55;
-  const swing = (x, y) => [4 + (x - 4) * Math.cos(open) - (y - 0.4) * Math.sin(open), 0.4 + (x - 4) * Math.sin(open) + (y - 0.4) * Math.cos(open)];
+  if (o.heat > 0.02) glow(g, GOAT.mouth, 2, 15 + 10 * o.heat, '255, 130, 30', 0.6 * o.heat);
+  horn(g, [3, -10], [-1, -25], [-18, -28], [-28, -17], 5.4, C.hornFar, o.heat * 0.7);
+  // a little pointed beard
+  poly(g, [[6, 5], [5.4 - o.wave * 0.7, 15], [12.6, 5.6]], C.goatDark, 1);
+  const open = o.jaw * 0.5;
+  const swing = (x, y) => [5 + (x - 5) * Math.cos(open) - (y - 1.4) * Math.sin(open), 1.4 + (x - 5) * Math.sin(open) + (y - 1.4) * Math.cos(open)];
   if (o.jaw > 0.1) {
     shape(g, o.heat > 0.2 ? '#ffb23a' : C.maw, 0, () => {
-      g.moveTo(4, 0);
-      g.lineTo(22.4, 0);
-      g.lineTo(...swing(20, 2));
-      g.lineTo(...swing(5, 2.4));
+      g.moveTo(5, 0.6);
+      g.lineTo(24, 1);
+      g.lineTo(...swing(22, 3));
+      g.lineTo(...swing(6, 3.4));
     });
   }
   g.save();
-  g.translate(4, 0.4);
+  g.translate(5, 1.4);
   g.rotate(open);
-  g.translate(-4, -0.4);
-  shape(g, C.goatDark, LW, () => {
-    g.moveTo(4, 0.6);
-    g.lineTo(21.4, 0.9);
-    g.quadraticCurveTo(21.6, 3.8, 17.4, 4.2);
-    g.quadraticCurveTo(9, 6, 1.6, 4.4);
+  g.translate(-5, -1.4);
+  shape(g, C.throat, LW, () => {
+    g.moveTo(5, 1.6);
+    g.lineTo(23.4, 2);
+    g.quadraticCurveTo(22.4, 5.8, 17, 6);
+    g.lineTo(6, 6.2);
   });
   g.restore();
   const head = () => {
-    g.moveTo(-9, -5);
-    g.bezierCurveTo(-8.6, -13, 0, -15.6, 7, -12.4);
-    g.quadraticCurveTo(11, -10.4, 15, -8.8);
-    g.bezierCurveTo(19.4, -7.4, 24, -5.4, 25.4, -2.6);
-    g.quadraticCurveTo(26.2, -0.2, 23, 0.4);
-    g.lineTo(8, 0.2);
-    g.quadraticCurveTo(4, 0.8, 3, 3.4);
-    g.bezierCurveTo(-1.4, 7.4, -8.4, 4.6, -9, -5);
+    g.moveTo(-8, -2);
+    g.bezierCurveTo(-9, -12, 2, -15, 9, -11);
+    g.bezierCurveTo(15, -8.4, 21, -8.6, 25, -6);
+    g.quadraticCurveTo(29, -2.6, 26.4, 1.4);
+    g.quadraticCurveTo(24.6, 2.6, 22, 2.2);
+    g.lineTo(8, 1.8);
+    g.bezierCurveTo(3, 7.6, -7, 6.4, -8, -2);
   };
-  shape(g, vgrad(g, -14, 6, C.goatLight, C.goatDark), 0, head);
-  within(g, head, () => ell(g, 2, 5, 13, 4.6, C.goatDark, 0, -0.1));
+  shape(g, C.goat, 0, head);
+  within(g, head, () => ell(g, 3, -14, 20, 7.4, C.goatDark, 0, 0.16));
   g.beginPath();
   head();
   g.closePath();
   ink(g);
-  // nostril, and one line down its long face
-  lines(g, 0.6, () => {
-    g.moveTo(12, -9);
-    g.quadraticCurveTo(18, -5.6, 22.6, -4.6);
-  });
-  lines(g, 1.1, () => {
-    g.moveTo(21.6, -3.4);
-    g.quadraticCurveTo(23.2, -3.2, 23.6, -2);
-  });
-  calmEye(g, 6.6, -6.8, 3.9, 2, o, o.heat > 0.3 || o.fury > 0.3 ? '#ffd24a' : '#d99a2b');
-  lines(g, 1.05, () => {
-    g.moveTo(2, -9.8);
-    g.quadraticCurveTo(7, -11, 12, -8.8);
-  });
-  // a long pointed ear, laid back
+  circ(g, 23.6, -3.4, 1.15, '#1c1620', 0);
+  beastEye(g, 6.6, -6.2, 3.5, o, o.heat > 0.3 || o.fury > 0.3 ? '#ff8a1e' : '#f2c232', true);
+  brow(g, 1.6, -9.6, 12.4, -8.6, C.brow, 2.2);
+  // a long ear, drooping back
   g.save();
-  g.translate(-5, -5);
+  g.translate(-3.6, -5);
   g.rotate(o.ear * 0.6);
   shape(g, C.goat, LW, () => {
     g.moveTo(0, -3.4);
-    g.quadraticCurveTo(-9, -7.6, -16, 1);
-    g.quadraticCurveTo(-8, 1.2, -0.6, 3);
+    g.bezierCurveTo(-7, -5.4, -14, 0.6, -15, 5.4);
+    g.bezierCurveTo(-9, 6.6, -3, 3.4, 0, 2.4);
   });
-  shape(g, '#76516c', 0, () => {
-    g.moveTo(-2, -1.8);
-    g.quadraticCurveTo(-8, -4.4, -12.8, 0);
-    g.quadraticCurveTo(-7, -0.4, -2, 1.2);
+  shape(g, C.pink, 0, () => {
+    g.moveTo(-2.2, -1.2);
+    g.bezierCurveTo(-6.4, -2, -10.4, 1.4, -11.6, 3.8);
+    g.bezierCurveTo(-8, 4, -4.4, 2.2, -2.2, 1);
   });
   g.restore();
-  horn(g, [-1.6, -11.6], [-15, -17], [-34, -12], [-52, 3], 7.4, C.horn, C.hornShade, Math.max(o.heat * 0.7, o.fury));
-  if (o.fury > 0.05) glow(g, -26, -8, 28, '190, 60, 255', 0.45 * o.fury);
+  horn(g, [-1, -10.4], [-7, -28], [-27, -29], [-35, -13], 6.6, C.horn, Math.max(o.heat * 0.7, o.fury));
+  if (o.fury > 0.05) glow(g, -18, -18, 25, '190, 60, 255', 0.45 * o.fury);
   // fire gathering at its lips: motes spiralling in to a ball that swells
   if (o.charge > 0.04) {
     const c = o.charge;
     const x = GOAT.mouth + 4;
-    glow(g, x, 0.6, 6 + 11 * c, '255, 90, 20', 0.75 * c);
-    glow(g, x, 0.6, 2.4 + 5 * c, '255, 236, 150', 0.95 * c);
+    glow(g, x, 2, 6 + 11 * c, '255, 90, 20', 0.75 * c);
+    glow(g, x, 2, 2.4 + 5 * c, '255, 236, 150', 0.95 * c);
     for (let i = 0; i < 9; i++) {
       const q = (o.clock * 1.9 + i / 9) % 1;
       const a = i * 2.4 + q * 4.4;
       const r = (1 - q) * (13 + (i % 3) * 3);
       lines(g, 1.3 * q + 0.3, () => {
-        g.moveTo(x + Math.cos(a) * r, 0.6 + Math.sin(a) * r * 0.8);
-        g.lineTo(x + Math.cos(a - 0.35) * (r + 3.4), 0.6 + Math.sin(a - 0.35) * (r + 3.4) * 0.8);
+        g.moveTo(x + Math.cos(a) * r, 2 + Math.sin(a) * r * 0.8);
+        g.lineTo(x + Math.cos(a - 0.35) * (r + 3.4), 2 + Math.sin(a - 0.35) * (r + 3.4) * 0.8);
       }, `rgba(255, ${150 + Math.round(90 * q)}, 50, ${c * (0.35 + 0.65 * q)})`);
     }
   }
   g.restore();
 }
 
-// a small level eye, its upper lid resting on it
-function calmEye(g, x, y, rx, ry, o, iris) {
-  if (o.dead) {
-    lines(g, 1.1, () => {
-      g.moveTo(x - rx * 0.6, y - ry);
-      g.lineTo(x + rx * 0.6, y + ry);
-      g.moveTo(x + rx * 0.6, y - ry);
-      g.lineTo(x - rx * 0.6, y + ry);
-    });
-    return;
-  }
-  const open = 1 - (o.shut || 0);
-  if (open < 0.4) {
-    lines(g, 1.1, () => {
-      g.moveTo(x - rx, y);
-      g.quadraticCurveTo(x, y + 1.2, x + rx, y + 0.2);
-    });
-    return;
-  }
-  const lid = () => {
-    g.moveTo(x - rx, y);
-    g.quadraticCurveTo(x - rx * 0.1, y - ry * 1.05 * open, x + rx, y);
-  };
-  shape(g, iris, 0.6, () => {
-    lid();
-    g.quadraticCurveTo(x, y + ry * 1.05 * open, x - rx, y);
-  });
-  ell(g, x + rx * 0.18, y, rx * 0.24, ry * 0.58 * open, '#1a0d0a', 0);
-  circ(g, x + rx * 0.02, y - ry * 0.24, 0.45, '#fff6e6', 0);
-  lines(g, 1.15, lid);
-}
-
 // ---------------------------------------------------------------- the lion's head
-// one layer of the mane: a ring of long locks, each bending like a flame. locks: [tip x, tip y, the notch after it x, y]
-// about the head; the tips stream and stir (wave)
-function maneLayer(g, start, locks, fill, shine, o, phase) {
-  const tips = locks.map(([tx, ty], i) => {
-    const far = Math.min(1, Math.max(0, -tx) / 40); // the long ones trailing behind stir the most
-    return [tx + Math.sin(o.clock * o.wind + phase + i * 1.7) * (0.8 + 1.8 * far), ty + Math.cos(o.clock * o.wind * 0.9 + phase + i * 2.3) * (0.8 + 2.4 * far)];
-  });
-  // a point `at` of the way from a to b, pushed `off` to one side
-  const side = (a, b, at, off) => {
-    const d = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
-    return [lerp(a[0], b[0], at) + ((b[1] - a[1]) / d) * off, lerp(a[1], b[1], at) - ((b[0] - a[0]) / d) * off];
-  };
+// the mane: one flat shaggy shape with short points all round, longer at the back, and a darker patch low behind
+function mane(g, o) {
+  const p = 1 + o.puff * 0.1;
+  const n = 21;
+  const cx = -4;
+  const cy = 0;
+  const rim = (a) => [cx + Math.cos(a) * 21.5 * p, cy + Math.sin(a) * 22.5 * p];
   const round = () => {
-    let from = start;
-    g.moveTo(from[0], from[1]);
-    locks.forEach(([, , vx, vy], i) => {
-      const tip = tips[i];
-      const notch = [vx, vy];
-      const len = Math.hypot(tip[0] - from[0], tip[1] - from[1]);
-      // (it stops just short of its point and rounds it off)
-      g.bezierCurveTo(...side(from, tip, 0.34, -len * 0.19), ...side(from, tip, 0.7, len * 0.02), lerp(tip[0], from[0], 0.07), lerp(tip[1], from[1], 0.07));
-      g.quadraticCurveTo(...tip, lerp(tip[0], notch[0], 0.12), lerp(tip[1], notch[1], 0.12));
-      g.bezierCurveTo(...side(tip, notch, 0.34, len * 0.05), ...side(tip, notch, 0.7, len * 0.12), ...notch);
-      from = notch;
-    });
+    g.moveTo(...rim(0));
+    for (let i = 0; i < n; i++) {
+      const a0 = (i / n) * TAU;
+      const a1 = ((i + 1) / n) * TAU;
+      const back = Math.max(0, -Math.cos(a0)); // 0 in front, 1 straight behind
+      const long = 3.6 + back * 5.4 + (i % 2) * 1.4;
+      // each point is swept toward the back
+      const am = (a0 + a1) / 2 + (Math.sin(a0) > 0 ? 0.13 : -0.13);
+      const sway = Math.sin(o.clock * o.wind * 0.7 + i * 1.9) * 0.8 * (0.3 + back);
+      const tip = [cx + Math.cos(am) * (21.5 * p + long), cy + Math.sin(am) * (22.5 * p + long) + sway];
+      const end = rim(a1);
+      g.quadraticCurveTo(...rim(a0 + (a1 - a0) * 0.7), ...tip);
+      g.lineTo(...end);
+    }
   };
-  shape(g, fill, 0, round);
+  shape(g, C.mane, 0, round);
+  within(g, round, () => ell(g, cx - 12, cy + 11, 25, 18, C.maneDark, 0, 0.35));
   g.beginPath();
   round();
   g.closePath();
-  ink(g, 0.8);
-  // a strand or two
-  lines(g, 0.6, () => {
-    tips.forEach(([tx, ty], i) => {
-      if (i % 3 !== 1) return;
-      g.moveTo(tx * 0.46, ty * 0.46);
-      g.bezierCurveTo(tx * 0.58 + 2, ty * 0.58 - 2.6, tx * 0.74, ty * 0.74 + 0.6, tx * 0.86, ty * 0.86);
-    });
-  }, shine);
+  ink(g);
+  // a few short strokes, as on the game's boar
+  lines(g, 0.9, () => {
+    for (const [x, y] of [[-19, -12], [-22, -1], [-18, 10], [-10, -18], [-8, 17]]) {
+      g.moveTo(x, y);
+      g.lineTo(x - 5, y + 1.4);
+    }
+  }, 'rgba(48, 24, 10, 0.55)');
 }
 
-// a single long lock flying free: from (x, y) round through (cx, cy) to its point
-function tress(g, o, i, [x, y, cx, cy, tx, ty], wide, fill) {
-  const sway = Math.sin(o.clock * o.wind + i * 2.1) * 3;
-  shape(g, fill, 0.65, () => {
-    g.moveTo(x, y - wide / 2);
-    g.bezierCurveTo(lerp(x, cx, 0.7), cy - wide * 0.7, cx - 4, cy + sway * 0.4, tx, ty + sway);
-    g.bezierCurveTo(cx - 1, cy + wide * 0.75 + sway * 0.4, lerp(x, cx, 0.6), cy + wide, x, y + wide / 2);
-  });
-}
-
-function mane(g, o) {
-  g.save();
-  const p = 1 + o.puff * 0.08;
-  g.scale(p, p);
-  // two long locks flying back
-  [[-18, -15, -40, -22, -63, -36], [-24, -3, -40, -9, -55, -8]].forEach((l, i) => tress(g, o, i, l, 7, C.maneBack));
-  maneLayer(g, [14, -24], [[-4, -38, -5, -23], [-30, -37, -18, -20], [-46, -21, -23, -12], [-37, -5, -25, 0], [-44, 9, -21, 10], [-27, 23, -11, 19], [-11, 33, 4, 23], [14, 35, 17, 21], [31, 23, 25, 11], [38, 3, 27, -6], [37, -22, 22, -20], [25, -35, 14, -24]], C.maneBack, C.maneMid, o, 0);
-  maneLayer(g, [12, -20], [[-6, -31, -4, -18], [-27, -27, -14, -13], [-37, -10, -18, -4], [-27, 3, -17, 8], [-30, 17, -8, 16], [-7, 28, 5, 20], [15, 30, 17, 18], [29, 18, 24, 7], [35, -4, 23, -10], [31, -24, 18, -19], [19, -31, 12, -20]], C.maneGold, C.maneShine, o, 2);
-  g.restore();
-}
-
-// a curved fang from (x, y). h: how long, downward (negative: upward)
-function fang(g, x, y, h, w) {
-  shape(g, C.tooth, 0.5, () => {
-    g.moveTo(x - w, y);
-    g.quadraticCurveTo(x - w * 0.3, y + h * 0.72, x + w * 0.7, y + h);
-    g.quadraticCurveTo(x + w * 1.25, y + h * 0.5, x + w, y);
-  });
-}
-
-// jaw: 0..1. At rest its mouth is shut
+// jaw: 0..1. Shut, two small teeth still show, as on the game's dragon and alligator
 function lionHead(g, o) {
   mane(g, o);
-  ell(g, FACE.x - 3, FACE.y - 2, 15, 15.5, 'rgba(112, 62, 14, 0.26)', 0);
-  g.save();
-  g.translate(FACE.x, FACE.y);
-  g.scale(FACE.size, FACE.size);
-  // a small ear, laid back
-  shape(g, C.fur, LW, () => {
-    g.moveTo(-9, -10);
-    g.quadraticCurveTo(-17, -20, -11, -23);
-    g.quadraticCurveTo(-3, -21, -1, -13.4);
-  });
-  shape(g, C.maneBack, 0, () => {
-    g.moveTo(-8, -12);
-    g.quadraticCurveTo(-13, -18, -10.4, -20.4);
-    g.quadraticCurveTo(-5, -18.4, -3, -13.4);
-  });
-  const open = Math.max(0, o.jaw - 0.08) * 0.66;
-  const swing = (x, y) => [x * Math.cos(open) - (y - 6) * Math.sin(open), 6 + x * Math.sin(open) + (y - 6) * Math.cos(open)];
+  // a round ear with a pink inside
+  circ(g, -1.6, -16, 5.6, C.fur, LW);
+  circ(g, -1.2, -15.6, 2.7, C.pink, 0);
+  const open = Math.max(0, o.jaw - 0.06) * 0.62;
+  const swing = (x, y) => [4 + (x - 4) * Math.cos(open) - (y - 6) * Math.sin(open), 6 + (x - 4) * Math.sin(open) + (y - 6) * Math.cos(open)];
   if (open > 0.04) {
-    // inside the mouth
-    shape(g, C.maw, 0.6, () => {
-      g.moveTo(1, 5);
-      g.bezierCurveTo(9, 4.4, 18, 4, 24.4, 3.6);
-      g.lineTo(...swing(22.4, 6.4));
-      g.quadraticCurveTo(...swing(10, 9), ...swing(-1, 7));
+    shape(g, C.maw, 0, () => {
+      g.moveTo(3, 5);
+      g.lineTo(28, 5);
+      g.lineTo(...swing(25, 8));
+      g.lineTo(...swing(5, 9));
     });
   }
   // lower jaw
   g.save();
-  g.translate(0, 6);
+  g.translate(4, 6);
   g.rotate(open);
-  g.translate(0, -6);
-  if (open > 0.14) {
-    shape(g, C.tongue, 0.5, () => {
-      g.moveTo(3, 7);
-      g.bezierCurveTo(8, 3.6, 13, 6.4, 18, 6.4);
-      g.quadraticCurveTo(10, 8.8, 3, 8);
-    });
-    fang(g, 19, 7, -4.8, 1.4);
+  g.translate(-4, -6);
+  if (open > 0.16) {
+    ell(g, 15, 6.4, 8, 2.2, C.tongue, 0);
+    for (const x of [22.6, 18.6]) poly(g, [[x - 1.7, 6.8], [x, 2.8], [x + 1.7, 6.8]], C.tooth, 0.7);
   }
-  const chin = () => {
-    g.moveTo(-1, 5.2);
-    g.quadraticCurveTo(10, 4.4, 22.6, 4);
-    g.quadraticCurveTo(23.8, 8.8, 19, 11);
-    g.quadraticCurveTo(11, 14, 3, 13.2);
-    g.quadraticCurveTo(-4, 11.6, -7, 7);
-  };
-  shape(g, C.muzzle, 0, chin);
-  within(g, chin, () => ell(g, 5, 14, 16, 4, C.furDark, 0));
-  g.beginPath();
-  chin();
-  ink(g);
-  // a short beard under the chin
-  shape(g, C.maneGold, 0.65, () => {
-    g.moveTo(1, 12.6);
-    g.quadraticCurveTo(2, 17.4, -3.4, 20.4);
-    g.quadraticCurveTo(6, 19.4, 11.6, 13);
+  shape(g, C.belly, LW, () => {
+    g.moveTo(2, 6);
+    g.lineTo(26.4, 6.4);
+    g.quadraticCurveTo(25.6, 11.6, 19, 12.4);
+    g.quadraticCurveTo(9, 13.6, 2, 10);
   });
   g.restore();
-  // the skull and upper jaw
   const face = () => {
-    g.moveTo(-11.4, -9);
-    g.bezierCurveTo(-7, -17, 2.6, -17, 7.4, -12.4);
-    g.bezierCurveTo(12, -9.6, 18, -8.4, 23.4, -6.2);
-    g.quadraticCurveTo(28, -4.6, 27.8, -1);
-    g.quadraticCurveTo(28, 3.2, 24, 4.4);
-    g.bezierCurveTo(18, 5.4, 9, 6.6, 3, 5.6);
-    g.quadraticCurveTo(-3, 11.4, -10.4, 9);
-    g.bezierCurveTo(-15.2, 3.6, -15.2, -4, -11.4, -9);
+    g.moveTo(-11, -2);
+    g.bezierCurveTo(-11, -15, 4, -17.4, 11, -12.6);
+    g.bezierCurveTo(14, -10.4, 15.4, -8.4, 17.6, -7.4);
+    g.bezierCurveTo(25, -7.6, 32, -5, 31.6, 1);
+    g.quadraticCurveTo(31.4, 6, 26.6, 6.2);
+    g.lineTo(12, 6);
+    g.bezierCurveTo(8, 8.8, 3, 11.6, -2, 10.8);
+    g.bezierCurveTo(-8, 9.4, -11, 4.6, -11, -2);
   };
-  shape(g, vgrad(g, -16, 8, C.furLight, C.fur), 0, face);
+  shape(g, C.fur, 0, face);
   within(g, face, () => {
-    ell(g, -4, 11, 14, 6, C.furDark, 0, -0.3);
-    ell(g, 21.4, 1.4, 8.4, 4.4, C.muzzle, 0, -0.06);
+    ell(g, 0, -17, 20, 7.6, C.furDark, 0, 0.12);
+    ell(g, 23.6, 3.4, 11.4, 6.4, C.belly, 0, -0.05);
   });
   g.beginPath();
   face();
   g.closePath();
   ink(g);
-  if (open > 0.1) {
-    fang(g, 21.4, 4.4, 5.6, 1.5);
-    fang(g, 11, 5.9, 3, 1.1);
-  }
-  // a broad flat nose, and the line from it to the corner of the mouth
-  shape(g, C.nose, 0.7, () => {
-    g.moveTo(21.8, -6.4);
-    g.quadraticCurveTo(27.6, -5.6, 28, -2.2);
-    g.quadraticCurveTo(26, 0, 24.2, -1.2);
-    g.quadraticCurveTo(22.4, -3.2, 21.8, -6.4);
+  // teeth along the top of the mouth
+  for (const x of open > 0.1 ? [24.6, 20.4, 16.2, 12.4] : [23.4, 18.6]) poly(g, [[x - 1.6, 5.9], [x, 5.9 + (open > 0.1 ? 4 : 3)], [x + 1.6, 6]], C.tooth, 0.7);
+  // the mouth line, turning down a little at the corner
+  lines(g, LW, () => {
+    g.moveTo(27, 6.1);
+    g.lineTo(12, 5.9);
+    g.quadraticCurveTo(9.6, 6.4, 8.6, 8.4);
   });
-  lines(g, 0.75, () => {
-    g.moveTo(24.4, -1);
-    g.quadraticCurveTo(24.6, 1.4, 23.4, 2.4);
-    g.quadraticCurveTo(19, 3.6, 15.6, 1.6);
+  // nose, the line under it, and whisker spots
+  shape(g, C.nose, 0.9, () => {
+    g.moveTo(25.4, -6.4);
+    g.quadraticCurveTo(32.4, -6, 32.2, -2.6);
+    g.quadraticCurveTo(31, -0.4, 28.4, -0.8);
+    g.quadraticCurveTo(26, -2.8, 25.4, -6.4);
   });
-  // one line along the nose and one on the cheek
-  lines(g, 0.6, () => {
-    g.moveTo(11.4, -6.2);
-    g.quadraticCurveTo(16, -4.4, 20, -4.6);
-    g.moveTo(-6, 0);
-    g.quadraticCurveTo(0, 3, 7, 0.6);
+  lines(g, 0.9, () => {
+    g.moveTo(28.8, -0.8);
+    g.quadraticCurveTo(29, 1.6, 27.4, 3);
   });
-  calmEye(g, 5.4, -5.6, 4.6, 2.3, o, '#e0991f');
-  // a level brow
-  lines(g, 1.35, () => {
-    g.moveTo(-1.6, -10.4);
-    g.quadraticCurveTo(5, -12, 11.4, -8.6);
-  });
-  g.restore();
+  for (const [x, y] of [[21.4, 0.8], [24, 2], [20.6, 3.2]]) circ(g, x, y, 0.65, '#6b4522', 0);
+  beastEye(g, 7, -5, 3.9, o, '#f6efd6', false);
+  brow(g, 1.4, -9.8, 13.4, -8, C.brow, 2.6);
 }
 
-// ---------------------------------------------------------------- the serpent that is its tail
-const SNAKE_ROOT = [-37, -7];
-// eight points it runs through, from the rump to its head: at rest it makes a great loop out behind and comes forward
-const SNAKE_REST = [SNAKE_ROOT, [-55, -3], [-71, -10], [-78, -23], [-70, -34], [-53, -35], [-31, -24], [-11, -22]];
-const SNAKE_COIL = [SNAKE_ROOT, [-57, -4], [-73, -17], [-74, -35], [-61, -47], [-45, -48], [-40, -40], [-32, -34]];
-const SNAKE_SLACK = [SNAKE_ROOT, [-50, 10], [-62, 22], [-56, 29], [-42, 29], [-28, 30], [-16, 31], [-3, 30]];
+// ---------------------------------------------------------------- the serpent that is its tail, like the game's snake
+const SNAKE_ROOT = [-37, -9];
+// eight points it runs through, from the rump to its head: at rest it curves out behind and up, and looks forward
+const SNAKE_REST = [SNAKE_ROOT, [-52, -7], [-63, -15], [-62, -29], [-55, -39], [-55, -50], [-47, -57], [-35, -56]];
+const SNAKE_COIL = [SNAKE_ROOT, [-56, -7], [-70, -20], [-70, -38], [-60, -50], [-48, -47], [-46, -38], [-42, -35]];
+const SNAKE_SLACK = [SNAKE_ROOT, [-50, 8], [-62, 20], [-56, 28], [-42, 28], [-28, 29], [-16, 30], [-4, 29]];
 
 function smoothThrough(pts, each = 4) {
   const out = [];
@@ -750,13 +568,11 @@ function smoothThrough(pts, each = 4) {
 // from: which sample to begin at (the last stretch is painted again over the front of the beast)
 function serpentBody(g, pts, from) {
   const n = pts.length;
-  const wide = (i) => 15.8 - 3.2 * (i / (n - 1));
+  const wide = (i) => 12.6 - 3.4 * (i / (n - 1));
   const [L, R] = edges(pts, wide);
-  // it is red underneath: that is its one side along the bottom of the loop, and by a twist at the far end the other
-  // side along the top
-  const twist = (i) => ease(clamp01((i / (n - 1) - 0.34) / 0.2));
+  // its pale belly: one side low down, and by a twist the other side up by the head
+  const twist = (i) => ease(clamp01((i / (n - 1) - 0.3) / 0.24));
   const under = pts.map((_, i) => [lerp(R[i][0], L[i][0], twist(i)), lerp(R[i][1], L[i][1], twist(i))]);
-  const over = pts.map((_, i) => [lerp(L[i][0], R[i][0], twist(i)), lerp(L[i][1], R[i][1], twist(i))]);
   const l = L.slice(from);
   const r = R.slice(from);
   const round = () => {
@@ -766,37 +582,25 @@ function serpentBody(g, pts, from) {
   };
   shape(g, C.snake, 0, round);
   within(g, round, () => {
-    const along = (k, colour, w) => {
-      g.beginPath();
-      let first = true;
-      for (let i = Math.max(0, from - 1); i < n; i++) {
-        const x = lerp(pts[i][0], under[i][0], k);
-        const y = lerp(pts[i][1], under[i][1], k);
-        if (first) g.moveTo(x, y);
-        else g.lineTo(x, y);
-        first = false;
+    // dark bands round it
+    lines(g, 3.6, () => {
+      for (let i = 2; i < n - 1; i += 4) {
+        if (i < from - 1) continue;
+        const slant = pts[Math.min(n - 1, i + 1)];
+        g.moveTo(L[i][0] * 1.2 - pts[i][0] * 0.2, L[i][1] * 1.2 - pts[i][1] * 0.2);
+        g.lineTo(slant[0] * 2 - L[Math.min(n - 1, i + 1)][0] * 1.2 + pts[Math.min(n - 1, i + 1)][0] * 0.2, slant[1] * 2 - L[Math.min(n - 1, i + 1)][1] * 1.2 + pts[Math.min(n - 1, i + 1)][1] * 0.2);
       }
-      ink(g, w, colour);
-    };
-    along(-0.75, C.snakeDark, 4.6);
-    along(-0.2, C.snakeLight, 1.6);
-    // dark red underneath, in plates
-    along(0.74, C.belly, 6.8);
-    lines(g, 0.6, () => {
-      for (let i = from + 1; i < n - 1; i += 3) {
-        const mx = lerp(pts[i][0], under[i][0], 0.3);
-        const my = lerp(pts[i][1], under[i][1], 0.3);
-        g.moveTo(mx, my);
-        g.lineTo(under[i][0] * 1.12 - pts[i][0] * 0.12, under[i][1] * 1.12 - pts[i][1] * 0.12);
-      }
-    }, C.bellyDark);
-    lines(g, 0.5, () => {
-      for (let i = from; i < n; i++) {
-        g.moveTo(lerp(pts[i][0], under[i][0], 0.3), lerp(pts[i][1], under[i][1], 0.3));
-        const j = Math.max(0, i - 1);
-        g.lineTo(lerp(pts[j][0], under[j][0], 0.3), lerp(pts[j][1], under[j][1], 0.3));
-      }
-    });
+    }, C.snakeDark);
+    g.beginPath();
+    let first = true;
+    for (let i = Math.max(0, from - 1); i < n; i++) {
+      const x = lerp(pts[i][0], under[i][0], 0.86);
+      const y = lerp(pts[i][1], under[i][1], 0.86);
+      if (first) g.moveTo(x, y);
+      else g.lineTo(x, y);
+      first = false;
+    }
+    ink(g, 4.6, C.snakeBelly);
   });
   for (const side of [l, r]) {
     g.beginPath();
@@ -814,67 +618,57 @@ function serpentHead(g, pts, s, o) {
   g.translate(head[0], head[1]);
   g.rotate(angle);
   if (Math.cos(angle) < 0) g.scale(1, -1); // (kept the right way up when it faces back)
-  g.scale(1.06, 1.16);
   if (s.tongue > 0.05) {
-    const far = 17 + s.tongue * 9;
-    lines(g, 1.25, () => {
-      g.moveTo(13, 2.4);
-      g.bezierCurveTo(18, 3.4, 18, 9 + s.tongue * 3, far - 1, 11 + s.tongue * 3);
-      g.lineTo(far + 3.4, 10.4 + s.tongue * 3);
-      g.moveTo(far - 1, 11 + s.tongue * 3);
-      g.lineTo(far + 2, 15 + s.tongue * 3);
-    }, '#d8232f');
+    const far = 16 + s.tongue * 8;
+    lines(g, 1.2, () => {
+      g.moveTo(14, 2);
+      g.lineTo(far, 2.8);
+      g.lineTo(far + 3.6, 0.6);
+      g.moveTo(far, 2.8);
+      g.lineTo(far + 3.6, 5);
+    }, '#d3303c');
   }
   const open = s.gape * 0.75;
   if (s.gape > 0.1) {
-    shape(g, C.maw, 0.6, () => {
+    shape(g, C.maw, 0.8, () => {
       g.moveTo(-1, 1.4);
-      g.lineTo(18, 0.6);
-      g.lineTo(16 * Math.cos(open), 1.6 + 16 * Math.sin(open));
+      g.lineTo(17, 0.8);
+      g.lineTo(15 * Math.cos(open), 1.6 + 15 * Math.sin(open));
     });
   }
   g.save();
   g.translate(0, 1.6);
   g.rotate(open);
   g.translate(0, -1.6);
-  shape(g, C.belly, LW, () => {
-    g.moveTo(-3, 1.8);
-    g.lineTo(16.4, 2);
-    g.quadraticCurveTo(14, 5.4, 8, 5.6);
-    g.quadraticCurveTo(1, 6.4, -4, 3.6);
+  shape(g, C.snakeBelly, LW, () => {
+    g.moveTo(-3, 1.6);
+    g.lineTo(16, 1.8);
+    g.quadraticCurveTo(13.4, 6, 7, 6);
+    g.quadraticCurveTo(1, 6.4, -4, 3.4);
   });
-  if (s.gape > 0.5) poly(g, [[11.6, 2], [13, -2.4], [14.4, 2]], C.tooth, 0.5);
+  if (s.gape > 0.5) poly(g, [[11.4, 1.8], [12.8, -2], [14.2, 1.8]], C.tooth, 0.6);
   g.restore();
   const skull = () => {
-    g.moveTo(-5, -4);
-    g.bezierCurveTo(0, -9.4, 6, -8.6, 10, -6);
-    g.quadraticCurveTo(17.4, -5, 19.4, -1.2);
-    g.quadraticCurveTo(19, 1.6, 15, 1.4);
-    g.quadraticCurveTo(6, 3.4, -4, 2.4);
+    g.moveTo(-5, -3.6);
+    g.bezierCurveTo(-1, -9.4, 9, -8.8, 14, -5.4);
+    g.quadraticCurveTo(19.6, -2.6, 18, 0.8);
+    g.quadraticCurveTo(14, 2.8, 8, 2.2);
+    g.lineTo(-4, 2.6);
   };
-  shape(g, vgrad(g, -9, 3, C.snakeLight, C.snakeDark), 0, skull);
+  shape(g, C.snake, 0, skull);
+  within(g, skull, () => ell(g, 1, -9, 12, 4, C.snakeDark, 0, 0.1));
   g.beginPath();
   skull();
   ink(g);
   if (s.gape > 0.5) {
-    for (const x of [12.6, 16.4]) {
-      shape(g, C.tooth, 0.5, () => {
-        g.moveTo(x - 1.3, 1.4);
-        g.quadraticCurveTo(x + 1.6, 4, x - 0.4, 8.2);
-        g.quadraticCurveTo(x - 0.2, 4.4, x + 1.2, 1.4);
-      });
-    }
+    for (const x of [11.4, 15]) poly(g, [[x - 1.3, 1.4], [x + 0.4, 6.6], [x + 1.3, 1.4]], C.tooth, 0.6);
   }
-  lines(g, 0.6, () => {
-    g.moveTo(17.4, 0.2);
-    g.quadraticCurveTo(9, 0.8, 1, 0.2);
-  });
-  circ(g, 16.6, -2.6, 0.55, INK, 0);
-  calmEye(g, 6.6, -3.6, 3.2, 1.9, o, '#e5b21e');
   lines(g, 0.9, () => {
-    g.moveTo(2.4, -6.4);
-    g.quadraticCurveTo(7, -7.4, 11.4, -5);
+    g.moveTo(17.8, 0.2);
+    g.quadraticCurveTo(10, 1.4, 3, -0.2);
   });
+  circ(g, 15.4, -3, 0.7, INK, 0);
+  beastEye(g, 6.8, -3.9, 3.5, o, '#fdfdf6', false);
   g.restore();
 }
 
@@ -883,8 +677,8 @@ function serpentHead(g, pts, s, o) {
 // wide its mouth; puff: its mane; tilt: the goat's head; bleat: the goat's mouth; reach / kick: front paws thrown
 // forward and hind hooves back, as it leaps; ax, ay and bx, by: where its near and far forepaws are lifted to, clawing
 const REST = { crouch: 0, lean: 0, nod: 0, roar: 0, puff: 0, tilt: 0, bleat: 0, reach: 0, kick: 0, ax: 0, ay: 0, bx: 0, by: 0 };
-const PAWS = { farHind: [-6, 19.4], nearHind: [-39, 25], farFront: [72, 22.6], nearFront: [40, 25] };
-const HIP = [-24, 4];
+const PAWS = { farHind: [-16, 23.4], nearHind: [-29, 25], farFront: [35, 23.4], nearFront: [24, 25] };
+const HIP = [-24, 2];
 
 // o: { paws, bob, clock, wind, aim, heat, charge, fury, shut, goatShut, ear, angry, dead, snake: { pts, gape, tongue } }
 function paint(g, P, o) {
@@ -906,8 +700,8 @@ function paint(g, P, o) {
   };
   const foot = (name) => {
     const front = name.endsWith('Front');
-    let x = PAWS[name][0] + o.paws[name].x + (front ? P.reach * 14 : -P.kick * 16);
-    let y = PAWS[name][1] + o.paws[name].y - (front ? P.reach * 10 : P.kick * 4);
+    let x = PAWS[name][0] + o.paws[name].x + (front ? P.reach * 20 : -P.kick * 18);
+    let y = PAWS[name][1] + o.paws[name].y - (front ? P.reach * 11 : P.kick * 5);
     if (name === 'nearFront') {
       x += P.ax;
       y += P.ay;
@@ -918,38 +712,37 @@ function paint(g, P, o) {
     return [x, y];
   };
   // a paw off the ground tips with the way it is held
-  const tip = (lift, over) => Math.max(-0.9, Math.min(0.75, lift * 0.035 - over * 0.012));
+  const tip = (lift, over) => Math.max(-0.9, Math.min(0.75, lift * 0.03 - over * 0.014));
   const pts = smoothThrough(o.snake.pts);
   const snakeEyes = { dead: o.dead, shut: o.shut };
-  const behind = () => upper(() => serpentBody(g, pts, 0));
-  const inFront = () => upper(() => {
-    serpentBody(g, pts, Math.floor(pts.length * 0.5));
+  const tail = (from) => upper(() => {
+    serpentBody(g, pts, from);
     serpentHead(g, pts, o.snake, snakeEyes);
   });
 
-  hindleg(g, turned(6, 6), foot('farHind'), [-8, -21], P.kick * 0.5, true);
-  const farLifted = P.by < -6;
-  if (!farLifted) foreleg(g, turned(34, 1), foot('farFront'), -P.reach * 0.3, true);
-  behind();
-  upper(() => torso(g));
-  hindleg(g, turned(-26, 3), foot('nearHind'), [-13, -24], P.kick * 0.5, false);
-  upper(() => haunch(g, o.paws.nearHind.x * 0.3 - P.kick * 7));
+  hindleg(g, turned(-17, -3), foot('farHind'), P.kick * 0.5, true);
+  const farLifted = P.by < -8;
+  if (!farLifted) foreleg(g, turned(31, -5), foot('farFront'), -P.reach * 0.3, true);
+  tail(0);
   upper(() => goat(g, { aim: o.aim + P.tilt, jaw: Math.max(P.bleat, o.heat), heat: o.heat, charge: o.charge, fury: o.fury, clock: o.clock, wave: Math.sin(o.clock * o.wind) * 1.2, shut: o.goatShut, ear: o.ear, dead: o.dead }));
-  const near = () => foreleg(g, turned(9, 0), foot('nearFront'), tip(P.ay, P.ax) - P.reach * 0.3, false);
-  const raised = P.ay < -6;
+  upper(() => torso(g));
+  hindleg(g, turned(-27, -2), foot('nearHind'), P.kick * 0.5, false);
+  const near = () => foreleg(g, turned(20, -4), foot('nearFront'), tip(P.ay, P.ax) - P.reach * 0.3, false);
+  const raised = P.ay < -8;
   if (!raised) near();
   upper(() => {
     g.save();
     g.translate(HEAD[0] - 14, HEAD[1] + 4);
     g.rotate(P.nod);
     g.translate(14, -4);
-    lionHead(g, { jaw: Math.max(0, P.roar), puff: P.puff, clock: o.clock, wind: o.wind, shut: o.shut, angry: o.angry, burning: o.burning, dead: o.dead });
+    lionHead(g, { jaw: Math.max(0, P.roar), puff: P.puff, clock: o.clock, wind: o.wind, shut: o.shut, dead: o.dead });
     g.restore();
   });
   // paws clawing the air come over in front
-  if (farLifted) foreleg(g, turned(36, 3), foot('farFront'), tip(P.by, P.bx), false);
+  if (farLifted) foreleg(g, turned(33, -3), foot('farFront'), tip(P.by, P.bx), false);
   if (raised) near();
-  inFront();
+  // the serpent comes round over everything while it strikes
+  if (o.snake.front) tail(Math.floor(pts.length * 0.5));
   g.restore();
 }
 
@@ -957,7 +750,7 @@ const none = () => ({ x: 0, y: 0 });
 const STAND = { farHind: none(), nearHind: none(), farFront: none(), nearFront: none() };
 
 export function drawChimeraStill(g) {
-  paint(g, REST, { paws: STAND, bob: 0, clock: 0, wind: 2, aim: 0.57, heat: 0, charge: 0, fury: 0, shut: 0, goatShut: 0, ear: 0, angry: true, snake: { pts: SNAKE_REST, gape: 0, tongue: 0 } });
+  paint(g, REST, { paws: STAND, bob: 0, clock: 0, wind: 2, aim: GOAT_REST, heat: 0, charge: 0, fury: 0, shut: 0, goatShut: 0, ear: 0, angry: true, snake: { pts: SNAKE_REST, gape: 0, tongue: 0 } });
 }
 
 // ---------------------------------------------------------------- how it holds itself
@@ -980,16 +773,16 @@ function posed(u, R, dead, windup, t) {
       // up with one great paw and down across them, then the other
       const first = a.hits[0];
       const second = a.hits[1];
-      if (m.t < first - 0.07) want = { ...want, lean: -0.13, crouch: 2, ax: 25, ay: -41, roar: 0.5, puff: 0.5, nod: -0.1 };
-      else if (m.t < first + 0.09) want = { ...want, lean: 0.12, crouch: 4, ax: 40, ay: -3, bx: 2, by: -36, roar: 0.85, puff: 0.7, nod: 0.08 };
-      else if (m.t < second - 0.07) want = { ...want, lean: -0.1, crouch: 2, bx: 4, by: -44, roar: 0.6, puff: 0.6 };
-      else want = { ...want, lean: 0.14, crouch: 5, bx: 18, by: -3, roar: 0.95, puff: 0.8, nod: 0.08 };
+      if (m.t < first - 0.07) want = { ...want, lean: -0.13, crouch: 2, ax: 26, ay: -42, roar: 0.5, puff: 0.5, nod: -0.1 };
+      else if (m.t < first + 0.09) want = { ...want, lean: 0.11, crouch: 3, ax: 32, ay: -7, bx: 18, by: -40, roar: 0.75, puff: 0.7, nod: 0.08 };
+      else if (m.t < second - 0.07) want = { ...want, lean: -0.1, crouch: 2, bx: 22, by: -44, roar: 0.6, puff: 0.6 };
+      else want = { ...want, lean: 0.12, crouch: 4, bx: 28, by: -6, roar: 0.8, puff: 0.8, nod: 0.08 };
       stiff = 900;
       damp = 46;
     } else if (m && m.kind === 'ram') {
       // head right down, horns first
-      if (m.t < a.windup) want = { ...want, crouch: 6, lean: -0.1, tilt: 0.62, roar: 0.25, puff: 0.3 };
-      else want = { ...want, crouch: 4, lean: 0.12, tilt: 0.78, roar: 0.55, puff: 0.5 };
+      if (m.t < a.windup) want = { ...want, crouch: 5, lean: -0.08, tilt: 0.85, roar: 0.25, puff: 0.3 };
+      else want = { ...want, crouch: 4, lean: 0.12, tilt: 1.15, roar: 0.4, puff: 0.5 };
       stiff = 420;
       damp = 30;
     } else if (m && m.kind === 'roar') {
@@ -1080,7 +873,7 @@ function snakePose(u, t, dead) {
     pts = mix(out, rest, k);
     gape = 0.3 * (1 - k);
   }
-  return { pts, gape, tongue: 0 };
+  return { pts, gape, tongue: 0, front: b.t >= coil && b.t < a.time - 0.12 };
 }
 
 // speed lines trailing back from it
@@ -1171,7 +964,7 @@ export function drawChimera(ctx, dpr, sprites, u, overlay) {
   const goatBlink = (t + 1.9) % 5.1;
   const pose = dead ? 0 : u.pose || 0;
   // the goat looks where the fire is going; with nobody about it gazes round
-  const aim = dead ? 0.2 : (0.55 + Math.sin(t * 0.9) * 0.1) * (1 - pose) + (u.aim || 0) * pose + (firing ? Math.sin(t * 31) * 0.03 : 0);
+  const aim = dead ? 0.2 : (GOAT_REST + Math.sin(t * 0.9) * 0.1) * (1 - pose) + (u.aim || 0) * pose + (firing ? Math.sin(t * 31) * 0.03 : 0);
   // (the snake's mark is on the ground; while the beast is in the air the drawing is lifted, so it aims lower to match)
   const lifted = alt * d.pounce.height;
   const bite = u.bite;
@@ -1184,7 +977,7 @@ export function drawChimera(ctx, dpr, sprites, u, overlay) {
     bob: -Math.abs(Math.sin(walk * TAU)) * 2.2 * k + Math.sin(t * 2.2) * 0.6 * (1 - k),
     clock: dead ? 0 : t,
     wind: k > 0.3 || busy ? 9 : 3,
-    aim: act ? 0.5 : aim,
+    aim: act ? GOAT_REST : aim,
     heat: firing ? 1 : windup * 0.65,
     charge: windup,
     fury,
@@ -1264,7 +1057,7 @@ function land(world, u) {
 // the roar bursts out: everyone near is knocked back and left seeing stars
 function bellow(world, u) {
   const a = u.def.roar;
-  const mouth = { x: u.x + u.facing * 66 * K * u.def.scale, y: u.y + FEET + (-14 * K - FEET) * u.def.scale };
+  const mouth = { x: u.x + u.facing * 64 * K * u.def.scale, y: u.y + FEET + (-10 * K - FEET) * u.def.scale };
   world.roars.push({ x: mouth.x, y: mouth.y, ground: u.y + FEET, cx: u.x, r: a.radius, age: 0, life: 0.9, seed: Math.random() * TAU });
   world.stomps.push({ x: u.x, y: u.y + FEET, r: a.radius * 0.8, age: 0, life: 1, seed: Math.random() * TAU });
   rubble(world, u.x, u.y + FEET, 16, a.radius * 0.7, 95);
