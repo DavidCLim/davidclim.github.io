@@ -1,18 +1,18 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=265';
-import { drawLayer, OUT, drawArcLine } from './sprites.js?v=265';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt, MALF_CORE, MALF_SPOTS } from './art_units.js?v=265';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=265';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=265';
-import { drawZordGround, drawZordAir } from './zordfx.js?v=265';
-import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=265';
-import { drawMalfAir, limpPose } from './malf.js?v=265';
-import { drawShieldAir } from './shield.js?v=265';
-import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=265';
-import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=265';
-import { drawGandalligator, drawGatorStill, drawGatorGround, drawGatorAir } from './gator.js?v=265';
-import { drawChimera, drawChimeraStill } from './chimera.js?v=265';
-import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=265';
-import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=265';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=266';
+import { drawLayer, OUT, drawArcLine } from './sprites.js?v=266';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt, MALF_CORE, MALF_SPOTS } from './art_units.js?v=266';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=266';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=266';
+import { drawZordGround, drawZordAir } from './zordfx.js?v=266';
+import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=266';
+import { drawMalfAir, limpPose } from './malf.js?v=266';
+import { drawShieldAir } from './shield.js?v=266';
+import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=266';
+import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=266';
+import { drawGandalligator, drawGatorStill, drawGatorGround, drawGatorAir } from './gator.js?v=266';
+import { drawChimera, drawChimeraStill, drawChimeraGround, drawChimeraAir } from './chimera.js?v=266';
+import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=266';
+import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=266';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -372,29 +372,14 @@ function drawTrooper(ctx, dpr, sprites, u) {
     cadence: heavy ? 1.8 : 2.25,
     calm: !u.target && !moving,
     busy: u.burstLeft > 0,
-    fidgets: heavy ? ['look', 'tinker', 'tinker', 'stretch', 'shimmy'] : ['look', 'look', 'tinker', 'stretch', 'shimmy', 'hops'],
+    fidgets: heavy ? ['look', 'tinker', 'tinker', 'stretch'] : ['look', 'look', 'tinker', 'stretch'],
     aim: { lean: -0.11 * braced - 0.07 * ready, squash: 0.08 * braced + 0.11 * ready },
   });
   const mood = heavy ? gatlingMood(u, dead, aiming, R) : null;
 
   placeUnit(ctx, dpr, u, u.hit > 0.14 ? (Math.random() - 0.5) * 1.6 : 0);
 
-  // ---- on the ground: the dust ring where he lands, and the shockwave of each shot
-  if (age > 0.26 && age < 0.8) {
-    const q = (age - 0.26) / 0.54;
-    ctx.strokeStyle = `rgba(150, 148, 160, ${0.6 * (1 - q)})`;
-    ctx.lineWidth = (heavy ? 3 : 2.4) * (1 - q) + 0.5;
-    ctx.beginPath();
-    ctx.ellipse(0, FEET + 1, 9 + (heavy ? 32 : 22) * q, 3 + (heavy ? 11 : 7.5) * q, 0, 0, TAU);
-    ctx.stroke();
-    ctx.fillStyle = `rgba(190, 186, 190, ${0.7 * (1 - q)})`;
-    for (let i = 0; i < 7; i++) {
-      const a = (i / 7) * TAU + (u.id || 0);
-      ctx.beginPath();
-      ctx.arc(Math.cos(a) * (10 + 20 * q), FEET + Math.sin(a) * (3 + 6 * q) - 3 * q, 2.6 * (1 - q) + 0.6, 0, TAU);
-      ctx.fill();
-    }
-  }
+  // ---- on the ground: the shockwave of each shot
   const kick = u.recoil || 0;
   if (!heavy && kick > 0.05 && !dead) {
     ctx.strokeStyle = `rgba(120, 190, 235, ${0.5 * kick})`;
@@ -405,11 +390,8 @@ function drawTrooper(ctx, dpr, sprites, u) {
   }
   if (heavy && mood.firing) botGlow(ctx, 20, FEET, 24, '255, 170, 50', 0.22);
 
-  // ---- he drops in from above, stretched by the fall; the springs squash him as he lands
-  const fall = age < 0.28 ? age / 0.28 : 0;
-  if (age < 0.28) ctx.translate(0, -46 * (1 - fall ** 2));
   ctx.translate(0, FEET);
-  ctx.scale(size * (1 - 0.09 * fall), size * (1 + 0.16 * fall));
+  ctx.scale(size, size);
   ctx.translate(0, -FEET);
 
   drawBotFeet(ctx, A, R, { spread: 4.5 * braced, clock: t });
@@ -678,16 +660,14 @@ function drawShieldBot(ctx, dpr, sprites, u) {
   const R = rigStep(u, {
     age, dead, moving, bang: u.shieldFlash > 0.12 ? 1 : 0, kick: 0.3, cadence: 2.2,
     calm: !u.target && !moving, busy: rushing,
-    fidgets: ['look', 'look', 'stretch', 'shimmy', 'hops'],
+    fidgets: ['look', 'look', 'stretch'],
     aim: { lean: rushing ? 0.26 : 0, squash: rushing ? 0.08 : 0 },
   });
 
   placeUnit(ctx, dpr, u, u.hit > 0.14 ? (Math.random() - 0.5) * 1.6 : 0);
-  const fall = age < 0.28 ? age / 0.28 : 0;
-  if (age < 0.28) ctx.translate(0, -46 * (1 - fall ** 2));
   const size = d.scale || BOT_SCALE;
   ctx.translate(0, FEET);
-  ctx.scale(size * (1 - 0.09 * fall), size * (1 + 0.16 * fall));
+  ctx.scale(size, size);
   ctx.translate(0, -FEET);
 
   // streaking along behind him as he charges
@@ -843,15 +823,13 @@ function drawMalf(ctx, dpr, sprites, u) {
   const wind = !dead && u.fuseT !== undefined ? Math.min(1, u.fuseT / d.bomb.wind) : 0;
   const moving = u.moving && !dead;
   // (the rig is told he is standing, so its own even stride never gets going: the limp is worked out below)
-  const R = rigStep(u, { age, dead, moving: false, bang: 0, kick: 1, calm: !u.target && !moving, busy: wind > 0, fidgets: ['look', 'look', 'shimmy'] });
+  const R = rigStep(u, { age, dead, moving: false, bang: 0, kick: 1, calm: !u.target && !moving, busy: wind > 0, fidgets: ['look'] });
   const L = limpPose(dead ? 0 : u.limp || 0, dead ? 0 : u.limpK || 0);
 
   placeUnit(ctx, dpr, u, wind > 0 ? (Math.random() - 0.5) * 3 * wind : u.hit > 0.14 ? (Math.random() - 0.5) * 1.6 : 0);
-  const fall = age < 0.28 ? age / 0.28 : 0;
-  if (age < 0.28) ctx.translate(0, -46 * (1 - fall ** 2));
   const size = d.scale || BOT_SCALE;
   ctx.translate(0, FEET);
-  ctx.scale(size * (1 - 0.09 * fall), size * (1 + 0.16 * fall));
+  ctx.scale(size, size);
   ctx.translate(0, -FEET);
 
   // how far each foot is from where it rests, in art px, along the way he is heading. (Straight up or down the field he
@@ -1177,10 +1155,6 @@ function drawJuggernaut(ctx, dpr, sprites, u) {
     ctx.ellipse(x, y, rx, rx * 0.34, 0, 0, TAU);
     ctx.stroke();
   };
-  if (age > 0.26 && age < 0.8) {
-    const q = (age - 0.26) / 0.54;
-    ring(0, FEET + 1, 14 + 32 * q, `rgba(150, 148, 160, ${0.6 * (1 - q)})`, 3 * (1 - q) + 0.5);
-  }
   // where the blow lands: a shock ring, and under a two-fisted slam the ground cracks too
   if (punching && s >= d.windup) {
     const x = (u.strikeX === undefined ? u.facing * d.slamAt : u.strikeX) * u.facing;
@@ -1210,10 +1184,8 @@ function drawJuggernaut(ctx, dpr, sprites, u) {
     }
   }
 
-  if (age < 0.28) ctx.translate(0, -60 * (1 - (age / 0.28) ** 2));
-  const squash = age >= 0.28 && age < 0.55 ? Math.sin(((age - 0.28) / 0.27) * Math.PI) : 0;
   ctx.translate(0, FEET);
-  ctx.scale(d.scale * d.bulk * (1 + 0.2 * squash), d.scale * (1 - 0.22 * squash));
+  ctx.scale(d.scale * d.bulk, d.scale);
   ctx.translate(0, -FEET);
 
   // one wide shadow under fists and feet
@@ -1497,10 +1469,8 @@ function drawMechaZord(ctx, dpr, sprites, u) {
   // the moment before he breathes, his horns light up
   const inRange = u.target && Math.hypot(u.target.x - u.x, u.target.y - u.y) <= d.range;
   const charge = !dead && !firing && inRange && !(u.burstLeft > 0) && u.burstT !== undefined && u.burstT < 0.8 ? Math.max(0, Math.min(1, 1 - u.burstT / 0.8)) : 0;
-  // he roars once he has landed, and now and then while he waits for a fight
-  const idleRoar = !dead && u.rig && u.rig.fidget === 'roar' ? (u.rig.t - u.rig.fidgetAt) / u.rig.fidgetFor : 1;
-  const roarAt = age > 0.75 && age < 2.1 ? (age - 0.75) / 1.35 : idleRoar < 1 ? idleRoar : 1;
-  const roar = roarAt < 1 ? Math.max(0, Math.min(1, roarAt * 5, (1 - roarAt) * 4)) : 0;
+  // (he no longer roars on arriving or while standing about: after a battle it looked like crowing)
+  const roar = 0;
   const swipe = !dead && u.swipeT !== undefined && u.swipeT !== null ? Math.min(1, u.swipeT / d.swipe.time) : null;
   // the great beam: gathering it, then firing it, his head following where it points
   const beam = !dead && u.beam ? u.beam : null;
@@ -1514,7 +1484,7 @@ function drawMechaZord(ctx, dpr, sprites, u) {
     cadence: 1.55,
     calm: !u.target && !moving && alt < 0.1 && age > 2.2 && swipe === null && !beam,
     busy: firing || u.salvo > 0 || swipe !== null || !!beam,
-    fidgets: ['look', 'chomp', 'yawn', 'sniff', 'roar', 'stretch'],
+    fidgets: ['look', 'chomp', 'yawn', 'sniff', 'stretch'],
     // he gathers himself back to charge, then throws his weight into the breath
     aim: beam ? { lean: blast ? 0.12 : -0.2 * gather, squash: blast ? 0.03 : 0.1 * gather, head: beamAim - (blast ? 0 : 0.24 * (1 - gather * 0.6)), jaw: blast ? 0.76 : 0.1 + 0.58 * gather } : {
       lean: firing ? 0.11 : -0.19 * charge - 0.08 * roar + (alt > 0.12 ? 0.08 : 0),
@@ -1569,10 +1539,6 @@ function drawMechaZord(ctx, dpr, sprites, u) {
     ctx.ellipse(x, y, rx, rx * 0.34, 0, 0, TAU);
     ctx.stroke();
   };
-  if (age > 0.28 && age < 0.9) {
-    const q = (age - 0.28) / 0.62;
-    ring(0, FEET + 1, 14 + 34 * q, `rgba(150, 148, 160, ${0.65 * (1 - q)})`, 3 * (1 - q) + 0.5);
-  }
   // each heavy step puffs out a little ring of dust
   if (moving && alt < 0.1 && R.since.step < 0.26) {
     const q = R.since.step / 0.26;
@@ -1603,27 +1569,9 @@ function drawMechaZord(ctx, dpr, sprites, u) {
       ring(0, FEET + 1, base * (firing ? 0.7 + 1.2 * q : 1.9 - 1.2 * q), `rgba(40, 225, 180, ${0.7 * (firing ? 1 - q : q * charge)})`, 1.3);
     }
   }
-  if (age > 0.3 && age < 0.85) {
-    const q = (age - 0.3) / 0.55;
-    ring(0, FEET + 1, 18 + 56 * q, `rgba(40, 225, 180, ${0.8 * (1 - q)})`, 2.6 * (1 - q) + 0.4);
-    ctx.strokeStyle = `rgba(90, 245, 205, ${1 - q})`;
-    ctx.lineWidth = 0.9;
-    for (let i = 0; i < 7; i++) {
-      const a = (i / 7) * TAU + Math.random() * 0.5;
-      const r0 = 14 + 30 * q;
-      ctx.beginPath();
-      ctx.moveTo(Math.cos(a) * r0, FEET + Math.sin(a) * r0 * 0.34);
-      ctx.lineTo(Math.cos(a + 0.18) * (r0 + 7), FEET + Math.sin(a + 0.18) * (r0 + 7) * 0.34 - 3);
-      ctx.lineTo(Math.cos(a) * (r0 + 14), FEET + Math.sin(a) * (r0 + 14) * 0.34);
-      ctx.stroke();
-    }
-  }
-
-  if (age < 0.3) ctx.translate(0, -70 * (1 - (age / 0.3) ** 2));
   if (alt > 0.01) ctx.translate(0, -alt * (d.hoverH + Math.sin(t * 3.2) * 1.4));
-  const fall = age < 0.3 ? age / 0.3 : 0;
   ctx.translate(0, FEET);
-  ctx.scale(d.scale * (1 - 0.09 * fall), d.scale * (1 + 0.16 * fall));
+  ctx.scale(d.scale, d.scale);
   ctx.translate(0, -FEET);
   // roaring he shudders
   if (roar > 0) ctx.translate(Math.sin(t * 62) * 0.5 * roar, 0);
@@ -1709,18 +1657,6 @@ function drawMechaZord(ctx, dpr, sprites, u) {
       }
       g.restore();
     }
-    // each roar rings out from his mouth
-    if (roar > 0) {
-      g.lineCap = 'round';
-      for (let i = 0; i < 3; i++) {
-        const q = (roarAt * 3.2 + i / 3) % 1;
-        g.strokeStyle = `rgba(112, 190, 180, ${0.85 * (1 - q) * roar})`;
-        g.lineWidth = (2.2 - 1.3 * q) * K * 1.4;
-        g.beginPath();
-        g.arc(38 * K, 12 * K, (12 + 30 * q) * K, -0.95, 0.55);
-        g.stroke();
-      }
-    }
   });
 
   const raised = ctx.getTransform();
@@ -1794,7 +1730,7 @@ function drawJetTrooper(ctx, dpr, sprites, u) {
     kick: 2,
     cadence: 2.25,
     calm: !u.target && !moving && !air,
-    fidgets: ['look', 'hops', 'hops', 'tinker', 'stretch', 'shimmy'],
+    fidgets: ['look', 'look', 'tinker', 'stretch'],
     // in the air he banks the way he is flying
     aim: { lean: air ? Math.max(-0.2, Math.min(0.3, drift * 0.004)) + 0.05 : -0.07 * ready, squash: 0.12 * ready },
   });
@@ -1814,39 +1750,15 @@ function drawJetTrooper(ctx, dpr, sprites, u) {
     ctx.ellipse(0, FEET + 2, 10 - 3 * alt, 3.2 - alt, 0, 0, TAU);
     ctx.fill();
   }
-  if (age > 0.26 && age < 0.8) {
-    const q = (age - 0.26) / 0.54;
-    ctx.strokeStyle = `rgba(150, 148, 160, ${0.6 * (1 - q)})`;
-    ctx.lineWidth = 2.4 * (1 - q) + 0.5;
-    ctx.beginPath();
-    ctx.ellipse(0, FEET + 1, 10 + 24 * q, 3.4 + 8 * q, 0, 0, TAU);
-    ctx.stroke();
-  }
-  const fall = age < 0.28 ? age / 0.28 : 0;
-  if (age < 0.28) ctx.translate(0, -50 * (1 - fall ** 2));
   ctx.translate(0, -alt * (d.fly.height + Math.sin(t * 3.4) * 2));
   ctx.translate(0, FEET);
-  ctx.scale(d.scale * (1 - 0.09 * fall), d.scale * (1 + 0.16 * fall));
+  ctx.scale(d.scale, d.scale);
   ctx.translate(0, -FEET);
 
   drawBotFeet(ctx, A, R, { air: alt, clock: t, shadow: !air });
   if (!dead && !air) stepDust(ctx, R, 1);
   applyBotBody(ctx, R);
 
-  // little test burns from the pack as he hops about
-  if (!dead && !air && R.fidget === 'hops' && R.hop < -1) {
-    const len = Math.min(1, -R.hop / 5);
-    for (const jx of [-24.5, -16.5]) {
-      botGlow(ctx, jx * K, 26 * K, 9 * len * K, '255, 170, 60', 0.8);
-      ctx.fillStyle = '#ffd23c';
-      ctx.beginPath();
-      ctx.moveTo((jx - 3) * K, 20 * K);
-      ctx.lineTo(jx * K, (20 + (12 + Math.random() * 6) * len) * K);
-      ctx.lineTo((jx + 3) * K, 20 * K);
-      ctx.closePath();
-      ctx.fill();
-    }
-  }
   ctx.save();
   ctx.translate(0, R.pack * K);
   drawLayer(ctx, A.pack);
@@ -2631,6 +2543,7 @@ export function drawFlames(ctx, world, under) {
     drawGatlingGround(ctx, world);
     drawGibbonGround(ctx, world);
     drawGatorGround(ctx, world);
+    drawChimeraGround(ctx, world);
   }
   let many = 0;
   for (const f of world.flames) if (!!f.under === under) many++;
@@ -2643,6 +2556,7 @@ export function drawFlames(ctx, world, under) {
     drawGatlingAir(ctx, world);
     drawGibbonAir(ctx, world);
     drawGatorAir(ctx, world);
+    drawChimeraAir(ctx, world);
     drawMalfAir(ctx, world);
     drawShieldAir(ctx, world);
   }
@@ -2974,7 +2888,7 @@ const ICONS = {
   }],
   gibbondore: [134, 63, 68, null],
   gandalligator: [102, 47, 50, null],
-  chimera: [124, 71, 66, null],
+  chimera: [128, 74, 68, null],
   mechazord: [122, 70, 60, null],
   trooper: [96, 45, 44, (g, S) => {
     g.save();

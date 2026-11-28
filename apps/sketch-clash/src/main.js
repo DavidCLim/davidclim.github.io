@@ -1,16 +1,16 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=265';
-import { buildCreatureArt } from './creatures.js?v=265';
-import { buildEggArt } from './art_eggs.js?v=265';
-import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon, WATER } from './terrain.js?v=265';
-import { WaterLayer } from './water.js?v=265';
-import { beginUnitPictures, drawPictured } from './unitcache.js?v=265';
-import { Sfx } from './sfx.js?v=265';
-import { World } from './world.js?v=265';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=265';
-import { buildUnitArt, drawDrop } from './art_units.js?v=265';
-import { drawGibbonHatWorn } from './gibbon.js?v=265';
-import { drawGatorHatWorn } from './gator.js?v=265';
-import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=265';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=266';
+import { buildCreatureArt } from './creatures.js?v=266';
+import { buildEggArt } from './art_eggs.js?v=266';
+import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon, WATER } from './terrain.js?v=266';
+import { WaterLayer } from './water.js?v=266';
+import { beginUnitPictures, drawPictured } from './unitcache.js?v=266';
+import { Sfx } from './sfx.js?v=266';
+import { World } from './world.js?v=266';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=266';
+import { buildUnitArt, drawDrop } from './art_units.js?v=266';
+import { drawGibbonHatWorn } from './gibbon.js?v=266';
+import { drawGatorHatWorn } from './gator.js?v=266';
+import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=266';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -214,7 +214,7 @@ const LATTICE = {
   mage: [16, 13, true],
   gibbondore: [34, 28, true],
   gandalligator: [48, 32, true],
-  chimera: [72, 50, true],
+  chimera: [92, 64, true],
 };
 
 // Terrain: walls, water and ice are painted as strokes; the rest are dropped along the drag.
@@ -1124,6 +1124,30 @@ function drawBody(u) {
   else drawPictured(ctx, dpr, u, (g) => drawUnit(g, dpr, sprites, u));
 }
 
+// Left dazed by the Chimera's roar: little stars going round over its head.
+function drawDazeStars(u) {
+  const size = Math.max(1, Math.min(2.2, (u.def.radius || 6) / 5.5));
+  const top = u.y - 9 - 5.5 * size;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#f7cd3a';
+  ctx.strokeStyle = '#c9781c';
+  ctx.lineWidth = 0.6;
+  for (let i = 0; i < 3; i++) {
+    const ang = u.dazed * -8 + (i / 3) * TAU;
+    const sx = u.x + Math.cos(ang) * 11 * UNIT * size;
+    const sy = top + Math.sin(ang) * 3.6 * UNIT * size;
+    ctx.beginPath();
+    for (let p = 0; p < 10; p++) {
+      const r = (p % 2 === 0 ? 4.4 : 1.9) * UNIT;
+      const q = (p / 10) * TAU - Math.PI / 2;
+      ctx.lineTo(sx + Math.cos(q) * r, sy + Math.sin(q) * r);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+}
+
 // A unit swept off its feet: lifted through its somersault, then dizzy on its back with stars going round its head.
 function drawTripped(u) {
   const { x, y } = u;
@@ -1424,7 +1448,10 @@ function render() {
     }
     const inside = u.perch && u.perch.state !== 'walk';
     if (!inside && u.slip > 0) drawTripped(u);
-    else if (!inside) drawBody(u);
+    else if (!inside) {
+      drawBody(u);
+      if (u.dazed > 0) drawDazeStars(u);
+    }
     else if (u.perch.state === 'enter') {
       // slipping in at the door
       const q = Math.min(1, u.perch.t / u.def.perch.enter);

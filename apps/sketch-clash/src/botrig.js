@@ -5,8 +5,8 @@
 // a hit, a landing) just give the springs a shove, and they overshoot and settle on their own.
 // All of it is for show; none of it changes what a robot does. It runs on the unit's own time (u.breath, which only
 // moves while the world does), so a paused robot holds still.
-import { TAU, K, FEET } from './config.js?v=265';
-import { drawLayer } from './sprites.js?v=265';
+import { TAU, K, FEET } from './config.js?v=266';
+import { drawLayer } from './sprites.js?v=266';
 
 // [stiffness, damping]: low damping rings on longer
 const SPRINGS = {
@@ -37,7 +37,7 @@ function shove(r, kicks, k = 1) {
 }
 
 // o: age, dead, moving, alt, bang (a value that jumps each time he fires), kick (how hard each bang is),
-//    cadence (strides a second), calm (nothing to fight), busy (mid-attack: no cheering),
+//    cadence (strides a second), calm (nothing to fight), busy (mid-attack: no cheering), cheers (celebrates a win),
 //    fidgets (names to pick from), aim: targets for the springs ({ lean, squash, head, jaw })
 export function rigStep(u, o) {
   if (o.dead) return STILL;
@@ -75,14 +75,6 @@ export function rigStep(u, o) {
   if (!walking && r.moving && grounded) shove(r, { squash: 0.9, ant: 60, cap: 20 }); // and rocks to a stop
   r.moving = walking;
 
-  // ---- landing from the drop that brought him in
-  if (!r.landed && age >= 0.28) {
-    r.landed = true;
-    if (age < 0.6) {
-      r.landAt = clock;
-      shove(r, { squash: 6.2, cap: -125, gunA: 5.5, ant: 150, pack: 80, head: 2.4, jaw: 5 });
-    }
-  }
   // ---- off the ground and back onto it
   if (r.alt <= 0.1 && alt > 0.1) {
     r.takeoffAt = clock;
@@ -103,9 +95,9 @@ export function rigStep(u, o) {
   if (hit > r.hit + 0.05) shove(r, { lean: -1.7, squash: 2.1, cap: -75, ant: Math.random() < 0.5 ? 110 : -110, gunA: Math.random() * 3 - 1.5, head: -1.2, pack: 40 });
   r.hit = hit;
 
-  // ---- a happy double hop when the one he was after goes down
+  // ---- a happy double hop when the one he was after goes down (only for those who celebrate: o.cheers)
   const was = r.target;
-  if (was && was !== u.target && was.dead && !o.busy && grounded && clock > r.nextCheer) {
+  if (o.cheers && was && was !== u.target && was.dead && !o.busy && grounded && clock > r.nextCheer) {
     r.cheerAt = clock;
     r.cheerHops = 0;
     r.nextCheer = clock + 3.5 + Math.random() * 2;

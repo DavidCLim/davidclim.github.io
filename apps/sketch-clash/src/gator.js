@@ -3,10 +3,10 @@
 // stood a little higher so there is room for a beard, and dressed as a wizard: a tall grey hat, a grey cloak with a
 // silver hem, a long white beard and a wooden staff, which he leans on as he walks. His magic is blue and silver.
 // Drawn in art units, facing +x, with the ground 25 below the origin (as the alligator is).
-import { TAU, K, FEET } from './config.js?v=265';
-import { OUT } from './sprites.js?v=265';
-import { blob, ribbon, stick, poly, circ, ell, vgrad } from './art_kit.js?v=265';
-import { rigStep, applyBotBody } from './botrig.js?v=265';
+import { TAU, K, FEET } from './config.js?v=266';
+import { OUT } from './sprites.js?v=266';
+import { blob, ribbon, stick, poly, circ, ell, vgrad } from './art_kit.js?v=266';
+import { rigStep, applyBotBody } from './botrig.js?v=266';
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -514,10 +514,8 @@ export function drawGandalligator(ctx, dpr, sprites, u, overlay) {
       ctx.stroke();
     }
   }
-  const fall = age < 0.28 ? age / 0.28 : 0;
-  if (age < 0.28) ctx.translate(0, -46 * (1 - fall ** 2));
   ctx.translate(0, FEET);
-  ctx.scale(d.scale * (1 - 0.08 * fall), d.scale * (1 + 0.14 * fall));
+  ctx.scale(d.scale, d.scale);
   ctx.translate(0, -FEET);
   applyBotBody(ctx, { ...R, roll: 0, lean: R.lean * 0.4 });
 

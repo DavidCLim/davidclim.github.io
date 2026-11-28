@@ -591,34 +591,44 @@ export const GATOR = {
   muzzleLen: 0,
 };
 
-// The Chimera: a great lion with a goat's head on its back and a snake for a tail. The goat breathes fire as the
-// dragon does, but bigger. It walks, keeps a little distance, and is far too big to be knocked about.
+// The Chimera: a huge lion with a goat's head on its back and a snake for a tail. Between its fire it pounces, roars
+// (leaving those near seeing stars) and charges horns first; and all the while the snake bites and poisons whoever it can
+// reach. It is far too big to be knocked about.
 export const CHIMERA = {
   kind: 'chimera',
-  hp: 1900,
-  radius: 17,
-  sep: 26,
-  speed: 44,
+  hp: 2300,
+  radius: 21,
+  sep: 31,
+  speed: 46,
   sight: 420,
   range: 175,
   holdDist: 105,
-  dps: 58, // the dragon's is 38, MechaZaur's 82
+  dps: 56, // the dragon's is 38, MechaZaur's 82: fire is only one of the things it does
   cone: 0.34,
   burnTime: 3,
   burnDps: 14,
-  onTime: 2.2,
-  offTime: 1.05,
-  scale: 1.9,
+  onTime: 1.7,
+  offTime: 1.4,
+  scale: 2.3,
   bigFire: true, // sparks and burning ground with its breath (chimera.js)
   plume: { every: 0.019, speed: 2.15, life: 1.58, size: 2.35 },
-  footFire: 22, // whoever is pressed right up against it is caught too
-  // the goat's mouth (see GOAT in chimera.js: it turns about 14 across and 35 up in the drawing, and reaches 23)
-  pivot: { x: 14 * K * 1.9, y: FEET + (-35 * K - FEET) * 1.9 },
-  muzzleLen: 23 * K * 1.9,
+  footFire: 24, // whoever is pressed right up against it is caught too
+  // the goat's mouth (see GOAT in chimera.js: it turns about 15 across and 37 up in the drawing, and reaches 19)
+  pivot: { x: 15 * K * 2.3, y: FEET + (-37 * K - FEET) * 2.3 },
+  muzzleLen: 19 * K * 2.3,
+  // each move: first: seconds before it can; cooldown: between times.
+  // the lion's leap. min / max: how far off the mark may be; damage: to the one it lands on, splash: to others within radius
+  pounce: { first: 1.4, cooldown: [6, 8], min: 62, max: 200, windup: 0.36, time: 0.56, recover: 0.3, height: 42, damage: 68, splash: 36, radius: 40, knock: 300 },
+  // the goat's charge. light units are flipped onto their backs
+  ram: { first: 3.4, cooldown: [8, 10], min: 34, max: 128, windup: 0.46, time: 0.46, recover: 0.28, speed: 215, damage: 40, knock: 380 },
+  // the lion's roar. daze: seconds they stand seeing stars
+  roar: { first: 4.5, cooldown: [11, 13], radius: 92, windup: 0.42, time: 1.2, daze: 1.5, damage: 12, knock: 150 },
+  // the snake's bite, which goes on whatever else it is doing. hit: when in the strike it lands
+  venom: { cooldown: [2.5, 3.3], reach: 74, time: 0.72, hit: 0.34, damage: 22, poison: 5, poisonDps: 11 },
   creature: true,
   noKnock: true,
-  body: [44, 22, 2],
-  ring: 3.1,
+  body: [48, 24, 2],
+  ring: 3.7,
 };
 
 export const TERRAIN_IDS = ['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower'];

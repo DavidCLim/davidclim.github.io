@@ -5,10 +5,10 @@
 // feet), and a wizard's outfit: hat, cloak, belted robe with wide sleeves, and staff.
 // Drawn in art units, facing +x, with the ground about 28 below the origin. His limbs are drawn live, from where his
 // hands and feet are, so they can move smoothly through any pose.
-import { TAU, K, FEET } from './config.js?v=265';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=265';
-import { rigStep, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=265';
-import { STORM } from './gibbonfx.js?v=265';
+import { TAU, K, FEET } from './config.js?v=266';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=266';
+import { rigStep, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=266';
+import { STORM } from './gibbonfx.js?v=266';
 
 const C = {
   fur: '#5a463e', furDark: '#3d2f2a', furFar: '#342826', white: '#f4eddf', whiteShade: '#c9bda8',
@@ -664,6 +664,7 @@ export function drawGibbondore(ctx, dpr, sprites, u, overlay) {
     calm: !u.target && !u.moving,
     busy,
     fidgets: ['look', 'scratch', 'scratch', 'twirl', 'hoot', 'hops'],
+    cheers: true, // he is the only one who celebrates a win
     aim: {},
   });
   const P = posed(u, R, dead, t);
@@ -698,11 +699,9 @@ export function drawGibbondore(ctx, dpr, sprites, u, overlay) {
   }
   if (!dead) stepDust(ctx, R, 1.2);
 
-  const fall = age < 0.28 ? age / 0.28 : 0;
-  if (age < 0.28) ctx.translate(0, -46 * (1 - fall ** 2));
   if (alt > 0.01) ctx.translate(0, -alt * d.leap.height);
   ctx.translate(0, FEET);
-  ctx.scale(d.scale * (1 - 0.08 * fall), d.scale * (1 + 0.14 * fall));
+  ctx.scale(d.scale, d.scale);
   ctx.translate(0, -FEET);
   applyBotBody(ctx, R);
 

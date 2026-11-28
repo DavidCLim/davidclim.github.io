@@ -1,13 +1,13 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=265';
-import { TerrainMap, WALL } from './terrain.js?v=265';
-import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordBeam, stepZordSwipe, stepZordFx, moveBeamPuff } from './zordfx.js?v=265';
-import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=265';
-import { resetGatorFx, stepGator, stepGatorFx } from './gator.js?v=265';
-import { stepChimera, chimeraIgnite, chimeraBreath } from './chimera.js?v=265';
-import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=265';
-import { installBeasts } from './beasts.js?v=265';
-import { resetMalfFx, stepMalf, stepMalfFx, queueBoom } from './malf.js?v=265';
-import { resetShieldFx, stepShield, stepShieldFx, findShields, shieldCross, shieldHit } from './shield.js?v=265';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=266';
+import { TerrainMap, WALL } from './terrain.js?v=266';
+import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordBeam, stepZordSwipe, stepZordFx, moveBeamPuff } from './zordfx.js?v=266';
+import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=266';
+import { resetGatorFx, stepGator, stepGatorFx } from './gator.js?v=266';
+import { stepChimera, chimeraIgnite, chimeraBreath, resetChimeraFx, stepChimeraFx } from './chimera.js?v=266';
+import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=266';
+import { installBeasts } from './beasts.js?v=266';
+import { resetMalfFx, stepMalf, stepMalfFx, queueBoom } from './malf.js?v=266';
+import { resetShieldFx, stepShield, stepShieldFx, findShields, shieldCross, shieldHit } from './shield.js?v=266';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -86,6 +86,7 @@ export class World {
     resetGatlingFx(this);
     resetGibbonFx(this);
     resetGatorFx(this);
+    resetChimeraFx(this);
     resetMalfFx(this);
     resetShieldFx(this);
     this.bombs = []; // grenades in the air
@@ -482,6 +483,7 @@ export class World {
     resetGatlingFx(this);
     resetGibbonFx(this);
     resetGatorFx(this);
+    resetChimeraFx(this);
     resetMalfFx(this);
     resetShieldFx(this);
     this.terrain.clear();
@@ -1063,6 +1065,13 @@ export class World {
     }
     if (!this.live) {
       this.idleStep(u, dt);
+      return;
+    }
+    // left seeing stars (by the Chimera's roar): whatever they were doing is on hold
+    if (u.dazed > 0) {
+      u.dazed -= dt;
+      u.firing = false;
+      u.laser = false;
       return;
     }
     switch (u.def.kind) {
@@ -2159,6 +2168,7 @@ export class World {
     stepGatlingFx(this, dt);
     stepGibbonFx(this, dt);
     stepGatorFx(this, dt);
+    stepChimeraFx(this, dt);
     stepMalfFx(this, dt);
     stepShieldFx(this, dt);
 

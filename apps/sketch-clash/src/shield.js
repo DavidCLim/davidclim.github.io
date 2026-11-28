@@ -1,6 +1,6 @@
 // The Shield Trooper: he goes in front behind a shield that stops shots, charges into whoever is close, and when it is
 // shattered backs off until it comes up again.
-import { TAU, FEET } from './config.js?v=265';
+import { TAU, FEET } from './config.js?v=266';
 
 const rand = (a, b) => a + Math.random() * (b - a);
 
