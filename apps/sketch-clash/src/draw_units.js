@@ -1,15 +1,15 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=257';
-import { drawLayer, OUT, drawArcLine } from './sprites.js?v=257';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt, MALF_CORE, MALF_SPOTS } from './art_units.js?v=257';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=257';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=257';
-import { drawZordGround, drawZordAir } from './zordfx.js?v=257';
-import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=257';
-import { drawMalfAir, limpPose } from './malf.js?v=257';
-import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=257';
-import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=257';
-import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=257';
-import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=257';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=258';
+import { drawLayer, OUT, drawArcLine } from './sprites.js?v=258';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt, MALF_CORE, MALF_SPOTS } from './art_units.js?v=258';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=258';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=258';
+import { drawZordGround, drawZordAir } from './zordfx.js?v=258';
+import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=258';
+import { drawMalfAir, limpPose } from './malf.js?v=258';
+import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=258';
+import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=258';
+import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=258';
+import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=258';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -650,25 +650,41 @@ function drawMalf(ctx, dpr, sprites, u) {
   ctx.scale(size * (1 - 0.09 * fall), size * (1 + 0.16 * fall));
   ctx.translate(0, -FEET);
 
+  // how far each foot is from where it rests, in art px, along the way he is heading. (Straight up or down the field he
+  // still steps a bit to the side, or you couldn't see that he was stepping at all; and a foot can only go so far up or
+  // down before it comes off him)
+  const long = (u.stride || d.stride) / (K * size);
+  const wx = u.walkX === undefined ? 1 : u.walkX;
+  const along = Math.max(0.65, Math.abs(wx));
+  const tall = (u.walkY || 0) * 0.35;
+  const goodX = 9.5 + L.goodAt * long * along;
+  const goodY = 25.7 + L.goodAt * long * tall - L.goodLift + R.hop * 0.8;
+  const badX = -5.5 + L.badAt * long * along;
+  const badY = 25.8 + L.badAt * long * tall - L.badLift;
+
   // ---- his shadow, the foot that drags and the good one
   ctx.save();
   ctx.translate(1 * K, 28 * K);
   drawLayer(ctx, A.shade);
   ctx.restore();
-  for (const [layer, x, y, turn] of [[A.badFoot, -5.5 + L.badX, 25.8 - L.badLift, 0.16 + L.badTurn], [A.foot, 9.5 + L.goodX, 25.7 - L.goodLift + R.hop * 0.8, L.goodTurn]]) {
+  const foot = (layer, x, y, turn) => {
     ctx.save();
     ctx.translate(x * K, y * K);
     ctx.rotate(turn);
     drawLayer(ctx, layer);
     ctx.restore();
-  }
+  };
+  foot(A.badFoot, badX, badY, 0.16 + L.badTurn);
+  // (while the good one is stepping it comes round in front of him: behind, his dropping body would hide the whole step)
+  const stepping = L.goodLift > 1.2;
+  if (!stepping) foot(A.foot, goodX, goodY, L.goodTurn);
   // grit kicked up where it scrapes along, and the puff as the good one stamps down
   if (L.scrape > 0.15) {
     ctx.fillStyle = `rgba(172, 168, 176, ${0.65 * L.scrape})`;
     for (let i = 0; i < 4; i++) {
       const q = (t * 3.2 + i / 4) % 1;
       ctx.beginPath();
-      ctx.arc((-10 + L.badX - q * 11) * K, (28 - q * (3 + i)) * K, (1.3 + q * 2.4) * K, 0, TAU);
+      ctx.arc((badX - 4 - q * 11) * K, (badY + 2.4 - q * (3 + i)) * K, (1.3 + q * 2.4) * K, 0, TAU);
       ctx.fill();
     }
   }
@@ -676,12 +692,13 @@ function drawMalf(ctx, dpr, sprites, u) {
     ctx.fillStyle = `rgba(176, 172, 180, ${0.6 * L.stamp})`;
     for (const side of [-1, 0.5, 1]) {
       ctx.beginPath();
-      ctx.arc((16 + side * (5 + 9 * (1 - L.stamp))) * K, (28 - 3 * (1 - L.stamp)) * K, (1.4 + 2 * (1 - L.stamp)) * K, 0, TAU);
+      ctx.arc((goodX + side * (5 + 9 * (1 - L.stamp))) * K, (goodY + 2.4 - 3 * (1 - L.stamp)) * K, (1.4 + 2 * (1 - L.stamp)) * K, 0, TAU);
       ctx.fill();
     }
   }
 
   // ---- the body, lurching over it all; swelling as he is about to go
+  ctx.save();
   applyBotBody(ctx, { ...R, lean: R.lean + L.lean - (dead ? 0 : 0.05), roll: 0, bob: R.bob + L.bob }, 0.15 * wind * wind);
   ctx.save();
   ctx.translate(0, R.pack * K);
@@ -703,7 +720,7 @@ function drawMalf(ctx, dpr, sprites, u) {
   const flicker = Math.sin(t * 17.3) + Math.sin(t * 7.1) > 1.35;
   const power = age < 0.5 ? 0 : flicker && !wind ? 0.2 : 1;
   const blinkT = t % 4.1;
-  const lid = wind > 0 ? 0 : 0.24 + (blinkT < 0.2 ? Math.sin((blinkT / 0.2) * Math.PI) * 0.7 : 0);
+  const lid = wind > 0 ? 0 : Math.min(0.96, Math.max(0.24 + (blinkT < 0.2 ? Math.sin((blinkT / 0.2) * Math.PI) * 0.7 : 0), L.wince * 0.92, L.heave * 0.46));
   const look = moving || u.target ? [1, 0.25] : [Math.sin(t * 0.7), 0.5];
   ctx.save();
   ctx.scale(K, K);
@@ -716,7 +733,7 @@ function drawMalf(ctx, dpr, sprites, u) {
   ctx.save();
   applyBotCap(ctx, R);
   ctx.translate(0, -17 * K);
-  ctx.rotate(-0.13 + L.lean * 0.5 + (wind > 0 ? Math.sin(t * 61) * 0.09 * wind : 0));
+  ctx.rotate(-0.13 + L.lean * 0.5 - L.wince * 0.07 + (wind > 0 ? Math.sin(t * 61) * 0.09 * wind : 0));
   ctx.translate(0, 17 * K);
   malfAerial(ctx, R.ant + L.swing * 4, !dead && Math.sin(t * 9) + Math.sin(t * 23) > 0.7);
   drawLayer(ctx, A.cap);
@@ -764,6 +781,8 @@ function drawMalf(ctx, dpr, sprites, u) {
 
   burnGlow(ctx, u, 20.7 * K, 23 * K);
   if (!dead) drawHitFlash(ctx, u, 20.9 * K, 23.2 * K);
+  ctx.restore();
+  if (stepping) foot(A.foot, goodX, goodY, L.goodTurn);
 }
 
 // Robot Juggernaut: Robo Trooper's armour on a gorilla's frame. He walks on his knuckles, pumps a fist now and then

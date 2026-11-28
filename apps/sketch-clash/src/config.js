@@ -114,7 +114,8 @@ export const MALF = {
   kind: 'malf',
   hp: 600, // a Robo Trooper has 170: he has to last long enough to get there
   armor: 0.65, // and shots mostly go into holes that are already there
-  speed: 38,
+  speed: 30,
+  stride: 17, // how far one whole limping step takes him (his feet reach just far enough to match it, so they never slide)
   burst: 0,
   kick: false,
   casing: false,
@@ -124,7 +125,7 @@ export const MALF = {
   // his bomb. radius: how far the blast reaches; damage: at the middle of it (less further out); wind: seconds he stands
   // shaking before it goes; crowd: how close together enemies count as one group; rush: this close to them he breaks into
   // a frantic hobble, `hurry` times as fast, since many back away from anyone coming at them
-  bomb: { radius: 68, damage: 220, knock: 460, wind: 0.65, crowd: 46, rush: 125, hurry: 2.1 },
+  bomb: { radius: 68, damage: 220, knock: 460, wind: 0.65, crowd: 46, rush: 125, hurry: 1.75 },
   parts: ['botplate', 'botplate', 'botplate', 'botpod', 'botlens', 'malftrooper'],
 };
 

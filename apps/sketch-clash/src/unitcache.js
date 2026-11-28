@@ -12,7 +12,7 @@ const PICTURED = {
   juggernaut: { weight: 6, half: 38, up: 94, down: 22 },
   trooper: { weight: 1.5, half: 46, up: 74, down: 20 },
   jettrooper: { weight: 1.2, half: 30, up: 92, down: 20 },
-  malftrooper: { weight: 2.8, half: 34, up: 76, down: 20 },
+  malftrooper: { weight: 2.8, half: 34, up: 76, down: 20, planted: true },
 };
 const BUDGET = 16; // how much weight is drawn afresh in a frame before they start taking turns
 const SLOWEST = 6; // and the longest any of them waits, in frames
@@ -78,6 +78,8 @@ export function drawPictured(ctx, dpr, u, draw) {
     draw(pic.g);
   }
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.drawImage(pic.canvas, Math.round(u.x * dpr + pic.dx), Math.round(u.y * dpr + pic.dy));
+  // (`planted`: he stays where he was drawn until drawn again, so that his feet don't slide along with the picture)
+  if (spec.planted) ctx.drawImage(pic.canvas, pic.ox, pic.oy);
+  else ctx.drawImage(pic.canvas, Math.round(u.x * dpr + pic.dx), Math.round(u.y * dpr + pic.dy));
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }

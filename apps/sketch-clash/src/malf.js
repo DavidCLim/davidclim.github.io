@@ -1,8 +1,8 @@
 // Malfunction Trooper: how he picks his crowd, limps over to it and blows himself up, and the sparks that keep jumping off
 // him on the way. Only the blast hurts anyone; the sparks are for show.
-import { TAU, K, FEET } from './config.js?v=257';
-import { nova, embers, scorch } from './zordfx.js?v=257';
-import { MALF_SPOTS } from './art_units.js?v=257';
+import { TAU, K, FEET } from './config.js?v=258';
+import { nova, embers, scorch } from './zordfx.js?v=258';
+import { MALF_SPOTS } from './art_units.js?v=258';
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const ease = (q) => q * q * (3 - 2 * q);
@@ -14,29 +14,82 @@ export function resetMalfFx(world) {
 }
 
 // ---------------------------------------------------------------- the limp
-// One stride of it: his weight drops onto the bad leg while the good one hurries through (the first SWING of it), then
-// he heaves himself up over the good leg while the bad one scrapes along behind.
-const SWING = 0.38;
-const STRIDES = 1.15; // a second
+// One whole limping step, as a hurt leg makes it, with p going 0..1:
+//   0    .. HOP    the good foot snatches forward, and while it is off the ground all his weight drops onto the bad leg,
+//                  which gives under him: he lurches down and winces
+//   HOP  .. DRAG   both feet down: he catches himself on the good one
+//   DRAG .. REST   he heaves up over the good leg and hauls the bad one along behind, its toe scraping
+//   REST .. 1      both down again: he stops a moment to get over it
+// He only gets anywhere as `travel` says he does, and a foot that is on the ground is moved back by just as much as he
+// goes forward, so it stays exactly where it was put.
+const HOP = 0.28;
+const DRAG = 0.48;
+const REST = 0.84;
+const SHARE = [0, 0.45, 0.5, 0.95, 1]; // how much of the step he has covered by the end of each part
+// how far a foot goes from front to back, as a part of the step: what he covers while it is on the ground
+const REACH = 1 - SHARE[1];
 
+// how far he has got after `phase` steps, counted in steps
+export function limpTravel(phase) {
+  const whole = Math.floor(phase);
+  const p = phase - whole;
+  if (p < HOP) return whole + SHARE[1] * ease(p / HOP);
+  if (p < DRAG) return whole + SHARE[1] + (SHARE[2] - SHARE[1]) * ((p - HOP) / (DRAG - HOP));
+  if (p < REST) return whole + SHARE[2] + (SHARE[3] - SHARE[2]) * ease((p - DRAG) / (REST - DRAG));
+  return whole + SHARE[3] + (SHARE[4] - SHARE[3]) * ((p - REST) / (1 - REST));
+}
+
+// What he looks like `phase` steps in. k: 0 standing still .. 1 walking. goodAt / badAt: how far ahead of its resting
+// place each foot is, in steps (multiply by the length of a step)
 export function limpPose(phase, k) {
-  const p = phase % 1;
-  if (p < SWING) {
-    const q = p / SWING;
-    const sag = Math.sin(q * Math.PI);
-    return {
-      goodX: (-8 + 16 * ease(q)) * k, goodLift: sag * 9 * k, goodTurn: -0.35 * Math.sin(q * TAU) * k,
-      badX: -10 * q * k, badLift: 0, badTurn: 0,
-      bob: 6 * sag * k, lean: -0.2 * sag * k, swing: sag * k, scrape: 0, stamp: 0,
-    };
+  const p = phase - Math.floor(phase);
+  const half = REACH / 2;
+  const gone = limpTravel(p);
+  const pose = { goodLift: 0, goodTurn: 0, badLift: 0, badTurn: 0, bob: 0, lean: 0, swing: 0, scrape: 0, stamp: 0, wince: 0, heave: 0 };
+  // the good foot: in the air for the hop, then planted
+  if (p < HOP) {
+    const q = p / HOP;
+    pose.goodAt = -half + REACH * ease(q);
+  } else pose.goodAt = half - (gone - SHARE[1]);
+  // the bad foot: dragged forward in its turn, planted the rest of the time (right through the end of one step and into
+  // the next)
+  if (p >= DRAG && p < REST) {
+    const q = (p - DRAG) / (REST - DRAG);
+    pose.badAt = -half + REACH * ease(q);
+  } else pose.badAt = half - ((p < DRAG ? gone + 1 : gone) - SHARE[3]);
+
+  if (p < HOP) {
+    const q = p / HOP;
+    const give = Math.sin(Math.PI * q ** 0.8);
+    pose.goodLift = Math.sin(q * Math.PI) * 7.5;
+    pose.goodTurn = -0.4 * Math.sin(q * TAU);
+    pose.bob = 7 * give;
+    pose.lean = -0.27 * give;
+    pose.swing = give;
+    pose.wince = Math.min(1, give * 1.5);
+  } else if (p < DRAG) {
+    const q = (p - HOP) / (DRAG - HOP);
+    pose.bob = 2.6 * Math.sin(q * Math.PI);
+    pose.lean = 0.07 * ease(q);
+    pose.stamp = Math.max(0, 1 - q * 1.4);
+    pose.wince = Math.max(0, 0.7 - q * 1.6);
+  } else if (p < REST) {
+    const q = (p - DRAG) / (REST - DRAG);
+    const up = Math.sin(q * Math.PI);
+    pose.bob = -3.5 * up;
+    pose.lean = 0.07 + 0.14 * up;
+    pose.badLift = 0.9 * up;
+    pose.badTurn = 0.85 * Math.sin(Math.min(1, q * 1.25) * Math.PI);
+    pose.swing = -0.7 * up;
+    pose.scrape = up;
+    pose.heave = up;
+  } else {
+    const q = (p - REST) / (1 - REST);
+    pose.bob = 2.2 * Math.sin(q * Math.PI);
+    pose.lean = 0.07 * (1 - ease(q));
   }
-  const q = (p - SWING) / (1 - SWING);
-  const rise = Math.sin(q * Math.PI);
-  return {
-    goodX: (8 - 16 * q) * k, goodLift: 0, goodTurn: 0,
-    badX: (-10 + 10 * ease(q)) * k, badLift: 0.7 * rise * k, badTurn: 0.6 * rise * k,
-    bob: -3.5 * rise * k, lean: 0.12 * rise * k, swing: -0.6 * rise * k, scrape: rise * k, stamp: q < 0.35 ? (1 - q / 0.35) * k : 0,
-  };
+  for (const key in pose) pose[key] *= k;
+  return pose;
 }
 
 // ---------------------------------------------------------------- finding the biggest group
@@ -124,13 +177,18 @@ export function stepMalf(world, u, dt) {
       return;
     }
     if (Math.abs(dx) > 3) u.facing = dx > 0 ? 1 : -1;
-    // he gets along in lurches: quick as the good leg swings through, slow as he drags the other after it
+    // he gets along in lurches, only ever moving as far as his step has taken him (hurrying, he reaches a bit further too)
     const hurry = dist < m.rush ? m.hurry : 1;
-    u.limp = u.limp === undefined ? Math.random() : u.limp + dt * STRIDES * (hurry > 1 ? 1.7 : 1);
-    const lurch = u.limp % 1 < SWING ? 1.65 : 0.6;
-    const s = d.speed * u.speedMul * lurch * hurry * dt;
-    u.x += (dx / dist) * s;
-    u.y += (dy / dist) * s;
+    const want = d.stride * (hurry > 1 ? 1.2 : 1);
+    u.stride = u.stride === undefined ? want : u.stride + (want - u.stride) * Math.min(1, dt * 4);
+    if (u.limp === undefined) u.limp = Math.random();
+    const was = limpTravel(u.limp);
+    u.limp += (dt * d.speed * u.speedMul * hurry) / u.stride;
+    const s = (limpTravel(u.limp) - was) * u.stride;
+    u.walkX = dx / dist;
+    u.walkY = dy / dist;
+    u.x += u.walkX * s;
+    u.y += u.walkY * s;
     u.moving = true;
   }
   u.limpK = u.moving ? Math.min(1, u.limpK + dt * 7) : Math.max(0, u.limpK - dt * 6);
