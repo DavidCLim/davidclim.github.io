@@ -1,7 +1,8 @@
 // Gibbondore The Great: how he fights, and what his magic does to the world.
 // Like the original's ape he goes straight in and hits the ground hard enough to send everyone flying; being a gibbon
 // he also swings himself across the gap in one great leap, and being a wizard he throws stars from his staff on the way.
-import { TAU, K, FEET } from './config.js?v=256';
+import { TAU, K, FEET } from './config.js?v=257';
+import { drawArcLine } from './sprites.js?v=257';
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -100,7 +101,7 @@ function burst(world, s) {
 export const STORM = { tap1: 0.36, tap2: 0.8, strike: 0.9, time: 1.45 };
 const LEAD = 0.05; // the breath between the second blow and the first bolt
 const GAP = 0.07; // between one bolt and the next
-const GLOW = 0.3; // how long each is seen
+const GLOW = 0.36; // how long each is seen (as long as the Wizard's)
 
 // where the end of his staff lands in the slam pose
 function staffEnd(u) {
@@ -127,7 +128,6 @@ function callDown(world, u) {
   // where the orb is as he holds the staff to the sky
   const orb = { x: u.x + u.facing * 17 * K * u.def.scale, y: u.y + FEET + (-124 * K - FEET) * u.def.scale };
   world.storms.push({ bolts, age: 0, life: LEAD + (bolts.length - 1) * GAP + GLOW, owner: u });
-  glints(world, orb.x, orb.y, 14, 120);
   if (world.sfx) world.sfx('zap', orb.x);
 }
 
@@ -149,9 +149,6 @@ function stepStorms(world, dt) {
       const o = bolt.o;
       bolt.x = o.x;
       bolt.y = o.y;
-      // it lands the way one of his stars does: a gold ring, a flash of a star and a few gold sparks
-      world.quakes.push({ x: o.x, y: o.y + FEET * 0.35, r: 17, age: 0, life: 0.32, air: true });
-      glints(world, o.x, o.y + FEET * 0.35, 9, 95);
       if (!o.dead) world.hurt(o, s.owner.def.storm.damage * rand(0.9, 1.1), o.x, o.y, 'blast', s.owner);
       world.hitProps(o.x, o.y, 6, s.owner.def.storm.damage * 0.5);
       if (world.sfx) {
@@ -163,82 +160,16 @@ function stepStorms(world, dt) {
   if (world.storms.some((s) => s.age >= s.life)) world.storms = world.storms.filter((s) => s.age < s.life);
 }
 
-// the same string of numbers every time for the same seed, so a bolt can hold its shape
-const rnd = (seed, i) => {
-  const v = Math.sin(seed * 12.9898 + i * 78.233) * 43758.5453;
-  return v - Math.floor(v);
-};
-
-// a simple zig-zag from above the top of the screen down to (x, y), a few clean kinks to one side and then the other
-function zigzag(x, y, seed) {
-  const top = -20;
-  const lean = (rnd(seed, 3) - 0.5) * 22;
-  const n = Math.max(2, Math.round((y - top) / 52));
-  const pts = [[x + lean, top]];
-  for (let i = 1; i < n; i++) {
-    const q = i / n;
-    const off = (i % 2 ? 1 : -1) * (6 + 4 * rnd(seed, i));
-    pts.push([x + lean * (1 - q) + off, top + (y - top) * q]);
-  }
-  pts.push([x, y]);
-  return pts;
-}
-
-// the shape of it: `wide` half as wide for most of its length, drawing in to a point where it lands
-function ribbon(ctx, pts, wide) {
-  const left = [];
-  const right = [];
-  const last = pts.length - 1;
-  for (let i = 0; i < last; i++) {
-    const a = pts[Math.max(0, i - 1)];
-    const b = pts[i + 1];
-    const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
-    const nx = -(b[1] - a[1]) / len;
-    const ny = (b[0] - a[0]) / len;
-    const w = wide * (i === last - 1 ? 0.8 : 1);
-    left.push([pts[i][0] + nx * w, pts[i][1] + ny * w]);
-    right.push([pts[i][0] - nx * w, pts[i][1] - ny * w]);
-  }
-  ctx.beginPath();
-  for (const [x, y] of left) ctx.lineTo(x, y);
-  ctx.lineTo(...pts[last]);
-  for (let i = right.length - 1; i >= 0; i--) ctx.lineTo(...right[i]);
-  ctx.closePath();
-}
-
-// drawn as his stars are: flat gold with a darker gold line round it and a pale heart. It shoots down, holds, and thins
-// away to nothing
-function lightning(ctx, x, y, since, seed) {
-  const down = Math.min(1, since / 0.05);
-  const gone = Math.max(0, (since - 0.15) / (GLOW - 0.15));
-  if (gone >= 1) return;
-  const pts = zigzag(x, y, seed);
-  const thin = 1 - gone * 0.8;
-  ctx.save();
-  if (down < 1) {
-    ctx.beginPath();
-    ctx.rect(x - 60, -30, 120, 30 + y * down);
-    ctx.clip();
-  }
-  ctx.globalAlpha = 1 - gone * gone;
-  ctx.lineJoin = 'miter';
-  ctx.miterLimit = 3;
-  ribbon(ctx, pts, 4.4 * thin);
-  ctx.strokeStyle = '#b86a0c';
-  ctx.lineWidth = 1.6 * thin;
-  ctx.stroke();
-  ctx.fillStyle = '#ffd23c';
-  ctx.fill();
-  ribbon(ctx, pts, 1.8 * thin);
-  ctx.fillStyle = '#fffbe0';
-  ctx.fill();
-  ctx.restore();
-}
+// the Wizard's lightning in gold, coming down from above the top of the screen
+const GOLD_ARC = [['255, 210, 40', 0.3, 6.5], ['250, 188, 10', 0.9, 3], ['255, 255, 232', 1, 1.1]];
 
 function drawStormAir(ctx, s) {
   for (const b of s.bolts) {
     const since = s.age - b.at;
-    if (since >= 0 && b.struck) lightning(ctx, b.x, b.y + FEET * 0.35, since, b.seed);
+    if (!b.struck || since < 0 || since >= GLOW) continue;
+    // (each comes in at its own slight slant)
+    const lean = (((b.seed % 97) / 97) - 0.5) * 40;
+    drawArcLine(ctx, [[b.x + lean, -12], [b.x, b.y - 2]], since, b.seed, Math.min(1, (GLOW - since) / 0.2), GOLD_ARC);
   }
 }
 
@@ -427,7 +358,9 @@ export function drawGibbonGround(ctx, world) {
 
 // over the units: his stars, where they burst, and the gold sparks
 export function drawGibbonAir(ctx, world) {
+  ctx.save();
   for (const s of world.storms) drawStormAir(ctx, s);
+  ctx.restore();
   for (const s of world.stars) {
     if (s.wait > 0) continue;
     for (let i = 0; i < s.trail.length; i++) {

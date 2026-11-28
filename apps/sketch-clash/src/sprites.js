@@ -1,4 +1,4 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=256';
+import { TEAMS, TAU, K, UNIT, PIVOT, SNIPER } from './config.js?v=257';
 
 // Units are drawn from "art" coordinates matching the reference sprites
 // (origin at the body centre, y down) into small offscreen layers, then
@@ -812,4 +812,37 @@ export function stampHat(g, x, y) {
   g.fill();
   g.stroke();
   g.restore();
+}
+
+// The Wizard's lightning (Gibbondore's is drawn the same way): a thin line through `pts` with a soft glow round it and a
+// white heart. Each leg bends gently, and the bends shift as it burns. `age`: how long it has been there; `layers`:
+// [colour as 'r, g, b', strength, width], from the outside in
+export function drawArcLine(ctx, pts, age, seed0, fade, layers) {
+  let seed = Math.floor(age * 24) * 31 + seed0;
+  const rnd = () => {
+    seed = (seed * 16807) % 2147483647;
+    return seed / 2147483647;
+  };
+  rnd();
+  const path = [pts[0]];
+  for (let i = 1; i < pts.length; i++) {
+    const [x0, y0] = pts[i - 1];
+    const [x1, y1] = pts[i];
+    const len = Math.hypot(x1 - x0, y1 - y0) || 1;
+    const n = Math.max(2, Math.round(len / 18));
+    for (let k = 1; k < n; k++) {
+      const off = (rnd() - 0.5) * 6;
+      path.push([x0 + ((x1 - x0) * k) / n - ((y1 - y0) / len) * off, y0 + ((y1 - y0) * k) / n + ((x1 - x0) / len) * off]);
+    }
+    path.push([x1, y1]);
+  }
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  for (const [rgb, strength, wide] of layers) {
+    ctx.strokeStyle = `rgba(${rgb}, ${strength * fade})`;
+    ctx.lineWidth = wide;
+    ctx.beginPath();
+    path.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+    ctx.stroke();
+  }
 }

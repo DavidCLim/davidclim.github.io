@@ -1,15 +1,15 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=256';
-import { drawLayer, OUT } from './sprites.js?v=256';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt, MALF_CORE, MALF_SPOTS } from './art_units.js?v=256';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=256';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=256';
-import { drawZordGround, drawZordAir } from './zordfx.js?v=256';
-import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=256';
-import { drawMalfAir, limpPose } from './malf.js?v=256';
-import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=256';
-import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=256';
-import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=256';
-import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=256';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=257';
+import { drawLayer, OUT, drawArcLine } from './sprites.js?v=257';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt, MALF_CORE, MALF_SPOTS } from './art_units.js?v=257';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=257';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=257';
+import { drawZordGround, drawZordAir } from './zordfx.js?v=257';
+import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=257';
+import { drawMalfAir, limpPose } from './malf.js?v=257';
+import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=257';
+import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=257';
+import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=257';
+import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=257';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -48,9 +48,9 @@ export function burnOverlay(ctx, u, rx, ry, cx = 0, cy = 0) {
     ctx.ellipse(cx, cy, rx, ry, 0, 0, TAU);
     ctx.fill();
   }
-  // caught in his green beam it glows with it
+  // caught in his teal beam it glows with it
   if (u.spirit > 0) {
-    ctx.fillStyle = `rgba(104, 230, 54, ${(0.5 + 0.14 * Math.sin(u.breath * 22)) * Math.min(1, u.spirit / 0.25)})`;
+    ctx.fillStyle = `rgba(40, 218, 196, ${(0.5 + 0.14 * Math.sin(u.breath * 22)) * Math.min(1, u.spirit / 0.25)})`;
     ctx.beginPath();
     ctx.ellipse(cx, cy, rx, ry, 0, 0, TAU);
     ctx.fill();
@@ -2002,6 +2002,8 @@ function drawWizard(ctx, dpr, sprites, u) {
 }
 
 // his spells: pink bolts with a soft tail, the round pink burst where one lands, and the lightning
+const WIZARD_ARC = [['150, 190, 255', 0.22, 6.5], ['160, 200, 255', 0.55, 3], ['255, 255, 255', 1, 1.1]];
+
 function drawSpells(ctx, world) {
   ctx.save();
   ctx.lineCap = 'round';
@@ -2047,36 +2049,7 @@ function drawSpells(ctx, world) {
   }
   for (const a of world.arcs) {
     const fade = Math.min(1, (a.life - a.age) / 0.2);
-    // each leap bends gently two or three times, and the bends shift as it burns
-    let seed = Math.floor(a.age * 24) * 31 + Math.floor(a.pts[0][0] * 7) + 5;
-    const rnd = () => {
-      seed = (seed * 16807) % 2147483647;
-      return seed / 2147483647;
-    };
-    rnd();
-    const path = [a.pts[0]];
-    for (let i = 1; i < a.pts.length; i++) {
-      const [x0, y0] = a.pts[i - 1];
-      const [x1, y1] = a.pts[i];
-      const len = Math.hypot(x1 - x0, y1 - y0) || 1;
-      const n = Math.max(2, Math.round(len / 18));
-      for (let k = 1; k < n; k++) {
-        const off = (rnd() - 0.5) * 6;
-        path.push([x0 + ((x1 - x0) * k) / n - ((y1 - y0) / len) * off, y0 + ((y1 - y0) * k) / n + ((x1 - x0) / len) * off]);
-      }
-      path.push([x1, y1]);
-    }
-    for (const [col, wide] of [
-      [`rgba(150, 190, 255, ${0.22 * fade})`, 6.5],
-      [`rgba(160, 200, 255, ${0.55 * fade})`, 3],
-      [`rgba(255, 255, 255, ${fade})`, 1.1],
-    ]) {
-      ctx.strokeStyle = col;
-      ctx.lineWidth = wide;
-      ctx.beginPath();
-      path.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
-      ctx.stroke();
-    }
+    drawArcLine(ctx, a.pts, a.age, Math.floor(a.pts[0][0] * 7) + 5, fade, WIZARD_ARC);
   }
   ctx.restore();
 }
@@ -2254,10 +2227,10 @@ const blobs = (() => {
     brown: mk('176, 104, 46'),
     plasma: mk('36, 224, 206'),
     core: mk('246, 255, 244'),
-    // and the green of his great beam
-    gpale: mk('204, 255, 120'),
-    gbright: mk('92, 212, 48'),
-    gdark: mk('40, 134, 46'),
+    // and the teal of his great beam
+    tpale: mk('176, 255, 236'),
+    tbright: mk('24, 208, 180'),
+    tdark: mk('10, 132, 136'),
   };
 })();
 
@@ -2317,9 +2290,10 @@ function lumpsOf(e) {
 }
 
 const BEAM_BURN = 300; // how far a puff of his beam goes as it changes from white heat to full green fire
-const flamePuff = (f) => (f.size + f.grow * (f.beam ? Math.min(1, f.far / 240) : f.age / f.life)) * (f.small ? 1 : 1.12);
+// (a puff of the beam swells steadily the further it gets, `k` of the way to its full size)
+const flamePuff = (f) => (f.beam ? f.size + (f.full - f.size) * f.k : f.size + f.grow * (f.age / f.life)) * (f.small ? 1 : 1.12);
 
-// a puff of the beam goes through the same changes as one of his breath, green for orange
+// a puff of the beam goes through the same changes as one of his breath, teal for orange
 function drawBeamPuff(ctx, f) {
   const t = Math.min(1, f.far / BEAM_BURN);
   const r = flamePuff(f);
@@ -2329,20 +2303,16 @@ function drawBeamPuff(ctx, f) {
   if (alpha <= 0) return;
   ctx.globalAlpha = alpha;
   if (t < 0.17) {
-    // (bold green round a white heart, which gives the same bubbling rings his breath starts with)
-    ctx.drawImage(blobs.gbright, f.x - r * 1.12, f.y - r * 1.12, r * 2.24, r * 2.24);
-    ctx.drawImage(blobs.core, f.x - r * 0.72, f.y - r * 0.72, r * 1.44, r * 1.44);
+    // (bold teal round a white heart, which gives the same bubbling rings his breath starts with)
+    ctx.drawImage(blobs.tbright, f.x - r * 1.25, f.y - r * 1.25, r * 2.5, r * 2.5);
+    ctx.drawImage(blobs.core, f.x - r * 0.58, f.y - r * 0.58, r * 1.16, r * 1.16);
     return;
   }
-  const spr = t < 0.3 ? blobs.gpale : f.dark && t > 0.62 ? blobs.gdark : blobs.gbright;
+  const spr = t < 0.3 ? blobs.tpale : f.dark && t > 0.62 ? blobs.tdark : blobs.tbright;
   ctx.drawImage(spr, f.x - r, f.y - r, r * 2, r * 2);
   if (t < 0.42) {
     ctx.globalAlpha = alpha * (1 - (t - 0.17) / 0.25);
     ctx.drawImage(blobs.core, f.x - r * 0.8, f.y - r * 0.8, r * 1.6, r * 1.6);
-  } else if (!f.dark && f.phase < 2.2) {
-    // pale licks run on down the middle of it all the way
-    ctx.globalAlpha = alpha * 0.8;
-    ctx.drawImage(blobs.gpale, f.x - r * 0.55, f.y - r * 0.55, r * 1.1, r * 1.1);
   }
 }
 

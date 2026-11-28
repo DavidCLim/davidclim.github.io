@@ -1,9 +1,9 @@
 // MechaZaur's own part of the world: his missiles, and the effects that go with him (the shockwave as he lets loose, the
 // embers and heat rings in his breath, the ground it leaves burning, the great blast when he goes). Only the missiles
 // hurt anyone; the rest is for show.
-import { TAU, K, FEET } from './config.js?v=256';
-import { WATER } from './terrain.js?v=256';
-import { swipeTurn, SWIPE_BACK } from './zordlimbs.js?v=256';
+import { TAU, K, FEET } from './config.js?v=257';
+import { WATER } from './terrain.js?v=257';
+import { swipeTurn, SWIPE_BACK } from './zordlimbs.js?v=257';
 
 const TEAL = '70, 245, 200';
 const GOLD = '255, 196, 80';
@@ -104,12 +104,13 @@ function beamReach(world, from, angle) {
   return Math.max(0, t) + 90;
 }
 
-const BEAM_SWELL = 240; // how far the fire travels before it is as big as it gets
-const BEAM_GAP = 8; // how far apart its puffs are
+const BEAM_GAP = 6.5; // how far apart its puffs are
+// it gets steadily bigger the whole way, reaching its full size about where it leaves the field
+const swellOver = (reach) => Math.max(300, reach - 90);
 
-// The beam is made of the very same puffs as his fire breath, in green: bigger ones, poured out much faster and
-// straighter, each living long enough to get well off the field.
-function pourBeam(world, u, from, dx, dy, dt) {
+// The beam is made of the same puffs as his fire breath, in teal: poured out much faster and dead straight, small at his
+// jaws and bigger the further they get, each living long enough to get well off the field.
+function pourBeam(world, u, dt) {
   const m = u.def.beam;
   const b = u.beam;
   const every = BEAM_GAP / m.speed;
@@ -119,34 +120,72 @@ function pourBeam(world, u, from, dx, dy, dt) {
     const v = m.speed * (0.97 + Math.random() * 0.06);
     world.flames.push({
       beam: true,
-      x: from.x,
-      y: from.y,
-      x0: from.x,
-      y0: from.y,
-      dx,
-      dy,
+      x: b.x0,
+      y: b.y0,
+      of: b,
       v,
       far: 0,
+      k: 0,
       // (the world moves it on by this frame straight after, so it starts a frame back: puffs made in the same frame
       // then come out spaced along the stream, not in one lump)
       age: b.pourT - dt,
       life: (b.reach + 70) / v,
-      size: 7,
-      grow: 15 + Math.random() * 6,
+      size: 4.4,
+      full: 22 + Math.random() * 6,
       lat: (Math.random() - 0.5) * 38,
       phase: Math.random() * TAU,
-      dark: Math.random() < 0.42,
+      dark: Math.random() < 0.32,
     });
   }
 }
 
-// where a puff of the beam has got to: dead straight, spreading a little as it leaves him and rolling as it goes
+// where a puff of the beam has got to: along the line he is aiming (or was, once it is over), tight near his jaws and
+// spreading and rolling more the further out it is
 export function moveBeamPuff(f) {
+  const b = f.of;
   f.far = Math.max(0, f.v * f.age);
-  const k = Math.min(1, f.far / BEAM_SWELL);
-  const side = (f.lat + Math.sin(f.far * 0.025 + f.phase) * 3) * k;
-  f.x = f.x0 + f.dx * f.far - f.dy * side;
-  f.y = f.y0 + f.dy * f.far + f.dx * side;
+  f.k = Math.min(1, f.far / swellOver(b.reach));
+  const side = f.lat * f.k ** 1.5 + Math.sin(f.far * 0.025 + f.phase) * 2 * f.k;
+  f.x = b.x0 + b.dx * f.far - b.dy * side;
+  f.y = b.y0 + b.dy * f.far + b.dx * side;
+}
+
+// The bright heart that runs down the middle of it and makes a beam of it: three soft wedges, one inside another,
+// widening along the way. [colour, strength, half as wide at his jaws, and at full size]
+const HEART = [['24, 214, 190', 0.55, 5, 14], ['128, 252, 228', 0.7, 3.2, 8], ['248, 255, 253', 0.92, 1.7, 3.6]];
+
+function drawBeamHeart(ctx, u) {
+  const m = u.def.beam;
+  const b = u.beam;
+  const since = b.t - m.charge;
+  const len = Math.min(b.reach, m.speed * since);
+  const fade = Math.max(0, Math.min(1, since / 0.06, (m.fire - since) / 0.22));
+  if (len < 4 || fade <= 0) return;
+  const from = beamMouth(u);
+  const over = swellOver(b.reach);
+  const flicker = 1 + Math.sin(u.breath * 47) * 0.09;
+  const mid = Math.min(len, over);
+  ctx.save();
+  ctx.translate(from.x, from.y);
+  ctx.rotate(b.angle);
+  for (const [rgb, strength, near, far] of HEART) {
+    const w0 = near * flicker * fade;
+    const w1 = (near + (far - near) * (mid / over)) * flicker * fade;
+    // while it is still shooting out it ends in a point
+    const tip = len < b.reach ? Math.min(46, len * 0.5) : 0;
+    const flat = Math.min(mid, len - tip);
+    ctx.fillStyle = `rgba(${rgb}, ${strength * fade})`;
+    ctx.beginPath();
+    ctx.arc(0, 0, w0, Math.PI / 2, -Math.PI / 2);
+    ctx.lineTo(flat, -w1);
+    ctx.lineTo(len - tip, -w1);
+    ctx.lineTo(len, 0);
+    ctx.lineTo(len - tip, w1);
+    ctx.lineTo(flat, w1);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
 function aimBeam(u, t) {
@@ -181,8 +220,13 @@ function stepBeam(world, u, dt) {
     const reach = b.reach;
     // the fire only burns as far as it has got
     const out = Math.min(reach, m.speed * (b.t - m.charge));
-    const halfAt = (along) => m.width + m.widen * Math.min(1, along / BEAM_SWELL);
-    pourBeam(world, u, from, dx, dy, dt);
+    // (it is aimed as one straight thing: all of it swings together as he turns)
+    b.x0 = from.x;
+    b.y0 = from.y;
+    b.dx = dx;
+    b.dy = dy;
+    const halfAt = (along) => m.width + m.widen * Math.min(1, along / swellOver(reach));
+    pourBeam(world, u, dt);
     world.eachEnemyNear(u.side, from.x + (dx * reach) / 2, from.y + (dy * reach) / 2, reach / 2 + 30, (o) => {
       const ox = o.x - from.x;
       const oy = o.y - 2 - from.y;
@@ -250,9 +294,9 @@ export function stepZordBeam(world, u, dt) {
   return true;
 }
 
-// ---- the gathering before it: green fire dragged into his jaws. (The beam itself is drawn with the rest of the fire,
-// puff by puff: see pourBeam.)
-const GREEN = { white: '248, 255, 236', pale: '226, 255, 160', bright: '98, 222, 52', dark: '38, 142, 48' };
+// ---- the gathering before it: teal fire dragged into his jaws. (The beam itself is drawn with the rest of the fire,
+// puff by puff: see pourBeam. Only its bright heart is drawn here.)
+const FIRE_TEAL = { white: '242, 255, 252', pale: '176, 255, 236', bright: '24, 208, 180', dark: '10, 132, 136' };
 
 // one of the soft puffs his fire is made of
 function softPuff(rgb) {
@@ -270,7 +314,7 @@ function softPuff(rgb) {
 
 let fire = null;
 function beamFire() {
-  if (!fire) fire = Object.fromEntries(Object.entries(GREEN).map(([k, rgb]) => [k, softPuff(rgb)]));
+  if (!fire) fire = Object.fromEntries(Object.entries(FIRE_TEAL).map(([k, rgb]) => [k, softPuff(rgb)]));
   return fire;
 }
 
@@ -279,7 +323,10 @@ const stamp = (ctx, img, x, y, r) => ctx.drawImage(img, x - r, y - r, r * 2, r *
 function drawBeam(ctx, u) {
   const m = u.def.beam;
   const b = u.beam;
-  if (b.t >= m.charge) return;
+  if (b.t >= m.charge) {
+    drawBeamHeart(ctx, u);
+    return;
+  }
   const from = beamMouth(u);
   const clock = u.breath;
   const P = beamFire();
@@ -290,7 +337,7 @@ function drawBeam(ctx, u) {
   {
     const p = b.t / m.charge;
     // a thin flickering line shows where it is going to go
-    ctx.strokeStyle = `rgba(66, 176, 40, ${0.5 * p * (0.6 + 0.4 * Math.sin(clock * 40))})`;
+    ctx.strokeStyle = `rgba(14, 162, 146, ${0.5 * p * (0.6 + 0.4 * Math.sin(clock * 40))})`;
     ctx.lineWidth = 0.9;
     ctx.beginPath();
     ctx.moveTo(10, 0);
@@ -308,7 +355,7 @@ function drawBeam(ctx, u) {
     // rings closing in as it comes to the full
     for (let i = 0; i < 3; i++) {
       const q = (clock * 2.1 + i / 3) % 1;
-      ctx.strokeStyle = `rgba(112, 222, 52, ${0.75 * q * p})`;
+      ctx.strokeStyle = `rgba(38, 212, 188, ${0.75 * q * p})`;
       ctx.lineWidth = 1.3;
       ctx.beginPath();
       ctx.arc(5, 0, 6 + 30 * (1 - q), 0, TAU);
@@ -662,8 +709,8 @@ function patchArt(green) {
     g.fill();
   });
   art = {
-    stain: oval(green ? 'rgb(30, 74, 28)' : 'rgb(66, 46, 40)', REF, REF * 0.42),
-    glow: oval(green ? 'rgb(104, 228, 52)' : 'rgb(255, 140, 40)', REF * 0.72, REF * 0.3),
+    stain: oval(green ? 'rgb(14, 68, 72)' : 'rgb(66, 46, 40)', REF, REF * 0.42),
+    glow: oval(green ? 'rgb(40, 214, 196)' : 'rgb(255, 140, 40)', REF * 0.72, REF * 0.3),
     flames: Array.from({ length: BEATS }, (_, n) => picture(24, 24, (g) => {
       g.translate(0, -4);
       for (let i = 0; i < 3; i++) {
@@ -671,8 +718,8 @@ function patchArt(green) {
         const x = (i - 1) * REF * 0.52;
         const h = REF * (i === 1 ? 1.35 : 0.9) * (green ? 1.25 : 1) * (1 + 0.24 * Math.sin(beat * (i === 1 ? 1 : 2)));
         const lean = Math.sin(beat) * 1.4;
-        tongue(g, x, 0, REF * 0.26, h, lean, green ? '#3cb42c' : '#ff8a2e');
-        tongue(g, x, 0, REF * 0.14, h * 0.6, lean * 0.6, green ? '#e2ff8c' : '#ffd65c');
+        tongue(g, x, 0, REF * 0.26, h, lean, green ? '#0fae9e' : '#ff8a2e');
+        tongue(g, x, 0, REF * 0.14, h * 0.6, lean * 0.6, green ? '#b4fff0' : '#ffd65c');
       }
     })),
   };
@@ -705,7 +752,7 @@ export function drawZordGround(ctx, world) {
 const EMBER_INK = {
   orange: ['255, 128, 30', '255, 238, 150'],
   teal: ['30, 215, 170', '220, 255, 246'],
-  green: ['52, 176, 40', '232, 255, 168'],
+  green: ['8, 166, 158', '196, 255, 244'], // (the beam's)
 };
 
 function drawEmbers(ctx, embers) {

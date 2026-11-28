@@ -1,10 +1,10 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=256';
-import { TerrainMap, WALL } from './terrain.js?v=256';
-import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordBeam, stepZordSwipe, stepZordFx, moveBeamPuff } from './zordfx.js?v=256';
-import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=256';
-import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=256';
-import { installBeasts } from './beasts.js?v=256';
-import { resetMalfFx, stepMalf, stepMalfFx, queueBoom } from './malf.js?v=256';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=257';
+import { TerrainMap, WALL } from './terrain.js?v=257';
+import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordBeam, stepZordSwipe, stepZordFx, moveBeamPuff } from './zordfx.js?v=257';
+import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=257';
+import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=257';
+import { installBeasts } from './beasts.js?v=257';
+import { resetMalfFx, stepMalf, stepMalfFx, queueBoom } from './malf.js?v=257';
 
 export const CELL = 32;
 const SEP_CELL = 20;

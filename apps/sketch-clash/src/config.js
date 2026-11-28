@@ -517,12 +517,12 @@ export const MECHAZORD = {
   offTime: 0.85,
   explodes: true, // and goes to pieces when he dies, like the other robots
   boom: 30,
-  // his rare one, a huge beam of green fire from his jaws: his fire breath, only bigger. Every `every` seconds he has only
+  // his rare one, a huge beam of teal fire from his jaws: made like his fire breath, only bigger. Every `every` seconds he has only
   // a `chance` of using it, and after he has, none for a long while. charge / fire: how long each part lasts; width: half
   // its width at his jaws, growing by `widen` as the fire swells; speed: how fast the fire rushes out; sweep: how fast he
   // can swing it once firing (radians a second). range: how near someone must be for him to start it; once it is out it
   // runs clean off the edge of the field
-  beam: { every: 4, chance: 0.14, cooldown: [24, 34], range: 400, width: 12, widen: 16, speed: 1100, dps: 200, charge: 1.15, fire: 1.35, sweep: 0.4 },
+  beam: { every: 4, chance: 0.14, cooldown: [24, 34], range: 400, width: 8, widen: 20, speed: 1100, dps: 200, charge: 1.15, fire: 1.35, sweep: 0.4 },
   // his third attack: a sweep of the tail along the ground. It does no damage; whoever it catches is flipped off their
   // feet and lies stunned. first: seconds before he can; cooldown: between sweeps; reach: how far the tail gets;
   // time: how long the sweep takes
