@@ -1,7 +1,7 @@
-import { TAU, K } from './config.js?v=264';
-import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=264';
-import { buildGibbonArt, drawGibbonHatDrop } from './gibbon.js?v=264';
-import { drawGatorHatDrop } from './gator.js?v=264';
+import { TAU, K } from './config.js?v=265';
+import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=265';
+import { buildGibbonArt, drawGibbonHatDrop } from './gibbon.js?v=265';
+import { drawGatorHatDrop } from './gator.js?v=265';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -2613,6 +2613,7 @@ export function buildUnitArt() {
   const dark = feetSet('#25232e');
   const art = {};
   art.gibbondore = buildGibbonArt();
+  art.chimera = { ghost: makeLayer(-26, -30, 26, 26, (g) => ghostBody(g)) }; // (drawn live)
   art.gandalligator = { ghost: makeLayer(-26, -30, 26, 26, (g) => ghostBody(g)) };
 
   art.flamethrower = {

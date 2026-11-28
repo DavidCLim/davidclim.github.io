@@ -2,7 +2,7 @@
 // is wide, a thin line at the shore and another where it drops off, and two long soft waves of light and shade drifting
 // across the lot, nearly at right angles. It has a canvas of its own under the rest of the ground, so that it can move
 // without anything else being painted again.
-import { bankDiscs, fillDiscs } from './terrain.js?v=264';
+import { bankDiscs, fillDiscs } from './terrain.js?v=265';
 
 const SHORE = 0.62; // the width of the lines, in world units
 const SHORE_INK = 'rgb(108, 166, 186)';

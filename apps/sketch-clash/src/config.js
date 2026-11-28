@@ -591,6 +591,36 @@ export const GATOR = {
   muzzleLen: 0,
 };
 
+// The Chimera: a great lion with a goat's head on its back and a snake for a tail. The goat breathes fire as the
+// dragon does, but bigger. It walks, keeps a little distance, and is far too big to be knocked about.
+export const CHIMERA = {
+  kind: 'chimera',
+  hp: 1900,
+  radius: 17,
+  sep: 26,
+  speed: 44,
+  sight: 420,
+  range: 175,
+  holdDist: 105,
+  dps: 58, // the dragon's is 38, MechaZaur's 82
+  cone: 0.34,
+  burnTime: 3,
+  burnDps: 14,
+  onTime: 2.2,
+  offTime: 1.05,
+  scale: 1.9,
+  bigFire: true, // sparks and burning ground with its breath (chimera.js)
+  plume: { every: 0.019, speed: 2.15, life: 1.58, size: 2.35 },
+  footFire: 22, // whoever is pressed right up against it is caught too
+  // the goat's mouth (see GOAT in chimera.js: it turns about 14 across and 35 up in the drawing, and reaches 23)
+  pivot: { x: 14 * K * 1.9, y: FEET + (-35 * K - FEET) * 1.9 },
+  muzzleLen: 23 * K * 1.9,
+  creature: true,
+  noKnock: true,
+  body: [44, 22, 2],
+  ring: 3.1,
+};
+
 export const TERRAIN_IDS = ['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower'];
 
 // `faction` decides who fights whom in free-for-all (defaults to the
@@ -628,6 +658,7 @@ export const SPECIES = {
   dragon: { id: 'dragon', label: 'Dragon', def: DRAGON },
   necromancer: { id: 'necromancer', label: 'Necromancer', def: NECROMANCER },
   skeleton: { id: 'skeleton', label: 'Skeleton', def: SKELETON },
+  chimera: { id: 'chimera', label: 'Chimera', def: CHIMERA },
   // terrain items that appear in the legend
   barrel: { id: 'barrel', label: 'Barrel', def: { prop: true } },
   tree: { id: 'tree', label: 'Tree', def: { prop: true } },
@@ -638,9 +669,9 @@ export const TABS = [
   { id: 'army', label: 'Army', items: ['soldier', 'flamethrower', 'sniper', 'grenadier', 'archer', 'cowboy', 'ninja'] },
   { id: 'robots', label: 'Robots', items: ['trooper', 'shieldtrooper', 'jettrooper', 'malftrooper', 'gatlingtrooper', 'mechazord'] }, // the Juggernaut's code is kept, but he isn't in the palette
   { id: 'magic', label: 'Magic', items: ['mage', 'gibbondore'] }, // Gandalligator's code is kept, but he isn't in the palette for now: add 'gandalligator' here to bring him back
-  { id: 'beasts', label: 'Beasts', items: [], locked: true }, // greyed out until it has something in it
+  { id: 'beasts', label: 'Beasts', items: ['chimera'] },
   { id: 'terrain', label: 'Terrain', items: ['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower'] },
 ];
 export const TERRAIN_LABELS = { wall: 'Wall', water: 'Water', ice: 'Ice', mine: 'Mines', barrel: 'Barrel', tree: 'Tree', tower: 'Wizard Tower' };
 export const PALETTE_ORDER = TABS[0].items;
-export const SPECIES_ORDER = [...TABS[0].items, ...TABS[1].items, ...TABS[2].items, 'barrel', 'tree', 'tower'];
+export const SPECIES_ORDER = [...TABS[0].items, ...TABS[1].items, ...TABS[2].items, ...TABS[3].items, 'barrel', 'tree', 'tower'];

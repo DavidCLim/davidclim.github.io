@@ -1,17 +1,18 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=264';
-import { drawLayer, OUT, drawArcLine } from './sprites.js?v=264';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt, MALF_CORE, MALF_SPOTS } from './art_units.js?v=264';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=264';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=264';
-import { drawZordGround, drawZordAir } from './zordfx.js?v=264';
-import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=264';
-import { drawMalfAir, limpPose } from './malf.js?v=264';
-import { drawShieldAir } from './shield.js?v=264';
-import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=264';
-import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=264';
-import { drawGandalligator, drawGatorStill, drawGatorGround, drawGatorAir } from './gator.js?v=264';
-import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=264';
-import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=264';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=265';
+import { drawLayer, OUT, drawArcLine } from './sprites.js?v=265';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt, MALF_CORE, MALF_SPOTS } from './art_units.js?v=265';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=265';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=265';
+import { drawZordGround, drawZordAir } from './zordfx.js?v=265';
+import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=265';
+import { drawMalfAir, limpPose } from './malf.js?v=265';
+import { drawShieldAir } from './shield.js?v=265';
+import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=265';
+import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=265';
+import { drawGandalligator, drawGatorStill, drawGatorGround, drawGatorAir } from './gator.js?v=265';
+import { drawChimera, drawChimeraStill } from './chimera.js?v=265';
+import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=265';
+import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=265';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -2289,6 +2290,7 @@ const DRAWERS = {
   shieldtrooper: drawShieldBot,
   gibbondore: (ctx, dpr, sprites, u) => drawGibbondore(ctx, dpr, sprites, u, burnOverlay),
   gandalligator: (ctx, dpr, sprites, u) => drawGandalligator(ctx, dpr, sprites, u, burnOverlay),
+  chimera: (ctx, dpr, sprites, u) => drawChimera(ctx, dpr, sprites, u, burnOverlay),
   jettrooper: drawJetTrooper,
   juggernaut: drawJuggernaut,
   mechazord: drawMechaZord,
@@ -2451,6 +2453,8 @@ const blobs = (() => {
     brown: mk('176, 104, 46'),
     plasma: mk('36, 224, 206'),
     core: mk('246, 255, 244'),
+    // the deep red in the Chimera's fire
+    red: mk('226, 78, 34'),
     // and the teal of his great beam
     tpale: mk('176, 255, 236'),
     tbright: mk('24, 208, 180'),
@@ -2547,8 +2551,22 @@ function drawFlame(ctx, f) {
   }
   const t = f.age / f.life;
   const r = flamePuff(f);
-  const spr = t < 0.3 ? blobs.yellow : f.dark && t > 0.62 ? blobs.brown : blobs.orange;
+  // (the Chimera's goes on through a deep red before it chars)
+  const spr = t < 0.3 ? blobs.yellow : f.dark && t > (f.blaze ? 0.72 : 0.62) ? blobs.brown : f.blaze && t > 0.5 && (f.dark || t > 0.64) ? blobs.red : blobs.orange;
   ctx.globalAlpha = Math.max(0, (t < 0.1 ? 0.75 + t * 2 : 0.92) * (1 - t * t * t));
+  if (f.blaze && t < 0.26) {
+    // white-hot where it leaves the goat's mouth
+    ctx.drawImage(blobs.yellow, f.x - r * 1.18, f.y - r * 1.18, r * 2.36, r * 2.36);
+    ctx.drawImage(blobs.core, f.x - r * 0.66, f.y - r * 0.66, r * 1.32, r * 1.32);
+    return;
+  }
+  if (f.blaze && t < 0.55) {
+    // with a bright yellow lick down the middle of the orange
+    ctx.drawImage(spr, f.x - r, f.y - r, r * 2, r * 2);
+    ctx.globalAlpha *= (0.55 - t) / 0.29;
+    ctx.drawImage(blobs.yellow, f.x - r * 0.66, f.y - r * 0.66, r * 1.32, r * 1.32);
+    return;
+  }
   // teal laid over yellow turns green, so his goes by way of white heat: teal, then white, and only then fire
   if (f.hot && t < 0.17) {
     ctx.drawImage(blobs.plasma, f.x - r * 1.12, f.y - r * 1.12, r * 2.24, r * 2.24);
@@ -2956,6 +2974,7 @@ const ICONS = {
   }],
   gibbondore: [134, 63, 68, null],
   gandalligator: [102, 47, 50, null],
+  chimera: [124, 71, 66, null],
   mechazord: [122, 70, 60, null],
   trooper: [96, 45, 44, (g, S) => {
     g.save();
@@ -3073,6 +3092,8 @@ export function paintUnitIcon(canvas, sprites, species) {
     drawGibbonStill(g, S);
   } else if (species === 'gandalligator') {
     drawGatorStill(g);
+  } else if (species === 'chimera') {
+    drawChimeraStill(g);
   } else if (species === 'shieldtrooper') {
     drawLayer(g, S.torso);
     g.save();

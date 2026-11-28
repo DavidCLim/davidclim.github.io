@@ -1,12 +1,13 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=264';
-import { TerrainMap, WALL } from './terrain.js?v=264';
-import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordBeam, stepZordSwipe, stepZordFx, moveBeamPuff } from './zordfx.js?v=264';
-import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=264';
-import { resetGatorFx, stepGator, stepGatorFx } from './gator.js?v=264';
-import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=264';
-import { installBeasts } from './beasts.js?v=264';
-import { resetMalfFx, stepMalf, stepMalfFx, queueBoom } from './malf.js?v=264';
-import { resetShieldFx, stepShield, stepShieldFx, findShields, shieldCross, shieldHit } from './shield.js?v=264';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=265';
+import { TerrainMap, WALL } from './terrain.js?v=265';
+import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordBeam, stepZordSwipe, stepZordFx, moveBeamPuff } from './zordfx.js?v=265';
+import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=265';
+import { resetGatorFx, stepGator, stepGatorFx } from './gator.js?v=265';
+import { stepChimera, chimeraIgnite, chimeraBreath } from './chimera.js?v=265';
+import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=265';
+import { installBeasts } from './beasts.js?v=265';
+import { resetMalfFx, stepMalf, stepMalfFx, queueBoom } from './malf.js?v=265';
+import { resetShieldFx, stepShield, stepShieldFx, findShields, shieldCross, shieldHit } from './shield.js?v=265';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -1079,6 +1080,7 @@ export class World {
       case 'mage': this.stepMage(u, dt); break;
       case 'gibbon': stepGibbon(this, u, dt); break;
       case 'gator': stepGator(this, u, dt); break;
+      case 'chimera': stepChimera(this, u, dt); break;
       case 'necro': this.stepNecro(u, dt); break;
       default: this.stepSoldier(u, dt);
     }
@@ -1336,6 +1338,7 @@ export class World {
         u.burstLeft = 1;
         u.burstT = d.onTime * (0.8 + Math.random() * 0.4);
         if (d.mega) zordIgnite(this, u, this.muzzleOf(u), u.facing > 0 ? u.aim : Math.PI - u.aim);
+        if (d.bigFire) chimeraIgnite(this, u, this.muzzleOf(u), u.facing > 0 ? u.aim : Math.PI - u.aim);
       }
     } else {
       u.burstLeft = 0;
@@ -1370,9 +1373,11 @@ export class World {
         grow: (5.4 + Math.random() * 2) * p.size,
         dark: Math.random() < 0.65,
         hot: !!d.mega,
+        blaze: !!d.bigFire,
       });
     }
     if (d.mega) zordBreath(this, u, m, ang, dt, u.target);
+    if (d.bigFire) chimeraBreath(this, u, m, ang, dt, u.target);
     if (this.sfx) this.sfx('flame', m.x);
     const cone = d.cone;
     this.eachEnemyNear(u.side, m.x, m.y, d.range, (o) => {
