@@ -1,10 +1,10 @@
 // MechaZaur's own part of the world: his missiles, and the effects that go with him (the shockwave as he lets loose, the
 // embers and heat rings in his breath, the ground it leaves burning, the great blast when he goes). Only the missiles
 // hurt anyone; the rest is for show.
-import { TAU, K, FEET } from './config.js?v=260';
-import { WATER } from './terrain.js?v=260';
-import { shieldCross, shieldHit } from './shield.js?v=260';
-import { swipeTurn, SWIPE_BACK } from './zordlimbs.js?v=260';
+import { TAU, K, FEET } from './config.js?v=261';
+import { WATER } from './terrain.js?v=261';
+import { shieldCross, shieldHit } from './shield.js?v=261';
+import { swipeTurn, SWIPE_BACK } from './zordlimbs.js?v=261';
 
 const TEAL = '70, 245, 200';
 const GOLD = '255, 196, 80';
@@ -95,22 +95,12 @@ function beamMouth(u) {
   return { x: u.x + u.facing * 54 * K, y: u.y + 1 * K - (u.alt || 0) * u.def.hoverH };
 }
 
-// how far it is from the jaws to the edge of the field the way he is aiming, and then some, so its end is out of sight
-function beamReach(world, from, angle) {
-  const dx = Math.cos(angle);
-  const dy = Math.sin(angle);
-  let t = Infinity;
-  if (Math.abs(dx) > 1e-4) t = Math.min(t, ((dx > 0 ? world.w : 0) - from.x) / dx);
-  if (Math.abs(dy) > 1e-4) t = Math.min(t, ((dy > 0 ? world.h : 0) - from.y) / dy);
-  return Math.max(0, t) + 90;
-}
-
 const BEAM_GAP = 6.5; // how far apart its puffs are
-// it gets steadily bigger the whole way, reaching its full size about where it leaves the field
-const swellOver = (reach) => Math.max(300, reach - 90);
+// it gets steadily bigger nearly the whole way
+const swellOver = (reach) => reach * 0.9;
 
 // The beam is made of the same puffs as his fire breath, in teal: poured out much faster and dead straight, small at his
-// jaws and bigger the further they get, each living long enough to get well off the field.
+// jaws and bigger the further they get, thinning away to nothing at the end of its reach.
 function pourBeam(world, u, dt) {
   const m = u.def.beam;
   const b = u.beam;
@@ -130,7 +120,7 @@ function pourBeam(world, u, dt) {
       // (the world moves it on by this frame straight after, so it starts a frame back: puffs made in the same frame
       // then come out spaced along the stream, not in one lump)
       age: b.pourT - dt,
-      life: (b.reach + 70) / v,
+      life: (b.reach + 18) / v,
       size: 4.4,
       full: 22 + Math.random() * 6,
       lat: (Math.random() - 0.5) * 38,
@@ -149,44 +139,6 @@ export function moveBeamPuff(f) {
   const side = f.lat * f.k ** 1.5 + Math.sin(f.far * 0.025 + f.phase) * 2 * f.k;
   f.x = b.x0 + b.dx * f.far - b.dy * side;
   f.y = b.y0 + b.dy * f.far + b.dx * side;
-}
-
-// The bright heart that runs down the middle of it and makes a beam of it: three soft wedges, one inside another,
-// widening along the way. [colour, strength, half as wide at his jaws, and at full size]
-const HEART = [['24, 214, 190', 0.55, 5, 14], ['128, 252, 228', 0.7, 3.2, 8], ['248, 255, 253', 0.92, 1.7, 3.6]];
-
-function drawBeamHeart(ctx, u) {
-  const m = u.def.beam;
-  const b = u.beam;
-  const since = b.t - m.charge;
-  const len = Math.min(b.reach, m.speed * since);
-  const fade = Math.max(0, Math.min(1, since / 0.06, (m.fire - since) / 0.22));
-  if (len < 4 || fade <= 0) return;
-  const from = beamMouth(u);
-  const over = swellOver(b.reach);
-  const flicker = 1 + Math.sin(u.breath * 47) * 0.09;
-  const mid = Math.min(len, over);
-  ctx.save();
-  ctx.translate(from.x, from.y);
-  ctx.rotate(b.angle);
-  for (const [rgb, strength, near, far] of HEART) {
-    const w0 = near * flicker * fade;
-    const w1 = (near + (far - near) * (mid / over)) * flicker * fade;
-    // while it is still shooting out it ends in a point
-    const tip = len < b.reach ? Math.min(46, len * 0.5) : 0;
-    const flat = Math.min(mid, len - tip);
-    ctx.fillStyle = `rgba(${rgb}, ${strength * fade})`;
-    ctx.beginPath();
-    ctx.arc(0, 0, w0, Math.PI / 2, -Math.PI / 2);
-    ctx.lineTo(flat, -w1);
-    ctx.lineTo(len - tip, -w1);
-    ctx.lineTo(len, 0);
-    ctx.lineTo(len - tip, w1);
-    ctx.lineTo(flat, w1);
-    ctx.closePath();
-    ctx.fill();
-  }
-  ctx.restore();
 }
 
 function aimBeam(u, t) {
@@ -213,7 +165,7 @@ function stepBeam(world, u, dt) {
       world.sfx('flame', u.x);
     }
   }
-  b.reach = beamReach(world, beamMouth(u), b.angle);
+  b.reach = m.reach;
   if (firing) {
     const from = beamMouth(u);
     const dx = Math.cos(b.angle);
@@ -251,7 +203,7 @@ function stepBeam(world, u, dt) {
     b.sparkT = (b.sparkT || 0) - dt;
     while (b.sparkT <= 0) {
       b.sparkT += 0.016;
-      const along = 8 + Math.random() * Math.max(0, out - 90);
+      const along = 8 + Math.random() * Math.max(0, out - 50);
       const side = Math.random() < 0.5 ? -1 : 1;
       const off = side * halfAt(along) * (0.5 + Math.random() * 0.6);
       embers(world, from.x + dx * along - dy * off, from.y + dy * along + dx * off, 1, b.angle + side * 0.45, 0.7, 190, true);
@@ -265,7 +217,7 @@ function stepBeam(world, u, dt) {
     b.fireT = (b.fireT || 0) - dt;
     if (b.fireT <= 0) {
       b.fireT = 0.035;
-      const along = 22 + Math.random() * Math.max(0, Math.min(out - 90, 460));
+      const along = 22 + Math.random() * Math.max(0, out - 60);
       scorch(world, from.x + dx * along + (Math.random() - 0.5) * 14, from.y + dy * along + FEET + (Math.random() - 0.5) * 7, 4 + Math.random() * 4, 1.9 + Math.random() * 1.2, true);
     }
   }
@@ -296,7 +248,7 @@ export function stepZordBeam(world, u, dt) {
 }
 
 // ---- the gathering before it: teal fire dragged into his jaws. (The beam itself is drawn with the rest of the fire,
-// puff by puff: see pourBeam. Only its bright heart is drawn here.)
+// puff by puff: see pourBeam.)
 const FIRE_TEAL = { white: '242, 255, 252', pale: '176, 255, 236', bright: '24, 208, 180', dark: '10, 132, 136' };
 
 // one of the soft puffs his fire is made of
@@ -324,10 +276,7 @@ const stamp = (ctx, img, x, y, r) => ctx.drawImage(img, x - r, y - r, r * 2, r *
 function drawBeam(ctx, u) {
   const m = u.def.beam;
   const b = u.beam;
-  if (b.t >= m.charge) {
-    drawBeamHeart(ctx, u);
-    return;
-  }
+  if (b.t >= m.charge) return;
   const from = beamMouth(u);
   const clock = u.breath;
   const P = beamFire();

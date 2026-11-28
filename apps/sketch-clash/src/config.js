@@ -151,7 +151,7 @@ export const SHIELD = {
   // reaches up and down the field; recharge: seconds before it is back. The charge: rushFrom: how near someone must be;
   // rushTime / rushSpeed: how long and fast; every: seconds between; shove: how hard it throws; bash: damage.
   // keepOff: with no shield, how far he tries to stay from them
-  guard: { hp: 360, ahead: 17, half: 22, recharge: 5.5, rushFrom: 62, rushTime: 0.34, rushSpeed: 200, every: 2.6, shove: 360, bash: 16, keepOff: 200 },
+  guard: { hp: 440, ahead: 17, half: 22, recharge: 5.5, rushFrom: 62, rushTime: 0.34, rushSpeed: 200, every: 2.6, shove: 360, bash: 16, keepOff: 200 },
   parts: ['botplate', 'botplate', 'botpod', 'botpod', 'botlens', 'shieldtrooper'],
 };
 
@@ -544,12 +544,12 @@ export const MECHAZORD = {
   offTime: 0.85,
   explodes: true, // and goes to pieces when he dies, like the other robots
   boom: 30,
-  // his rare one, a huge beam of teal fire from his jaws: made like his fire breath, only bigger. Every `every` seconds he has only
-  // a `chance` of using it, and after he has, none for a long while. charge / fire: how long each part lasts; width: half
-  // its width at his jaws, growing by `widen` as the fire swells; speed: how fast the fire rushes out; sweep: how fast he
-  // can swing it once firing (radians a second). range: how near someone must be for him to start it; once it is out it
-  // runs clean off the edge of the field
-  beam: { every: 4, chance: 0.14, cooldown: [24, 34], range: 400, width: 8, widen: 20, speed: 1100, dps: 200, charge: 1.15, fire: 1.35, sweep: 0.4 },
+  // his rare one, a huge beam of teal fire from his jaws: made like his fire breath, only bigger. Every `every` seconds he
+  // has only a `chance` of using it, and after he has, none for a long while. charge / fire: how long each part lasts;
+  // width: half its width at his jaws, growing by `widen` as the fire swells; speed: how fast the fire rushes out; sweep:
+  // how fast he can swing it once firing (radians a second). reach: how far it goes. range: how near someone must be for
+  // him to start it
+  beam: { every: 4, chance: 0.14, cooldown: [24, 34], range: 340, reach: 340, width: 8, widen: 20, speed: 1100, dps: 200, charge: 1.15, fire: 1.35, sweep: 0.4 },
   // his third attack: a sweep of the tail along the ground. It does no damage; whoever it catches is flipped off their
   // feet and lies stunned. first: seconds before he can; cooldown: between sweeps; reach: how far the tail gets;
   // time: how long the sweep takes

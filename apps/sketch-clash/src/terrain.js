@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=260';
-import { makeLayer, drawLayer, OUT } from './sprites.js?v=260';
-import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=260';
+import { TAU, K } from './config.js?v=261';
+import { makeLayer, drawLayer, OUT } from './sprites.js?v=261';
+import { vgrad, fs, ell, circ, blob, poly, stick, rrect } from './art_kit.js?v=261';
 
 // ------------------------------------------------------------------ the painted terrain
 // Wall, water and ice are brush strokes: each is a polyline with a width. A coarse mask

@@ -1,16 +1,16 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=260';
-import { drawLayer, OUT, drawArcLine } from './sprites.js?v=260';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt, MALF_CORE, MALF_SPOTS } from './art_units.js?v=260';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=260';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=260';
-import { drawZordGround, drawZordAir } from './zordfx.js?v=260';
-import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=260';
-import { drawMalfAir, limpPose } from './malf.js?v=260';
-import { drawShieldAir } from './shield.js?v=260';
-import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=260';
-import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=260';
-import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=260';
-import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=260';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=261';
+import { drawLayer, OUT, drawArcLine } from './sprites.js?v=261';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt, MALF_CORE, MALF_SPOTS } from './art_units.js?v=261';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=261';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=261';
+import { drawZordGround, drawZordAir } from './zordfx.js?v=261';
+import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=261';
+import { drawMalfAir, limpPose } from './malf.js?v=261';
+import { drawShieldAir } from './shield.js?v=261';
+import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=261';
+import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=261';
+import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=261';
+import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=261';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -2519,8 +2519,8 @@ const flamePuff = (f) => (f.beam ? f.size + (f.full - f.size) * f.k : f.size + f
 function drawBeamPuff(ctx, f) {
   const t = Math.min(1, f.far / BEAM_BURN);
   const r = flamePuff(f);
-  // (it only starts to fade near the end of its life, which is well off the field)
-  const fade = Math.min(1, Math.max(0, (1 - f.age / f.life) / 0.08));
+  // (it thins away over the last of its reach, as his breath does)
+  const fade = Math.min(1, Math.max(0, (1 - f.age / f.life) / 0.28));
   const alpha = (t < 0.1 ? 0.75 + t * 2 : 0.92) * fade;
   if (alpha <= 0) return;
   ctx.globalAlpha = alpha;
