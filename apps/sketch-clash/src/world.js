@@ -1,10 +1,11 @@
-import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=258';
-import { TerrainMap, WALL } from './terrain.js?v=258';
-import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordBeam, stepZordSwipe, stepZordFx, moveBeamPuff } from './zordfx.js?v=258';
-import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=258';
-import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=258';
-import { installBeasts } from './beasts.js?v=258';
-import { resetMalfFx, stepMalf, stepMalfFx, queueBoom } from './malf.js?v=258';
+import { SPECIES, GAZE_WEIGHTS, TAU, FEET, ZAP_TIME } from './config.js?v=259';
+import { TerrainMap, WALL } from './terrain.js?v=259';
+import { resetZordFx, zordIgnite, zordBreath, zordDeath, stepZordSalvo, stepZordBeam, stepZordSwipe, stepZordFx, moveBeamPuff } from './zordfx.js?v=259';
+import { resetGibbonFx, stepGibbon, stepGibbonFx } from './gibbonfx.js?v=259';
+import { resetGatlingFx, gatlingVolley, gatlingShot, gatlingImpact, gatlingCookOff, stepGatlingFx } from './gatlingfx.js?v=259';
+import { installBeasts } from './beasts.js?v=259';
+import { resetMalfFx, stepMalf, stepMalfFx, queueBoom } from './malf.js?v=259';
+import { resetShieldFx, stepShield, stepShieldFx, findShields, shieldCross, shieldHit } from './shield.js?v=259';
 
 export const CELL = 32;
 const SEP_CELL = 20;
@@ -83,6 +84,7 @@ export class World {
     resetGatlingFx(this);
     resetGibbonFx(this);
     resetMalfFx(this);
+    resetShieldFx(this);
     this.bombs = []; // grenades in the air
     this.arrows = []; // arrows in the air
     this.blasts = []; // explosions
@@ -477,6 +479,7 @@ export class World {
     resetGatlingFx(this);
     resetGibbonFx(this);
     resetMalfFx(this);
+    resetShieldFx(this);
     this.terrain.clear();
     this.groups = [];
     this.started = false;
@@ -732,8 +735,19 @@ export class World {
     for (const k of this.rockets) {
       k.age += dt;
       const p = Math.min(1, k.age / k.dur);
+      const wasX = k.x;
+      const wasY = k.y;
       k.x = k.sx + (k.tx - k.sx) * p;
       k.y = k.sy + (k.ty - k.sy) * p;
+      const guard = this.shields.length ? shieldCross(this, k.side, wasX, wasY, k.x, k.y) : null;
+      if (guard) {
+        k.x = guard.x + guard.s.facing;
+        k.y = guard.y;
+        shieldHit(this, guard.s, k.owner.def.damage, guard.x, guard.y);
+        k.dead = true;
+        this.rocketBurst(k);
+        continue;
+      }
       const a = Math.atan2(k.ty - k.sy, k.tx - k.sx);
       k.trail -= dt;
       if (k.trail <= 0) {
@@ -934,6 +948,12 @@ export class World {
         break;
       }
     }
+    // a shield in the way stops it there
+    const guard = this.shields.length ? shieldCross(this, side, ox, oy, ox + c * range, oy + s * range) : null;
+    if (guard) {
+      range = Math.hypot(guard.x - ox, guard.y - oy);
+      end = { x: guard.x, y: guard.y };
+    }
     const enemy = this.enemyGrids.get(side);
     if (!enemy || !enemy.length) return { len: Math.hypot(end.x - ox, end.y - oy), hits: [] };
     const hits = [];
@@ -976,6 +996,7 @@ export class World {
     const out = [];
     for (let i = 0; i < n; i++) out.push({ u: hits[i].u, dist: hits[i].dist, dmg: i === 0 ? damage : damage * 0.6 });
     if (hits.length >= pierce) end = { x: ox + c * hits[pierce - 1].dist, y: oy + s * hits[pierce - 1].dist };
+    else if (guard) shieldHit(this, guard.s, damage, guard.x, guard.y);
     return { len: Math.hypot(end.x - ox, end.y - oy), hits: out };
   }
 
@@ -1047,6 +1068,7 @@ export class World {
       case 'jugger': this.stepJugger(u, dt); break;
       case 'jet': this.stepJet(u, dt); break;
       case 'malf': stepMalf(this, u, dt); break;
+      case 'shield': stepShield(this, u, dt); break;
       case 'grenade': this.stepGrenade(u, dt); break;
       case 'archer': this.stepArcher(u, dt); break;
       case 'cavalry': this.stepCavalry(u, dt); break;
@@ -1796,6 +1818,20 @@ export class World {
     let gone = false;
     for (const a of this.arrows) {
       a.age += dt;
+      if (this.shields.length && a.age > 0) {
+        // has the ground under it just gone through a shield? (they are lobbed high, but it covers those behind)
+        const p0 = Math.max(0, (a.age - dt) / a.dur);
+        const p1 = Math.min(1, a.age / a.dur);
+        const at = (p) => [a.x0 + (a.x1 - a.x0) * p, a.y0 + (a.y1 - a.y0) * p];
+        const guard = shieldCross(this, a.side, ...at(p0), ...at(p1));
+        if (guard) {
+          const p = p0 + (p1 - p0) * guard.q;
+          shieldHit(this, guard.s, a.damage, guard.x, guard.y - Math.min(14, 4 * a.h * p * (1 - p)));
+          a.dead = true;
+          gone = true;
+          continue;
+        }
+      }
       if (a.age < a.dur) continue;
       a.dead = true;
       gone = true;
@@ -2011,6 +2047,15 @@ export class World {
         anyGone = true;
         continue;
       }
+      // stopped by a shield?
+      const guard = this.shields.length ? shieldCross(this, b.side, px, py, b.x, b.y) : null;
+      if (guard) {
+        if (b.tracer) gatlingImpact(this, guard.x, guard.y, Math.atan2(b.vy, b.vx));
+        shieldHit(this, guard.s, b.damage, guard.x, guard.y);
+        b.dead = true;
+        anyGone = true;
+        continue;
+      }
       if (this.shotBlocked(b.x, b.y, b.damage)) {
         if (b.tracer) gatlingImpact(this, b.x, b.y, Math.atan2(b.vy, b.vx));
         b.dead = true;
@@ -2105,6 +2150,7 @@ export class World {
     stepGatlingFx(this, dt);
     stepGibbonFx(this, dt);
     stepMalfFx(this, dt);
+    stepShieldFx(this, dt);
 
     for (const f of this.flames) {
       f.age += dt;
@@ -2154,6 +2200,7 @@ export class World {
       this.computeCentroids();
     }
     this.stepGroups(dt);
+    findShields(this);
     for (const u of this.units) {
       if (!u.dead) this.stepUnit(u, dt);
     }

@@ -1,15 +1,16 @@
-import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=258';
-import { drawLayer, OUT, drawArcLine } from './sprites.js?v=258';
-import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt, MALF_CORE, MALF_SPOTS } from './art_units.js?v=258';
-import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=258';
-import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=258';
-import { drawZordGround, drawZordAir } from './zordfx.js?v=258';
-import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=258';
-import { drawMalfAir, limpPose } from './malf.js?v=258';
-import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=258';
-import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=258';
-import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=258';
-import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=258';
+import { TAU, K, UNIT, FEET, ZAP_TIME } from './config.js?v=259';
+import { drawLayer, OUT, drawArcLine } from './sprites.js?v=259';
+import { drawDrop, trooperEyes, BOT_JETS, drawJugArm, drawJugLeg, JUG_HEAD, ZORD_JAW, ZORD_WIDE, ZORD_HORNS, GATLING_WIDE, drawGatlingBarrels, drawGatlingDrum, drawGatlingBelt, MALF_CORE, MALF_SPOTS } from './art_units.js?v=259';
+import { drawCreature, paintCreatureIcon, CREATURE_IDS } from './creatures.js?v=259';
+import { EGG_DROPS, WIZ_STAFF } from './art_eggs.js?v=259';
+import { drawZordGround, drawZordAir } from './zordfx.js?v=259';
+import { drawGatlingGround, drawGatlingAir } from './gatlingfx.js?v=259';
+import { drawMalfAir, limpPose } from './malf.js?v=259';
+import { drawShieldAir } from './shield.js?v=259';
+import { drawGibbondore, drawGibbonStill } from './gibbon.js?v=259';
+import { drawGibbonGround, drawGibbonAir } from './gibbonfx.js?v=259';
+import { rigStep, drawBotFeet, applyBotBody, applyBotCap, stepDust } from './botrig.js?v=259';
+import { ZORD_LIFT, drawZordLeg, zordTail, drawZordTail, drawSwoosh } from './zordlimbs.js?v=259';
 
 // Drawing for everything beyond the soldier and sniper: the egg-bodied
 // units (flamethrower, roman, grenadier, archer, knight, ninja), the
@@ -560,6 +561,206 @@ function drawTrooper(ctx, dpr, sprites, u) {
       }
     }
   }
+}
+
+// ---------------------------------------------------------------- Shield Trooper
+const SHIELD_AT = { top: -52, bottom: 32, mid: -10 }; // in art px; its back edge is about 41 ahead of his middle
+
+function shieldShape(g) {
+  const { top, bottom, mid } = SHIELD_AT;
+  g.beginPath();
+  g.moveTo(40, top + 4);
+  g.quadraticCurveTo(48, top - 3, 54, top + 7);
+  g.quadraticCurveTo(65, mid, 54, bottom - 7);
+  g.quadraticCurveTo(48, bottom + 3, 40, bottom - 4);
+  g.quadraticCurveTo(49, mid, 40, top + 4);
+  g.closePath();
+}
+
+// the cracks that spread over it as it takes hits: some at two thirds gone, more at one third
+const SHIELD_CRACKS = [
+  [[[56, -34], [49, -27], [52, -19], [45, -13]], [[49, -27], [43, -30]], [[57, 6], [50, 11], [52, 18]]],
+  [[[51, -48], [48, -38], [53, -30]], [[60, -12], [52, -8], [55, 0], [47, 6]], [[52, -8], [46, -4]], [[53, 24], [47, 17], [49, 11]]],
+];
+
+// strength: how much of it is left, 0..1. flash: just struck, 0..1, `struck` up or down it (-1..1). grow: 0..1 as it
+// comes up again
+function drawEnergyShield(ctx, { strength, flash, struck, grow, clock }) {
+  const { top, bottom, mid } = SHIELD_AT;
+  ctx.save();
+  ctx.scale(K, K);
+  ctx.translate(0, 10);
+  ctx.scale(1, grow);
+  ctx.translate(0, -10);
+  // (nearly gone, it flickers)
+  const dim = strength < 0.22 && Math.sin(clock * 31) > 0.35 ? 0.45 : 1;
+  ctx.globalAlpha *= dim;
+  const gr = ctx.createLinearGradient(40, 0, 62, 0);
+  gr.addColorStop(0, 'rgba(120, 250, 230, 0.14)');
+  gr.addColorStop(1, 'rgba(22, 206, 188, 0.44)');
+  ctx.fillStyle = gr;
+  shieldShape(ctx);
+  ctx.fill();
+  ctx.save();
+  shieldShape(ctx);
+  ctx.clip();
+  // a honeycomb of light drifting up it
+  ctx.strokeStyle = 'rgba(10, 164, 152, 0.4)';
+  ctx.lineWidth = 0.9;
+  ctx.beginPath();
+  const rise = (clock * 11) % 11;
+  for (let row = -1; row < 10; row++) {
+    for (let col = 0; col < 3; col++) {
+      const hx = 42 + col * 9.6 + (row % 2) * 4.8;
+      const hy = top + row * 11 - rise + 6;
+      for (let i = 0; i <= 6; i++) {
+        const an = (i / 6) * TAU + TAU / 12;
+        const px = hx + Math.cos(an) * 5.6;
+        const py = hy + Math.sin(an) * 5.6;
+        if (i) ctx.lineTo(px, py);
+        else ctx.moveTo(px, py);
+      }
+    }
+  }
+  ctx.stroke();
+  if (flash > 0) {
+    ctx.fillStyle = `rgba(232, 255, 250, ${0.6 * flash})`;
+    ctx.fillRect(34, top - 6, 36, bottom - top + 12);
+    ctx.strokeStyle = `rgba(255, 255, 255, ${flash})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(52, mid + struck * 34, 4 + 8 * (1 - flash), 7 + 15 * (1 - flash), 0, 0, TAU);
+    ctx.stroke();
+  }
+  ctx.restore();
+  ctx.lineJoin = 'round';
+  shieldShape(ctx);
+  ctx.strokeStyle = 'rgba(6, 140, 134, 0.95)';
+  ctx.lineWidth = 2.6;
+  ctx.stroke();
+  // the bright line down its face
+  ctx.strokeStyle = 'rgba(230, 255, 250, 0.95)';
+  ctx.lineWidth = 1.5;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(50, top + 7);
+  ctx.quadraticCurveTo(61.5, mid, 50, bottom - 8);
+  ctx.stroke();
+  const stage = strength < 0.34 ? 2 : strength < 0.67 ? 1 : 0;
+  for (let n = 0; n < stage; n++) {
+    for (const [colour, wide] of [['rgba(4, 82, 84, 0.95)', 1.9], ['rgba(255, 255, 255, 0.9)', 0.7]]) {
+      ctx.strokeStyle = colour;
+      ctx.lineWidth = wide;
+      ctx.beginPath();
+      for (const run of SHIELD_CRACKS[n]) run.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+function drawShieldBot(ctx, dpr, sprites, u) {
+  const A = sprites.shieldtrooper;
+  const d = u.def;
+  const dead = !!u.tilt;
+  const clock = performance.now() / 1000;
+  const t = clock + (u.id || 0) * 0.737;
+  if (u.born === undefined) u.born = clock;
+  const age = dead ? 9 : clock - u.born;
+  const moving = u.moving && !dead;
+  const rushing = !dead && u.rushT > 0;
+  const max = d.guard.hp;
+  const left = u.shieldHp === undefined ? max : u.shieldHp;
+  const up = !dead && left > 0;
+  const R = rigStep(u, {
+    age, dead, moving, bang: u.shieldFlash > 0.12 ? 1 : 0, kick: 0.3, cadence: 2.2,
+    calm: !u.target && !moving, busy: rushing,
+    fidgets: ['look', 'look', 'stretch', 'shimmy', 'hops'],
+    aim: { lean: rushing ? 0.26 : 0, squash: rushing ? 0.08 : 0 },
+  });
+
+  placeUnit(ctx, dpr, u, u.hit > 0.14 ? (Math.random() - 0.5) * 1.6 : 0);
+  const fall = age < 0.28 ? age / 0.28 : 0;
+  if (age < 0.28) ctx.translate(0, -46 * (1 - fall ** 2));
+  const size = d.scale || BOT_SCALE;
+  ctx.translate(0, FEET);
+  ctx.scale(size * (1 - 0.09 * fall), size * (1 + 0.16 * fall));
+  ctx.translate(0, -FEET);
+
+  // streaking along behind him as he charges
+  if (rushing) {
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(40, 200, 184, 0.6)';
+    ctx.lineWidth = 2.4 * K;
+    ctx.beginPath();
+    for (const [y, len] of [[-14, 30], [0, 42], [15, 26]]) {
+      ctx.moveTo((-26 - len * (0.7 + 0.3 * Math.sin(t * 40 + y))) * K, y * K);
+      ctx.lineTo(-26 * K, y * K);
+    }
+    ctx.stroke();
+  }
+  drawBotFeet(ctx, A, R, { clock: t, spread: rushing ? 3 : 0 });
+  if (!dead) stepDust(ctx, R, 1.1);
+  applyBotBody(ctx, R);
+
+  ctx.save();
+  ctx.translate(0, R.pack * K);
+  drawLayer(ctx, A.pack);
+  ctx.restore();
+  drawLayer(ctx, A.torso);
+
+  let power = 1;
+  if (age < 0.5) power = 0;
+  else if (age < 0.85) power = Math.sin(age * 70) > 0 ? 1 : 0.15;
+  const blinkT = t % 3.3;
+  const aiming = !dead && !!u.target;
+  const lid = !aiming && blinkT < 0.16 ? Math.sin((blinkT / 0.16) * Math.PI) : 0;
+  let look = [Math.sin(t * 0.9) * 0.9 + 0.2, Math.sin(t * 1.7) * 0.5];
+  if (aiming) look = [1, 0.1];
+  else if (R.fidget === 'look') look = [Math.sin(R.q * TAU) * 1.5, -0.2];
+  ctx.save();
+  ctx.scale(K, K);
+  trooperEyes(ctx, { lx: look[0], ly: look[1], lid: R.happy ? 0 : lid, angry: aiming && !R.happy, happy: R.happy, spin: Math.sin(t * 0.6) * 0.4, power, dead });
+  ctx.restore();
+  if (!dead && power > 0.5) botGlow(ctx, 10.6 * K, -4.6 * K, (11 + Math.sin(t * 3)) * K, '70, 255, 205', 0.2);
+
+  ctx.save();
+  applyBotCap(ctx, R);
+  botAntennae(ctx, dead ? 7 : R.ant, !dead && t % 1.1 < 0.22);
+  drawLayer(ctx, A.cap);
+  ctx.restore();
+
+  burnGlow(ctx, u, 20.7 * K, 23 * K);
+  if (!dead) drawHitFlash(ctx, u, 20.9 * K, 23.2 * K);
+
+  // ---- the arm that holds it out (lowered while it is down), jolting back as it is struck
+  const jolt = u.shieldFlash > 0 ? u.shieldFlash / 0.18 : 0;
+  ctx.save();
+  ctx.translate((19 - 2.6 * jolt + (rushing ? 3 : 0)) * K, (up || dead ? 11 : 15) * K);
+  ctx.rotate(dead ? 0.9 : up ? 0 : 0.42);
+  drawLayer(ctx, A.arm);
+  ctx.restore();
+
+  if (up) {
+    const grow = u.upAge !== undefined && u.upAge < 0.25 ? Math.max(0.05, u.upAge / 0.25) : age < 0.9 ? Math.max(0, Math.min(1, (age - 0.5) / 0.35)) : 1;
+    if (grow > 0) {
+      ctx.save();
+      ctx.translate(((rushing ? 3 : 0) - 2 * jolt) * K, 0);
+      drawEnergyShield(ctx, { strength: left / max, flash: jolt, struck: u.struckAt || 0, grow, clock: t });
+      ctx.restore();
+    }
+  } else if (!dead && u.brokenT > 0) {
+    // powering up again: the block on his arm glows brighter and brighter, and sputters just before
+    const q = 1 - u.brokenT / d.guard.recharge;
+    botGlow(ctx, 39 * K, 18 * K, (4 + 12 * q + 2 * Math.sin(t * 17)) * K, '60, 240, 215', 0.35 + 0.55 * q);
+    if (u.brokenT < 0.9 && Math.sin(t * 38) > 0.2) {
+      ctx.save();
+      ctx.globalAlpha *= 0.4;
+      drawEnergyShield(ctx, { strength: 1, flash: 0, struck: 0, grow: 1, clock: t });
+      ctx.restore();
+    }
+  }
+  if (!dead && u.hit > 0.02) drawZaps(ctx, 2);
 }
 
 // ---------------------------------------------------------------- Malfunction Trooper
@@ -2083,6 +2284,7 @@ const DRAWERS = {
   trooper: drawTrooper,
   gatlingtrooper: drawTrooper,
   malftrooper: drawMalf,
+  shieldtrooper: drawShieldBot,
   gibbondore: (ctx, dpr, sprites, u) => drawGibbondore(ctx, dpr, sprites, u, burnOverlay),
   jettrooper: drawJetTrooper,
   juggernaut: drawJuggernaut,
@@ -2419,6 +2621,7 @@ export function drawFlames(ctx, world, under) {
     drawGatlingAir(ctx, world);
     drawGibbonAir(ctx, world);
     drawMalfAir(ctx, world);
+    drawShieldAir(ctx, world);
   }
 }
 
@@ -2729,6 +2932,7 @@ const ICONS = {
   }],
   juggernaut: [104, 52, 68, null],
   malftrooper: [96, 46, 46, null],
+  shieldtrooper: [110, 45, 52, null],
   gatlingtrooper: [108, 47, 48, (g, S) => {
     g.save();
     g.scale(K, K);
@@ -2829,6 +3033,10 @@ export function paintUnitIcon(canvas, sprites, species) {
   g.translate((ox * canvas.width) / w, (oy * canvas.width) / w);
   g.scale(m, m);
   if (species === 'trooper' || species === 'jettrooper' || species === 'gatlingtrooper') drawLayer(g, S.pack);
+  if (species === 'shieldtrooper') {
+    drawLayer(g, S.pack);
+    drawLayer(g, S.feet[0]);
+  }
   if (species === 'malftrooper') {
     drawLayer(g, S.pack);
     for (const [layer, x, y, turn] of [[S.badFoot, -7, 25.8, 0.2], [S.foot, 9.5, 25.7, 0]]) {
@@ -2857,6 +3065,18 @@ export function paintUnitIcon(canvas, sprites, species) {
     drawZordLeg(g, 0, {});
   } else if (species === 'gibbondore') {
     drawGibbonStill(g, S);
+  } else if (species === 'shieldtrooper') {
+    drawLayer(g, S.torso);
+    g.save();
+    g.scale(K, K);
+    trooperEyes(g, { lx: 0.7, ly: 0.2 });
+    g.restore();
+    drawLayer(g, S.cap);
+    g.save();
+    g.translate(19 * K, 11 * K);
+    drawLayer(g, S.arm);
+    g.restore();
+    drawEnergyShield(g, { strength: 1, flash: 0, struck: 0, grow: 1, clock: 0 });
   } else if (species === 'malftrooper') {
     drawLayer(g, S.torso);
     malfWires(g, 0, 0);

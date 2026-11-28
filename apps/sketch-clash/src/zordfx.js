@@ -1,9 +1,10 @@
 // MechaZaur's own part of the world: his missiles, and the effects that go with him (the shockwave as he lets loose, the
 // embers and heat rings in his breath, the ground it leaves burning, the great blast when he goes). Only the missiles
 // hurt anyone; the rest is for show.
-import { TAU, K, FEET } from './config.js?v=258';
-import { WATER } from './terrain.js?v=258';
-import { swipeTurn, SWIPE_BACK } from './zordlimbs.js?v=258';
+import { TAU, K, FEET } from './config.js?v=259';
+import { WATER } from './terrain.js?v=259';
+import { shieldCross, shieldHit } from './shield.js?v=259';
+import { swipeTurn, SWIPE_BACK } from './zordlimbs.js?v=259';
 
 const TEAL = '70, 245, 200';
 const GOLD = '255, 196, 80';
@@ -538,8 +539,20 @@ function stepMissiles(world, dt) {
   for (const k of world.missiles) {
     k.age += dt;
     const p = Math.min(1, k.age / k.dur);
-    // it follows its mark until it starts to dive
-    if (!k.o.dead && p < 0.75) {
+    // one whose way lies through a shield comes down on the front of it instead
+    if (world.shields.length && !k.guard && p < 0.8) {
+      const c = shieldCross(world, k.side, k.sx, k.sy, k.tx, k.ty);
+      if (c) k.guard = { s: c.s, dy: c.y - c.s.y };
+    }
+    if (k.guard) {
+      const s = k.guard.s;
+      if (!s.dead && s.shieldHp > 0) {
+        const f = Math.min(1, dt * 14);
+        k.tx += (s.x + s.facing * (s.def.guard.ahead + 2) - k.tx) * f;
+        k.ty += (s.y + k.guard.dy - k.ty) * f;
+      }
+    } else if (!k.o.dead && p < 0.75) {
+      // it follows its mark until it starts to dive
       const f = Math.min(1, dt * 9);
       k.tx += (k.o.x + k.off.x - k.tx) * f;
       k.ty += (k.o.y + k.off.y - k.ty) * f;
@@ -557,6 +570,7 @@ function stepMissiles(world, dt) {
     }
     if (p >= 1) {
       k.dead = true;
+      if (k.guard) shieldHit(world, k.guard.s, k.owner.def.missiles.damage, k.tx, k.ty);
       burst(world, k);
     }
   }

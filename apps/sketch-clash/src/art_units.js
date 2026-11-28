@@ -1,6 +1,6 @@
-import { TAU, K } from './config.js?v=258';
-import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=258';
-import { buildGibbonArt, drawGibbonHatDrop } from './gibbon.js?v=258';
+import { TAU, K } from './config.js?v=259';
+import { makeLayer, drawLayer, rr, star, FEET_POSES, drawFeet, OUT, drawSniperBody, drawSniperEyes, drawSniperHat, neckScarf } from './sprites.js?v=259';
+import { buildGibbonArt, drawGibbonHatDrop } from './gibbon.js?v=259';
 
 // Art for the rest of the Army, drawn from the supplied showcase video.
 // Same conventions as the soldier: art px, origin at the body centre, y
@@ -1480,6 +1480,13 @@ export const DROPS = {
     drawJugFist(g);
     g.restore();
   },
+  shieldtrooper(g) {
+    g.save();
+    g.scale(0.66, 0.66);
+    g.translate(0, 18);
+    drawShieldCap(g);
+    g.restore();
+  },
   malftrooper(g) {
     g.save();
     g.scale(0.66, 0.66);
@@ -1763,6 +1770,33 @@ function drawTrooperCap(g) {
   g.beginPath();
   g.ellipse(-9, -22.4, 4, 2, -0.5, 0, TAU);
   g.fill();
+}
+
+// ---------------------------------------------------------------- Shield Trooper
+// Robo Trooper in a helmet a little wider than usual, with an extra plate bolted across its front
+function drawShieldCap(g) {
+  g.save();
+  g.translate(0.5, -13.4);
+  g.scale(1.15, 1.04);
+  g.translate(-0.5, 13.4);
+  drawTrooperCap(g);
+  g.restore();
+  botPoly(g, BOT.teal, [[5, -24], [18, -22.6], [19.6, -16.2], [6, -17]], 1.5);
+  for (const x of [8.6, 16]) botBall(g, '#b4ced8', x, -19.8, 1.4, 0.8);
+}
+
+// what he holds the shield with: his round hand on a short grip, and the block the shield comes out of. Origin: the grip
+function drawShieldArm(g) {
+  g.lineJoin = 'round';
+  botPoly(g, BOT.gunDark, [[-3, -3], [12, -3.6], [12, 3.4], [-3, 3]], 1.5);
+  botPoly(g, BOT.gun, [[11, -8], [20, -6.4], [20, 6.4], [11, 8]], 1.6);
+  botPoly(g, BOT.gunLite, [[13, -5], [18, -4], [18, -1], [13, -1.4]], 0.9);
+  botBall(g, '#17c8b0', 20, 0, 3.6, 1.2);
+  g.fillStyle = '#d6fff6';
+  g.beginPath();
+  g.arc(19, -1.2, 1.2, 0, TAU);
+  g.fill();
+  botBall(g, BOT.lite, 0.5, 3.4, 4.6, 1.5);
 }
 
 // ---------------------------------------------------------------- Malfunction Trooper
@@ -2592,6 +2626,17 @@ export function buildUnitArt() {
     foot: makeLayer(-9, -6, 9, 6, botFoot),
     shade: makeLayer(-32, -10, 32, 10, botShade),
     gun: makeLayer(-18, -14, 44, 14, drawTrooperGun),
+    ghost: makeLayer(-26, -30, 26, 26, (g) => ghostBody(g)),
+  };
+
+  art.shieldtrooper = {
+    feet: art.trooper.feet,
+    pack: art.trooper.pack,
+    torso: art.trooper.torsoBare,
+    cap: makeLayer(-28, -35, 31, -8, drawShieldCap),
+    foot: art.trooper.foot,
+    shade: art.trooper.shade,
+    arm: makeLayer(-8, -11, 26, 12, drawShieldArm),
     ghost: makeLayer(-26, -30, 26, 26, (g) => ghostBody(g)),
   };
 

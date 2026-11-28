@@ -129,6 +129,32 @@ export const MALF = {
   parts: ['botplate', 'botplate', 'botplate', 'botpod', 'botlens', 'malftrooper'],
 };
 
+// Shield Trooper: he marches at the front behind a see-through energy shield that stops bullets, arrows (and throwing
+// stars) and rockets, so that those behind him are covered. Up close he charges with it and shoves people back. Enough
+// hits shatter it, and he backs off until it comes up again. Only the front is covered; blasts, fire, magic and blows
+// get through.
+export const SHIELD = {
+  ...TROOPER,
+  kind: 'shield',
+  hp: 380,
+  armor: 0.85,
+  speed: 46,
+  sight: 460,
+  range: 0,
+  burst: 0,
+  kick: false,
+  casing: false,
+  noDrop: true,
+  boom: 16,
+  ring: 1.3,
+  // the shield. hp: what it takes to shatter it; ahead: how far in front of him it stands; half: half of how far it
+  // reaches up and down the field; recharge: seconds before it is back. The charge: rushFrom: how near someone must be;
+  // rushTime / rushSpeed: how long and fast; every: seconds between; shove: how hard it throws; bash: damage.
+  // keepOff: with no shield, how far he tries to stay from them
+  guard: { hp: 520, ahead: 17, half: 18, recharge: 5.5, rushFrom: 62, rushTime: 0.34, rushSpeed: 200, every: 2.6, shove: 360, bash: 16, keepOff: 200 },
+  parts: ['botplate', 'botplate', 'botpod', 'botpod', 'botlens', 'shieldtrooper'],
+};
+
 // Gatling Trooper: between the Jet Trooper and MechaZaur. A heavier Robo Trooper whose rotary cannon pours out a long
 // stream of rounds, then winds down for a moment. He doesn't back away from anyone.
 export const GATLING = {
@@ -555,6 +581,7 @@ export const SPECIES = {
   ninja: { id: 'ninja', label: 'Samurai', def: NINJA },
   mechazord: { id: 'mechazord', label: 'MechaZaur', def: MECHAZORD },
   trooper: { id: 'trooper', label: 'Robo Trooper', def: TROOPER },
+  shieldtrooper: { id: 'shieldtrooper', label: 'Shield Trooper', def: SHIELD },
   jettrooper: { id: 'jettrooper', label: 'Jet Trooper', def: JETTROOPER },
   malftrooper: { id: 'malftrooper', label: 'Malfunction Trooper', def: MALF },
   gatlingtrooper: { id: 'gatlingtrooper', label: 'Gatling Trooper', def: GATLING },
@@ -583,7 +610,7 @@ export const SPECIES = {
 // The order of the palette (the knight only ever comes from a cavalry).
 export const TABS = [
   { id: 'army', label: 'Army', items: ['soldier', 'flamethrower', 'sniper', 'grenadier', 'archer', 'cowboy', 'ninja'] },
-  { id: 'robots', label: 'Robots', items: ['trooper', 'jettrooper', 'malftrooper', 'gatlingtrooper', 'mechazord'] }, // the Juggernaut's code is kept, but he isn't in the palette
+  { id: 'robots', label: 'Robots', items: ['trooper', 'shieldtrooper', 'jettrooper', 'malftrooper', 'gatlingtrooper', 'mechazord'] }, // the Juggernaut's code is kept, but he isn't in the palette
   { id: 'magic', label: 'Magic', items: ['mage', 'gibbondore'] },
   { id: 'terrain', label: 'Terrain', items: ['wall', 'water', 'ice', 'mine', 'barrel', 'tree', 'tower'] },
 ];

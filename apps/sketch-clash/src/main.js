@@ -1,15 +1,15 @@
-import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=258';
-import { buildCreatureArt } from './creatures.js?v=258';
-import { buildEggArt } from './art_eggs.js?v=258';
-import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon, WATER } from './terrain.js?v=258';
-import { WaterLayer } from './water.js?v=258';
-import { beginUnitPictures, drawPictured } from './unitcache.js?v=258';
-import { Sfx } from './sfx.js?v=258';
-import { World } from './world.js?v=258';
-import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=258';
-import { buildUnitArt, drawDrop } from './art_units.js?v=258';
-import { drawGibbonHatWorn } from './gibbon.js?v=258';
-import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=258';
+import { TEAMS, TAU, K, UNIT, PIVOT, IDLE_PIVOT, IDLE_AIM, FEET, SPECIES, SPECIES_ORDER, TABS, TERRAIN_LABELS, ZAP_TIME } from './config.js?v=259';
+import { buildCreatureArt } from './creatures.js?v=259';
+import { buildEggArt } from './art_eggs.js?v=259';
+import { buildTerrainArt, renderGround, drawTowerMagic, hasTerrainIcon, paintTerrainIcon, WATER } from './terrain.js?v=259';
+import { WaterLayer } from './water.js?v=259';
+import { beginUnitPictures, drawPictured } from './unitcache.js?v=259';
+import { Sfx } from './sfx.js?v=259';
+import { World } from './world.js?v=259';
+import { buildSprites, drawLayer, paintIcon } from './sprites.js?v=259';
+import { buildUnitArt, drawDrop } from './art_units.js?v=259';
+import { drawGibbonHatWorn } from './gibbon.js?v=259';
+import { drawFlames, drawUnit, drawFx, placeUnit, burnOverlay, drawHitFlash, drawDizzyEyes, dropMark, arrowMark, stepMarks, drawMarks, hasIcon, paintUnitIcon, drawShortCircuit } from './draw_units.js?v=259';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('stage-wrap');
@@ -192,6 +192,7 @@ const LATTICE = {
   default: [15.5, 12.5, true],
   trooper: [28, 22, true],
   jettrooper: [28, 22, true],
+  shieldtrooper: [31, 24, true],
   malftrooper: [28, 22, true],
   gatlingtrooper: [31, 24, true],
   juggernaut: [43, 31, true],
@@ -1356,7 +1357,7 @@ function render() {
       ctx.ellipse(0, 0, 20.5 * 0.31, 22.8 * 0.31, 0, 0, TAU);
       ctx.fill();
     }
-    if (c.u.species !== 'sniper' && c.u.species !== 'trooper' && c.u.species !== 'jettrooper' && c.u.species !== 'malftrooper' && c.u.species !== 'gatlingtrooper' && c.u.species !== 'juggernaut' && c.u.species !== 'mechazord' && c.u.species !== 'gibbondore') {
+    if (c.u.species !== 'sniper' && c.u.species !== 'trooper' && c.u.species !== 'jettrooper' && c.u.species !== 'malftrooper' && c.u.species !== 'shieldtrooper' && c.u.species !== 'gatlingtrooper' && c.u.species !== 'juggernaut' && c.u.species !== 'mechazord' && c.u.species !== 'gibbondore') {
       placeUnit(ctx, dpr, c.u);
       ctx.globalAlpha = a;
       drawDizzyEyes(ctx, c.u);
